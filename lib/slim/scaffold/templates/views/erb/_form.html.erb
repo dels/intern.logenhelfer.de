@@ -1,0 +1,9 @@
+<%%= form_for <%= item_path :instance_variable => true %>, builder: DefiniteFormBuilder do |f| %>
+  <%%= f.error_messages %>
+  <dl>
+<%- for attribute in model_attributes -%>
+    <%%= f.<%= attribute.field_type %> :<%= attribute.name %> %>
+<% end %>
+    <%%= f.submit %>
+  </dl>
+<%% end %>

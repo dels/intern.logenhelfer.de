@@ -1,0 +1,176 @@
+table.calendar {
+  th {
+    text-align: center;
+    border: 1px solid darken($link-color, 20%);
+  }
+  tbody tr {
+    min-height: 6em;
+    background-color: $white;
+  }
+
+  .day_names th {
+    width: 14%;
+  }
+
+  .day {
+    border: 1px solid $light-color;
+    padding: 0;
+    vertical-align: top;
+
+    div {
+      padding: 2px;
+      margin: 2px;
+      min-height: 7em;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    nav {
+      span {
+        font-weight: bold;
+      }
+      a {
+        color: $dark-color;
+        float: right;
+        display: none;
+        text-decoration: none;
+      }
+    }
+    &:hover {
+      div {
+        margin: 0;
+        border: 2px solid $main-color;
+      }
+      nav a {
+        display: inline;
+      }
+    }
+  }
+
+  .day.today {
+    color: $white;
+    background-color: $main-color;
+    a {
+      color: $white;
+    }
+  }
+
+  .day.weekend {
+    nav span {
+      font-weight: normal;
+    }
+    a {
+      color: $white;
+    }
+  }
+
+  .day.otherMonth {
+    nav span {
+      font-weight: normal;
+    }
+    color: $link-color;
+    background-color: lighten($link-color, 40%);
+    font-style: italic;
+    a {
+      color: $link-color;
+    }
+  }
+
+  nav.day-of-the-week {
+    margin: 0;
+    border-bottom: 1px solid $light-color;
+  }
+
+  ul {
+    margin: 1ex 0 0 1em;
+    padding: 0 0 0 1ex;
+    line-height: 1;
+  }
+
+  td.active {
+    color: $white;
+    background-color: $dark-color;
+  }
+}
+
+table.calendar.week {
+  tr:hover {
+    background-color: $main-color;
+
+    td {
+      color: $white;
+    }
+
+    & td:nth-of-type(2n) {
+      background-color: lighten($main-color, 10%);
+    }
+  }
+
+  tr.now {
+    background-color: $light-color;
+    td {
+      color: $white;
+    }
+
+    & td:nth-of-type(2n) {
+      background-color: lighten($light-color, 10%);
+    }
+  }
+
+  th.time {
+    width: 2%;
+  }
+
+  th.dow {
+    width: 14%;
+  }
+
+  td.time {
+    color: $link-color;
+    font-style: italic;
+    text-align: right;
+  }
+
+  .day {
+    padding: 0 .5ex;
+    border-width: 1px 0;
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      line-height: $line-height;
+    }
+
+    li.event {
+      @include radii(2px);
+      border: 1px solid $link-color;
+      margin: 1px 0;
+      @include linear-gradient(lighten($light-color, 33%), $light-color);
+
+      a {
+        display: block;
+        background: transparent 1px 1px no-repeat;
+        padding-left: 20px;
+      }
+    }
+    li.event.doctor         a { background-image: image-url("event_doctor.png"); }
+    li.event.teacher        a { background-image: image-url("event_school.png"); }
+    li.event.youth_office   a { background-image: image-url("event_youth_office.png"); }
+    li.event.miscellaneous  a { background-image: image-url("event_misc.png"); }
+    li.event.birthday       a { background-image: image-url("event_birthday.png"); }
+    li.event.all-day        a { background-image: image-url("event_all_day.png"); }
+
+    a {
+      color: $black;
+      text-decoration: none;
+    }
+  }
+
+  td:nth-of-type(2n) {
+    background-color: lighten($link-color, 40%);
+  }
+  td.active:nth-of-type(2n) {
+    background-color: lighten($dark-color, 10%);
+  }
+}

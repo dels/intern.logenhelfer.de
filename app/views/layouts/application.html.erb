@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for?(:title) ? "#{yield(:title)} - Friedrich Wilhelm zur Eintracht" : "FWzE" %></title>
+    <%= render 'layouts/jquery_format_locales' %>
+    <%= stylesheet_link_tag "application" %>
+    <%= javascript_include_tag "application" %>
+    <%= favicon_link_tag '/favicon.png' %>
+    <%= csrf_meta_tag %>
+    <%= yield(:head) %>
+  </head>
+  <body>
+    <nav id="left">
+      <%= render 'layouts/menu' %>
+    </nav>
+
+    <section>
+
+      <nav id="top-menu">
+        <%= render 'layouts/top_menu' %>
+      </nav>
+      <%- if flash.any? -%>
+        <% flash.each do |name, msg| %>
+          <%= content_tag :header, content_tag(:span, msg), :id => "flash-#{name}" %>
+        <% end %>
+      <%- end -%>
+
+      <%= content_tag :h1, yield(:title), :class => 'title' if show_title? %>
+      <%= yield %>
+    </section>
+
+    <footer>
+      Running in <%= Rails.env %> mode. Version <%= APP_VERSION_STRING %>, deployed at <%= APP_VERSION[:deployed_at] %>
+    </footer>
+
+    <% if current_user && Rails.env.development? %>
+      <footer style="text-align: left; font-size: 1em; line-height: 1;">
+        <h4>Debugging (dev-only)</h4>
+        <h5>current_user:</h5> <pre><%= current_user.to_yaml %></pre>
+        <h5>params:</h5> <%= debug params %>
+      </footer>
+    <% end%>
+
+    <div id="throbble-container">
+      <p id="throbble-notice">
+        <%= image_tag 'throbbler.gif' %>
+        <%= t 'shared.please_be_patient' %>
+      </p>
+    </div>
+  </body>
+</html>

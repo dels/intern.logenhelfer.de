@@ -1,0 +1,133 @@
+$main-color:    adjust-hue(#66a, -33deg);
+$link-color:    desaturate($main-color, 90%);
+$dark-color:    darken($main-color, 25%);
+$light-color:   lighten($main-color, 25%);
+$gray:          #333;
+$white:         #fefefe;
+$black:         #050505;
+
+$box-distance:    13px;
+$font-family:     "DejaVu Sans Condensed", Tahoma, Helvetica, Arial, sans-serif;
+$line-height:     $box-distance * 1.45;
+$default-radius:  3px;
+$nav-width:       210px;
+
+
+@mixin radii($radius: $default-radius) {
+  -webkit-border-radius: $radius;
+  -moz-border-radius: $radius;
+  -ms-border-radius: $radius;
+  -o-border-radius: $radius;
+  border-radius: $radius;
+}
+
+@mixin shadow($color: #ccc, $radius: $default-radius) {
+  -webkit-box-shadow: 0 0 $radius $color;
+  -moz-box-shadow: 0 0 $radius $color;
+  -ms-box-shadow: 0 0 $radius $color;
+  -o-box-shadow: 0 0 $radius $color;
+  box-shadow: 0 0 $radius $color;
+}
+
+@mixin no-shadow() {
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  -ms-box-shadow: none;
+  -o-box-shadow: none;
+  box-shadow: none;
+}
+
+@mixin linear-gradient($a-color, $b-color) {
+  background-color: $b-color;
+  background-image: -webkit-linear-gradient($a-color, $b-color);
+  background-image: -moz-linear-gradient($a-color, $b-color);
+  background-image: -ms-linear-gradient($a-color, $b-color);
+  background-image: -o-linear-gradient($a-color, $b-color);
+  background-image: linear-gradient($a-color, $b-color);
+}
+
+@import 'jquery.ui.all';
+
+label {
+  cursor: pointer;
+  &.required:after {
+    content: ' (*)';
+    font-weight: normal;
+  }
+}
+.ui-widget,
+.ui-widget input,
+.ui-widget select,
+.ui-widget textarea,
+.ui-widget button {
+  font: normal #{$box-distance}/#{$line-height} $font-family;
+}
+input {
+  width: 20em;
+  height: 1.8em;
+}
+input.large {
+  width: 30em;
+}
+input.medium-small {
+  width: 9.8em;
+}
+input.small {
+  width: 5em;
+}
+input.very-small {
+  width: 3em;
+}
+input[type="submit"],
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto;
+  height: auto;
+}
+input.ui-autocomplete-input {
+  width: 17.7em;
+}
+input.datepicker {
+  background: {
+    image: image-url('calendar.png');
+    position: 2px center;
+    repeat: no-repeat;
+  }
+  padding-left: 2em;
+  width: 18em;
+}
+dd div input.ui-autocomplete-input {
+  width: 15em;
+}
+.ui-datepicker {
+  width: 20em;
+}
+.ui-autocomplete li a {
+  font-weight: normal;
+  white-space: nowrap;
+}
+.ui-autocomplete-category {
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: .2em .4em;
+  line-height: 2em;
+}
+.ui-button {
+  margin: 0 0 0 -1px;
+}
+.ui-button-icon-only .ui-button-text {
+  line-height: 1.2;
+}
+#tabs ul {
+  height: 30px;
+}
+
+#tabs.ui-tabs ul.ui-tabs-nav li a {
+  padding: .5em 1ex !important;
+}
+
+@import 'layout';
+@import 'simpistic-layout';
+@import 'error';
+@import 'jquery.contextMenu';
+@import 'calendar';

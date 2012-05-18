@@ -1,0 +1,34 @@
+<%% title t("activerecord.models.<%= instance_name %>") %>
+
+<%- if action? :new -%>
+<%% if can? :create, <%= class_name %> %>
+<p class="horizontal-menu"><%%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.<%= instance_name %>")), <%= item_path :action => :new %> %></p>
+<%% end %>
+<%- end -%>
+
+<table>
+  <tr>
+  <%- model_attributes.each do |attribute| -%>
+    <th><%%= t 'activerecord.attributes.<%= instance_name %>.<%= attribute.name %>' %></th>
+  <%- end -%>
+    <th></th>
+  </tr>
+  <%% @<%= instances_name %>.each do |<%= instance_name %>| %>
+    <tr>
+    <%- model_attributes.each do |attribute| -%>
+      <td><%%= <%= instance_name %>.<%= attribute.name %> %></td>
+    <%- end -%>
+      <td>
+      <%- if action? :show -%>
+        <%%= show_link_to <%= item_path %> if can?(:show, <%= instance_name %>) %>
+      <%- end -%>
+      <%- if action? :edit -%>
+        <%%= edit_link_to <%= item_path %> if can?(:edit, <%= instance_name %>) %>
+      <%- end -%>
+      <%- if action? :destroy -%>
+        <%%= destroy_link_to <%= item_path %> if can?(:destroy, <%= instance_name %>) %>
+      <%- end -%>
+      </td>
+    </tr>
+  <%% end %>
+</table>

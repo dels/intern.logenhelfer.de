@@ -1,0 +1,20 @@
+body#simplistic {
+  height: 100%;
+  max-width: 600px;
+  width: 90%;
+  margin: 0 auto;
+
+  section {
+    margin: 5em 0 0;
+  }
+
+  #devise-options ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      margin: 1ex 0;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+<% title t('devise.links.forgot_password') %>
+
+<%= form_for(resource, :as => resource_name, :url => password_path(resource_name), :html => { :method => :post }) do |f| %>
+  <%= devise_error_messages! %>
+
+  <dl>
+    <dt><%= f.label :email %></dt>
+    <dd><%= f.email_field :email, class: jqueryui_input_classes %></dd>
+
+    <dt>&nbsp;</dt>
+    <dd><%= f.submit t('devise.links.send_reset_password_instructions') %></dd>
+<% end %>
+
+<%= render :partial => "devise/shared/links" %>

@@ -1,0 +1,25 @@
+<ul>
+  <%- if user_signed_in? && !current_user.approved? -%>
+    <li>
+      <%= t("devise.information.signed_in_as", :user =>  current_user.email ) %>
+    </li>
+    <li>
+      <%= link_to(t("devise.links.sign_out"), destroy_user_session_path) %>,
+    </li>
+    <li>
+      <strong><%= t('devise.information.not_approved_yet') %></strong>
+    </li>
+  <%- elsif user_signed_in? -%>
+    <li>
+      <%= t("devise.information.signed_in_as", :user =>  current_user.email ) %>
+    </li>
+    <li>
+      <%= link_to(t("devise.links.sign_out"), destroy_user_session_path) %>,
+    </li>
+
+  <%- else -%>
+    <%= content_tag :li, link_to(t("links.pages.index"), root_url) %>
+    <%= content_tag :li, link_to(t("devise.links.sign_in"), new_user_session_path) %>
+  <%- end -%>
+</ul>
+

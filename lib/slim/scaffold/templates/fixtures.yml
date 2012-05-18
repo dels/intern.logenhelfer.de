@@ -1,0 +1,11 @@
+one:
+<%- for attribute in model_attributes -%>
+  <%= attribute.name %>: <%= attribute.default %>
+<%- end -%>
+  deleted: false
+
+two:
+<%- for attribute in model_attributes -%>
+  <%= attribute.name %>: <%= attribute.default %>
+<%- end -%>
+  deleted: true

@@ -1,0 +1,15 @@
+<%% title t("activerecord.actions.edit", :model => t("activerecord.models.<%= instance_name %>")) %>
+
+<%- if actions? :show, :index -%>
+<p class="horizontal-menu">
+<%- if action? :show -%>
+  <%%= show_link_to <%= item_path :instance_variable => true %> if can?(:show, @<%= instance_name %>) %>
+<%- end -%>
+<%- if action? :index -%>
+  <%%= show_link_to_all <%= items_path %> if can?(:index, <%= class_name %>) %>
+<%- end -%>
+</p>
+<%- end -%>
+
+<%= render_form %>
+

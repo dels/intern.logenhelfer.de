@@ -1,0 +1,8 @@
+<ul>
+  <% if user_signed_in? %>
+    <!--<li><a href="#">FAQ</a></li>-->
+  <% else %>
+    <li><%= link_to "Anmelden", root_path %></li>
+  <% end %>
+  <li><%= link_to "Impressum", impressum_path %></li>
+</ul>

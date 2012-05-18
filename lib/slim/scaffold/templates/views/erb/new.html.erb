@@ -1,0 +1,10 @@
+<%% title t("activerecord.actions.create_new", :model => t("activerecord.models.<%= instance_name %>")) %>
+
+<%- if action? :index -%>
+<%% if can? :index, <%= class_name %> %>
+<p class="horizontal-menu"><%%= show_link_to_all <%= items_path %> %></p>
+<%% end %>
+<%- end -%>
+
+<%= render_form %>
+

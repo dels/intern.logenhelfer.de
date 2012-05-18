@@ -1,0 +1,74 @@
+#flash-notice,
+#flash-warning,
+#flash-error,
+#flash-alert {
+  padding: 0 1ex 0 1ex;
+  margin: 1ex 0 1em;
+  color: #fff;
+  @include radii();
+
+  span {
+    display: block;
+    padding: 1ex 0 1ex 4ex;
+    background: left center no-repeat;
+  }
+}
+
+$flash-green:   #6C6;
+$flash-yellow:  #FB3;
+$flash-red:     #F30000;
+
+#flash-notice {
+  @include linear-gradient($flash-green, darken($flash-green, 20%));
+  span { background-image: image-url('w-success.png'); }
+}
+
+#flash-warning {
+  @include linear-gradient(lighten($flash-yellow, 5%), darken($flash-yellow, 5%));
+  span { background-image: image-url('w-warning.png'); }
+}
+
+#flash-error,
+#flash-alert {
+  @include linear-gradient(darken($flash-red, 10%), $flash-red);
+  span { background-image: image-url('w-error.png'); }
+}
+
+.fieldWithErrors,
+.field_with_errors {
+  display: inline;
+  color: #CF0000;
+
+  input {
+    border: 2px solid #CF0000;
+  }
+}
+
+.error_messages {
+  width: 500px;
+  border: 2px solid #CF0000;
+  padding: 0px;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  background-color: #f0f0f0;
+  font-size: 12px;
+
+  h2 {
+    text-align: left;
+    font-weight: bold;
+    padding: 5px 10px;
+    font-size: 12px;
+    margin: 0;
+    background-color: #c00;
+    color: #fff;
+  }
+
+  p {
+    margin: 8px 10px;
+  }
+
+  ul {
+    margin: 0;
+  }
+}
+

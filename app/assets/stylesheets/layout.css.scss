@@ -1,0 +1,413 @@
+html {
+  @include linear-gradient($main-color, darken($main-color, 5%));
+  background-repeat: no-repeat;
+  font: normal #{$box-distance}/#{$line-height} $font-family;
+  padding: 2em 0;
+  color: $black;
+}
+
+body {
+  width: 97%;
+  max-width: 1380px;
+  margin: 0 auto;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family;
+  font-weight: bold;
+  color: $dark-color;
+  margin: 1.75em 0 1em;
+}
+
+section h1:first-of-type {
+  margin-top: .5em;
+}
+
+h1 { font-size: 27px; }
+h2 { font-size: 22px; }
+h3 { font-size: 18px; }
+h4 { font-size: 15px; }
+h5 { font-size: 12px; }
+h6 { font-size: 10px; }
+
+a {
+  color: $link-color;
+  text-decoration: underline;
+
+  &:hover {
+    color: $dark-color;
+    text-decoration: none;
+  }
+
+  img {
+    border: none;
+    vertical-align: baseline;
+  }
+}
+
+nav#left {
+  margin-bottom: $box-distance;
+  display: block;
+  padding: 2em 0;
+  float: left;
+  width: $nav-width;
+  background-color: $white;
+  @include shadow($radius: 10px);
+  @include radii();
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  ul li, ul ul a {
+    padding: 2px 1em;
+  }
+  ul ul li {
+    padding: 0;
+  }
+  ul ul a {
+    display: block;
+    background-color: $dark-color;
+    color: $white;
+    text-decoration: none;
+    margin: 1px 0;
+
+    &:hover {
+      color: $dark-color;
+      background-color: $white;
+    }
+  }
+  ul ul .active a,
+  ul ul .active ul .active a {
+    text-align: right;
+  }
+  ul ul ul a {
+    background-color: $light-color;
+    color: $dark-color;
+    margin-left: 1ex;
+  }
+  ul ul .active ul a {
+    text-align: left;
+  }
+}
+
+nav.pagination {
+  margin: 1em 0;
+
+  span {
+    a {
+      display: inline-block;
+      padding: .5ex 1ex;
+
+      &:hover {
+        background: $link-color;
+        color: $white;
+        text-decoration: none;
+      }
+    }
+  }
+  .current, .gap {
+    padding: .5ex 1ex;
+  }
+}
+
+ul.horizontal {
+  background: $link-color;
+  list-style: none;
+  padding: 0 1ex;
+  margin: .5ex 0 1em;
+  display: inline-block;
+  clear: right;
+  @include radii();
+
+  a {
+    color: $white;
+    text-decoration: none;
+    display: inline-block;
+    line-height: 1.5em;
+    padding: .5ex 2ex;
+
+    &:hover {
+      background: $white;
+      color: $link-color;
+    }
+  }
+
+  li {
+    display: inline-block;
+  }
+}
+
+.space-top { margin-top: 1em !important; }
+.more.space-top { margin-top: 2em !important; }
+
+.space-bottom { margin-bottom: 1em !important; }
+.more.space-bottom { margin-bottom: 2em !important; }
+
+.large { font-size: large; }
+.very.large { font-size: xx-large; }
+
+.clear {
+  clear: both;
+  height: 0;
+  overflow: hidden;
+}
+
+.hidden { display: none; }
+.center { text-align: center !important; }
+.right { text-align: right !important; }
+.left { text-align: left !important; }
+
+.translation_missing {
+  padding-right: 20px;
+  background: {
+    image: image_url('missing-translation.png');
+    position: right center;
+    repeat: no-repeat;
+  }
+}
+
+section, footer {
+  margin: 0 0 $box-distance ($nav-width + $box-distance);
+  padding: 2em 3em;
+  background-color: $white;
+  @include shadow($radius: 10px);
+  @include radii();
+
+	::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+		display: block;
+	}
+	::-webkit-scrollbar-button {
+	  display: none;
+	}
+	::-webkit-scrollbar-track {
+		border-radius: 5px;
+		background: lighten($link-color, 45%);
+		&:disabled {
+			display: none;
+		}
+	}
+	::-webkit-scrollbar-thumb {
+		border-radius: 5px;
+		background: rgba(0, 0, 0, .25);
+		border: none;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background: darken($link-color, 20%);
+	}
+
+	nav#top-menu {
+	  float: right;
+	  margin: -2em -3em 0 0;
+	  padding: .5ex 1em;
+	  background-color: $link-color;
+    -webkit-border-top-right-radius: $default-radius;
+    -webkit-border-bottom-left-radius: 4*$default-radius;
+    -moz-border-topright-radius: $default-radius;
+    -moz-border-bottomleft-radius: 4*$default-radius;
+    -ms-border-radius-top-right: $default-radius;
+    -ms-border-radius-bottom-left: 4*$default-radius;
+    -o-border-radius-top-right: $default-radius;
+    -o-border-radius-bottom-left: 4*$default-radius;
+    border-radius-top-right: $default-radius;
+    border-radius-bottom-left: 4*$default-radius;
+
+	  ul {
+	    list-style: none;
+	    margin: 0;
+	    padding: 0;
+	  }
+	  li {
+	    display: inline-block;
+	    margin: 0 1ex;
+	  }
+	  a {
+	    font-weight: normal;
+	    color: $white;
+	    text-decoration: none;
+	  }
+	}
+}
+
+section.wide {
+  margin: 0;
+}
+
+footer {
+  font-style: normal;
+  text-align: center;
+  margin: $box-distance 0;
+  clear: both;
+  padding: 1ex 1em;
+  color: $gray;
+  font-size: x-small;
+}
+
+dl {
+  margin: 20px 0;
+
+  &.buttons {
+    margin: 20px 0 0;
+    padding: 20px 0 10px;
+  }
+}
+
+.fields {
+  border-top: 1px solid $dark-color;
+  h3 {
+    margin: 1ex 0 0;
+  }
+}
+
+dt {
+  font-weight: bold;
+  float: left;
+  width: $nav-width;
+}
+
+dd {
+  margin-left: 1.1*$nav-width;
+
+  p {
+    margin: 0 0 .5ex;
+  }
+  dl {
+    margin: 10px 0;
+  }
+  dt {
+    width: 120px;
+  }
+  dd {
+    margin-left: 130px;
+  }
+}
+
+dd.fields {
+  margin-left: 1.1*$nav-width;
+}
+
+dt, dd {
+  padding-top: 3px;
+}
+
+.wide-table {
+  border: 5px solid $white;
+  @include shadow($radius: 10px);
+  overflow-x: scroll;
+  padding-bottom: 1ex;
+
+  table {
+    border: none;
+    @include no-shadow();
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  p, ul, ol {
+    margin: 0;
+  }
+
+  th {
+    background-color: darken($link-color, 20%);
+    color: $white;
+
+    a, a:hover { color: $white; }
+  }
+
+  td {
+    a { color: $link-color; }
+  }
+
+  th, td {
+    padding: .125em .25em;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  tr {
+    background-color: $white;
+    &:hover {
+      background-color: lighten($link-color, 45%);
+    }
+    &:nth-child(odd) {
+      background-color: lighten($link-color, 40%);
+    }
+  }
+  .asc:before {  content: "\2191 "; }
+  .desc:before { content: "\2193 "; }
+}
+
+.legend {
+  table {
+    width: auto;
+  }
+}
+
+table.autolink {
+  tr.link {
+    cursor: pointer;
+
+    a.show {
+      display: none;
+    }
+    &:hover {
+      color: $white;
+      background-color: $dark-color;
+    }
+  }
+  &.showlink tr.link:hover a.show {
+    display: inline;
+    color: $white;
+  }
+}
+
+#throbble-container {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  margin: 0;
+  padding: 0;
+
+  img {
+    vertical-align: middle;
+    margin-right: 1em;
+  }
+}
+#throbble-notice {
+  width: 50%;
+  margin: 10% auto 0;
+  background: $white;
+  @include shadow($radius: 10px);
+  @include radii();
+  padding: 40px;
+  text-align: center;
+}
+body.reloading #throbble-container {
+  display: block;
+}
+
+textarea {
+  font-size: smaller;
+  width: 25em;
+  height: 8em;
+}
+
+span.add {
+  cursor: pointer;
+}
+
+.relation-people.details {
+  display: none; // initially, will be toggled by javascript
+}

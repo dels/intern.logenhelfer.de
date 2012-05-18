@@ -1,0 +1,15 @@
+<% title t('devise.links.unlock_instructions_not_received') %>
+
+<%= form_for(resource, :as => resource_name, :url => unlock_path(resource_name), :html => { :method => :post }) do |f| %>
+  <%= devise_error_messages! %>
+
+  <dl>
+    <dt><%= f.label :email %></dt>
+    <dd><%= f.email_field :email, class: jqueryui_input_classes %></dd>
+
+    <dt>&nbsp;</dt>
+    <dd><%= f.submit t('devise.links.resend_instructions') %></dd>
+  </dl>
+<% end %>
+
+<%= render :partial => "devise/shared/links" %>

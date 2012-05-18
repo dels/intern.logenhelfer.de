@@ -1,0 +1,20 @@
+<%% title t("activerecord.models.<%= instance_name %>") %>
+
+<p class="horizontal-menu">
+<%- if action? :edit -%>
+  <%%= edit_link_to <%= item_path :instance_variable => true %> if can?(:edit, @<%= instance_name %>) %>
+<%- end -%>
+<%- if action? :destroy -%>
+  <%%= destroy_link_to <%= item_path :instance_variable => true %> if can?(:destroy, @<%= instance_name %>) %>
+<%- end -%>
+<%- if action? :index -%>
+  <%%= show_link_to_all <%= class_name %> if can?(:index, <%= class_name %>) %>
+<%- end -%>
+</p>
+
+<dl>
+<%- for attribute in model_attributes -%>
+  <dt><%%= t 'activerecord.attributes.<%= instance_name %>.<%= attribute.name %>' %>:</dt>
+  <dd><%%= @<%= instance_name %>.<%= attribute.name %> %></dd>
+<% end %>
+</dl>

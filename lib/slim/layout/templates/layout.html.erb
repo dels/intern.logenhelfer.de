@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%%= content_for?(:title) ? yield(:title) : "Untitled" %></title>
+    <%%= stylesheet_link_tag "<%= file_name %>" %>
+    <%%= javascript_include_tag :defaults %>
+    <%%= csrf_meta_tag %>
+    <%%= yield(:head) %>
+  </head>
+  <body>
+    <section>
+      <%% flash.each do |name, msg| %>
+        <%%= content_tag :header, msg, :id => "flash-#{name}" %>
+      <%% end %>
+      <%%= content_tag :h1, yield(:title) if show_title? %>
+      <%%= yield %>
+    </section>
+  </body>
+</html>

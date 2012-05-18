@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for?(:title) ? "#{yield(:title)}" : "FWzE" %></title>
+    <%= render 'layouts/jquery_format_locales' %>
+    <%= stylesheet_link_tag "application" %>
+    <%= javascript_include_tag "application" %>
+    <%= favicon_link_tag '/favicon.png' %>
+    <%= csrf_meta_tag %>
+    <%= yield(:head) %>
+  </head>
+  <body id="simplistic">
+    <section>
+      <nav id="top-menu">
+        <%= render 'layouts/top_menu' %>
+      </nav>
+      <%- if flash.any? -%>
+        <% flash.each do |name, msg| %>
+          <%= content_tag :header, content_tag(:span, msg), :id => "flash-#{name}" %>
+        <% end %>
+      <%- end -%>
+
+      <%= content_tag :h1, yield(:title), :class => 'title' if show_title? %>
+      <%= yield %>
+    </section>
+  </body>
+</html>
