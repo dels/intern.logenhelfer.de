@@ -1,0 +1,12 @@
+.bundle
+db/*.sqlite3
+log/*.log
+tmp/
+*~
+#*
+.#*
+*#
+thin.yml
+config/database.yml
+restart.sh
+public/assets/
