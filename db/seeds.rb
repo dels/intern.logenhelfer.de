@@ -24,9 +24,12 @@ mr = nil
 block 'create roles' do
   log ar = Role.create!(:name => "Admin")
   log ur = Role.create!(:name => "Uploader")
-  log er = Role.create!(:name => "Entered Apprentice")
-  log fr = Role.create!(:name => "Fellow Craft")
-  log mr = Role.create!(:name => "Master Mason")
+  log er = Role.create!(:name => "EnteredApprentice")
+  log fr = Role.create!(:name => "FellowCraft")
+  log mr = Role.create!(:name => "MasterMason")
+  log wmr = Role.create!(:name => "WorshipfulMaster")
+  log mocr = Role.create!(:name => "MemberOfCouncil")
+  
 end
 
 block 'create users' do 
@@ -36,6 +39,8 @@ block 'create users' do
   u.roles << mr
   u.roles << fr
   u.roles << er
+  u.roles << wmr
+  u.roles << mocr
   u.save!
   log u = User.create!(:email => 'meister@fwze.de', :password => 'keks1024')
   u.roles << mr
@@ -50,4 +55,5 @@ block 'create users' do
   u.roles << er
   u.save!
 end
+
 
