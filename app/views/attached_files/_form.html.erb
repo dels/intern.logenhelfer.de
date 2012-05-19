@@ -1,12 +1,7 @@
-<%= form_for @attached_file, builder: DefiniteFormBuilder do |f| %>
+<%= form_for @attached_file, :html => { :multipart => true } , builder: DefiniteFormBuilder do |f| %>
   <%= f.error_messages %>
   <dl>
-    <%= f.text_field :uuid %>
-    <%= f.text_field :filename %>
-    <%= f.text_field :content %>
-    <%= f.text_field :content_type %>
-    <%= f.number_field :directory_id %>
-    <%= f.number_field :uploader_id %>
+    <%= f.file_field :file %>
 
     <%= f.submit %>
   </dl>
