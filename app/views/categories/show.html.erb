@@ -24,8 +24,6 @@
 
 <h2><%= t("activerecord.models.directories") %></h2>
 
-<% if can?(:edit, @category)%>
-  <%= render "directories/listing", :category => @category %>
-<% end %>
+<%= render "directories/listing", :category => @category %>
 
 
