@@ -1,5 +1,5 @@
 <% if can? :create, AttachedFile %>
-<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.attached_file")), new_attached_file_path %></p>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.attached_file")), new_attached_file_path(:directory => @directory.id) %></p>
 <% end %>
 
 <table>

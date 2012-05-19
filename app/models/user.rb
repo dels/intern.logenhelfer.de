@@ -6,6 +6,7 @@ class User < ActiveRecord::Base
 
   has_many :user_roles
   has_many :roles, :through => :user_roles
+  has_many :attached_files
 
   def approved?
     true
