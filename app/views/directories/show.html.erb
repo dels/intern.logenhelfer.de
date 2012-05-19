@@ -11,5 +11,8 @@
   <dd><%= dash @directory.description %></dd>
   <dt><%= t 'activerecord.attributes.directory.category_id' %>:</dt>
   <dd><%= @directory.category.name %></dd>
-
 </dl>
+
+<% if can?(:edit, @directory)%>
+  <%= render "attached_files/listing", :directory => @directory %>
+<% end %>

@@ -3,7 +3,7 @@
 <p class="horizontal-menu">
   <%= edit_link_to @attached_file if can?(:edit, @attached_file) %>
   <%= destroy_link_to @attached_file if can?(:destroy, @attached_file) %>
-  <%= show_link_to_all AttachedFile if can?(:index, AttachedFile) %>
+  <%= show_link_to_all @attached_file.directory if can?(:show, @attached_file.directory) %>
 </p>
 
 <dl>
