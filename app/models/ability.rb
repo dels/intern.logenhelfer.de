@@ -8,6 +8,15 @@ class Ability
     @user.roles.each do |role|
       self.send("#{role.name.underscore}_abilities")
     end
+    can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
+      [] != (c.roles & @user.roles)
+    end
+    can [:index, :show], Directory, ['directories.deleted = ?', false] do |d|
+      [] != (d.roles & @user.roles)
+    end
+    can [:index, :show, :download], AttachedFile, ['attached_files.deleted = ?', false] do |f|
+      [] != (f.roles & @user.roles)
+    end
   end
 
   def admin_abilities
@@ -20,7 +29,8 @@ class Ability
     
   end
 
-  def entered_apprentice_abilities  
+  def entered_apprentice_abilities
+    
   end
 
   def fellow_craft_abilities
