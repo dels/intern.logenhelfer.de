@@ -10,16 +10,18 @@
 <ul>
   
   <% if can?(:create, Category) %>
-    <%= content_tag :li, :class => (request.fullpath =~ /^\/categories/ ? 'active' : nil) do %>
+    <%= content_tag :li, :class => (request.fullpath =~ /^\/categories$/ ? 'active' : nil) do %>
       <%= link_to(t("activerecord.models.cateories"), categories_path )%>
     <% end %>
   <% end %>
 
   <% Category.all.each do |cat| 
      next if([] == (cat.role_ids & current_user.role_ids))
+     active = request.fullpath =~ /^\/categories\// 
      %>
-      <%= content_tag :li, :class => (request.fullpath =~ /^\/categories/ ? 'active' : nil) do %>
+      <%= content_tag :li, :class => (active ?  'active' : nil) do %>
         <%= link_to(t("activerecord.category.#{cat.name}"), category_path(cat) )%>
+        <% next unless active %>
       <% end %>
      
   <% end %>
