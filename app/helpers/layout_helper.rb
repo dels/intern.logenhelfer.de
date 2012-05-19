@@ -137,4 +137,59 @@ module LayoutHelper
     end
   end
 
+  def categories_menu
+    res = "".html_safe
+    Category.all.each do |cat| 
+      next if([] == (cat.role_ids & current_user.role_ids))
+      active = request.fullpath =~ /^\/categories\/#{cat.name}/ 
+      res << content_tag(:li, :class => active ? 'active' : nil) do
+        blockres = "".html_safe
+        blockres << link_to(cat.name, category_path(cat))
+        blockres << directories_menu(cat)
+        blockres
+      end
+
+    end
+    res
+  end
+
+  def category_has_visible_directories? category
+    category.directories.each do |dir|
+      next if([] == (dir.role_ids & current_user.role_ids))
+      return true
+    end
+    return false
+  end
+
+  def directories_menu category
+    res = "".html_safe
+    res << content_tag(:ul, :class => 'space-bottom' ) do
+      category.directories.all.each do |dir|
+        next if([] == (dir.role_ids & current_user.role_ids))
+        active = request.fullpath =~ /^\/categories\/#{cat.name}\/directories\/#{dir.name}/
+        content_tag(:li, :class => active ? 'active' : nil) do 
+          link_to(category.name, directory_path(cat, dir))
+        end
+      end
+    end
+    res
+  end
 end
+
+=begin
+
+      next unless active
+      content_tag :ul do
+        cat.directories.all.each do |dir|
+          next if([] == (dir.role_ids & current_user.role_ids))
+          active = request.fullpath =~ /^\/categories\/#{cat.name}\/directories\/#{dir.name}/
+          
+
+          content_tag :li, :class => active ? 'active' : nil do %>
+           <%= link_to(cat.name, category_path(cat) )%>
+         <% end %>
+      </ul>
+      <% end %>
+    <% end %>
+
+=end

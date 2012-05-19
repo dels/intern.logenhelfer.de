@@ -16,28 +16,7 @@
   <% end %>
 
   <li class='more space-top'></li>
-  <%
-     Category.all.each do |cat| 
-       next if([] == (cat.role_ids & current_user.role_ids))
-       active = request.fullpath =~ /^\/categories\/#{cat.name}/ 
-     %>
-      <%= content_tag :li, :class => active ? 'active' : nil do %>
-        <%= link_to(cat.name, category_path(cat) )%>
-        <% next unless active %>
-        <% cat.directories.all.each do |dir| 
-           next if([] == (cat.role_ids & current_user.role_ids))
-           active = request.fullpath =~ /^\/categories\/#{cat.name}\/directories\/#{dir.name}/
-           %>
-        <%= content_tag :li, :class => active ? 'active' : nil do %>
-        <%= link_to(cat.name, category_path(cat) )%>
-
-      <% end %>
-        
-      <% end %>
-        
-      <% end %>
-     
-  <% end %>
+  <%= categories_menu %>
 
 
   <%- else -%>
