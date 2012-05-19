@@ -1,8 +1,10 @@
 <%= form_for @attached_file.path_array, :html => { :multipart => true } , builder: DefiniteFormBuilder do |f| %>
   <%= f.error_messages %>
   <dl>
-    <%= f.file_field :file %>
-    <%= f.hidden_field :directory_id, :value => params[:directory] %>
+    <% if f.object.new_record? %>
+      <%= f.file_field :file %>
+    <% end %>
+    <%= f.collection_select :roles, Role.all, :id, :name, { :selected => @attached_file.role_ids }, { :style => 'width:300px', :multiple => true, :name => 'attached_file[role_ids][]' } %>
 
     <%= f.submit %>
   </dl>

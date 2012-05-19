@@ -11,6 +11,7 @@ class AttachedFilesController < ApplicationController
   end
 
   def new
+    @attached_file.directory = Directory.find(params[:directory_id])
   end
 
   def create
@@ -24,10 +25,11 @@ class AttachedFilesController < ApplicationController
       af.content = file.tempfile.read
       file.tempfile.delete
       af.uploader_id = current_user.id
-      af.directory_id = params[:attached_file][:directory_id]
+      af.directory_id = params[:directory_id]
+      af.role_ids = params[:attached_file][:role_ids]
     end
     if @attached_file.save
-      redirect_to @attached_file, notice: t("activerecord.create_success", model: t("activerecord.models.attached_file"))
+      redirect_to @attached_file.path_array, notice: t("activerecord.create_success", model: t("activerecord.models.attached_file"))
     else
       render :new
     end
@@ -38,7 +40,7 @@ class AttachedFilesController < ApplicationController
 
   def update
     if @attached_file.update_attributes(params[:attached_file])
-      redirect_to @attached_file, notice: t("activerecord.update_success", model: t("activerecord.models.attached_file"))
+      redirect_to @attached_file.path_array, notice: t("activerecord.update_success", model: t("activerecord.models.attached_file"))
     else
       render :edit
     end

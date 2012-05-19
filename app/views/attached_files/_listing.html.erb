@@ -8,7 +8,7 @@
     <th><%= t 'activerecord.attributes.attached_file.size' %></th>
     <th></th>
   </tr>
-  <% @directory.attached_files.each do |attached_file| %>
+  <% @attached_files.each do |attached_file| %>
     <tr>
       <td><%= attached_file.filename %></td>
       <td><%= attached_file.size %></td>
