@@ -1,4 +1,4 @@
-<% title t("activerecord.models.category") %>
+<% title @category.name %>
 
 <p class="horizontal-menu">
   <%= edit_link_to @category if can?(:edit, @category) %>
@@ -7,8 +7,6 @@
 </p>
 
 <dl>
-  <dt><%= t 'activerecord.attributes.category.name' %>:</dt>
-  <dd><%= @category.name %></dd>
   <dt><%= t 'activerecord.attributes.category.description' %>:</dt>
   <dd><%= dash @category.description %></dd>
   
