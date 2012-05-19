@@ -5,6 +5,7 @@ class CategoriesController < ApplicationController
   end
 
   def show
+    @directories = @category.directories
   end
 
   def new
