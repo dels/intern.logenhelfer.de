@@ -24,13 +24,14 @@ mr = nil
 wmr = nil
 mocr = nil
 block 'create roles' do
-  log ar = Role.create!(:name => "Admin")
-  log ur = Role.create!(:name => "Uploader")
-  log er = Role.create!(:name => "Lehrling")
-  log fr = Role.create!(:name => "Geselle")
-  log mr = Role.create!(:name => "Meister")
-  log wmr = Role.create!(:name => "Meister vom Stuhl")
-  log mocr = Role.create!(:name => "Beamtenrat")
+  log ar = Role.create!(:name => "Admin", :display_name => "Administrator")
+  log ur = Role.create!(:name => "Uploader", :display_name => "Darf hochladen")
+  log er = Role.create!(:name => "EnteredApprentice", :display_name => "Lehrling")
+  log fr = Role.create!(:name => "FellowCraft", :display_name => "Geselle")
+  log mr = Role.create!(:name => "MasterMason", :display_name => "Meister")
+  log wmr = Role.create!(:name => "WorshipfulMaster", :display_name => "MvSt")
+  log mocr = Role.create!(:name => "MemberOfCouncil", :display_name => "Beamtenratsmitglied")
+  
 end
 
 block 'create users' do 
@@ -56,5 +57,29 @@ block 'create users' do
   u.roles << er
   u.save!
 end
+
+rite_cat = nil
+block 'create categories' do
+  log rite_cat = Category.create!(:name =>"Rituale")
+end
+
+block 'create directories'
+  log Directory.create!(
+                        :category => rite_cat, 
+                        :name => "Lehrling"
+                        :roles = [er, fr , mr]
+                        )
+  log Directory.create!(
+                        :category => rite_cat, 
+                        :name => "Geselle"
+                        :roles = [fr , mr]
+                        )
+  log Directory.create!(
+                        :category => rite_cat, 
+                        :name => "Meister"
+                        :roles = [mr]
+                        )
+end
+
 
 

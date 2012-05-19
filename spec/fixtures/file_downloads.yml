@@ -1,0 +1,11 @@
+one:
+  attached_file_id: 1
+  user_id: 1
+  remote_ip: MyString
+  deleted: false
+
+two:
+  attached_file_id: 1
+  user_id: 1
+  remote_ip: MyString
+  deleted: true

@@ -1,0 +1,17 @@
+<% title t("activerecord.models.file_download") %>
+
+<p class="horizontal-menu">
+  <%= edit_link_to @file_download if can?(:edit, @file_download) %>
+  <%= destroy_link_to @file_download if can?(:destroy, @file_download) %>
+  <%= show_link_to_all FileDownload if can?(:index, FileDownload) %>
+</p>
+
+<dl>
+  <dt><%= t 'activerecord.attributes.file_download.attached_file_id' %>:</dt>
+  <dd><%= @file_download.attached_file_id %></dd>
+  <dt><%= t 'activerecord.attributes.file_download.user_id' %>:</dt>
+  <dd><%= @file_download.user_id %></dd>
+  <dt><%= t 'activerecord.attributes.file_download.remote_ip' %>:</dt>
+  <dd><%= @file_download.remote_ip %></dd>
+
+</dl>

@@ -1,0 +1,10 @@
+<%= form_for @file_download, builder: DefiniteFormBuilder do |f| %>
+  <%= f.error_messages %>
+  <dl>
+    <%= f.number_field :attached_file_id %>
+    <%= f.number_field :user_id %>
+    <%= f.text_field :remote_ip %>
+
+    <%= f.submit %>
+  </dl>
+<% end %>

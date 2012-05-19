@@ -13,6 +13,7 @@ class User < ActiveRecord::Base
 
   validates_presence_of :firstname, :lastname
 
+  has_many :file_downloads
   has_many :user_roles
   has_many :roles, :through => :user_roles
   has_many :attached_files

@@ -7,9 +7,9 @@ class AttachedFile < ActiveRecord::Base
 
   belongs_to :directory
   belongs_to :uploader, :class_name => "User"
+  has_many :file_downloads
   has_many :attached_file_roles
   has_many :roles, :through => :attached_file_roles
-
 
   attr_accessible :filename, :content, :content_type, :directory_id, :role_ids
 

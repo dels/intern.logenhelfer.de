@@ -1,5 +1,7 @@
 FwzeIntern::Application.routes.draw do
 
+  resources :file_downloads
+
   resources :users
 
   resources :categories do
