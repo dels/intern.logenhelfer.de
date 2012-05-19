@@ -13,4 +13,8 @@ class AttachedFile < ActiveRecord::Base
   attr_accessible :filename, :content, :content_type, :directory_id
 
   default_scope where(:deleted => false)
+  
+  def size
+    content.length
+  end
 end
