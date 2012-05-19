@@ -15,8 +15,15 @@
     <% end %>
   <% end %>
 
-  
-  
+  <% Category.all.each do |cat| 
+     next if([] == (cat.role_ids & current_user.role_ids))
+     %>
+      <%= content_tag :li, :class => (request.fullpath =~ /^\/categories/ ? 'active' : nil) do %>
+        <%= link_to(t("activerecord.category.#{cat.name}"), category_path(cat) )%>
+      <% end %>
+     
+  <% end %>
+
 
   <%- else -%>
   <%= content_tag :li, link_to(t("links.pages.index"), root_url) %>

@@ -33,7 +33,7 @@ block 'create roles' do
 end
 
 block 'create users' do 
-  log u = User.create!(:email => 'deft@deftwork.com', :password => 'keks1024')
+  log u = User.create!(:email => 'deft@deftwork.de', :password => 'keks1024')
   u.roles << ar
   u.roles << ur
   u.roles << mr
