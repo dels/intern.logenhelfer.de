@@ -11,7 +11,14 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120519085258) do
+ActiveRecord::Schema.define(:version => 20120519111931) do
+
+  create_table "attached_file_roles", :force => true do |t|
+    t.integer  "attached_file_id"
+    t.integer  "role_id"
+    t.datetime "created_at",       :null => false
+    t.datetime "updated_at",       :null => false
+  end
 
   create_table "attached_files", :force => true do |t|
     t.string   "uuid",         :limit => 36
@@ -47,6 +54,13 @@ ActiveRecord::Schema.define(:version => 20120519085258) do
     t.boolean  "deleted",     :default => false
     t.datetime "created_at",                     :null => false
     t.datetime "updated_at",                     :null => false
+  end
+
+  create_table "directory_roles", :force => true do |t|
+    t.integer  "directory_id"
+    t.integer  "role_id"
+    t.datetime "created_at",   :null => false
+    t.datetime "updated_at",   :null => false
   end
 
   create_table "roles", :force => true do |t|
