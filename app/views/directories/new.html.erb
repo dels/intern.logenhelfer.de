@@ -1,7 +1,7 @@
 <% title t("activerecord.actions.create_new", :model => t("activerecord.models.directory")) %>
 
-<% if can? :index, Directory %>
-<p class="horizontal-menu"><%= show_link_to_all directories_path %></p>
+<% if can? :show, @directory.category %>
+<p class="horizontal-menu"><%= show_link_to_all @directory.category %></p>
 <% end %>
 
 <%= render 'form' %>

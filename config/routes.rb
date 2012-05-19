@@ -2,9 +2,9 @@ FwzeIntern::Application.routes.draw do
 
   resources :attached_files
 
-  resources :directories
-
-  resources :categories
+  resources :categories do
+    resources :directories
+  end
 
   devise_for :users, path_prefix: 'auth'
   resources :users do
