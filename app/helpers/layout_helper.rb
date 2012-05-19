@@ -145,20 +145,13 @@ module LayoutHelper
       res << content_tag(:li, :class => active ? 'active' : nil) do
         blockres = "".html_safe
         blockres << link_to(cat.name, category_path(cat))
-        blockres << directories_menu(cat) if active && category_has_visible_directories?(cat)
+        # if current category is in current request and if any current categories' directory is accessable by the 
+        # current user the show the directories as submenue
+        blockres << directories_menu(cat) if active && [] != cat.directories.delete_if{|cur| [] == (cur.role_ids & current_user.role_ids)}
         blockres
       end
-
     end
     res
-  end
-
-  def category_has_visible_directories? category
-    category.directories.each do |dir|
-      next if([] == (dir.role_ids & current_user.role_ids))
-      return true
-    end
-    return false
   end
 
   def directories_menu category
