@@ -1,18 +1,17 @@
 class DirectoriesController < ApplicationController
   load_and_authorize_resource
 
-  def index
-  end
-
   def show
   end
 
   def new
+    @directory.category = Category.find(params[:category_id])
   end
 
   def create
+    @directory.category = Category.find(params[:category_id])
     if @directory.save
-      redirect_to @directory, notice: t("activerecord.create_success", model: t("activerecord.models.directory"))
+      redirect_to [@directory.category, @directory], notice: t("activerecord.create_success", model: t("activerecord.models.directory"))
     else
       render :new
     end
@@ -23,7 +22,7 @@ class DirectoriesController < ApplicationController
 
   def update
     if @directory.update_attributes(params[:directory])
-      redirect_to @directory, notice: t("activerecord.update_success", model: t("activerecord.models.directory"))
+      redirect_to [@directory.category, @directory], notice: t("activerecord.update_success", model: t("activerecord.models.directory"))
     else
       render :edit
     end
@@ -32,6 +31,6 @@ class DirectoriesController < ApplicationController
   def destroy
     @directory.deleted = true
     @directory.save
-    redirect_to directories_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.directory"))
+    redirect_to @directory.category, notice: t("activerecord.destroy_success", model: t("activerecord.models.directory"))
   end
 end

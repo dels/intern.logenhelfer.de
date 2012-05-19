@@ -1,17 +1,17 @@
 <% title t("activerecord.models.directory") %>
 
 <p class="horizontal-menu">
-  <%= edit_link_to @directory if can?(:edit, @directory) %>
-  <%= destroy_link_to @directory if can?(:destroy, @directory) %>
-  <%= show_link_to_all Directory if can?(:index, Directory) %>
+  <%= edit_link_to [@directory.category, @directory] if can?(:edit, @directory) %>
+  <%= destroy_link_to [@directory.category, @directory] if can?(:destroy, @directory) %>
+  <%= show_link_to_all @directory if can?(:show, @directory.category) %>
 </p>
 
 <dl>
   <dt><%= t 'activerecord.attributes.directory.name' %>:</dt>
   <dd><%= @directory.name %></dd>
   <dt><%= t 'activerecord.attributes.directory.description' %>:</dt>
-  <dd><%= @directory.description %></dd>
+  <dd><%= dash @directory.description %></dd>
   <dt><%= t 'activerecord.attributes.directory.category_id' %>:</dt>
-  <dd><%= @directory.category_id %></dd>
+  <dd><%= @directory.category.name %></dd>
 
 </dl>

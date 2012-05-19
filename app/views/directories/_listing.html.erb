@@ -1,5 +1,5 @@
 <% if can? :create, Directory %>
-<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.directory")), new_directory_path %></p>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.directory")), new_category_directory_path(category) %></p>
 <% end %>
 
 <table>
@@ -9,7 +9,7 @@
     <th><%= t 'activerecord.attributes.directory.category_id' %></th>
     <th></th>
   </tr>
-  <% @directories.each do |directory| %>
+  <% category.directories.each do |directory| %>
     <tr>
       <td><%= directory.name %></td>
       <td><%= directory.description %></td>
