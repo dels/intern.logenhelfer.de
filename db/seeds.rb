@@ -21,6 +21,8 @@ ur = nil
 er = nil
 fr = nil
 mr = nil
+wmr = nil
+mocr = nil
 block 'create roles' do
   log ar = Role.create!(:name => "Admin")
   log ur = Role.create!(:name => "Uploader")
