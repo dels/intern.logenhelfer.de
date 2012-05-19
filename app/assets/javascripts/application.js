@@ -8,11 +8,12 @@
 //= require autolink_table_rows
 //= require calendar
 //= require events
+//= require select2
 //= require_self
 
 jQuery(function() {
   // dropdown lists
-  $("section select:not(:disabled):not(.very-small)").combobox();
+  $("section select:not(:disabled):not(.very-small)").select2();
 
   // date picker
   $("section input.datepicker").datepicker({ dateFormat: cur_locale_date_format });

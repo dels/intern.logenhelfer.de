@@ -1,5 +1,5 @@
 class Category < ActiveRecord::Base
-  attr_accessible :name, :description
+  attr_accessible :name, :description, :role_ids
 
   has_many :directories
 
