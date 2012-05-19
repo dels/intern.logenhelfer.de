@@ -23,6 +23,7 @@ class Ability
     can :manage, Category
     can :manage, Directory
     can :manage, AttachedFile
+    can :manage, User
   end
 
   def uploader_abilities
