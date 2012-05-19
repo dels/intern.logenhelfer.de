@@ -6,6 +6,9 @@ class AttachedFile < ActiveRecord::Base
   friendly_id :uuid
 
   belongs_to :directory
+  has_many :attached_file_roles
+  has_many :roles, :through => :attached_file_roles
+
 
   attr_accessible :filename, :content, :content_type, :directory_id
 

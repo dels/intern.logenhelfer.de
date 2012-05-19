@@ -1,0 +1,9 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  attached_file_id: 1
+  role_id: 1
+
+two:
+  attached_file_id: 1
+  role_id: 1
