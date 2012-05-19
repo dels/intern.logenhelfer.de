@@ -2,6 +2,7 @@ class DirectoriesController < ApplicationController
   load_and_authorize_resource
 
   def show
+    @attached_files = view_context.get_authorized @directory.attached_files
   end
 
   def new

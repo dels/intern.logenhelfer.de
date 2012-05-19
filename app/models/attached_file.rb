@@ -11,7 +11,7 @@ class AttachedFile < ActiveRecord::Base
   has_many :roles, :through => :attached_file_roles
 
 
-  attr_accessible :filename, :content, :content_type, :directory_id
+  attr_accessible :filename, :content, :content_type, :directory_id, :role_ids
 
   default_scope where(:deleted => false)
   
