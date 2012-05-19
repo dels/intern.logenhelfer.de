@@ -11,6 +11,7 @@ class Ability
   end
 
   def admin_abilities
+    can :manage, Category
   end
 
   def uploader_abilities

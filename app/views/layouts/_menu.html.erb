@@ -6,15 +6,22 @@
     <li>
       <%= link_to(t("devise.links.sign_out"), destroy_user_session_path) %>
     </li>
+<li class="more space-top">
+<ul>
+  
+  <% if can?(:create, Category) %>
+    <%= content_tag :li, :class => (request.fullpath =~ /^\/categories/ ? 'active' : nil) do %>
+      <%= link_to(t("activerecord.models.cateories"), categories_path )%>
+    <% end %>
+  <% end %>
 
-    <% if can? :index, "rite"%>
-    huhu
-
-   <%- end -%>
+  
+  
 
   <%- else -%>
-    <%= content_tag :li, link_to(t("links.pages.index"), root_url) %>
-    <%= content_tag :li, link_to(t("devise.links.sign_in"), new_user_session_path) %>
+  <%= content_tag :li, link_to(t("links.pages.index"), root_url) %>
+  <%= content_tag :li, link_to(t("devise.links.sign_in"), new_user_session_path) %>
   <%- end -%>
+</ul>
 </ul>
 
