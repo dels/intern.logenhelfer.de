@@ -3,6 +3,10 @@ class AttachedFilesController < ApplicationController
   check_authorization :except => :create
   load_and_authorize_resource :except => :create
   
+  def download
+    send_data @attached_file.content, :filename => @attached_file.filename, :type => @attached_file.content_type
+  end
+  
   def show
   end
 

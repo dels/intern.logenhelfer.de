@@ -18,4 +18,8 @@ class AttachedFile < ActiveRecord::Base
   def size
     content.length
   end
+  
+  def path_array
+    [directory.category, directory, self]
+  end
 end

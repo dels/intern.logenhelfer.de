@@ -1,9 +1,13 @@
 FwzeIntern::Application.routes.draw do
 
-  resources :attached_files
-
   resources :categories do
-    resources :directories
+    resources :directories do
+      resources :attached_files do
+        member do
+          get 'download'
+        end
+  end
+    end
   end
 
   devise_for :users, path_prefix: 'auth'
