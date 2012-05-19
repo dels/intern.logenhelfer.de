@@ -2,6 +2,7 @@
   <%= f.error_messages %>
   <dl>
     <%= f.file_field :file %>
+    <%= f.hidden_field :directory_id, :value => params[:directory] %>
 
     <%= f.submit %>
   </dl>

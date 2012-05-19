@@ -10,7 +10,7 @@ class AttachedFilesController < ApplicationController
   end
 
   def create
-    unless current_user.role_ids.include?(Role.find_by_name("Uploader").id)
+    unless can?(:create, AttachedFile)
       redirect_to root_url, :alert => t("devise.error.access_denied")
     end
     @attached_file = AttachedFile.new do |af|
@@ -20,6 +20,7 @@ class AttachedFilesController < ApplicationController
       af.content = file.tempfile.read
       file.tempfile.delete
       af.uploader_id = current_user.id
+      af.directory_id = params[:attached_file][:directory_id]
     end
     if @attached_file.save
       redirect_to @attached_file, notice: t("activerecord.create_success", model: t("activerecord.models.attached_file"))
