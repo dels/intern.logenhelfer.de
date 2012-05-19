@@ -17,6 +17,7 @@ class Ability
   end
 
   def uploader_abilities
+    
   end
 
   def entered_apprentice_abilities  
