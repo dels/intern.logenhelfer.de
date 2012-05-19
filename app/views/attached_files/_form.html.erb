@@ -1,4 +1,4 @@
-<%= form_for @attached_file, :html => { :multipart => true } , builder: DefiniteFormBuilder do |f| %>
+<%= form_for @attached_file.path_array, :html => { :multipart => true } , builder: DefiniteFormBuilder do |f| %>
   <%= f.error_messages %>
   <dl>
     <%= f.file_field :file %>

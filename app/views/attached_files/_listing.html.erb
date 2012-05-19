@@ -1,8 +1,8 @@
 <% if can? :create, AttachedFile %>
-<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.attached_file")), new_attached_file_path(:directory => @directory.id) %></p>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.attached_file")), new_category_directory_attached_file_path(@directory.category, @directory) %></p>
 <% end %>
 
-<table>
+<table class='autolink'>
   <tr>
     <th><%= t 'activerecord.attributes.attached_file.filename' %></th>
     <th><%= t 'activerecord.attributes.attached_file.size' %></th>
@@ -13,9 +13,10 @@
       <td><%= attached_file.filename %></td>
       <td><%= attached_file.size %></td>
       <td>
-        <%= show_link_to attached_file if can?(:show, attached_file) %>
-        <%= edit_link_to attached_file if can?(:edit, attached_file) %>
-        <%= destroy_link_to attached_file if can?(:destroy, attached_file) %>
+        <%= show_link_to download_category_directory_attached_file_path(attached_file.directory.category, attached_file.directory, attached_file) if can?(:show, attached_file) %>
+        <%= image_link_tag_helper 'show', category_directory_attached_file_path(attached_file.directory.category, attached_file.directory, attached_file), :title => I18n.t('helpers.link.show') %>
+        <%= edit_link_to attached_file.path_array if can?(:edit, attached_file) %>
+        <%= destroy_link_to attached_file.path_array if can?(:destroy, attached_file) %>
       </td>
     </tr>
   <% end %>
