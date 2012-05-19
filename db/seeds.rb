@@ -63,21 +63,21 @@ block 'create categories' do
   log rite_cat = Category.create!(:name =>"Rituale")
 end
 
-block 'create directories'
+block 'create directories' do
   log Directory.create!(
                         :category => rite_cat, 
-                        :name => "Lehrling"
-                        :roles = [er, fr , mr]
+                        :name => "Lehrling",
+                        :roles => [er, fr , mr]
                         )
   log Directory.create!(
                         :category => rite_cat, 
-                        :name => "Geselle"
-                        :roles = [fr , mr]
+                        :name => "Geselle",
+                        :roles => [fr , mr]
                         )
   log Directory.create!(
                         :category => rite_cat, 
-                        :name => "Meister"
-                        :roles = [mr]
+                        :name => "Meister",
+                        :roles => [mr]
                         )
 end
 

@@ -2,7 +2,7 @@ class Directory < ActiveRecord::Base
   extend FriendlyId
   friendly_id :name
 
-  attr_accessible :name, :description, :category_id, :role_ids
+  attr_accessible :name, :description, :category_id, :role_ids, :roles, :category
 
   validates_presence_of :name
   validates_uniqueness_of :name

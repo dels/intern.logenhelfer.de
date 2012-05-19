@@ -1,5 +1,7 @@
 class Role < ActiveRecord::Base
-  attr_accessible :description, :name
+  attr_accessible :description, :name, :display_name
+
+  validates_presence_of :name, :display_name
 
   has_many :user_roles
 
