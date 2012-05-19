@@ -145,7 +145,7 @@ module LayoutHelper
       res << content_tag(:li, :class => active ? 'active' : nil) do
         blockres = "".html_safe
         blockres << link_to(cat.name, category_path(cat))
-        blockres << directories_menu(cat)
+        blockres << directories_menu(cat) if active && category_has_visible_directories?(cat)
         blockres
       end
 
@@ -164,13 +164,15 @@ module LayoutHelper
   def directories_menu category
     res = "".html_safe
     res << content_tag(:ul, :class => 'space-bottom' ) do
+      blockres = "".html_safe
       category.directories.all.each do |dir|
         next if([] == (dir.role_ids & current_user.role_ids))
-        active = request.fullpath =~ /^\/categories\/#{cat.name}\/directories\/#{dir.name}/
-        content_tag(:li, :class => active ? 'active' : nil) do 
-          link_to(category.name, directory_path(cat, dir))
+        active = request.fullpath =~ /^\/categories\/#{category.name}\/directories\/#{dir.name}/
+        blockres << content_tag(:li, :class => active ? 'active' : nil) do 
+          link_to(dir.name, category_directory_path(category, dir))
         end
       end
+      blockres
     end
     res
   end
