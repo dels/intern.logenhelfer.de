@@ -1,0 +1,32 @@
+<% title t("activerecord.models.attached_file") %>
+
+<% if can? :create, AttachedFile %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.attached_file")), new_attached_file_path %></p>
+<% end %>
+
+<table>
+  <tr>
+    <th><%= t 'activerecord.attributes.attached_file.uuid' %></th>
+    <th><%= t 'activerecord.attributes.attached_file.filename' %></th>
+    <th><%= t 'activerecord.attributes.attached_file.content' %></th>
+    <th><%= t 'activerecord.attributes.attached_file.content_type' %></th>
+    <th><%= t 'activerecord.attributes.attached_file.directory_id' %></th>
+    <th><%= t 'activerecord.attributes.attached_file.uploader_id' %></th>
+    <th></th>
+  </tr>
+  <% @attached_files.each do |attached_file| %>
+    <tr>
+      <td><%= attached_file.uuid %></td>
+      <td><%= attached_file.filename %></td>
+      <td><%= attached_file.content %></td>
+      <td><%= attached_file.content_type %></td>
+      <td><%= attached_file.directory_id %></td>
+      <td><%= attached_file.uploader_id %></td>
+      <td>
+        <%= show_link_to attached_file if can?(:show, attached_file) %>
+        <%= edit_link_to attached_file if can?(:edit, attached_file) %>
+        <%= destroy_link_to attached_file if can?(:destroy, attached_file) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

@@ -1,0 +1,9 @@
+<% title t("activerecord.actions.edit", :model => t("activerecord.models.directory")) %>
+
+<p class="horizontal-menu">
+  <%= show_link_to @directory if can?(:show, @directory) %>
+  <%= show_link_to_all directories_path if can?(:index, Directory) %>
+</p>
+
+<%= render 'form' %>
+

@@ -1,0 +1,10 @@
+<%= form_for @directory, builder: DefiniteFormBuilder do |f| %>
+  <%= f.error_messages %>
+  <dl>
+    <%= f.text_field :name %>
+    <%= f.text_area :description %>
+    <%= f.number_field :category_id %>
+
+    <%= f.submit %>
+  </dl>
+<% end %>

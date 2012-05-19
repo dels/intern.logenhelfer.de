@@ -1,0 +1,8 @@
+<% title t("activerecord.actions.create_new", :model => t("activerecord.models.attached_file")) %>
+
+<% if can? :index, AttachedFile %>
+<p class="horizontal-menu"><%= show_link_to_all attached_files_path %></p>
+<% end %>
+
+<%= render 'form' %>
+

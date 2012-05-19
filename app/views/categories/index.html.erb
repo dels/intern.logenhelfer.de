@@ -1,0 +1,24 @@
+<% title t("activerecord.models.category") %>
+
+<% if can? :create, Category %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.category")), new_category_path %></p>
+<% end %>
+
+<table>
+  <tr>
+    <th><%= t 'activerecord.attributes.category.name' %></th>
+    <th><%= t 'activerecord.attributes.category.description' %></th>
+    <th></th>
+  </tr>
+  <% @categories.each do |category| %>
+    <tr>
+      <td><%= category.name %></td>
+      <td><%= category.description %></td>
+      <td>
+        <%= show_link_to category if can?(:show, category) %>
+        <%= edit_link_to category if can?(:edit, category) %>
+        <%= destroy_link_to category if can?(:destroy, category) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

@@ -1,0 +1,15 @@
+<% title t("activerecord.models.category") %>
+
+<p class="horizontal-menu">
+  <%= edit_link_to @category if can?(:edit, @category) %>
+  <%= destroy_link_to @category if can?(:destroy, @category) %>
+  <%= show_link_to_all Category if can?(:index, Category) %>
+</p>
+
+<dl>
+  <dt><%= t 'activerecord.attributes.category.name' %>:</dt>
+  <dd><%= @category.name %></dd>
+  <dt><%= t 'activerecord.attributes.category.description' %>:</dt>
+  <dd><%= @category.description %></dd>
+
+</dl>

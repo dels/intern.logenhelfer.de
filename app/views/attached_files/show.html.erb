@@ -1,0 +1,23 @@
+<% title t("activerecord.models.attached_file") %>
+
+<p class="horizontal-menu">
+  <%= edit_link_to @attached_file if can?(:edit, @attached_file) %>
+  <%= destroy_link_to @attached_file if can?(:destroy, @attached_file) %>
+  <%= show_link_to_all AttachedFile if can?(:index, AttachedFile) %>
+</p>
+
+<dl>
+  <dt><%= t 'activerecord.attributes.attached_file.uuid' %>:</dt>
+  <dd><%= @attached_file.uuid %></dd>
+  <dt><%= t 'activerecord.attributes.attached_file.filename' %>:</dt>
+  <dd><%= @attached_file.filename %></dd>
+  <dt><%= t 'activerecord.attributes.attached_file.content' %>:</dt>
+  <dd><%= @attached_file.content %></dd>
+  <dt><%= t 'activerecord.attributes.attached_file.content_type' %>:</dt>
+  <dd><%= @attached_file.content_type %></dd>
+  <dt><%= t 'activerecord.attributes.attached_file.directory_id' %>:</dt>
+  <dd><%= @attached_file.directory_id %></dd>
+  <dt><%= t 'activerecord.attributes.attached_file.uploader_id' %>:</dt>
+  <dd><%= @attached_file.uploader_id %></dd>
+
+</dl>

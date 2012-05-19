@@ -1,0 +1,9 @@
+<% title t("activerecord.actions.edit", :model => t("activerecord.models.attached_file")) %>
+
+<p class="horizontal-menu">
+  <%= show_link_to @attached_file if can?(:show, @attached_file) %>
+  <%= show_link_to_all attached_files_path if can?(:index, AttachedFile) %>
+</p>
+
+<%= render 'form' %>
+

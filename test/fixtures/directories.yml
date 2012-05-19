@@ -1,0 +1,11 @@
+one:
+  name: MyString
+  description: MyText
+  category_id: 1
+  deleted: false
+
+two:
+  name: MyString
+  description: MyText
+  category_id: 1
+  deleted: true

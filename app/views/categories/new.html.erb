@@ -1,0 +1,8 @@
+<% title t("activerecord.actions.create_new", :model => t("activerecord.models.category")) %>
+
+<% if can? :index, Category %>
+<p class="horizontal-menu"><%= show_link_to_all categories_path %></p>
+<% end %>
+
+<%= render 'form' %>
+

@@ -1,0 +1,17 @@
+one:
+  uuid: MyString
+  filename: MyString
+  content: 
+  content_type: MyString
+  directory_id: 1
+  uploader_id: 1
+  deleted: false
+
+two:
+  uuid: MyString
+  filename: MyString
+  content: 
+  content_type: MyString
+  directory_id: 1
+  uploader_id: 1
+  deleted: true
