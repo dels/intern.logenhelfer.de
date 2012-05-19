@@ -1,5 +1,7 @@
 FwzeIntern::Application.routes.draw do
 
+  resources :users
+
   resources :categories do
     resources :directories do
       resources :attached_files do

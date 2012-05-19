@@ -1,0 +1,32 @@
+<% title t("activerecord.models.user") %>
+
+<% if can? :create, User %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.user")), new_user_path %></p>
+<% end %>
+
+<table class='autolink'>
+  <tr>
+    <th><%= t 'activerecord.attributes.user.email' %></th>
+    <th><%= t 'activerecord.attributes.user.firstname' %></th>
+    <th><%= t 'activerecord.attributes.user.lastname' %></th>
+    <th><%= t 'activerecord.attributes.user.date_of_birth' %></th>
+    <th><%= t 'activerecord.attributes.user.included_at' %></th>
+    <th><%= t 'activerecord.attributes.user.accepted_at' %></th>
+    <th></th>
+  </tr>
+  <% @users.each do |user| %>
+    <tr>
+      <td><%= user.email %></td>
+      <td><%= dash(user.firstname) %></td>
+      <td><%= dash(user.lastname) %></td>
+      <td><%= dash(user.date_of_birth) %></td>
+      <td><%= dash(user.included_at) %></td>
+      <td><%= dash(user.accepted_at) %></td>
+      <td>
+        <%= show_link_to user if can?(:show, user) %>
+        <%= edit_link_to user if can?(:edit, user) %>
+        <%= destroy_link_to user if can?(:destroy, user) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

@@ -1,0 +1,9 @@
+<% title t("activerecord.actions.edit", :model => t("activerecord.models.user")) %>
+
+<p class="horizontal-menu">
+  <%= show_link_to @user if can?(:show, @user) %>
+  <%= show_link_to_all users_path if can?(:index, User) %>
+</p>
+
+<%= render 'form' %>
+

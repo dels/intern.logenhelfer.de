@@ -9,13 +9,14 @@
 <li class="more space-top">
 <ul>
   
-  <%= authorized_menu_item User, user_path%>
-  
   <% if can?(:create, Category) %>
     <%= content_tag :li, :class => (request.fullpath =~ /^\/categories$/ ? 'active' : nil) do %>
       <%= link_to(t("activerecord.models.cateories"), categories_path )%>
     <% end %>
   <% end %>
+
+  <%= authorized_menu_item User, users_path%>
+  
 
   <li class='more space-top'></li>
   <%= categories_menu %>

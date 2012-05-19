@@ -35,7 +35,7 @@ block 'create roles' do
 end
 
 block 'create users' do 
-  log u = User.create!(:email => 'deft@deftwork.com', :password => 'keks1024')
+  log u = User.create!(:email => 'deft@deftwork.com', :password => 'keks1024', :firstname => "El", :lastname => "Chefe")
   u.roles << ar
   u.roles << ur
   u.roles << mr
@@ -44,16 +44,16 @@ block 'create users' do
   u.roles << wmr
   u.roles << mocr
   u.save!
-  log u = User.create!(:email => 'meister@fwze.de', :password => 'keks1024')
+  log u = User.create!(:email => 'meister@fwze.de', :password => 'keks1024', :firstname => "master", :lastname => "mason")
   u.roles << mr
   u.roles << fr
   u.roles << er
   u.save!
-  log u = User.create!(:email => 'geselle@fwze.de', :password => 'keks1024')
+  log u = User.create!(:email => 'geselle@fwze.de', :password => 'keks1024', :firstname => "fellow", :lastname => "craft")
   u.roles << fr
   u.roles << er
   u.save!
-  log u = User.create!(:email => 'lehrling@fwze.de', :password => 'keks1024')
+  log u = User.create!(:email => 'lehrling@fwze.de', :password => 'keks1024', :firstname => "entered", :lastname => "apprentice")
   u.roles << er
   u.save!
 end
