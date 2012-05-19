@@ -26,12 +26,11 @@ mocr = nil
 block 'create roles' do
   log ar = Role.create!(:name => "Admin")
   log ur = Role.create!(:name => "Uploader")
-  log er = Role.create!(:name => "EnteredApprentice")
-  log fr = Role.create!(:name => "FellowCraft")
-  log mr = Role.create!(:name => "MasterMason")
-  log wmr = Role.create!(:name => "WorshipfulMaster")
-  log mocr = Role.create!(:name => "MemberOfCouncil")
-  
+  log er = Role.create!(:name => "Lehrling")
+  log fr = Role.create!(:name => "Geselle")
+  log mr = Role.create!(:name => "Meister")
+  log wmr = Role.create!(:name => "Meister vom Stuhl")
+  log mocr = Role.create!(:name => "Beamtenrat")
 end
 
 block 'create users' do 

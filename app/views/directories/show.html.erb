@@ -12,7 +12,7 @@
   <dt><%= t 'activerecord.attributes.directory.category_id' %>:</dt>
   <dd><%= @directory.category.name %></dd>
   
-  <dt><%= t 'activerecord.attributes.category.roles' %>:</dt>
+  <dt><%= t 'helpers.visible_to' %>:</dt>
   <dd><ul>
     <% @directory.roles.each do |role| %>
       <li><%= role.name %></li>
