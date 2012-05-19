@@ -24,9 +24,18 @@ module LayoutHelper
   def polymorphic_path_helper *args
     options = args.extract_options!
     target = args.first
-    if target.is_a? User # application specific!
-      target = polymorphic_path(target.loginable, options)
-    elsif target.is_a? ActiveRecord::Base
+    if target.is_a?(Array)
+      all_ar = true
+      target.each do |elem|
+        next if(elem.is_a? ActiveRecord::Base)
+        all_ar = false
+        break
+      end
+      if all_ar
+        target = polymorphic_path(target, options)
+      end
+    end
+    if target.is_a?(ActiveRecord::Base)
       target = polymorphic_path(target, options)
     end
     target
@@ -145,9 +154,13 @@ module LayoutHelper
       res << content_tag(:li, :class => active ? 'active' : nil) do
         blockres = "".html_safe
         blockres << link_to(cat.name, category_path(cat))
-        # if current category is in current request and if any current categories' directory is accessable by the 
+        # if current category is in current request and 
+        # if any current categories' directory is accessable by the 
         # current user the show the directories as submenue
-        blockres << directories_menu(cat) if active && [] != cat.directories.delete_if{|cur| [] == (cur.role_ids & current_user.role_ids)}
+        # (could be _one_ line but its easies to read like this)
+        if active && [] != cat.directories.delete_if{|cur| [] == (cur.role_ids & current_user.role_ids)}
+          blockres << directories_menu(cat) 
+        end
         blockres
       end
     end
