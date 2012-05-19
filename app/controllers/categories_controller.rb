@@ -2,10 +2,11 @@ class CategoriesController < ApplicationController
   load_and_authorize_resource
 
   def index
+    @categories = view_context.get_authorized @categories
   end
 
   def show
-    @directories = @category.directories
+    @directories = view_context.get_authorized @category.directories
   end
 
   def new

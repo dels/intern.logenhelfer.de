@@ -148,8 +148,7 @@ module LayoutHelper
 
   def categories_menu
     res = "".html_safe
-    Category.all.each do |cat| 
-      next if([] == (cat.role_ids & current_user.role_ids))
+    get_authorized(Category.all).each do |cat| 
       active = request.fullpath =~ /^\/categories\/#{cat.name}/ 
       res << content_tag(:li, :class => active ? 'active' : nil) do
         blockres = "".html_safe
@@ -158,7 +157,7 @@ module LayoutHelper
         # if any current categories' directory is accessable by the 
         # current user the show the directories as submenue
         # (could be _one_ line but its easies to read like this)
-        if active && [] != cat.directories.delete_if{|cur| [] == (cur.role_ids & current_user.role_ids)}
+        if active && [] != get_authorized(cat.directories)
           blockres << directories_menu(cat) 
         end
         blockres
@@ -171,8 +170,7 @@ module LayoutHelper
     res = "".html_safe
     res << content_tag(:ul, :class => 'space-bottom' ) do
       blockres = "".html_safe
-      category.directories.all.each do |dir|
-        next if([] == (dir.role_ids & current_user.role_ids))
+      (get_authorized category.directories).each do |dir|
         active = request.fullpath =~ /^\/categories\/#{category.name}\/directories\/#{dir.name}/
         blockres << content_tag(:li, :class => active ? 'active' : nil) do 
           link_to(dir.name, category_directory_path(category, dir))
@@ -183,21 +181,3 @@ module LayoutHelper
     res
   end
 end
-
-=begin
-
-      next unless active
-      content_tag :ul do
-        cat.directories.all.each do |dir|
-          next if([] == (dir.role_ids & current_user.role_ids))
-          active = request.fullpath =~ /^\/categories\/#{cat.name}\/directories\/#{dir.name}/
-          
-
-          content_tag :li, :class => active ? 'active' : nil do %>
-           <%= link_to(cat.name, category_path(cat) )%>
-         <% end %>
-      </ul>
-      <% end %>
-    <% end %>
-
-=end
