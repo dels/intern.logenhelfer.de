@@ -3,8 +3,7 @@ class Role < ActiveRecord::Base
 
   has_many :user_roles
 
-  has_many :cateogy_roles
-  has_many :categories, :through => :cateogy_roles
-
+  has_many :category_roles
+  has_many :categories, :through => :category_roles
 
 end

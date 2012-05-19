@@ -1,6 +1,8 @@
 class CategoryRole < ActiveRecord::Base
   attr_accessible :category_id, :role_id
 
-  belongs_to :categories
-  belongs_to :roles
+  belongs_to :category
+  belongs_to :role
+
+
 end
