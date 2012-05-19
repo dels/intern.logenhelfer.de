@@ -10,10 +10,10 @@
   </tr>
   <% @file_downloads.each do |file_download| %>
     <tr>
-      <td><%= file_download.attached_file.name %></td>
+      <td><%= file_download.attached_file.filename %></td>
       <td><%= file_download.user.fullname %></td>
       <td><%= file_download.remote_ip %></td>
-      <td><%= file_download.created_at %></td>
+      <td><%= l file_download.created_at %></td>
       <td>
         <%= destroy_link_to file_download if can?(:destroy, file_download) %>
       </td>
