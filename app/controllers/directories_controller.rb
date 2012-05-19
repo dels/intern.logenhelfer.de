@@ -7,6 +7,7 @@ class DirectoriesController < ApplicationController
 
   def new
     @directory.category = Category.find(params[:category_id])
+    @directory.role_ids = @directory.category.role_ids
   end
 
   def create

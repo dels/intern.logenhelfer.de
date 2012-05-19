@@ -12,6 +12,7 @@ class AttachedFilesController < ApplicationController
 
   def new
     @attached_file.directory = Directory.find(params[:directory_id])
+    @attached_file.role_ids = @attached_file.directory.role_ids
   end
 
   def create
