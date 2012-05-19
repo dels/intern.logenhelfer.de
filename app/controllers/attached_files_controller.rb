@@ -26,7 +26,7 @@ class AttachedFilesController < ApplicationController
       af.content = file.tempfile.read
       file.tempfile.delete
       af.uploader_id = current_user.id
-      af.directory_id = params[:directory_id]
+      af.directory_id = Directory.find(params[:directory_id]).id
       af.role_ids = params[:attached_file][:role_ids]
     end
     if @attached_file.save
