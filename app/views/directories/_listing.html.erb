@@ -1,0 +1,24 @@
+<% if can? :create, Directory %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.directory")), new_directory_path %></p>
+<% end %>
+
+<table>
+  <tr>
+    <th><%= t 'activerecord.attributes.directory.name' %></th>
+    <th><%= t 'activerecord.attributes.directory.description' %></th>
+    <th><%= t 'activerecord.attributes.directory.category_id' %></th>
+    <th></th>
+  </tr>
+  <% @directories.each do |directory| %>
+    <tr>
+      <td><%= directory.name %></td>
+      <td><%= directory.description %></td>
+      <td><%= directory.category_id %></td>
+      <td>
+        <%= show_link_to directory if can?(:show, directory) %>
+        <%= edit_link_to directory if can?(:edit, directory) %>
+        <%= destroy_link_to directory if can?(:destroy, directory) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

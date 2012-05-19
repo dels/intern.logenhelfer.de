@@ -13,3 +13,11 @@
   <dd><%= @category.description %></dd>
 
 </dl>
+
+<p>&nbsp;</p>
+
+<% if can?(:edit, @category)%>
+<%= render "directories/listing" %>
+<% end %>
+
+

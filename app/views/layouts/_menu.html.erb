@@ -20,7 +20,7 @@
      active = request.fullpath =~ /^\/categories\// 
      %>
       <%= content_tag :li, :class => (active ?  'active' : nil) do %>
-        <%= link_to(t("activerecord.category.#{cat.name}"), category_path(cat) )%>
+        <%= link_to(cat.name, category_path(cat) )%>
         <% next unless active %>
       <% end %>
      
