@@ -10,7 +10,15 @@
   <dt><%= t 'activerecord.attributes.category.name' %>:</dt>
   <dd><%= @category.name %></dd>
   <dt><%= t 'activerecord.attributes.category.description' %>:</dt>
-  <dd><%= @category.description %></dd>
+  <dd><%= dash @category.description %></dd>
+  
+  <dt><%= t 'activerecord.attributes.category.roles' %>:</dt>
+  <dd><ul>
+    <% @category.roles.each do |role| %>
+      <li><%= role.name %></li>
+    <% end %>
+  </ul></dd>
+</dl>
 
 </dl>
 

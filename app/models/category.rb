@@ -1,4 +1,6 @@
 class Category < ActiveRecord::Base
+  attr_accessible :name, :description, :role_ids
+
   extend FriendlyId
   friendly_id :name
 
