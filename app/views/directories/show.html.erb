@@ -1,4 +1,4 @@
-<% title t("activerecord.models.directory") %>
+<% title @directory.name %>
 
 <p class="horizontal-menu">
   <%= edit_link_to [@directory.category, @directory] if can?(:edit, @directory) %>
@@ -7,8 +7,6 @@
 </p>
 
 <dl>
-  <dt><%= t 'activerecord.attributes.directory.name' %>:</dt>
-  <dd><%= @directory.name %></dd>
   <dt><%= t 'activerecord.attributes.directory.description' %>:</dt>
   <dd><%= dash @directory.description %></dd>
   <dt><%= t 'activerecord.attributes.directory.category_id' %>:</dt>
