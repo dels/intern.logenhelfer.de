@@ -17,6 +17,9 @@ class Ability
     can [:index, :show, :download], AttachedFile, ['attached_files.deleted = ?', false] do |f|
       [] != (f.roles & @user.roles)
     end
+    can [:show], User do |u|
+      [] != (u.roles & @user.roles)
+    end
   end
 
   def admin_abilities
