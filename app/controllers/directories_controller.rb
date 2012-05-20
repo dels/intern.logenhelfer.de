@@ -1,6 +1,6 @@
-class DirectoriesController < ApplicationController
-  load_and_authorize_resource
-
+class DirectoriesController < AuthorizedController
+  helper_method :sort_column, :sort_direction
+  
   def show
     @attached_files = view_context.get_authorized @directory.attached_files
   end
@@ -34,5 +34,12 @@ class DirectoriesController < ApplicationController
     @directory.deleted = true
     @directory.save
     redirect_to @directory.category, notice: t("activerecord.destroy_success", model: t("activerecord.models.directory"))
+  end
+
+
+  private
+  
+  def sort_column
+    (Directory.column_names).include?(params[:sort_by]) ? params[:sort_by] : "name ASC"
   end
 end

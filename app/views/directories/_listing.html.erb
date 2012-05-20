@@ -4,8 +4,8 @@
 
 <table class='autolink'>
   <tr>
-    <th><%= t 'activerecord.attributes.directory.name' %></th>
-    <th><%= t 'activerecord.attributes.directory.description' %></th>
+    <th><%= Directory.human_attribute_name(:name) %></th>
+    <th><%= Directory.human_attribute_name(:description) %></th>
     <th></th>
   </tr>
   <% category.directories.each do |directory| %>

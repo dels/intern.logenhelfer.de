@@ -1,12 +1,11 @@
-class CategoriesController < ApplicationController
-  load_and_authorize_resource
+class CategoriesController < AuthorizedController
 
   def index
-    @categories = view_context.get_authorized @categories
+    @categories = view_context.get_authorized(@categories)
   end
 
   def show
-    @directories = view_context.get_authorized @category.directories
+    @directories = view_context.get_authorized(@category.directories)
   end
 
   def new
@@ -36,4 +35,5 @@ class CategoriesController < ApplicationController
     @category.save
     redirect_to categories_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.category"))
   end
+
 end

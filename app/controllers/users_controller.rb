@@ -1,6 +1,8 @@
 class UsersController < AuthorizedController
-
+  helper_method :sort_column, :sort_direction
+  
   def index
+    @users = @users.order(sort_column + " " + sort_direction).try(:page)
   end
 
   def members_list
@@ -58,5 +60,12 @@ class UsersController < AuthorizedController
     @user.deleted = true
     @user.save
     redirect_to users_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.user"))
+  end
+
+
+  private
+  
+  def sort_column
+    (User.column_names).include?(params[:sort_by]) ? params[:sort_by] : "lastname ASC, firstname ASC, email "
   end
 end

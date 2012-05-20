@@ -2,6 +2,7 @@ class AttachedFilesController < ApplicationController
   before_filter :authenticate_user!
   check_authorization :except => :create
   load_and_authorize_resource :except => :create
+  helper_method :sort_column, :sort_direction
   
   def download
     fd = FileDownload.new

@@ -4,17 +4,19 @@
 <p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.user")), new_user_path %></p>
 <% end %>
 
+<%= paginate @users if @users.present? %>
+
 <table class='autolink'>
   <tr>
-    <th><%= t 'activerecord.attributes.user.email' %></th>
-    <th><%= t 'activerecord.attributes.user.firstname' %></th>
-    <th><%= t 'activerecord.attributes.user.lastname' %></th>
-    <th><%= t 'activerecord.attributes.user.date_of_birth' %></th>
-    <th><%= t 'activerecord.attributes.user.included_at' %></th>
-    <th><%= t 'activerecord.attributes.user.accepted_at' %></th>
+    <th><%= sortable :email,User.human_attribute_name(:email) %></th>
+    <th><%= sortable :firstname,User.human_attribute_name(:firstname) %></th>
+    <th><%= sortable :lastname,User.human_attribute_name(:lastname) %></th>
+    <th><%= sortable :date_of_birth,User.human_attribute_name(:date_of_birth) %></th>
+    <th><%= sortable :included_at,User.human_attribute_name(:included_at) %></th>
+    <th><%= sortable :accpected_at,User.human_attribute_name(:accepted_at) %></th>
     <th></th>
   </tr>
-  <% get_authorized(@users).each do |user| %>
+  <% @users.each do |user| %>
     <tr>
       <td><%= user.email %></td>
       <td><%= dash(user.firstname) %></td>

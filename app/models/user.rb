@@ -33,4 +33,8 @@ class User < ActiveRecord::Base
     degree
   end
 
+  def rome_degree
+    "I" * num_degree
+  end
+
 end

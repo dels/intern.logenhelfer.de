@@ -6,8 +6,8 @@
 
 <table class="autolink">
   <tr>
-    <th><%= t 'activerecord.attributes.category.name' %></th>
-    <th><%= t 'activerecord.attributes.category.description' %></th>
+    <th><%= Category.human_attribute_name(:name) %></th>
+    <th><%= Category.human_attribute_name(:description) %></th>
     <th></th>
   </tr>
   <% @categories.each do |category| %>

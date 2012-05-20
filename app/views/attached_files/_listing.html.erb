@@ -4,8 +4,8 @@
 
 <table class='autolink'>
   <tr>
-    <th><%= t 'activerecord.attributes.attached_file.filename' %></th>
-    <th><%= t 'activerecord.attributes.attached_file.size' %></th>
+    <th><%= AttachedFile.human_attribute_name(:filename) %></th>
+    <th><%= AttachedFile.human_attribute_name(:size) %></th>
     <th></th>
   </tr>
   <% @attached_files.each do |attached_file| %>
