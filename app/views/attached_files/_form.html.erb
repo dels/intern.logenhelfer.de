@@ -4,7 +4,8 @@
     <% if f.object.new_record? %>
       <%= f.file_field :file %>
     <% end %>
-    <%= render 'roles/role_chooser', :f => f %>
+
+    <%= f.collection_select :roles, Role.all, :id, :display_name, { :selected => @attached_file.role_ids }, { :style => 'width:300px', :multiple => true, :name => 'attached_file[role_ids][]' } %>
 
     <%= f.submit %>
   </dl>

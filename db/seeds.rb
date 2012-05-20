@@ -35,7 +35,14 @@ block 'create roles' do
 end
 
 block 'create users' do 
-  log u = User.create!(:email => 'deft@deftwork.com', :password => 'keks1024', :firstname => "El", :lastname => "Chefe")
+  log u = User.create!(
+                       :email => 'deft@deftwork.com', 
+                       :password => 'keks1024', 
+                       :firstname => "El", 
+                       :lastname => "Chefe",
+                       :date_of_birth => Date.today - 40.years,
+                       :included_at => Date.today - 4.years
+                       )
   u.roles << ar
   u.roles << ur
   u.roles << mr
@@ -44,23 +51,50 @@ block 'create users' do
   u.roles << wmr
   u.roles << mocr
   u.save!
-  log u = User.create!(:email => 'meister@fwze.de', :password => 'keks1024', :firstname => "master", :lastname => "mason")
+  log u = User.create!(
+                       :email => 'meister@fwze.de', 
+                       :password => 'keks1024', 
+                       :firstname => "master", 
+                       :lastname => "mason",
+                       :date_of_birth => Date.today - 40.years,
+                       :included_at => Date.today - 4.years
+                       )
   u.roles << mr
   u.roles << fr
   u.roles << er
   u.save!
-  log u = User.create!(:email => 'geselle@fwze.de', :password => 'keks1024', :firstname => "fellow", :lastname => "craft")
+  log u = User.create!(:email => 'geselle@fwze.de', 
+                       :password => 'keks1024', 
+                       :firstname => "fellow", 
+                       :lastname => "craft",
+                       :date_of_birth => Date.today - 40.years,
+                       :included_at => Date.today - 2.years
+                       )
   u.roles << fr
   u.roles << er
   u.save!
-  log u = User.create!(:email => 'lehrling@fwze.de', :password => 'keks1024', :firstname => "entered", :lastname => "apprentice")
+  log u = User.create!(:email => 'lehrling@fwze.de', 
+                       :password => 'keks1024', 
+                       :firstname => "entered", 
+                       :lastname => "apprentice",
+                       :date_of_birth => Date.today - 40.years,
+                       :included_at => Date.today - 1.years
+                       )
   u.roles << er
   u.save!
 end
 
 rite_cat = nil
+lit_cat = nil
 block 'create categories' do
-  log rite_cat = Category.create!(:name =>"Rituale")
+  log rite_cat = Category.create!(
+                                  :name =>"Rituale",
+                                  :roles => [er, fr , mr]
+                                  )
+  log lit_cat = Category.create!(
+                                 :name =>"Literatur",
+                                 :roles => [er, fr , mr]
+                                 )
 end
 
 block 'create directories' do
@@ -78,6 +112,24 @@ block 'create directories' do
                         :category => rite_cat, 
                         :name => "Meister",
                         :roles => [mr]
+                        )
+
+  log Directory.create!(
+                        :category => lit_cat, 
+                        :name => "Allgemeines",
+                        :roles => [er, fr , mr]
+                        )
+
+  log Directory.create!(
+                        :category => lit_cat, 
+                        :name => "Schroeder",
+                        :roles => [er, fr , mr]
+                        )
+
+  log Directory.create!(
+                        :category => lit_cat, 
+                        :name => "Fessler",
+                        :roles => [er, fr , mr]
                         )
 end
 

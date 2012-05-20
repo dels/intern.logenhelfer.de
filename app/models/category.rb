@@ -1,10 +1,8 @@
 class Category < ActiveRecord::Base
-  attr_accessible :name, :description, :role_ids
-
   extend FriendlyId
   friendly_id :name
 
-  attr_accessible :name, :description
+  attr_accessible :name, :description, :roles, :role_ids
 
   validates_presence_of :name
   validates_uniqueness_of :name

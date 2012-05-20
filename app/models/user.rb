@@ -9,9 +9,9 @@ class User < ActiveRecord::Base
          :validatable, :timeoutable
 
   attr_accessible :email, :password, :password_confirmation, :remember_me, :firstname, :lastname,
-                  :date_of_birth, :included_at, :accepted_at
+                  :date_of_birth, :included_at, :accepted_at, :role_id, :role_ids
 
-  validates_presence_of :firstname, :lastname
+  validates_presence_of :firstname, :lastname, :date_of_birth, :included_at
 
   has_many :file_downloads
   has_many :user_roles
