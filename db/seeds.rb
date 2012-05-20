@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 def log bool
   print bool ? '.' : 'F'
@@ -30,7 +31,7 @@ block 'create roles' do
   log fr = Role.create!(:name => "FellowCraft", :display_name => "Geselle")
   log mr = Role.create!(:name => "MasterMason", :display_name => "Meister")
   log wmr = Role.create!(:name => "WorshipfulMaster", :display_name => "MvSt")
-  log mocr = Role.create!(:name => "MemberOfCouncil", :display_name => "Beamtenratsmitglied")
+  log mocr = Role.create!(:name => "MemberOfCouncil", :display_name => "Mitglied des Beamtenrates")
   
 end
 
@@ -86,6 +87,9 @@ end
 
 rite_cat = nil
 lit_cat = nil
+paint_cat = nil
+dir_cat = nil
+council_cat = nil
 block 'create categories' do
   log rite_cat = Category.create!(
                                   :name =>"Rituale",
@@ -95,9 +99,22 @@ block 'create categories' do
                                  :name =>"Literatur",
                                  :roles => [er, fr , mr]
                                  )
+  log paint_cat = Category.create!(
+                                 :name =>"Zeichnungen",
+                                 :roles => [er, fr , mr]
+                                 )
+  log dir_cat = Category.create!(
+                                 :name =>"Verzeichnisse",
+                                 :roles => [er, fr , mr]
+                                 )
+  log council_cat = Category.create!(
+                                 :name =>"Beamtenrat",
+                                 :roles => [mocr]
+                                 )
 end
 
 block 'create directories' do
+  # Rituale
   log Directory.create!(
                         :category => rite_cat, 
                         :name => "Lehrling",
@@ -113,7 +130,7 @@ block 'create directories' do
                         :name => "Meister",
                         :roles => [mr]
                         )
-
+  # Literatur
   log Directory.create!(
                         :category => lit_cat, 
                         :name => "Allgemeines",
@@ -122,16 +139,70 @@ block 'create directories' do
 
   log Directory.create!(
                         :category => lit_cat, 
-                        :name => "Schroeder",
+                        :name => "Royal York",
                         :roles => [er, fr , mr]
                         )
-
   log Directory.create!(
                         :category => lit_cat, 
                         :name => "Fessler",
                         :roles => [er, fr , mr]
                         )
+  log Directory.create!(
+                        :category => lit_cat, 
+                        :name => "Handbücher",
+                        :roles => [er, fr , mr]
+                        )
+  log Directory.create!(
+                        :category => lit_cat, 
+                        :name => "Interne Dokumente",
+                        :roles => [er, fr , mr]
+                        )
+  log Directory.create!(
+                        :category => lit_cat, 
+                        :name => "eBooks",
+                        :roles => [er, fr , mr]
+                        )
+  # Zeichnungen
+  log Directory.create!(
+                        :category => paint_cat, 
+                        :name => "Zeichnungen",
+                        :roles => [er, fr , mr]
+                        )
+  # Verzeichnisse
+  log Directory.create!(
+                        :category => dir_cat, 
+                        :name => "Intern",
+                        :roles => [er, fr , mr]
+                        )
+  log Directory.create!(
+                        :category => dir_cat, 
+                        :name => "Telefonliste",
+                        :roles => [er, fr , mr]
+                        )
+  log Directory.create!(
+                        :category => dir_cat, 
+                        :name => "Witwenliste",
+                        :roles => [er, fr , mr]
+                        )
+  # Beamtenrat
+  log Directory.create!(
+                        :category => council_cat, 
+                        :name => "Protokolle",
+                        :roles => [mocr]
+                        )
+  log Directory.create!(
+                        :category => council_cat, 
+                        :name => "Vorstand",
+                        :roles => [mocr]
+                        )
+  log Directory.create!(
+                        :category => council_cat, 
+                        :name => "Posteingang",
+                        :roles => [mocr]
+                        )
+  log Directory.create!(
+                        :category => council_cat, 
+                        :name => "Gästeliste",
+                        :roles => [mocr]
+                        )
 end
-
-
-
