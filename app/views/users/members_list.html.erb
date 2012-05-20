@@ -7,8 +7,8 @@
 <%= form_tag("/users/members_list", :method => "post", :autocomplete => :off) do %>
 
 <dt><%= label_tag(:password, t("helpers.pdf.password")) %></dt>
-<dd><%= text_field_tag(:password) %></dd>
-
+<dd><%= password_field_tag(:password) %></dd>
+<%= hidden_field_tag(:hidden_field) %>
 <dt></dt>
 <dd><%= submit_tag(t("helpers.pdf.generate")) %></dd>
 <% end %>

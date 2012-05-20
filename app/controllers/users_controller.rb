@@ -4,9 +4,8 @@ class UsersController < AuthorizedController
   end
 
   def members_list
-    return unless params[:password]
-    if params[:password].blank?
-      # TODO show error message
+    if params[:password].blank? || 5 > params[:password].length
+      flash[:error] = t("helpers.pdf.password_needed") if params[:hidden_field]
       return 
     end
     pdf = Prawn::Document.new(:page_layout => :landscape)
