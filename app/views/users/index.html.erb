@@ -14,7 +14,7 @@
     <th><%= t 'activerecord.attributes.user.accepted_at' %></th>
     <th></th>
   </tr>
-  <% @users.each do |user| %>
+  <% get_authorized(@users).each do |user| %>
     <tr>
       <td><%= user.email %></td>
       <td><%= dash(user.firstname) %></td>
