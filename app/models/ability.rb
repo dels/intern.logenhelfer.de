@@ -17,7 +17,7 @@ class Ability
     can [:index, :show, :download], AttachedFile, ['attached_files.deleted = ?', false] do |f|
       [] != (f.roles & @user.roles)
     end
-    can [:show], User do |u|
+    can [:index, :show], User, ["users.deleted = ?", false] do |u|
       [] != (u.roles & @user.roles)
     end
   end
@@ -35,7 +35,6 @@ class Ability
   end
 
   def entered_apprentice_abilities
-    
   end
 
   def fellow_craft_abilities

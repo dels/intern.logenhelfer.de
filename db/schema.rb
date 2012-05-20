@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120519163218) do
+ActiveRecord::Schema.define(:version => 20120520175342) do
 
   create_table "attached_file_roles", :force => true do |t|
     t.integer  "attached_file_id"
@@ -88,8 +88,8 @@ ActiveRecord::Schema.define(:version => 20120519163218) do
   end
 
   create_table "users", :force => true do |t|
-    t.string   "email",                  :default => "", :null => false
-    t.string   "encrypted_password",     :default => "", :null => false
+    t.string   "email",                  :default => "",    :null => false
+    t.string   "encrypted_password",     :default => "",    :null => false
     t.string   "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
@@ -98,14 +98,15 @@ ActiveRecord::Schema.define(:version => 20120519163218) do
     t.datetime "last_sign_in_at"
     t.string   "current_sign_in_ip"
     t.string   "last_sign_in_ip"
-    t.datetime "created_at",                             :null => false
-    t.datetime "updated_at",                             :null => false
+    t.datetime "created_at",                                :null => false
+    t.datetime "updated_at",                                :null => false
     t.string   "uuid"
     t.string   "firstname"
     t.string   "lastname"
     t.date     "date_of_birth"
     t.date     "included_at"
     t.date     "accepted_at"
+    t.boolean  "deleted",                :default => false
   end
 
   add_index "users", ["email"], :name => "index_users_on_email", :unique => true
