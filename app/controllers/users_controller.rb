@@ -27,7 +27,7 @@ class UsersController < AuthorizedController
                            :modify_contents    => false,
                            :copy_contents      => false,
                            :modify_annotations => false })
-    send_data pdf.render, type: "application/pdf", disposition: "inline"
+    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Mitgliederverzeichnis.pdf"
   end
 
   def show
