@@ -1,0 +1,1 @@
+    <%= f.collection_select :roles, Role.all, :id, :display_name, { :selected => @category.role_ids }, { :style => 'width:300px', :multiple => true, :name => 'category[role_ids][]' } %>

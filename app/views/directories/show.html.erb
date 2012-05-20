@@ -15,7 +15,7 @@
   <dt><%= t 'helpers.visible_to' %>:</dt>
   <dd><ul>
     <% @directory.roles.each do |role| %>
-      <li><%= role.name %></li>
+      <li><%= role.display_name %></li>
     <% end %>
   </ul></dd>
 </dl>

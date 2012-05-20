@@ -17,7 +17,7 @@
 
   <%= authorized_menu_item User, users_path do %>
       <% if(request.fullpath =~ /^\/users/ )%>
-        <%= content_tag(:li, :class => (request.fullpath =~ /^\/users\/members_list/ ? 'active' : nil)) do %>
+        <%= content_tag(:li, :class => (request.fullpath =~ /^\/users\/members_list/ ? 'active space-bottom' : 'space-bottom')) do %>
          <%= link_to(t("helpers.pdf.memberslist"), users_members_list_path)%>
       <% end%>
     <% end%>

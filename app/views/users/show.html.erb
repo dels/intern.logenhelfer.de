@@ -9,23 +9,18 @@
 <dl>
   <dt><%= t 'activerecord.attributes.user.email' %>:</dt>
   <dd><%= @user.email %></dd>
-  <dt><%= t 'activerecord.attributes.user.encrypted_password' %>:</dt>
-  <dd><%= @user.encrypted_password %></dd>
-  <dt><%= t 'activerecord.attributes.user.reset_password_token' %>:</dt>
-  <dd><%= @user.reset_password_token %></dd>
-  <dt><%= t 'activerecord.attributes.user.reset_password_sent_at' %>:</dt>
-  <dd><%= @user.reset_password_sent_at %></dd>
-  <dt><%= t 'activerecord.attributes.user.remember_created_at' %>:</dt>
-  <dd><%= @user.remember_created_at %></dd>
-  <dt><%= t 'activerecord.attributes.user.sign_in_count' %>:</dt>
-  <dd><%= @user.sign_in_count %></dd>
-  <dt><%= t 'activerecord.attributes.user.current_sign_in_at' %>:</dt>
-  <dd><%= @user.current_sign_in_at %></dd>
-  <dt><%= t 'activerecord.attributes.user.last_sign_in_at' %>:</dt>
-  <dd><%= @user.last_sign_in_at %></dd>
-  <dt><%= t 'activerecord.attributes.user.current_sign_in_ip' %>:</dt>
-  <dd><%= @user.current_sign_in_ip %></dd>
-  <dt><%= t 'activerecord.attributes.user.last_sign_in_ip' %>:</dt>
-  <dd><%= @user.last_sign_in_ip %></dd>
+  <dt><%= t 'activerecord.attributes.user.firstname' %>:</dt>
+  <dd><%= @user.firstname %></dd>
+  <dt><%= t 'activerecord.attributes.user.lastname' %>:</dt>
+  <dd><%= @user.lastname %></dd>
+  <dt><%= t 'activerecord.attributes.user.num_degree' %>:</dt>
+  <dd><%= @user.num_degree %></dd>
+  <dt><%= t 'activerecord.attributes.user.included_at' %>:</dt>
+  <dd><%= dash(@user.included_at) %></dd>
+  <dt><%= t 'activerecord.attributes.user.accepted_at' %>:</dt>
+  <dd><%= dash(@user.accepted_at) %></dd>
+  <dt><%= t 'activerecord.attributes.user.date_of_birth' %>:</dt>
+  <dd><%= dash(@user.date_of_birth) %></dd>
+  
 
 </dl>
