@@ -4,7 +4,11 @@ class UsersController < AuthorizedController
   end
 
   def members_list
-    return unless params[:password] && params[:password].blank?
+    return unless params[:password]
+    if params[:password].blank?
+      # TODO show error message
+      return 
+    end
     pdf = Prawn::Document.new(:page_layout => :landscape)
     
     usr_arr = []
