@@ -3,6 +3,29 @@ class UsersController < AuthorizedController
   def index
   end
 
+  def members_list
+    return unless params[:password] || params[:password].blank?
+    pdf = Prawn::Document.new(:page_layout => :landscape)
+    
+    usr_arr = []
+    # defining cell headlines
+    usr_arr << [ "Nachname", "Vorname", "Grad", "Aufgenommen am" , "Angenommen am", "Geburtstag" ]
+    # adding table
+    @users.each do |usr|
+      usr_arr << [ usr.lastname, usr.firstname, usr.num_degree, usr.included_at, usr.accepted_at, usr.date_of_birth ]
+    end
+    pdf.table(usr_arr, :row_colors => ["F0F0F0", "FFFFCC"]) do
+      row(0).border_width = 2
+      row(0).font_style = :bold
+    end
+    pdf.encrypt_document(:user_password => params[:password], :owner_password => :random,
+                         :permissions => { :print_document     => false,
+                           :modify_contents    => false,
+                           :copy_contents      => false,
+                           :modify_annotations => false })
+    send_data pdf.render, type: "application/pdf", disposition: "inline"
+  end
+
   def show
   end
 

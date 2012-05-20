@@ -15,7 +15,10 @@
     <% end %>
   <% end %>
 
-  <%= authorized_menu_item User, users_path%>
+  <%= authorized_menu_item User, users_path do 
+        authorized_menu_item User, users_members_list_path
+      end
+      %>
   <%= authorized_menu_item FileDownload, file_downloads_path%>
   
   <li class='more space-top'></li>

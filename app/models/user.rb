@@ -26,4 +26,11 @@ class User < ActiveRecord::Base
     "#{firstname} #{lastname}"
   end
 
+  def num_degree
+    degree = 1
+    degree += 1 if(self.roles.include? Role.find_by_name("FellowCraft"))
+    degree += 1 if(self.roles.include? Role.find_by_name("MasterMason"))
+    degree
+  end
+
 end

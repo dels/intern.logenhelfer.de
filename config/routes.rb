@@ -2,6 +2,10 @@ FwzeIntern::Application.routes.draw do
 
   resources :file_downloads
 
+  get 'users/members_list', to: 'users#members_list'
+  post 'users/members_list', to: 'users#members_list'
+
+
   resources :users
 
   resources :categories do
