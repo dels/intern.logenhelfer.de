@@ -37,3 +37,4 @@ gem 'cancan'
 gem "bcrypt-ruby", :require => "bcrypt"
 gem 'rails-i18n'
 gem 'copycopter_client', '~> 2.0.0'
+gem 'prawn'

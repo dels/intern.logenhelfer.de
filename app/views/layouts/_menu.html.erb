@@ -18,10 +18,8 @@
   <%= authorized_menu_item User, users_path%>
   <%= authorized_menu_item FileDownload, file_downloads_path%>
   
-
   <li class='more space-top'></li>
   <%= categories_menu %>
-
 
   <%- else -%>
   <%= content_tag :li, link_to(t("links.pages.index"), root_url) %>
