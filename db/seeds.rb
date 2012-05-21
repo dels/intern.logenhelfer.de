@@ -145,6 +145,10 @@ block 'create categories' do
                                  :name =>"Literatur",
                                  :roles => [er, fr , mr]
                                  )
+  log misc_cat = Category.create!(
+                                 :name =>"Allgemeines",
+                                 :roles => [er, fr , mr]
+                                 )
   log paint_cat = Category.create!(
                                  :name =>"Zeichnungen",
                                  :roles => [er, fr , mr]
@@ -206,6 +210,12 @@ block 'create directories' do
   log Directory.create!(
                         :category => lit_cat, 
                         :name => "eBooks",
+                        :roles => [er, fr , mr]
+                        )
+  # Sonstiges
+  log Directory.create!(
+                        :category => misc_cat, 
+                        :name => "Presse",
                         :roles => [er, fr , mr]
                         )
   # Zeichnungen
