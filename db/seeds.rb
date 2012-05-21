@@ -135,6 +135,7 @@ rite_cat = nil
 lit_cat = nil
 paint_cat = nil
 dir_cat = nil
+misc_cat = nil
 council_cat = nil
 block 'create categories' do
   log rite_cat = Category.create!(
