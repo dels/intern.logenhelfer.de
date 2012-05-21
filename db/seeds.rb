@@ -38,10 +38,12 @@ end
 
 block 'create users' do 
   log u = User.create!(
+                       :matriculation_number => 891,
                        :email => 'deft@deftwork.com', 
                        :password => 'keks1024', 
                        :firstname => "El", 
                        :lastname => "Chefe",
+                       :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
                        :included_at => Date.today - 4.years
                        )
@@ -54,10 +56,12 @@ block 'create users' do
   u.roles << mocr
   u.save!
   log u = User.create!(
+                       :matriculation_number => 892,
                        :email => 'uploader@fwze.de', 
                        :password => 'keks1024', 
                        :firstname => "Hoch", 
                        :lastname => "Lader",
+                       :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
                        :included_at => Date.today - 4.years
                        )
@@ -67,10 +71,12 @@ block 'create users' do
   u.roles << ur
   u.save!
   log u = User.create!(
+                       :matriculation_number => 893,
                        :email => 'meister@fwze.de', 
                        :password => 'keks1024', 
                        :firstname => "master", 
                        :lastname => "mason",
+                       :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
                        :included_at => Date.today - 4.years
                        )
@@ -78,20 +84,26 @@ block 'create users' do
   u.roles << fr
   u.roles << er
   u.save!
-  log u = User.create!(:email => 'geselle@fwze.de', 
+  log u = User.create!(
+                       :matriculation_number => 894,
+                       :email => 'geselle@fwze.de', 
                        :password => 'keks1024', 
                        :firstname => "fellow", 
                        :lastname => "craft",
+                       :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
                        :included_at => Date.today - 2.years
                        )
   u.roles << fr
   u.roles << er
   u.save!
-  log u = User.create!(:email => 'lehrling@fwze.de', 
+  log u = User.create!(
+                       :matriculation_number => 895,
+                       :email => 'lehrling@fwze.de', 
                        :password => 'keks1024', 
                        :firstname => "entered", 
                        :lastname => "apprentice",
+                       :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
                        :included_at => Date.today - 1.years
                        )

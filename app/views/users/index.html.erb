@@ -8,6 +8,7 @@
 
 <table class='autolink'>
   <tr>
+    <th><%= sortable :matriculation_number, User.human_attribute_name(:matriculation_number) %></th>
     <th><%= sortable :email,User.human_attribute_name(:email) %></th>
     <th><%= sortable :firstname,User.human_attribute_name(:firstname) %></th>
     <th><%= sortable :lastname,User.human_attribute_name(:lastname) %></th>
@@ -18,6 +19,7 @@
   </tr>
   <% @users.each do |user| %>
     <tr>
+      <td><%= user.matriculation_number %></td>
       <td><%= user.email %></td>
       <td><%= dash(user.firstname) %></td>
       <td><%= dash(user.lastname) %></td>
