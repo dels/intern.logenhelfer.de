@@ -8,6 +8,8 @@ class Ability
     @user.roles.each do |role|
       self.send("#{role.name.underscore}_abilities")
     end
+    can [:show, :edit, :update], User, :id => @user.id
+
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
       [] != (c.roles & @user.roles)
     end
