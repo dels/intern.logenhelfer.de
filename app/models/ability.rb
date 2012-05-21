@@ -24,6 +24,10 @@ class Ability
     end
   end
 
+  def secretary_abilities
+    can [:index, :show, :edit, :update], User
+  end
+
   def admin_abilities
     can :manage, Category
     can :manage, Directory

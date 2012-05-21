@@ -22,6 +22,9 @@ ur = nil
 er = nil
 fr = nil
 mr = nil
+sr = nil
+ser = nil
+jwr = nil
 wmr = nil
 mocr = nil
 block 'create roles' do
@@ -71,6 +74,21 @@ block 'create users' do
   u.roles << fr
   u.roles << er
   u.roles << ur
+  u.save!
+  log u = User.create!(
+                       :matriculation_number => 892,
+                       :email => 'sekretaer@fwze.de', 
+                       :password => 'keks1024', 
+                       :firstname => "Korrespondierender", 
+                       :lastname => "Schriftfuehrer",
+                       :job_title => "freemason",
+                       :date_of_birth => Date.today - 40.years,
+                       :included_at => Date.today - 4.years
+                       )
+  u.roles << mr
+  u.roles << fr
+  u.roles << er
+  u.roles << sr
   u.save!
   log u = User.create!(
                        :matriculation_number => 893,
