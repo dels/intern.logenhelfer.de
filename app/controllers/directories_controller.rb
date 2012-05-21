@@ -2,7 +2,7 @@ class DirectoriesController < AuthorizedController
   helper_method :sort_column, :sort_direction
   
   def show
-    @attached_files = view_context.get_authorized @directory.attached_files
+    @attached_files = view_context.get_authorized(@directory.attached_files.order(:filename))
   end
 
   def new

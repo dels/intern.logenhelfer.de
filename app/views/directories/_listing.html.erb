@@ -8,7 +8,7 @@
     <th><%= Directory.human_attribute_name(:description) %></th>
     <th></th>
   </tr>
-  <% category.directories.each do |directory| %>
+  <% category.directories.order(:name).each do |directory| %>
     <tr>
       <td><%= directory.name %></td>
       <td><%= directory.description %></td>
