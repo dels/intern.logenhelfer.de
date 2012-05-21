@@ -31,7 +31,9 @@ class Ability
   end
 
   def uploader_abilities
-    
+    can :manage, Category
+    can :manage, Directory
+    can :manage, AttachedFile
   end
 
   def entered_apprentice_abilities

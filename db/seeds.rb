@@ -31,7 +31,8 @@ block 'create roles' do
   log fr = Role.create!(:name => "FellowCraft", :display_name => "Geselle")
   log mr = Role.create!(:name => "MasterMason", :display_name => "Meister")
   log wmr = Role.create!(:name => "WorshipfulMaster", :display_name => "MvSt")
-  log mocr = Role.create!(:name => "MemberOfCouncil", :display_name => "Mitglied des Beamtenrates")
+  log sr = Role.create!(:name => "Secretary", :display_name => "Korrespondierder Schriftführer")
+  log mocr = Role.create!(:name => "MemberOfCouncil", :display_name => "Mitglieder des Beamtenrates")
   
 end
 
@@ -51,6 +52,19 @@ block 'create users' do
   u.roles << er
   u.roles << wmr
   u.roles << mocr
+  u.save!
+  log u = User.create!(
+                       :email => 'uploader@fwze.de', 
+                       :password => 'keks1024', 
+                       :firstname => "Hoch", 
+                       :lastname => "Lader",
+                       :date_of_birth => Date.today - 40.years,
+                       :included_at => Date.today - 4.years
+                       )
+  u.roles << mr
+  u.roles << fr
+  u.roles << er
+  u.roles << ur
   u.save!
   log u = User.create!(
                        :email => 'meister@fwze.de', 
