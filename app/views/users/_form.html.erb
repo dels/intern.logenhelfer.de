@@ -1,17 +1,24 @@
 <%= form_for @user, builder: DefiniteFormBuilder do |f| %>
   <%= f.error_messages %>
   <dl>
-    <%= f.number_field :matriculation_number %>
-    <%= f.text_field :email %>
-    <%= f.text_field :firstname %>
-    <%= f.text_field :lastname %>
+    <%= f.number_field :matriculation_number, :readonly => @limited_editing %>
+    <%= f.text_field :email, :readonly => @limited_editing %>
+    <%= f.text_field :firstname, :readonly => @limited_editing %>
+    <%= f.text_field :lastname, :readonly => @limited_editing %>
     <%= f.text_field :job_title %>
-    <%= f.date_select :date_of_birth %>
-    <%= f.date_select :included_at %>
-    <%= f.date_select :accepted_at %>
+    <%= f.date_select :date_of_birth, :readonly => @limited_editing %>
+    <%= f.date_select :included_at, :readonly => @limited_editing %>
+    <%= f.date_select :accepted_at, :readonly => @limited_editing %>
     
-    <%= f.collection_select :roles, Role.all, :id, :display_name, { :selected => @user.role_ids }, { :style => 'width:300px', :multiple => true, :name => 'user[role_ids][]' } %>
-
+    <% if current_user.roles.include?(Role.find_by_name('Admin')) %>
+      <%= f.collection_select :roles, Role.all, :id, :display_name, { :selected => @user.role_ids }, { :style => 'width:300px', :multiple => true, :name => 'user[role_ids][]' } %>
+      <% else %>
+        <ul>
+          <% @user.roles.each do |role| %>
+            <li><%= role.display_name %></li>
+          <% end %>
+        </ul>
+      <% end %>
     <%= f.submit %>
   </dl>
 <% end %>

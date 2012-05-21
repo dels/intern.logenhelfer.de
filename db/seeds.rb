@@ -32,6 +32,8 @@ block 'create roles' do
   log mr = Role.create!(:name => "MasterMason", :display_name => "Meister")
   log wmr = Role.create!(:name => "WorshipfulMaster", :display_name => "MvSt")
   log sr = Role.create!(:name => "Secretary", :display_name => "Korrespondierder Schriftführer")
+  log ser = Role.create!(:name => "SeniorWarden", :display_name => "Erster Aufseher")
+  log jwr = Role.create!(:name => "JuniorWarden", :display_name => "Zweiter Aufseher")
   log mocr = Role.create!(:name => "MemberOfCouncil", :display_name => "Mitglieder des Beamtenrates")
   
 end

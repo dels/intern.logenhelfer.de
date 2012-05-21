@@ -25,5 +25,11 @@
   <dd><%= dash(@user.accepted_at) %></dd>
   <dt><%= t 'activerecord.attributes.user.date_of_birth' %>:</dt>
   <dd><%= dash(@user.date_of_birth) %></dd>
+  <dt><%= t 'activerecord.attributes.user.roles' %>:</dt>
+  <dd><ul>
+    <% @user.roles.each do |role| %>
+      <li><%= role.display_name %></li>
+    <% end %>
+  </ul></dd>
 
 </dl>

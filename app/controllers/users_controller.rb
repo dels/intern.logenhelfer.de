@@ -46,6 +46,7 @@ class UsersController < AuthorizedController
   end
 
   def edit
+    @limited_editing = limited_editing
   end
 
   def update
@@ -65,6 +66,10 @@ class UsersController < AuthorizedController
 
   private
   
+  def limited_editing
+    [] == (current_user.roles & (Role.where(:name => ['Admin', 'Secretary'])))
+  end
+
   def sort_column
     (User.column_names).include?(params[:sort_by]) ? params[:sort_by] : "lastname ASC, firstname ASC, email "
   end
