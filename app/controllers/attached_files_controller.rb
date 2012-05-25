@@ -36,7 +36,7 @@ class AttachedFilesController < ApplicationController
       af.role_ids = params[:attached_file][:role_ids]
     end
     if @attached_file.save
-      redirect_to @attached_file.path_array, notice: t("activerecord.create_success", model: t("activerecord.models.attached_file"))
+      redirect_to [@attached_file.directory.category, @attached_file.directory], notice: t("activerecord.create_success", model: t("activerecord.models.attached_file"))
     else
       render :new
     end
