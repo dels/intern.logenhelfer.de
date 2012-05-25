@@ -1,0 +1,21 @@
+<dl class="vcard fields">
+  <dt><%= address.purpose %></dt>
+  <%= content_tag :dd, address.street1 if address.street1.present? %>
+  <%= content_tag :dd, address.street2 if address.street2.present? %>
+  <%= content_tag :dd, address.street3 if address.street3.present? %>
+  <dd><%= dash address.zip %> <%= dash address.city %></dd>
+
+  <dt class="space-top"><%= Address.human_attribute_name :phone %></dt>
+  <dd class="space-top"><%= dash(address.phone) %></dd>
+
+  <dt><%= Address.human_attribute_name :fax %></dt>
+  <dd><%= dash(address.fax) %></dd>
+
+  <dt><%= Address.human_attribute_name :email %></dt>
+  <dd><%= dash(address.email) %></dd>
+
+  <% if address.remarks.present? %>
+    <dt class="space-top"><%= Address.human_attribute_name :remarks %></dt>
+    <dd class="space-top"><%= simple_format address.remarks, :class => 'indent' %></dd>
+  <% end %>
+</dl>

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 class User < ActiveRecord::Base
+  include ActsAsAddressable
   include UuidHelper
   before_create :generate_uuid
 
@@ -15,10 +16,17 @@ class User < ActiveRecord::Base
 
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
 
+  validates_uniqueness_of :matriculation_number
+
+  has_many_addresses
   has_many :file_downloads
   has_many :user_roles
   has_many :roles, :through => :user_roles
   has_many :attached_files
+
+#  has_many_addresses
+
+
 
   TITLES = {
     "Dipl. Ing."                 => 1,

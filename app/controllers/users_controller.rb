@@ -20,12 +20,10 @@ class UsersController < AuthorizedController
       usr_arr << [ usr.matriculation_number, usr.title_str, usr.lastname, usr.firstname, usr.job_title, usr.num_degree, 
                    usr.entered_apprentice_since, usr.accepted_at, usr.date_of_birth ]
     end
-    pdf.table(usr_arr, :row_colors => ["F0F0F0", "FFFFCC"]) do
+    pdf.table(usr_arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
       row(0).border_width = 2
       row(0).font_style = :bold
     end
-
-    
 
     pdf.encrypt_document(:user_password => params[:password], :owner_password => :random,
                          :permissions => { :print_document     => false,

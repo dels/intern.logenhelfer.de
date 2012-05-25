@@ -11,7 +11,25 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120525122112) do
+ActiveRecord::Schema.define(:version => 20120525152714) do
+
+  create_table "addresses", :force => true do |t|
+    t.integer  "addressable_id"
+    t.string   "addressable_type"
+    t.string   "purpose",          :default => "geschäftlich"
+    t.string   "street1"
+    t.string   "street2"
+    t.string   "street3"
+    t.string   "zip"
+    t.string   "city"
+    t.string   "phone"
+    t.string   "fax"
+    t.string   "email"
+    t.text     "remarks"
+    t.boolean  "deleted",          :default => false
+    t.datetime "created_at",                                   :null => false
+    t.datetime "updated_at",                                   :null => false
+  end
 
   create_table "attached_file_roles", :force => true do |t|
     t.integer  "attached_file_id"

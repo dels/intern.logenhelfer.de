@@ -1,0 +1,20 @@
+<div class="fields">
+  <%
+    # show remove link, iff parent object has many addresses (= not has only one address)
+    if f.parent_builder.object.class.reflect_on_association(:address).nil?
+  %>
+    <p><%= link_to_remove_fields Address.human_attribute_name(:remove_fields), f %></p>
+  <% end %>
+  <dl>
+    <%= f.text_field :purpose, placeholder: Address.human_attribute_name(:purpose_info) %>
+    <%= f.text_field :street1, placeholder: Address.human_attribute_name(:street1_info) %>
+    <%= f.text_field :street2 %>
+    <%= f.text_field :street3, placeholder: Address.human_attribute_name(:street3_info) %>
+    <%= f.text_field :zip, jui: :tiny %>
+    <%= f.text_field :city %>
+    <%= f.text_field :phone %>
+    <%= f.text_field :fax %>
+    <%= f.email_field :email %>
+    <%= f.text_area :remarks %>
+  </dl>
+</div>
