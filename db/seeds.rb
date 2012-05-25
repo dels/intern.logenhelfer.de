@@ -27,6 +27,7 @@ ser = nil
 jwr = nil
 wmr = nil
 mocr = nil
+
 block 'create roles' do
   log ar = Role.create!(:name => "Admin", :display_name => "Administrator")
   log ur = Role.create!(:name => "Uploader", :display_name => "Darf hochladen")
@@ -34,10 +35,21 @@ block 'create roles' do
   log fr = Role.create!(:name => "FellowCraft", :display_name => "Geselle")
   log mr = Role.create!(:name => "MasterMason", :display_name => "Meister")
   log wmr = Role.create!(:name => "WorshipfulMaster", :display_name => "MvSt")
+  log sr = Role.create!(:name => "InternalSecretary", :display_name => "Protokolliernder Schriftführer")
   log sr = Role.create!(:name => "Secretary", :display_name => "Korrespondierder Schriftführer")
-  log ser = Role.create!(:name => "SeniorWarden", :display_name => "Erster Aufseher")
-  log jwr = Role.create!(:name => "JuniorWarden", :display_name => "Zweiter Aufseher")
+  log ser = Role.create!(:name => "SeniorWarden", :display_name => "1. Aufseher")
+  log jwr = Role.create!(:name => "JuniorWarden", :display_name => "2. Aufseher")
   log mocr = Role.create!(:name => "MemberOfCouncil", :display_name => "Mitglieder des Beamtenrates")
+  log Role.create!(:name => "Deakan", :display_name => "Wachhabender")
+  log Role.create!(:name => "Speaker", :display_name => "Redner")
+  log Role.create!(:name => "Musician", :display_name => "Musikmeister")
+  log Role.create!(:name => "MasterOfCeremony", :display_name => "Zeremonienmeister")
+  log Role.create!(:name => "PreparingBrother", :display_name => "Vorbereitender Bruder")
+  log Role.create!(:name => "PastMaster", :display_name => "Alstuhlmaster")
+  log Role.create!(:name => "DedicatedMaster", :display_name => "zug. Meister")
+  log Role.create!(:name => "Treasurer", :display_name => "Schatzmeister")
+  log Role.create!(:name => "JuniorDeacon", :display_name => "2. Schaffer")
+  log Role.create!(:name => "SeniorDeacon", :display_name => "1. Schaffer")
   
 end
 
