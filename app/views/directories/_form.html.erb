@@ -4,7 +4,7 @@
     <%= f.text_field :name %>
     <%= f.text_area :description %>
 
-    <%= f.collection_select :roles, Role.all, :id, :display_name, { :selected => @directory.role_ids }, { :style => 'width:300px', :multiple => true, :name => 'directory[role_ids][]' } %>
+    <%= f.collection_select :roles, Role.all, :id, :to_s, { :selected => @directory.role_ids }, { :style => 'width:300px', :multiple => true, :name => 'directory[role_ids][]' } %>
 
     <%= f.submit %>
   </dl>

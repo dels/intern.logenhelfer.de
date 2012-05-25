@@ -10,10 +10,10 @@ class User < ActiveRecord::Base
          :validatable, :timeoutable
 
   attr_accessible :email, :password, :password_confirmation, :remember_me, :firstname, :lastname,
-  :date_of_birth, :included_at, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title, 
-  :title
+  :date_of_birth, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title, 
+  :title, :entered_apprentice_since, :fellow_craft_since, :master_mason_since
 
-  validates_presence_of :firstname, :lastname, :date_of_birth, :included_at
+  validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
 
   has_many :file_downloads
   has_many :user_roles
@@ -53,14 +53,67 @@ class User < ActiveRecord::Base
     degree
   end
 
+
+  def entered_apprentice_since
+    unless roles.find_by_name('EnteredApprentice')
+      Rails.logger.fatal("#{self.fullname} is no entered apprentice")
+      return nil
+    end
+    user_roles.find_by_role_id(roles.find_by_name('EnteredApprentice').id).role_added_at
+  end
+
+  def fellow_craft_since
+    return nil unless roles.find_by_name('FellowCraft')
+    user_roles.find_by_role_id(roles.find_by_name('FellowCraft').id).role_added_at
+  end
+
+  def master_mason_since
+    return nil unless roles.find_by_name('MasterMason')
+    user_roles.find_by_role_id(roles.find_by_name('MasterMason').id).role_added_at
+  end
+
+  def entered_apprentice_since=(date)
+    return if date.blank?
+    ur = self.user_roles.where(:role_id => Role.find_by_name('EnteredApprentice')).first
+    ur = UserRole.new unless ur
+    ur.role = Role.find_by_name('EnteredApprentice')
+    ur.user = self
+    ur.role_added_at = date
+    ur.save!
+  end
+  
+  def fellow_craft_since=(date)
+    return if date.blank?
+    ur = self.user_roles.where(:role_id => Role.find_by_name('FellowCraft')).first
+    ur = UserRole.new unless ur
+    ur.role = Role.find_by_name('FellowCraft')
+    ur.user = self
+    ur.role_added_at = date
+    ur.save!
+  end
+
+  def master_mason_since=(date)
+    return if date.blank?
+    ur = self.user_roles.where(:role_id => Role.find_by_name('MasterMason')).first
+    ur = UserRole.new unless ur
+    ur.role = Role.find_by_name('MasterMason')
+    ur.user = self
+    ur.role_added_at = date
+    ur.save!
+  end
+
   def rome_degree
     "I" * num_degree
   end
 
-  def fullname_with_title
-
+  def degrees
+    self.user_roles & Role.degrees
   end
-  
+
+  def positions
+    self.user_roles & Role.positions
+  end
+
   alias to_s fullname
 
 end

@@ -14,15 +14,19 @@ class UsersController < AuthorizedController
     
     usr_arr = []
     # defining cell headlines
-    usr_arr << [ "Nachname", "Vorname", "Grad", "Aufgenommen am" , "Angenommen am", "Geburtstag" ]
-    # adding table
-    @users.each do |usr|
-      usr_arr << [ usr.lastname, usr.firstname, usr.num_degree, usr.included_at, usr.accepted_at, usr.date_of_birth ]
+    usr_arr << [ "MNr. ", "Titel", "Nachname", "Vorname", "Beruf", "Grad", "Aufgenommen am" , "Angenommen am", "Geburtstag" ]
+    # adding table    
+    @users.order(:lastname).order(:firstname).order(:matriculation_number).each do |usr|
+      usr_arr << [ usr.matriculation_number, usr.title_str, usr.lastname, usr.firstname, usr.job_title, usr.num_degree, 
+                   usr.entered_apprentice_since, usr.accepted_at, usr.date_of_birth ]
     end
     pdf.table(usr_arr, :row_colors => ["F0F0F0", "FFFFCC"]) do
       row(0).border_width = 2
       row(0).font_style = :bold
     end
+
+    
+
     pdf.encrypt_document(:user_password => params[:password], :owner_password => :random,
                          :permissions => { :print_document     => false,
                            :modify_contents    => false,
@@ -38,6 +42,7 @@ class UsersController < AuthorizedController
   end
 
   def create
+    set_user_degree_dates(params)
     if @user.save
       redirect_to @user, notice: t("activerecord.create_success", model: t("activerecord.models.user"))
     else
@@ -46,10 +51,12 @@ class UsersController < AuthorizedController
   end
 
   def edit
-    @limited_editing = limited_editing
+    @limited_editing = limited_editing()
   end
 
   def update
+    set_user_degree_dates(params)
+
     if @user.update_attributes(params[:user])
       redirect_to @user, notice: t("activerecord.update_success", model: t("activerecord.models.user"))
     else
@@ -72,5 +79,15 @@ class UsersController < AuthorizedController
 
   def sort_column
     (User.column_names).include?(params[:sort_by]) ? params[:sort_by] : "lastname ASC, firstname ASC, email "
+  end
+
+  def set_user_degree_dates params
+    @user.entered_apprentice_since= params[:user][:entered_apprentice_since] 
+    @user.fellow_craft_since= params[:user][:fellow_craft_since]
+    @user.master_mason_since= params[:user][:master_mason_since]
+
+    params[:user][:role_ids] << Role.find_by_name('EnteredApprentice').id if(@user.entered_apprentice_since)
+    params[:user][:role_ids] << Role.find_by_name('FellowCraft').id if(@user.fellow_craft_since)
+    params[:user][:role_ids] << Role.find_by_name('MasterMason').id if(@user.master_mason_since)
   end
 end

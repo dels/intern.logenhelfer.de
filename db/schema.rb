@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120525070305) do
+ActiveRecord::Schema.define(:version => 20120525122112) do
 
   create_table "attached_file_roles", :force => true do |t|
     t.integer  "attached_file_id"
@@ -83,8 +83,9 @@ ActiveRecord::Schema.define(:version => 20120525070305) do
   create_table "user_roles", :force => true do |t|
     t.integer  "user_id"
     t.integer  "role_id"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
+    t.date     "role_added_at"
   end
 
   create_table "users", :force => true do |t|
@@ -104,7 +105,6 @@ ActiveRecord::Schema.define(:version => 20120525070305) do
     t.string   "firstname"
     t.string   "lastname"
     t.date     "date_of_birth"
-    t.date     "included_at"
     t.date     "accepted_at"
     t.boolean  "deleted",                :default => false
     t.integer  "matriculation_number"

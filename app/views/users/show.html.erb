@@ -12,25 +12,33 @@
   <dt><%= t 'activerecord.attributes.user.email' %>:</dt>
   <dd><%= @user.email %></dd>
   <dt><%= t 'activerecord.attributes.user.title' %>:</dt>
-  <dd><%= @user.title_str %></dd>
+  <dd><%= dash(@user.title_str) %></dd>
   <dt><%= t 'activerecord.attributes.user.firstname' %>:</dt>
   <dd><%= @user.firstname %></dd>
   <dt><%= t 'activerecord.attributes.user.lastname' %>:</dt>
   <dd><%= @user.lastname %></dd>
   <dt><%= t 'activerecord.attributes.user.job_title' %>:</dt>
-  <dd><%= @user.job_title %></dd>
+  <dd><%= dash(@user.job_title) %></dd>
   <dt><%= t 'activerecord.attributes.user.num_degree' %>:</dt>
   <dd><%= @user.rome_degree %></dd>
-  <dt><%= t 'activerecord.attributes.user.included_at' %>:</dt>
-  <dd><%= dash(@user.included_at) %></dd>
   <dt><%= t 'activerecord.attributes.user.accepted_at' %>:</dt>
-  <dd><%= dash(@user.accepted_at) %></dd>
+  <dd><%= dash(@user.accepted_at ? l(@user.accepted_at) : nil) %></dd>
   <dt><%= t 'activerecord.attributes.user.date_of_birth' %>:</dt>
-  <dd><%= dash(@user.date_of_birth) %></dd>
-  <dt><%= t 'activerecord.attributes.user.roles' %>:</dt>
+  <dd><%= dash(@user.date_of_birth ? l(@user.date_of_birth) : nil) %></dd>
+
+  <dt><%= t 'activerecord.attributes.user.degrees' %>:</dt>
+  <dd>
+    <ul>
+      <% (@user.user_roles.where(:role_id => Role.degrees)).each do |role| %>
+        <li><%= role %></li>
+      <% end %>
+    </ul>
+  </dd>
+
+  <dt><%= t 'activerecord.attributes.user.positions' %>:</dt>
   <dd><ul>
-    <% @user.roles.each do |role| %>
-      <li><%= role.display_name %></li>
+    <% @user.roles.positions.each do |role| %>
+      <li><%= role %></li>
     <% end %>
   </ul></dd>
 

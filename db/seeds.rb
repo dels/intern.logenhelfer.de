@@ -45,18 +45,17 @@ block 'create users' do
   log u = User.create!(
                        :matriculation_number => 891,
                        :email => 'deft@deftwork.com', 
-                       :password => 'keks1024', 
+                       :password => 'keks4096', 
                        :firstname => "El", 
                        :lastname => "Chefe",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
-                       :included_at => Date.today - 4.years
                        )
   u.roles << ar
   u.roles << ur
-  u.roles << mr
-  u.roles << fr
-  u.roles << er
+  u.user_roles << UserRole.create!(:role => er, :user => u, :role_added_at => Date.today - 4.years)
+  u.user_roles << UserRole.create!(:role => fr, :user => u, :role_added_at => Date.today - 2.years)
+  u.user_roles << UserRole.create!(:role => mr, :user => u, :role_added_at => Date.today - 1.years)
   u.roles << wmr
   u.roles << mocr
   u.save!
@@ -68,11 +67,11 @@ block 'create users' do
                        :lastname => "Lader",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
-                       :included_at => Date.today - 4.years
                        )
-  u.roles << mr
-  u.roles << fr
-  u.roles << er
+
+  u.user_roles << UserRole.create!(:role => er, :user => u, :role_added_at => Date.today - 4.years)
+  u.user_roles << UserRole.create!(:role => fr, :user => u, :role_added_at => Date.today - 2.year)
+  u.user_roles << UserRole.create!(:role => mr, :user => u, :role_added_at => Date.today - 1.year)
   u.roles << ur
   u.save!
   log u = User.create!(
@@ -83,11 +82,10 @@ block 'create users' do
                        :lastname => "Schriftfuehrer",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
-                       :included_at => Date.today - 4.years
                        )
-  u.roles << mr
-  u.roles << fr
-  u.roles << er
+  u.user_roles << UserRole.create!(:role => er, :user => u, :role_added_at => Date.today - 3.years)
+  u.user_roles << UserRole.create!(:role => fr, :user => u, :role_added_at => Date.today - 2.year)
+  u.user_roles << UserRole.create!(:role => mr, :user => u, :role_added_at => Date.today - 1.year)
   u.roles << sr
   u.save!
   log u = User.create!(
@@ -98,11 +96,10 @@ block 'create users' do
                        :lastname => "mason",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
-                       :included_at => Date.today - 4.years
                        )
-  u.roles << mr
-  u.roles << fr
-  u.roles << er
+  u.user_roles << UserRole.create!(:role => er, :user => u, :role_added_at => Date.today - 4.years)
+  u.user_roles << UserRole.create!(:role => fr, :user => u, :role_added_at => Date.today - 2.year)
+  u.user_roles << UserRole.create!(:role => mr, :user => u, :role_added_at => Date.today - 1.year)
   u.save!
   log u = User.create!(
                        :matriculation_number => 894,
@@ -112,10 +109,9 @@ block 'create users' do
                        :lastname => "craft",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
-                       :included_at => Date.today - 2.years
                        )
-  u.roles << fr
-  u.roles << er
+  u.user_roles << UserRole.create!(:role => er, :user => u, :role_added_at => Date.today - 1.years)
+  u.user_roles << UserRole.create!(:role => fr, :user => u, :role_added_at => Date.today - 2.year)
   u.save!
   log u = User.create!(
                        :matriculation_number => 895,
@@ -125,9 +121,8 @@ block 'create users' do
                        :lastname => "apprentice",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
-                       :included_at => Date.today - 1.years
                        )
-  u.roles << er
+  u.user_roles << UserRole.create!(:role => er, :user => u, :role_added_at => Date.today - 1.years)
   u.save!
 end
 
