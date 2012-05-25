@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 class User < ActiveRecord::Base
   include UuidHelper
   before_create :generate_uuid
@@ -9,7 +10,8 @@ class User < ActiveRecord::Base
          :validatable, :timeoutable
 
   attr_accessible :email, :password, :password_confirmation, :remember_me, :firstname, :lastname,
-  :date_of_birth, :included_at, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title
+  :date_of_birth, :included_at, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title, 
+  :title
 
   validates_presence_of :firstname, :lastname, :date_of_birth, :included_at
 
@@ -18,12 +20,30 @@ class User < ActiveRecord::Base
   has_many :roles, :through => :user_roles
   has_many :attached_files
 
+  TITLES = {
+    "Dipl. Ing."                 => 1,
+    "Dipl. Kfm."                 => 10,
+    "Dipl. Ing."                 => 20,
+    "Dipl. Ökonom"               => 30,
+    "Dipl. Bankbetriebswirt"     => 40,
+    "Dipl.-Betr.Wirt"            => 50,
+    "Dr."                        => 60,
+    "Dr-Ing."                    => 70,
+    "Prof. Dipl.-Ing."           => 80,
+    "Prof. Dr."                  => 90,
+    "Prof. Dr-Ing."              => 100
+  }
+
+  def title_str
+    @title ||= (r = TITLES.rassoc(self.title)) ? r[0] : nil
+  end
+
   def approved?
     true
   end
 
   def fullname
-    "#{firstname} #{lastname}"
+    "#{title_str || ''} #{firstname} #{lastname}"
   end
 
   def num_degree
@@ -36,5 +56,11 @@ class User < ActiveRecord::Base
   def rome_degree
     "I" * num_degree
   end
+
+  def fullname_with_title
+
+  end
+  
+  alias to_s fullname
 
 end

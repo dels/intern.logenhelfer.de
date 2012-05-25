@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120521192530) do
+ActiveRecord::Schema.define(:version => 20120525070305) do
 
   create_table "attached_file_roles", :force => true do |t|
     t.integer  "attached_file_id"
@@ -109,6 +109,7 @@ ActiveRecord::Schema.define(:version => 20120521192530) do
     t.boolean  "deleted",                :default => false
     t.integer  "matriculation_number"
     t.string   "job_title"
+    t.integer  "title"
   end
 
   add_index "users", ["email"], :name => "index_users_on_email", :unique => true

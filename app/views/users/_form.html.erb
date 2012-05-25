@@ -3,6 +3,8 @@
   <dl>
     <%= f.number_field :matriculation_number, :readonly => @limited_editing %>
     <%= f.text_field :email, :readonly => @limited_editing %>
+
+    <%= f.collection_select :title, User::TITLES, :second, :first, :include_blank => :true, :readonly => @limited_editing %>
     <%= f.text_field :firstname, :readonly => @limited_editing %>
     <%= f.text_field :lastname, :readonly => @limited_editing %>
     <%= f.text_field :job_title %>
