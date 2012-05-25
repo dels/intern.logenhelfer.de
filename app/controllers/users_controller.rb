@@ -2,7 +2,7 @@ class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
   
   def index
-    @users = @users.order(sort_column + " " + sort_direction).try(:page)
+    @users = @users.order(sort_column + " " + sort_direction).page(params[:page])
   end
 
   def members_list

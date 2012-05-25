@@ -4,6 +4,8 @@
 <p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.category")), new_category_path %></p>
 <% end %>
 
+<%= paginate @categories if @categories.present? %>
+
 <table class="autolink">
   <tr>
     <th><%= Category.human_attribute_name(:name) %></th>
@@ -22,3 +24,5 @@
     </tr>
   <% end %>
 </table>
+
+<%= paginate @categories if @categories.present? %>

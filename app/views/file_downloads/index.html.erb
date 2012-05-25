@@ -1,5 +1,7 @@
 <% title t("activerecord.models.file_download") %>
 
+<%= paginate @file_downloads if @file_downloads.present? %>
+
 <table>
   <tr>
     <th><%= t 'activerecord.attributes.file_download.attached_file_id' %></th>
@@ -20,3 +22,5 @@
     </tr>
   <% end %>
 </table>
+
+<%= paginate @file_downloads if @file_downloads.present? %>

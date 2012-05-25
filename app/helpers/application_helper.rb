@@ -8,6 +8,10 @@ module ApplicationHelper
     link_to title, {:sort_by => column, :direction => direction}, {:class => css_class}
   end
 
+  def get_authorized_paginated objects
+    Kaminari.paginate_array(get_authorized objects)
+  end
+
   def get_authorized objects
     objects.delete_if do |obj|
       cannot?(:show, obj)

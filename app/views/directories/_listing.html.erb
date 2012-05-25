@@ -2,13 +2,15 @@
 <p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.directory")), new_category_directory_path(category) %></p>
 <% end %>
 
+<%= paginate @directories if @directories.present? %>
+
 <table class='autolink'>
   <tr>
     <th><%= Directory.human_attribute_name(:name) %></th>
     <th><%= Directory.human_attribute_name(:description) %></th>
     <th></th>
   </tr>
-  <% category.directories.order(:name).each do |directory| %>
+  <% @directories.each do |directory| %>
     <tr>
       <td><%= directory.name %></td>
       <td><%= directory.description %></td>
@@ -20,3 +22,5 @@
     </tr>
   <% end %>
 </table>
+
+<%= paginate @directories if @directories.present? %>
