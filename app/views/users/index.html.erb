@@ -23,9 +23,9 @@
       <td><%= user.title_str %></td>
       <td><%= dash(user.firstname) %></td>
       <td><%= dash(user.lastname) %></td>
-      <td><%= dash(user.date_of_birth) %></td>
-      <td><%= dash(user.included_at) %></td>
-      <td><%= dash(user.accepted_at) %></td>
+      <td><%= dash(user.date_of_birth ? l(user.date_of_birth) : nil) %></td>
+      <td><%= dash(user.included_at ? l(user.included_at) : nil) %></td>
+      <td><%= dash(user.accepted_at ? l(user.accepted_at) : nil) %></td>
       <td>
         <%= show_link_to user if can?(:show, user) %>
         <%= edit_link_to user if can?(:edit, user) %>
