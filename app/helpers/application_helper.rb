@@ -8,7 +8,6 @@ module ApplicationHelper
     link_to title, {:sort_by => column, :direction => direction}, {:class => css_class}
   end
 
-
   def link_to_remove_fields(name, f)
     f.hidden_field(:_destroy) + link_to_function(name, "remove_fields(this)")
   end
@@ -31,6 +30,9 @@ module ApplicationHelper
       }
     }
     @signatures[which]
+
+  def get_authorized_paginated objects
+    Kaminari.paginate_array(get_authorized objects)
   end
 
   def get_authorized objects

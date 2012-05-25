@@ -1,11 +1,11 @@
 class CategoriesController < AuthorizedController
 
   def index
-    @categories = view_context.get_authorized(@categories.order(:name))
+    @categories = view_context.get_authorized_paginated(@categories.order(:name)).page(params[:page])
   end
 
   def show
-    @directories = view_context.get_authorized(@category.directories.order(:name))
+    @directories = view_context.get_authorized_paginated(@category.directories.order(:name)).page(params[:page])
   end
 
   def new

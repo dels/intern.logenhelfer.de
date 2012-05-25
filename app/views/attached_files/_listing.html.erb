@@ -2,6 +2,8 @@
 <p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.attached_file")), new_category_directory_attached_file_path(@directory.category, @directory) %></p>
 <% end %>
 
+<%= paginate @attached_files if @attached_files.present? %>
+
 <table class='autolink'>
   <tr>
     <th><%= AttachedFile.human_attribute_name(:filename) %></th>
@@ -21,3 +23,5 @@
     </tr>
   <% end %>
 </table>
+
+<%= paginate @attached_files if @attached_files.present? %>

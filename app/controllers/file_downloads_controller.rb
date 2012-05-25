@@ -2,6 +2,7 @@ class FileDownloadsController < ApplicationController
   load_and_authorize_resource
 
   def index
+    @file_downloads = @file_downloads.page(params[:page])
   end
 
   def show
