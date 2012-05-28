@@ -9,7 +9,7 @@ class Ability
       self.send("#{role.name.underscore}_abilities")
     end
     can [:show, :edit, :update], User, :id => @user.id
-
+    can [:index, :show, :upcoming, :date], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
       [] != (c.roles & @user.roles)
     end
@@ -26,6 +26,7 @@ class Ability
 
   # korrespondierender Schriftfuehrer
   def secretary_abilities
+    can [:index, :create, :new, :show, :edit, :update], Event
     can [:index, :show, :edit, :update], User
   end
 
@@ -39,7 +40,7 @@ class Ability
     can :index, FileDownload
   end
 
-  # 
+  #
   def uploader_abilities
     can :manage, Category
     can :manage, Directory
@@ -57,7 +58,7 @@ class Ability
   # Meister
   def master_mason_abilities
   end
-  
+
   # Meister vom Stuhl
   def worshipful_master_abilities
   end
