@@ -128,10 +128,10 @@ class User < ActiveRecord::Base
   alias to_s fullname
 
   def validate_addresses
-    if 1 < addresses.where(:type_of_address => 0).count
+    if(1 < (addresses.to_a.select{|addr| 0 == addr.type_of_address }).count)
       errors.add(:base, I18n.t("activerecord.errors.maximum_private_addresses_exceeded"))
     end
-    if 1 < addresses.where(:type_of_address => 1).count
+    if(1 < (addresses.to_a.select{|addr| 1 == addr.type_of_address }).count)
       errors.add(:base, I18n.t("activerecord.errors.maximum_business_addresses_exceeded"))
     end
   end
