@@ -12,8 +12,11 @@
 
         <%= authorized_menu_item User, users_path do -%>
           <%- if request.fullpath =~ /^\/users/ -%>
-            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/members_list/ ? 'active space-bottom' : 'space-bottom')) do -%>
+            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/members_list/ ? 'active' : '')) do -%>
               <%= link_to(t("helpers.pdf.memberslist"), users_members_list_path) -%>
+            <%- end -%>
+            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/birthday_list/ ? 'active space-bottom' : 'space-bottom')) do -%>
+              <%= link_to(t("helpers.pdf.birthdaylist"), users_birthday_list_path) -%>
             <%- end -%>
           <%- end -%>
         <%- end -%>
