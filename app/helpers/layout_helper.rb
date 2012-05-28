@@ -148,17 +148,17 @@ module LayoutHelper
 
   def categories_menu
     res = "".html_safe
-    get_authorized(Category.order(:name)).each do |cat| 
-      active = request.fullpath =~ /^\/categories\/#{URI.escape(cat.name)}/ 
-      res << content_tag(:li, :class => active ? 'active' : nil) do
+    get_authorized(Category.order(:name)).each do |cat|
+      active = request.fullpath =~ /^\/categories\/#{URI.escape(cat.name)}/
+      res << content_tag(:li, class: active ? 'active' : nil) do
         blockres = "".html_safe
         blockres << link_to(cat.name, category_path(cat))
-        # if current category is in current request and 
-        # if any current categories' directory is accessable by the 
+        # if current category is in current request and
+        # if any current categories' directory is accessable by the
         # current user the show the directories as submenue
         # (could be _one_ line but its easies to read like this)
         if active && [] != get_authorized(cat.directories)
-          blockres << directories_menu(cat) 
+          blockres << directories_menu(cat)
         end
         blockres
       end
@@ -172,7 +172,7 @@ module LayoutHelper
       blockres = "".html_safe
       (get_authorized category.directories.order(:name)).each do |dir|
         active = request.fullpath =~ /^\/categories\/#{category.name}\/directories\/#{URI.escape(dir.name)}/
-        blockres << content_tag(:li, :class => active ? 'active' : nil) do 
+        blockres << content_tag(:li, :class => active ? 'active' : nil) do
           link_to(dir.name, category_directory_path(category, dir))
         end
       end
