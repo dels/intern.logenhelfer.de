@@ -30,6 +30,7 @@ module ApplicationHelper
       }
     }
     @signatures[which]
+  end
 
   def get_authorized_paginated objects
     Kaminari.paginate_array(get_authorized objects)

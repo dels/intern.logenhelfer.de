@@ -171,7 +171,6 @@ module LayoutHelper
     res << content_tag(:ul, :class => 'space-bottom' ) do
       blockres = "".html_safe
       (get_authorized category.directories.order(:name)).each do |dir|
-        Rails.logger.fatal "req: #{request.fullpath} -- dirname: #{dir.name}"
         active = request.fullpath =~ /^\/categories\/#{category.name}\/directories\/#{URI.escape(dir.name)}/
         blockres << content_tag(:li, :class => active ? 'active' : nil) do 
           link_to(dir.name, category_directory_path(category, dir))
