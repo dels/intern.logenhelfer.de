@@ -1,0 +1,14 @@
+<div>
+  <nav class="day-of-the-week">
+    <span><%= date.day %></span>
+    <%= link_to image_tag('add.png', alt: t("activerecord.actions.create_new", :model => t("activerecord.models.event"))), new_event_path(date: date) %>
+    <%= link_to image_tag('show.png', alt: 'Details'), calendar_path(year: date.year, month: date.month, day: date.day), class: :show %>
+  </nav>
+  <ul>
+    <% if events[date.month].any? && events[date.month][date.day].any? %>
+      <% events[date.month][date.day].each do |event| %>
+        <li><%= event.to_s %></li>
+      <% end %>
+    <% end %>
+  </ul>
+</div>

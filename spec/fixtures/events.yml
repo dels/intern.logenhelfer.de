@@ -1,0 +1,19 @@
+one:
+  date: 2012-05-28 10:53:24
+  title: MyString
+  public_description: MyText
+  private_description: MyText
+  whole_day: false
+  duration: 1
+  created_by: 1
+  deleted: false
+
+two:
+  date: 2012-05-28 10:53:24
+  title: MyString
+  public_description: MyText
+  private_description: MyText
+  whole_day: false
+  duration: 1
+  created_by: 1
+  deleted: true

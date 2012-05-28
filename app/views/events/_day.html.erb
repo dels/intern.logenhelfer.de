@@ -1,0 +1,17 @@
+<% title "Übersicht für den #{l @date, format: :long}" %>
+
+<%- if @events.count > 0 -%>
+  <h2>Termine</h2>
+  <dl class="inverse-width">
+    <%- if @whole_day_events.count > 0 -%>
+      <dt>ganztägig</dt>
+      <%- @whole_day_events.each do |event| -%>
+        <dd><%= render event %></dd>
+      <%- end -%>
+    <%- end -%>
+    <%- @events.each do |event| -%>
+      <dt><%= l event.time, format: :time %></dt>
+      <dd><%= render event %></dd>
+    <%- end -%>
+  </dl>
+<%- end -%>

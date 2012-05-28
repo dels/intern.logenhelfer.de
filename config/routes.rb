@@ -1,5 +1,9 @@
 FwzeIntern::Application.routes.draw do
 
+  match 'calendar/upcoming',                          to: 'events#upcoming',  as: :upcoming_calendar
+  match 'calendar/(:year(/:month(/:day)))(.:format)', to: 'events#date',      as: :calendar
+  resources :events
+
   resources :file_downloads
 
   get 'users/members_list', to: 'users#members_list'
@@ -14,7 +18,7 @@ FwzeIntern::Application.routes.draw do
         member do
           get 'download'
         end
-  end
+      end
     end
   end
 
@@ -27,7 +31,7 @@ FwzeIntern::Application.routes.draw do
       put 'disable'
       put 'enable'
       put 'change_state'
-      put 'confirm'                          
+      put 'confirm'
     end
   end
 

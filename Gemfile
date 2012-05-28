@@ -9,6 +9,7 @@ group :development do
   gem 'quiet_assets'
   gem 'rails_best_practices', :require => false
   gem 'rails-erd'
+  gem 'debugger'
   gem "letter_opener"
 end
 
@@ -38,6 +39,7 @@ gem 'cancan'
 gem "bcrypt-ruby", :require => "bcrypt"
 gem 'rails-i18n'
 gem 'copycopter_client', '~> 2.0.0'
+gem 'later_dude', '>= 0.3.1'
 gem 'prawn'
 gem 'kaminari'
 gem 'exception_notification_rails3', :require => 'exception_notifier'
