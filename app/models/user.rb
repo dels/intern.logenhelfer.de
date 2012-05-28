@@ -8,7 +8,7 @@ class User < ActiveRecord::Base
   friendly_id :uuid
 
   devise :database_authenticatable, :recoverable, :rememberable, :trackable, 
-         :validatable, :timeoutable
+         :validatable, :timeoutable#, :timeout_in => 1.hour
 
   attr_accessible :email, :password, :password_confirmation, :remember_me, :firstname, :lastname,
   :date_of_birth, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title, 

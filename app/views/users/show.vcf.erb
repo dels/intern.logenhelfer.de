@@ -1,0 +1,14 @@
+BEGIN:VCARD
+VERSION:3.0
+N:<%= @user.lastname %>; <%= @user.firstname %>
+FN:<%= @user.fullname %>
+ORG:<%= APP_CONFIG[:organisation] %>
+URL:http://<%= APP_CONFIG[:domain] %>/
+EMAIL;TYPE=INTERNET:<%= @user.email %>
+<% @user.addresses.each do |addr| %>
+TEL;TYPE=voice,<%= addr.purpose %>:<%= addr.phone %>
+TEL;TYPE=fax,<%= addr.purpose %>:<%= addr.fax %>
+ADR;TYPE=postal,parcel,<%= addr.purpose %>:;;<%= addr.street1 %> <%= addr.street2 %> <%= addr.street3 %>;<%= addr.city %>;;<%= addr.zip %>;
+NOTE:<%= addr.remarks %>
+<% end %>
+END:VCARD
