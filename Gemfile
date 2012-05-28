@@ -10,6 +10,7 @@ group :development do
   gem 'rails_best_practices', :require => false
   gem 'rails-erd'
   gem 'debugger'
+  gem "letter_opener"
 end
 
 group :assets do

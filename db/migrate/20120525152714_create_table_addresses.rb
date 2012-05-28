@@ -4,7 +4,7 @@ class CreateTableAddresses < ActiveRecord::Migration
     create_table :addresses do |t|
       t.integer :addressable_id
       t.string :addressable_type
-      t.string :purpose, :default => "geschäftlich"
+      t.string :purpose
       t.string :street1
       t.string :street2
       t.string :street3

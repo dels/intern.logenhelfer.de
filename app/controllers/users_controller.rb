@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
   
@@ -14,11 +15,27 @@ class UsersController < AuthorizedController
     
     usr_arr = []
     # defining cell headlines
-    usr_arr << [ "MNr. ", "Titel", "Nachname", "Vorname", "Beruf", "Grad", "Aufgenommen am" , "Angenommen am", "Geburtstag" ]
-    # adding table    
+    usr_arr << [ "MNr. ", "Titel", "Nachname", "Vorname", "Beruf", "Grad", "Aufgenommen am" , "Angenommen am", "Geburtstag",
+                 # business address
+                 "gesch. Str", "gesch. Plz", "gesch. Ort", "gesch. Telefon", "gesch. Mobil", "gesch. Fax", "gesch. E-Mail", 
+                 # private address
+                 "priv. Str", "priv. Plz", "priv. Ort", "priv. Telefon", "priv. Fax", "priv. E-Mail", 
+                 # position
+                 "Ämter"
+               ]
+    # adding table
     @users.order(:lastname).order(:firstname).order(:matriculation_number).each do |usr|
+      bsns_addr = usr.business_address
+      priv_addr = usr.private_address
       usr_arr << [ usr.matriculation_number, usr.title_str, usr.lastname, usr.firstname, usr.job_title, usr.num_degree, 
-                   usr.entered_apprentice_since, usr.accepted_at, usr.date_of_birth ]
+                   usr.entered_apprentice_since, usr.accepted_at, usr.date_of_birth, 
+                   # business address
+                   bsns_addr.street, bsns_addr.zip, bsns_addr.city, bsns_addr.phone, bsns_addr.mobile, bsns_addr.fax, bsns_addr.email,
+                   # private address
+                   priv_addr.street, priv_addr.zip, priv_addr.city, priv_addr.phone, priv_addr.mobile, priv_addr.fax, priv_addr.email,
+                   # positions
+                   @user.positions.join(", ")
+                 ]
     end
     pdf.table(usr_arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
       row(0).border_width = 2
@@ -56,6 +73,7 @@ class UsersController < AuthorizedController
     set_user_degree_dates(params)
 
     if @user.update_attributes(params[:user])
+      UserMailer.change_notification(@user).deliver
       redirect_to @user, notice: t("activerecord.update_success", model: t("activerecord.models.user"))
     else
       render :edit

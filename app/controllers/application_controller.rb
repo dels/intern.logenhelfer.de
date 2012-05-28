@@ -30,7 +30,7 @@ protected
   end
 
   def filter_empty_passwords_and_user_type
-    return if ['sessions', 'confirmations'].include?(controller_name)
+    return if ['sessions', 'confirmations', 'passwords'].include?(controller_name)
     res = self.class.name.gsub(/Controller$/, '').singularize.constantize
     sym = controller_name.singularize.to_sym
     return unless params[sym].present?
