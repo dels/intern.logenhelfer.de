@@ -10,6 +10,8 @@ class Event < ActiveRecord::Base
   belongs_to :created_by, foreign_key: :created_by_id, class_name: 'User'
   belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User'
 
+  attr_accessor :target
+
   def end_time
     self.time + self.duration.minutes
   end
@@ -29,5 +31,10 @@ class Event < ActiveRecord::Base
     classes << 'whole-day'            if self.whole_day?
     classes << "type-#{@event_type}"  if @event_type.present?
     classes.join(' ')
+  end
+
+  def target
+    return @target if @event_type.present?
+    self
   end
 end

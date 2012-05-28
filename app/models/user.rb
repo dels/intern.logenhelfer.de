@@ -158,6 +158,7 @@ class User < ActiveRecord::Base
         e.date      = user.date_of_birth.change(year: start_date.year)
         e.title     = "#{Event.human_attribute_name('type/birthday')}: #{user.fullname}"
         e.whole_day = true
+        e.target    = user
         e.birthday!
       }
     }

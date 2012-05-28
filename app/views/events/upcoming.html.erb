@@ -24,7 +24,7 @@
         <td class="day">
           <ul>
             <%- @whole_day_events[i].each do |event| -%>
-              <li class="event <%= event.event_type %>"><%= link_to event, event %></li>
+              <li class="event <%= event.event_type %>"><%= link_to event, event.target %></li>
             <%- end -%>
           </ul>
         </td>

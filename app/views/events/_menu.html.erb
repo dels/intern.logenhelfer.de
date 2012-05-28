@@ -1,7 +1,10 @@
 <ul class="horizontal">
   <li><%= link_to 'Woche',  upcoming_calendar_path %></li>
   <li><%= link_to 'Monat',  calendar_path(year: Date.today.year, month: Date.today.month) %></li>
-  <% if can?(:create, Event) %>
+  <%- if can?(:create, Event) -%>
     <li><%= link_to 'neuer Termin', new_event_path %></li>
-  <% end %>
+  <%- end -%>
+  <%- if session[:calendar_last_view].present? && session[:calendar_last_view] != request.fullpath -%>
+    <li><%= link_to 'zur letzten Ansicht', session[:calendar_last_view] %></li>
+  <%- end -%>
 </ul>
