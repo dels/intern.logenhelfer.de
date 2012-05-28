@@ -7,17 +7,19 @@ ORG:<%= APP_CONFIG[:organisation] %>
 URL:http://<%= APP_CONFIG[:domain] %>/
 EMAIL;TYPE=INTERNET:<%= @user.email %>
 <% @user.addresses.each do |addr| %>
-<% if addr.phone %>
+<% unless addr.phone.empty? %>
 TEL;TYPE=voice,<%= addr.vcf_type %>:<%= addr.phone %>
 <% end %>
-<% if addr.mobile %>
+<% unless addr.mobile.empty? %>
 TEL;TYPE=voice,cell,<%= addr.vcf_type %>:<%= addr.mobile %>
 <% end %>
-<% if addr.fax %>
+<% unless addr.fax.empty? %>
 TEL;TYPE=fax,<%= addr.vcf_type %>:<%= addr.fax %>
 <% end %>
+<% unless addr.street.empty? %>
 ADR;TYPE=postal,parcel,<%= addr.vcf_type %>:;;<%= addr.street %>;<%= addr.city %>;;<%= addr.zip %>;
-<% if addr.remarks %>
+<% end %>
+<% unless addr.remarks.empty? %>
 NOTE:<%= addr.remarks %>
 <% end %>
 <% end %>
