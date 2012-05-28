@@ -38,6 +38,6 @@ gem 'cancan'
 gem "bcrypt-ruby", :require => "bcrypt"
 gem 'rails-i18n'
 gem 'copycopter_client', '~> 2.0.0'
-gem 'prawn'
+gem 'prawn', '~>1.0.0.rc1'
 gem 'kaminari'
 gem 'exception_notification_rails3', :require => 'exception_notifier'
