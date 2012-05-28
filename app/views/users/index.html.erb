@@ -28,6 +28,7 @@
         <%= show_link_to user if can?(:show, user) %>
         <%= edit_link_to user if can?(:edit, user) %>
         <%= destroy_link_to user if can?(:destroy, user) %>
+        <%= image_link_tag_helper "vcard", user_path(user, :format => :vcf) if can?(:show, user) %>
       </td>
     </tr>
   <% end %>

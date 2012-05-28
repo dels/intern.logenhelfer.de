@@ -6,9 +6,18 @@ ORG:<%= APP_CONFIG[:organisation] %>
 URL:http://<%= APP_CONFIG[:domain] %>/
 EMAIL;TYPE=INTERNET:<%= @user.email %>
 <% @user.addresses.each do |addr| %>
+<% if addr.phone %>
 TEL;TYPE=voice,<%= addr.purpose %>:<%= addr.phone %>
+<% end %>
+<% if addr.mobile %>
+TEL;TYPE=voice,cell,<%= addr.purpose %>:<%= addr.mobile %>
+<% end %>
+<% if addr.fax %>
 TEL;TYPE=fax,<%= addr.purpose %>:<%= addr.fax %>
-ADR;TYPE=postal,parcel,<%= addr.purpose %>:;;<%= addr.street1 %> <%= addr.street2 %> <%= addr.street3 %>;<%= addr.city %>;;<%= addr.zip %>;
+<% end %>
+ADR;TYPE=postal,parcel,<%= addr.purpose %>:;;<%= addr.street %>;<%= addr.city %>;;<%= addr.zip %>;
+<% if addr.remarks %>
 NOTE:<%= addr.remarks %>
+<% end %>
 <% end %>
 END:VCARD
