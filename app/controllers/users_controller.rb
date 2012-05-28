@@ -94,7 +94,7 @@ class UsersController < AuthorizedController
       row(0).font_style = :bold
     end
 
-    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Geburtstagsliste.pdf"
+    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Telefonliste.pdf"
   end
 
   def show
