@@ -29,6 +29,7 @@ ActiveRecord::Schema.define(:version => 20120528110742) do
     t.boolean  "deleted",          :default => false
     t.datetime "created_at",                                   :null => false
     t.datetime "updated_at",                                   :null => false
+    t.integer  "type_of_address"
   end
 
   create_table "attached_file_roles", :force => true do |t|

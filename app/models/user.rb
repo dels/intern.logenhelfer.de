@@ -18,15 +18,13 @@ class User < ActiveRecord::Base
 
   validates_uniqueness_of :matriculation_number
 
+  validate :validate_addresses
+
   has_many_addresses
   has_many :file_downloads
   has_many :user_roles
   has_many :roles, :through => :user_roles
   has_many :attached_files
-
-#  has_many_addresses
-
-
 
   TITLES = {
     "Dipl. Ing."                 => 1,
@@ -129,4 +127,12 @@ class User < ActiveRecord::Base
 
   alias to_s fullname
 
+  def validate_addresses
+    if 1 < addresses.where(:type_of_address => 0).count
+      errors.add(:base, I18n.t("activerecord.errors.maximum_private_addresses_exceeded"))
+    end
+    if 1 < addresses.where(:type_of_address => 1).count
+      errors.add(:base, I18n.t("activerecord.errors.maximum_business_addresses_exceeded"))
+    end
+  end
 end
