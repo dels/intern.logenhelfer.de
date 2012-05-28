@@ -1,6 +1,6 @@
 class Ability
   include CanCan::Ability
- 
+
   def initialize(user)
     return unless user
     @user = user
@@ -29,6 +29,7 @@ class Ability
   end
 
   def admin_abilities
+    can :manage, Event
     can :manage, Category
     can :manage, Directory
     can :manage, AttachedFile

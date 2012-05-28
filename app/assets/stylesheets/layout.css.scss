@@ -275,13 +275,30 @@ dd {
     margin: 0 0 .5ex;
   }
   dl {
-    margin: 10px 0;
+    margin: 0 0 10px;
   }
   dt {
     width: 120px;
   }
   dd {
     margin-left: 130px;
+  }
+}
+
+dl.inverse-width {
+  dt {
+    width: 120px;
+  }
+  dd {
+    margin-left: 130px;
+  }
+  dl {
+    dt {
+      width: $nav-width;
+    }
+    dd {
+      margin-left: 1.1*$nav-width;
+    }
   }
 }
 

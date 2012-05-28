@@ -1,0 +1,9 @@
+<% title t("activerecord.actions.edit", :model => t("activerecord.models.event")) %>
+
+<p class="horizontal-menu">
+  <%= show_link_to @event if can?(:show, @event) %>
+  <%= show_link_to_all events_path if can?(:index, Event) %>
+</p>
+
+<%= render 'form' %>
+

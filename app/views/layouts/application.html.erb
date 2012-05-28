@@ -38,6 +38,7 @@
         <h4>Debugging (dev-only)</h4>
         <h5>current_user:</h5> <pre><%= current_user.to_yaml %></pre>
         <h5>params:</h5> <%= debug params %>
+        <h5>URIs</h5> <%= debug 'fullpath' => request.fullpath, 'path' => request.path %>
       </footer>
     <% end%>
 

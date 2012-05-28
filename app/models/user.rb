@@ -7,12 +7,12 @@ class User < ActiveRecord::Base
   extend FriendlyId
   friendly_id :uuid
 
-  devise :database_authenticatable, :recoverable, :rememberable, :trackable, 
-         :validatable, :timeoutable#, :timeout_in => 1.hour
+  devise :database_authenticatable, :recoverable, :rememberable, :trackable,
+      :validatable, :timeoutable#, :timeout_in => 1.hour
 
   attr_accessible :email, :password, :password_confirmation, :remember_me, :firstname, :lastname,
-  :date_of_birth, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title, 
-  :title, :entered_apprentice_since, :fellow_craft_since, :master_mason_since
+      :date_of_birth, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title,
+      :title, :entered_apprentice_since, :fellow_craft_since, :master_mason_since
 
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
 
@@ -49,7 +49,7 @@ class User < ActiveRecord::Base
   end
 
   def fullname
-    "#{title_str || ''} #{firstname} #{lastname}"
+    [ title_str, firstname, lastname ].compact.join(' ')
   end
 
   def num_degree
@@ -98,7 +98,7 @@ class User < ActiveRecord::Base
     ur.role_added_at = date
     ur.save!
   end
-  
+
   def fellow_craft_since=(date)
     return if date.blank?
     ur = self.user_roles.where(:role_id => Role.find_by_name('FellowCraft')).first
@@ -130,7 +130,7 @@ class User < ActiveRecord::Base
   def positions
     self.roles & Role.positions - (Role.where(:name => ['Admin', 'Uploader']))
   end
-  
+
   def self.get_secretary
     secretary_user_role = Role.find_by_name("Secretary").user_roles.first
     secretary_user_role.user if secretary_user_role
@@ -145,5 +145,21 @@ class User < ActiveRecord::Base
     if(1 < (addresses.to_a.select{|addr| 1 == addr.type_of_address }).count)
       errors.add(:base, I18n.t("activerecord.errors.maximum_business_addresses_exceeded"))
     end
+  end
+
+  scope :upcoming_birthdays, ->(from,to) {
+    extracton = 'EXTRACT(day FROM date_of_birth - date_trunc(\'year\', date_of_birth))'
+    where("#{extracton} >= ? AND #{extracton} <= ?", from.yday, to.yday)
+  }
+
+  def self.upcoming_birthday_events(start_date, end_date)
+    upcoming_birthdays(start_date, end_date).map {|user|
+      Event.new.tap {|e|
+        e.date      = user.date_of_birth.change(year: start_date.year)
+        e.title     = "#{Event.human_attribute_name('type/birthday')}: #{user.fullname}"
+        e.whole_day = true
+        e.birthday!
+      }
+    }
   end
 end

@@ -83,6 +83,24 @@ ActiveRecord::Schema.define(:version => 20120528123116) do
     t.datetime "updated_at",   :null => false
   end
 
+  create_table "events", :force => true do |t|
+    t.string   "title"
+    t.text     "public_description"
+    t.text     "private_description"
+    t.boolean  "whole_day"
+    t.integer  "duration"
+    t.integer  "created_by_id"
+    t.integer  "updated_by_id"
+    t.boolean  "deleted",             :default => false
+    t.datetime "created_at",                             :null => false
+    t.datetime "updated_at",                             :null => false
+    t.date     "date",                                   :null => false
+    t.time     "time",                                   :null => false
+  end
+
+  add_index "events", ["created_by_id"], :name => "index_events_on_created_by_id"
+  add_index "events", ["updated_by_id"], :name => "index_events_on_updated_by_id"
+
   create_table "file_downloads", :force => true do |t|
     t.integer  "attached_file_id"
     t.integer  "user_id"
