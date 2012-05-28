@@ -59,6 +59,17 @@ class User < ActiveRecord::Base
     degree
   end
 
+  def business_address
+
+  end
+
+  def private_address
+
+  end
+
+  def other_addresses
+
+  end
 
   def entered_apprentice_since
     unless roles.find_by_name('EnteredApprentice')

@@ -27,4 +27,12 @@ class Address < ActiveRecord::Base
     return purpose if 2 == type_of_address
     "activerecord.address.#{TYPES.rassoc(type_of_address)[0]}"
   end
+
+  def street
+    return "" if(street1.blank?)
+    return street1 if(street2.blank? && street3.blank?)
+    return "#{street1}\n#{street3}" if(street2.blank? && false == street3.blank?)
+    "#{street1}\n#{street2}\n#{street3}"
+  end
+
 end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120528110742) do
+ActiveRecord::Schema.define(:version => 20120528123116) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -30,6 +30,7 @@ ActiveRecord::Schema.define(:version => 20120528110742) do
     t.datetime "created_at",                                   :null => false
     t.datetime "updated_at",                                   :null => false
     t.integer  "type_of_address"
+    t.string   "mobile"
   end
 
   create_table "attached_file_roles", :force => true do |t|
