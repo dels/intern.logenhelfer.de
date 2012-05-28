@@ -1,0 +1,49 @@
+<%- title "Die Woche #{l @date, format: '%d.%m.'}-#{l @date.end_of_week, format: '%d.%m.%Y'}" -%>
+
+<%= render 'events/menu', date: @date -%>
+
+<table class="calendar week">
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="2"><%= link_to l(@date.prev_week, format: '← KW %W'), upcoming_calendar_path(week: @date.prev_week) %></th>
+      <th colspan="3"><%= l @date, format: 'KW %W' %></th>
+      <th colspan="2"><%= link_to l(@date.next_week, format: 'KW %W →'), upcoming_calendar_path(week: @date.next_week) %></th>
+    </tr>
+    <tr>
+      <th class="time">Zeit</th>
+      <%- (1..7).each do |dow| -%>
+        <th class="dow"><%= raw l(@date + dow.days - 1, format: '%A<br/>%d.%m.%Y') %></th>
+      <%- end -%>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="line below">
+      <td></td>
+      <%- (0..6).each do |i| -%>
+        <td class="day">
+          <ul>
+            <%- @whole_day_events[i].each do |event| -%>
+              <li class="event %>"><%= link_to event, event %></li>
+            <%- end -%>
+          </ul>
+        </td>
+      <%- end -%>
+    </tr>
+    <%- (0...24).each do |hour| -%>
+      <%= content_tag :tr, class: ('now' if Time.now.hour == hour) do -%>
+        <td class="day time"><%= "#{hour}:00" %></td>
+        <%- (0..6).each do |i| -%>
+          <%= content_tag :td, class: :day, data: calendar_context_menu(@date, hour, i) do -%>
+            <ul>
+              <%- @events[i].each do |event| -%>
+                <%- next unless event.time.hour == hour -%>
+                <li class="event"><%= link_to "#{l event.time, format: :time} #{event}", event %></li>
+              <%- end -%>
+            </ul>
+          <%- end -%>
+        <%- end -%>
+      <%- end -%>
+    <%- end -%>
+  </tbody>
+</table>
