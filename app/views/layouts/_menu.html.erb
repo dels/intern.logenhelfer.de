@@ -1,32 +1,36 @@
 <%- if user_signed_in? -%>
   <ul>
-    <li><%= t "devise.information.signed_in_as", :user =>  current_user.email %></li>
+    <li><%= t "devise.information.signed_in_as", user: current_user.email %></li>
     <li class="space-bottom"><%= link_to t("devise.links.sign_out"), destroy_user_session_path %></li>
     <li class="more space-top">
       <ul>
-        <% if can? :create, Category %>
-          <%= content_tag :li, :class => (request.fullpath =~ /^\/categories$/ ? 'active' : nil) do %>
-            <%= link_to t("activerecord.models.cateories"), categories_path %>
-          <% end %>
-        <% end %>
+        <%- if can? :index, Event -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)/ ? 'active' : nil) do -%>
+            <%= link_to t("activerecord.models.events"), upcoming_calendar_path -%>
+          <%- end -%>
+        <%- end -%>
 
-        <%= authorized_menu_item User, users_path do %>
-          <% if request.fullpath =~ /^\/users/ %>
-            <%= content_tag(:li, :class => (request.fullpath =~ /^\/users\/members_list/ ? 'active space-bottom' : 'space-bottom')) do %>
-              <%= link_to(t("helpers.pdf.memberslist"), users_members_list_path) %>
-            <% end %>
-          <% end %>
-        <% end %>
-        <%= authorized_menu_item FileDownload, file_downloads_path %>
+        <%= authorized_menu_item User, users_path do -%>
+          <%- if request.fullpath =~ /^\/users/ -%>
+            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/members_list/ ? 'active space-bottom' : 'space-bottom')) do -%>
+              <%= link_to(t("helpers.pdf.memberslist"), users_members_list_path) -%>
+            <%- end -%>
+          <%- end -%>
+        <%- end -%>
+
+        <%- if can? :create, Category -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/categories$/ ? 'active' : nil) do -%>
+            <%= link_to t("activerecord.models.cateories"), categories_path -%>
+          <%- end -%>
+        <%- end -%>
+        <%= authorized_menu_item FileDownload, file_downloads_path -%>
       </ul>
 
-      <ul class="more space-top">
-        <%= categories_menu %>
-      </ul>
+      <ul class="more space-top"><%= categories_menu %></ul>
     </li>
 <%- else -%>
   <ul>
-    <%= content_tag :li, link_to(t("links.pages.index"), root_url) %>
-    <%= content_tag :li, link_to(t("devise.links.sign_in"), new_user_session_path) %>
+    <%= content_tag :li, link_to(t("links.pages.index"), root_url) -%>
+    <%= content_tag :li, link_to(t("devise.links.sign_in"), new_user_session_path) -%>
   </ul>
 <%- end -%>
