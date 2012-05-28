@@ -13,7 +13,7 @@ class EventsController < AuthorizedController
 
     return day    if params[:day]
     return month  if params[:month]
-    year
+    month
   end
 
   def upcoming
@@ -33,6 +33,9 @@ class EventsController < AuthorizedController
 
     @whole_day_events = Hash.new {|h,k| h[k] = [] }
     events.where('events.whole_day = ?', true).each do |event|
+      @whole_day_events[event.date.days_to_week_start] << event
+    end
+    User.upcoming_birthday_events(@date, @date.end_of_week).each do |event|
       @whole_day_events[event.date.days_to_week_start] << event
     end
   end
@@ -77,7 +80,8 @@ private
     last_view         = calendar_path(year: @date.year, month: @date.month, day: @date.day)
     @partial          = :day
     @events           = Event.where('events.date >= ? AND events.date <= ?', @date.beginning_of_day, @date.end_of_day)
-    @whole_day_events = @events.where(whole_day: true)
+
+    @whole_day_events = @events.where(whole_day: true).to_a + User.upcoming_birthday_events(@date.beginning_of_day, @date.end_of_day)
     @events           = @events.where(whole_day: false)
   end
 
@@ -94,7 +98,8 @@ private
       next_month:     lambda {|d| @ctx.link_to("#{I18n.l d, format: '%B'} &raquo;".html_safe, @ctx.calendar_path(year: d.year, month: d.month)) }
     }
 
-    events = Event.where('events.date >= ? AND events.date <= ?', @date - 7.days, @date + 35.days)
+    events = Event.where('events.date >= ? AND events.date <= ?', @date - 7.days, @date + 35.days).to_a +
+        User.upcoming_birthday_events(@date - 7.days, @date + 35.days)
 
     @events_by_date = Hash.new {|h,k| h[k] = Hash.new {|l,m| l[m] = [] } }
     events.each do |event|
@@ -104,13 +109,6 @@ private
     @calendar = LaterDude::Calendar.new(@date.year, @date.month, calendar_options) do |date|
       @ctx.render 'month_day', date: date, events: @events_by_date
     end
-  end
-
-  def year
-    @date         = Date.parse("#{@year}/1/1")
-    last_view     = calendar_path(year: @date.year)
-    @partial      = :year
-    @events       = Event.where('events.date >= ? AND events.date <= ?', @date.beginning_of_year, @date.end_of_year)
   end
 
   def last_view=(where)

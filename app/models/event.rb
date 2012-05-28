@@ -17,4 +17,17 @@ class Event < ActiveRecord::Base
   def to_s
     title
   end
+
+  TYPES = [:birthday]
+  TYPES.each do |t|
+    define_method("#{t}?") { @event_type == t }
+    define_method("#{t}!") { @event_type =  t }
+  end
+
+  def event_type
+    classes = []
+    classes << 'whole-day'            if self.whole_day?
+    classes << "type-#{@event_type}"  if @event_type.present?
+    classes.join(' ')
+  end
 end

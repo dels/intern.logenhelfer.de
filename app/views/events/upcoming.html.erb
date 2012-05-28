@@ -24,7 +24,7 @@
         <td class="day">
           <ul>
             <%- @whole_day_events[i].each do |event| -%>
-              <li class="event %>"><%= link_to event, event %></li>
+              <li class="event <%= event.event_type %>"><%= link_to event, event %></li>
             <%- end -%>
           </ul>
         </td>
@@ -38,7 +38,7 @@
             <ul>
               <%- @events[i].each do |event| -%>
                 <%- next unless event.time.hour == hour -%>
-                <li class="event"><%= link_to "#{l event.time, format: :time} #{event}", event %></li>
+                <li class="event <%= event.event_type %>"><%= link_to "#{l event.time, format: :time} #{event}", event %></li>
               <%- end -%>
             </ul>
           <%- end -%>

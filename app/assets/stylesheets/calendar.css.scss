@@ -144,7 +144,7 @@ table.calendar.week {
 
     li.event {
       @include radii(2px);
-      border: 1px solid $link-color;
+      border: 1px solid rgba($link-color, 0.5);
       margin: 1px 0;
       @include linear-gradient(lighten($light-color, 33%), $light-color);
 
@@ -154,12 +154,8 @@ table.calendar.week {
         padding-left: 20px;
       }
     }
-    li.event.doctor         a { background-image: image-url("event_doctor.png"); }
-    li.event.teacher        a { background-image: image-url("event_school.png"); }
-    li.event.youth_office   a { background-image: image-url("event_youth_office.png"); }
-    li.event.miscellaneous  a { background-image: image-url("event_misc.png"); }
-    li.event.birthday       a { background-image: image-url("event_birthday.png"); }
-    li.event.all-day        a { background-image: image-url("event_all_day.png"); }
+    li.event.whole-day        a { background-image: image-url("event_all_day.png"); }
+    li.event.type-birthday    a { background-image: image-url("event_birthday.png"); }
 
     a {
       color: $black;
