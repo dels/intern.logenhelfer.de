@@ -66,6 +66,16 @@ FwzeIntern::Application.configure do
   # config.active_record.auto_explain_threshold_in_seconds = 0.5
 
 
+  config.action_mailer.smtp_settings = {
+    :address => "mail.paedagogikum.de",
+    :port => 25,
+    :domain => "paedagogikum.de",
+    :user_name => "website@paedagogikum.de",
+    :password => "thenewpaedagogikumpasswordsince:2012",
+    :authentication => :login,
+    :openssl_verify_mode => 'none'
+  }
+
   config.middleware.use ExceptionNotifier,
     :email_prefix => "[Exception] ",
     :sender_address => %{"Exception Notifier" <technik@fwze.de>},
