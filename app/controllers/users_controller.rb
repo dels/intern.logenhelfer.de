@@ -78,6 +78,24 @@ class UsersController < AuthorizedController
 
     send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Geburtstagsliste.pdf"
   end
+  
+  def phone_list
+    pdf = Prawn::Document.new(:page_layout => :landscape)
+    
+    usr_arr = []
+    # defining cell headlines
+    usr_arr << [ "Titel", "Nachname", "Vorname", "Telefon", "Mobil" , "Fax" ]
+    # adding table
+    @users.order(:lastname).order(:firstname).each do |usr|
+      usr_arr << [ usr.title_str, usr.lastname, usr.firstname, usr.phone_numbers_printable, usr.fax_numbers_printable, usr.mobile_numbers_printable ]
+    end
+    pdf.table(usr_arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
+      row(0).border_width = 2
+      row(0).font_style = :bold
+    end
+
+    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Geburtstagsliste.pdf"
+  end
 
   def show
   end
