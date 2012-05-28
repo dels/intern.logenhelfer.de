@@ -60,7 +60,7 @@ class User < ActiveRecord::Base
   end
 
   def business_address
-
+    
   end
 
   def private_address

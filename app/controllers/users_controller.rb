@@ -17,24 +17,24 @@ class UsersController < AuthorizedController
     # defining cell headlines
     usr_arr << [ "MNr. ", "Titel", "Nachname", "Vorname", "Beruf", "Grad", "Aufgenommen am" , "Angenommen am", "Geburtstag",
                  # business address
-                 "gesch. Str", "gesch. Plz", "gesch. Ort", "gesch. Telefon", "gesch. Fax", "gesch. E-Mail", 
+                 "gesch. Str", "gesch. Plz", "gesch. Ort", "gesch. Telefon", "gesch. Mobil", "gesch. Fax", "gesch. E-Mail", 
                  # private address
                  "priv. Str", "priv. Plz", "priv. Ort", "priv. Telefon", "priv. Fax", "priv. E-Mail", 
                  # position
                  "Ämter"
                ]
     # adding table
-    bsns_addr = @user.business_address
-    priv_addr = @user.private_address
     @users.order(:lastname).order(:firstname).order(:matriculation_number).each do |usr|
+      bsns_addr = usr.business_address
+      priv_addr = usr.private_address
       usr_arr << [ usr.matriculation_number, usr.title_str, usr.lastname, usr.firstname, usr.job_title, usr.num_degree, 
                    usr.entered_apprentice_since, usr.accepted_at, usr.date_of_birth, 
                    # business address
-                   bsns_addr.street, bsns_addr.zip, , bsns_addr.city, bsns_addr.phone, bsns_addr.mobile, bsns_addr.fax, bsns_addr.email,
+                   bsns_addr.street, bsns_addr.zip, bsns_addr.city, bsns_addr.phone, bsns_addr.mobile, bsns_addr.fax, bsns_addr.email,
                    # private address
-                   "gesch. Str", "gesch. Plz", "gesch. Ort", "gesch. Telefon", "gesch. Fax", "gesch. E-Mail", 
+                   priv_addr.street, priv_addr.zip, priv_addr.city, priv_addr.phone, priv_addr.mobile, priv_addr.fax, priv_addr.email,
                    # positions
-                   "Amt"
+                   @user.positions.join(", ")
                  ]
     end
     pdf.table(usr_arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
