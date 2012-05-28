@@ -1,6 +1,6 @@
 ﻿/*
  Copyright 2012 Igor Vaynberg
- 
+
  Version: 2.0 Timestamp: Wed, May 16, 2012 10:38:37 AM
 
  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this work except in

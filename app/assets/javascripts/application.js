@@ -13,7 +13,7 @@
 
 jQuery(function() {
   // dropdown lists
-  $("section select:not(:disabled):not(.very-small)").select2();
+  $("section select:not(:disabled):not(.very-small)").css({ width:'20em'}).select2();
 
   // date picker
   $("section input.datepicker").datepicker({ dateFormat: cur_locale_date_format });

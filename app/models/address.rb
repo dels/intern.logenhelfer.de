@@ -24,24 +24,23 @@ class Address < ActiveRecord::Base
   belongs_to :addressable, :polymorphic => true
 
   def purpose
-    return read_attribute(:purpose) if 2 == type_of_address
+    return read_attribute(:purpose) if type_of_address == 2 || type_of_address.blank?
     I18n.t("activerecord.address.#{TYPES.rassoc(type_of_address)[0]}")
   end
 
   def street
-    return "" if(street1.blank?)
-    return street1 if(street2.blank? && street3.blank?)
-    return "#{street1}\n#{street3}" if(street2.blank? && false == street3.blank?)
-    "#{street1}\n#{street2}\n#{street3}"
+    # XXX: for educational reasons, I won't delete this:
+    # return ""                       if street1.blank?
+    # return street1                  if street2.blank? && street3.blank?
+    # return "#{street1}\n#{street3}" if street2.blank? && street3.present?
+    # "#{street1}\n#{street2}\n#{street3}"
+
+    [street1, street2, street3].compact.join("\n")
   end
-  
+
   def vcf_type
-    if private?
-      return "home"
-    end
-    if business?
-      return "work"
-    end
+    return "home" if private?
+    return "work" if business?
     purpose
   end
 

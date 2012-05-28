@@ -17,26 +17,25 @@
     <%= f.date_select :entered_apprentice_since %>
     <%= f.date_select :fellow_craft_since %>
     <%= f.date_select :master_mason_since %>
-    
+
     <% if current_user.roles.include?(Role.find_by_name('Admin')) %>
-      <%= f.collection_select :roles, (Role.position_ids), :id, :to_s, { :selected => (@user.role_ids) }, { :style => 'width:300px', :multiple => true, :name => 'user[role_ids][]' } %>
+      <%= f.collection_select :roles, Role.position_ids, :id, :to_s, { selected: @user.role_ids }, style: 'width:300px', multiple: true, name: 'user[role_ids][]' %>
+    <% else %>
+      <ul>
+        <% (@user.roles & Role.degrees).each do |role| %>
+          <li><%= role %></li>
+        <% end %>
+      </ul>
+    <% end %>
+    <%= f.submit %>
+  </dl>
 
-
-      <% else %>
-        <ul>
-          <% (@user.roles & Role.degrees).each do |role| %>
-            <li><%= role %></li>
-          <% end %>
-        </ul>
-      <% end %>
-
-      <%= f.submit %>
-      <h2><%= t 'user_fields.address_attributes' %></h2>
-    <p><%= link_to_add_fields Address.human_attribute_name(:add_fields), f, :addresses %></p>
-    <dl>
-      <%= f.fields_for :addresses do |builder| %>
-        <%= render 'addresses/form_fields', :f => builder %>
-      <% end %>
-      <%= f.submit %>
+  <h2><%= t 'user_fields.address_attributes' %></h2>
+  <p><%= link_to_add_fields Address.human_attribute_name(:add_fields), f, :addresses %></p>
+  <dl>
+    <%= f.fields_for :addresses do |builder| %>
+      <%= render 'addresses/form_fields', :f => builder %>
+    <% end %>
+    <%= f.submit %>
   </dl>
 <% end %>

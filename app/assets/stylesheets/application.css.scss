@@ -1,4 +1,4 @@
-$main-color:      adjust-hue(#66a, -33deg);
+$main-color:      adjust-hue(#66a, -30deg);
 $link-color:      desaturate($main-color, 90%);
 $dark-color:      darken($main-color, 25%);
 $light-color:     lighten($main-color, 25%);
@@ -47,6 +47,7 @@ $nav-width:       210px;
 }
 
 @import 'jquery.ui.all';
+@import 'select2';
 
 label {
   cursor: pointer;
@@ -136,4 +137,3 @@ dd div input.ui-autocomplete-input {
 @import 'error';
 @import 'jquery.contextMenu';
 @import 'calendar';
-@import 'select2';
