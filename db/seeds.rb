@@ -50,15 +50,15 @@ block 'create roles' do
   log Role.create!(:name => "Treasurer", :display_name => "Schatzmeister")
   log Role.create!(:name => "JuniorDeacon", :display_name => "2. Schaffer")
   log Role.create!(:name => "SeniorDeacon", :display_name => "1. Schaffer")
-  
+
 end
 
-block 'create users' do 
+block 'create users' do
   log u = User.create!(
-                       :matriculation_number => 891,
-                       :email => 'deft@deftwork.com', 
-                       :password => 'keks4096', 
-                       :firstname => "El", 
+                       :matriculation_number => 890,
+                       :email => 'deft@deftwork.com',
+                       :password => 'keks4096',
+                       :firstname => "El",
                        :lastname => "Chefe",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
@@ -72,10 +72,10 @@ block 'create users' do
   u.roles << mocr
   u.save!
   log u = User.create!(
-                       :matriculation_number => 892,
-                       :email => 'uploader@fwze.de', 
-                       :password => 'keks1024', 
-                       :firstname => "Hoch", 
+                       :matriculation_number => 891,
+                       :email => 'uploader@fwze.de',
+                       :password => 'keks1024',
+                       :firstname => "Hoch",
                        :lastname => "Lader",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
@@ -88,9 +88,9 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        :matriculation_number => 892,
-                       :email => 'sekretaer@fwze.de', 
-                       :password => 'keks1024', 
-                       :firstname => "Korrespondierender", 
+                       :email => 'sekretaer@fwze.de',
+                       :password => 'keks1024',
+                       :firstname => "Korrespondierender",
                        :lastname => "Schriftfuehrer",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
@@ -102,9 +102,9 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        :matriculation_number => 893,
-                       :email => 'meister@fwze.de', 
-                       :password => 'keks1024', 
-                       :firstname => "master", 
+                       :email => 'meister@fwze.de',
+                       :password => 'keks1024',
+                       :firstname => "master",
                        :lastname => "mason",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
@@ -115,9 +115,9 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        :matriculation_number => 894,
-                       :email => 'geselle@fwze.de', 
-                       :password => 'keks1024', 
-                       :firstname => "fellow", 
+                       :email => 'geselle@fwze.de',
+                       :password => 'keks1024',
+                       :firstname => "fellow",
                        :lastname => "craft",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
@@ -127,9 +127,9 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        :matriculation_number => 895,
-                       :email => 'lehrling@fwze.de', 
-                       :password => 'keks1024', 
-                       :firstname => "entered", 
+                       :email => 'lehrling@fwze.de',
+                       :password => 'keks1024',
+                       :firstname => "entered",
                        :lastname => "apprentice",
                        :job_title => "freemason",
                        :date_of_birth => Date.today - 40.years,
@@ -174,98 +174,98 @@ end
 block 'create directories' do
   # Rituale
   log Directory.create!(
-                        :category => rite_cat, 
+                        :category => rite_cat,
                         :name => "Lehrling",
                         :roles => [er, fr , mr]
                         )
   log Directory.create!(
-                        :category => rite_cat, 
+                        :category => rite_cat,
                         :name => "Geselle",
                         :roles => [fr , mr]
                         )
   log Directory.create!(
-                        :category => rite_cat, 
+                        :category => rite_cat,
                         :name => "Meister",
                         :roles => [mr]
                         )
   # Literatur
   log Directory.create!(
-                        :category => lit_cat, 
+                        :category => lit_cat,
                         :name => "Allgemeines",
                         :roles => [er, fr , mr]
                         )
 
   log Directory.create!(
-                        :category => lit_cat, 
+                        :category => lit_cat,
                         :name => "Royal York",
                         :roles => [er, fr , mr]
                         )
   log Directory.create!(
-                        :category => lit_cat, 
+                        :category => lit_cat,
                         :name => "Fessler",
                         :roles => [er, fr , mr]
                         )
   log Directory.create!(
-                        :category => lit_cat, 
+                        :category => lit_cat,
                         :name => "Handbücher",
                         :roles => [er, fr , mr]
                         )
   log Directory.create!(
-                        :category => lit_cat, 
+                        :category => lit_cat,
                         :name => "Interne Dokumente",
                         :roles => [er, fr , mr]
                         )
   log Directory.create!(
-                        :category => lit_cat, 
+                        :category => lit_cat,
                         :name => "eBooks",
                         :roles => [er, fr , mr]
                         )
   # Sonstiges
   log Directory.create!(
-                        :category => misc_cat, 
+                        :category => misc_cat,
                         :name => "Presse",
                         :roles => [er, fr , mr]
                         )
   # Zeichnungen
   log Directory.create!(
-                        :category => paint_cat, 
+                        :category => paint_cat,
                         :name => "Zeichnungen",
                         :roles => [er, fr , mr]
                         )
   # Verzeichnisse
   log Directory.create!(
-                        :category => dir_cat, 
+                        :category => dir_cat,
                         :name => "Intern",
                         :roles => [er, fr , mr]
                         )
   log Directory.create!(
-                        :category => dir_cat, 
+                        :category => dir_cat,
                         :name => "Telefonliste",
                         :roles => [er, fr , mr]
                         )
   log Directory.create!(
-                        :category => dir_cat, 
+                        :category => dir_cat,
                         :name => "Witwenliste",
                         :roles => [er, fr , mr]
                         )
   # Beamtenrat
   log Directory.create!(
-                        :category => council_cat, 
+                        :category => council_cat,
                         :name => "Protokolle",
                         :roles => [mocr]
                         )
   log Directory.create!(
-                        :category => council_cat, 
+                        :category => council_cat,
                         :name => "Vorstand",
                         :roles => [mocr]
                         )
   log Directory.create!(
-                        :category => council_cat, 
+                        :category => council_cat,
                         :name => "Posteingang",
                         :roles => [mocr]
                         )
   log Directory.create!(
-                        :category => council_cat, 
+                        :category => council_cat,
                         :name => "Gästeliste",
                         :roles => [mocr]
                         )
