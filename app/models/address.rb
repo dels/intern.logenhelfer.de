@@ -1,5 +1,5 @@
 class Address < ActiveRecord::Base
-  attr_accessible :purpose, :street1, :street2, :street3,
+  attr_accessible :purpose, :street1, :street2, :street3, :mobile,
       :zip, :city, :phone, :fax, :email, :remarks, :type_of_address
 
   default_scope where(:deleted => false)
@@ -24,7 +24,7 @@ class Address < ActiveRecord::Base
   belongs_to :addressable, :polymorphic => true
 
   def purpose
-    return purpose if 2 == type_of_address
+    return read_attribute(:purpose) if 2 == type_of_address
     I18n.t("activerecord.address.#{TYPES.rassoc(type_of_address)[0]}")
   end
 
