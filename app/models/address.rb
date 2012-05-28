@@ -34,5 +34,15 @@ class Address < ActiveRecord::Base
     return "#{street1}\n#{street3}" if(street2.blank? && false == street3.blank?)
     "#{street1}\n#{street2}\n#{street3}"
   end
+  
+  def vcf_type
+    if private?
+      return "home"
+    end
+    if business?
+      return "work"
+    end
+    purpose
+  end
 
 end

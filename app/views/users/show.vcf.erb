@@ -1,5 +1,6 @@
 BEGIN:VCARD
 VERSION:3.0
+CLASS:CONFIDENTIAL
 N:<%= @user.lastname %>; <%= @user.firstname %>
 FN:<%= @user.fullname %>
 ORG:<%= APP_CONFIG[:organisation] %>
@@ -7,15 +8,15 @@ URL:http://<%= APP_CONFIG[:domain] %>/
 EMAIL;TYPE=INTERNET:<%= @user.email %>
 <% @user.addresses.each do |addr| %>
 <% if addr.phone %>
-TEL;TYPE=voice,<%= addr.purpose %>:<%= addr.phone %>
+TEL;TYPE=voice,<%= addr.vcf_type %>:<%= addr.phone %>
 <% end %>
 <% if addr.mobile %>
-TEL;TYPE=voice,cell,<%= addr.purpose %>:<%= addr.mobile %>
+TEL;TYPE=voice,cell,<%= addr.vcf_type %>:<%= addr.mobile %>
 <% end %>
 <% if addr.fax %>
-TEL;TYPE=fax,<%= addr.purpose %>:<%= addr.fax %>
+TEL;TYPE=fax,<%= addr.vcf_type %>:<%= addr.fax %>
 <% end %>
-ADR;TYPE=postal,parcel,<%= addr.purpose %>:;;<%= addr.street %>;<%= addr.city %>;;<%= addr.zip %>;
+ADR;TYPE=postal,parcel,<%= addr.vcf_type %>:;;<%= addr.street %>;<%= addr.city %>;;<%= addr.zip %>;
 <% if addr.remarks %>
 NOTE:<%= addr.remarks %>
 <% end %>
