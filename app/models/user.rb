@@ -60,15 +60,15 @@ class User < ActiveRecord::Base
   end
 
   def business_address
-    
+    addresses.where(:type_of_address => Address::TYPES[:business]).first
   end
 
   def private_address
-
+    addresses.where(:type_of_address => Address::TYPES[:private]).first
   end
 
   def other_addresses
-
+    addresses.where(:type_of_address => Address::TYPES[:other])
   end
 
   def entered_apprentice_since
