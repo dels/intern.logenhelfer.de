@@ -1,4 +1,4 @@
-<% title t("activerecord.models.user") %>
+<% title @user.fullname %>
 
 <p class="horizontal-menu">
   <%= edit_link_to @user if can?(:edit, @user) %>
