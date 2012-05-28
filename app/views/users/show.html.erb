@@ -4,6 +4,7 @@
   <%= edit_link_to @user if can?(:edit, @user) %>
   <%= destroy_link_to @user if can?(:destroy, @user) %>
   <%= show_link_to_all User if can?(:index, User) %>
+  <%= image_link_tag_helper "vcard", user_path(@user, :format => :vcf) %>
 </p>
 
 <dl>

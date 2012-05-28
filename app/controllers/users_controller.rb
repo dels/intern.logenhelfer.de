@@ -56,6 +56,7 @@ class UsersController < AuthorizedController
     set_user_degree_dates(params)
 
     if @user.update_attributes(params[:user])
+      UserMailer.change_notification(@user).deliver
       redirect_to @user, notice: t("activerecord.update_success", model: t("activerecord.models.user"))
     else
       render :edit

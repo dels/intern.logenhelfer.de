@@ -8,7 +8,7 @@ class User < ActiveRecord::Base
   friendly_id :uuid
 
   devise :database_authenticatable, :recoverable, :rememberable, :trackable, 
-         :validatable, :timeoutable
+         :validatable, :timeoutable#, :timeout_in => 1.hour
 
   attr_accessible :email, :password, :password_confirmation, :remember_me, :firstname, :lastname,
   :date_of_birth, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title, 
@@ -118,6 +118,11 @@ class User < ActiveRecord::Base
 
   def positions
     self.user_roles & Role.positions
+  end
+  
+  def self.get_secretary
+    secretary_user_role = Role.find_by_name("Secretary").user_roles.first
+    secretary_user_role.user if secretary_user_role
   end
 
   alias to_s fullname

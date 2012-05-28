@@ -127,6 +127,10 @@ dd div input.ui-autocomplete-input {
   padding: .5em 1ex !important;
 }
 
+#flash-timedout {
+  visibility: hidden;
+}
+
 @import 'layout';
 @import 'simpistic-layout';
 @import 'error';
