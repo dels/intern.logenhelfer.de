@@ -7,6 +7,7 @@ FwzeIntern::Application.routes.draw do
   resources :file_downloads
 
   get 'users/members_list', to: 'users#members_list'
+  get 'users/phone_list', to: 'users#phone_list'
   get 'users/birthday_list', to: 'users#birthday_list'
   post 'users/members_list', to: 'users#members_list'
 

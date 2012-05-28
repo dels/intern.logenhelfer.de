@@ -163,4 +163,34 @@ class User < ActiveRecord::Base
       }
     }
   end
+  
+  def phone_numbers_printable
+    strs = []
+    addresses.each do |addr|
+      unless addr.phone.empty?
+        strs << "#{addr.purpose}: #{addr.phone}"
+      end
+    end
+    strs.join("\n")
+  end
+  
+  def fax_numbers_printable
+    strs = []
+    addresses.each do |addr|
+      unless addr.fax.empty?
+        strs << "#{addr.purpose}: #{addr.fax}"
+      end
+    end
+    strs.join("\n")
+  end
+  
+  def mobile_numbers_printable
+    strs = []
+    addresses.each do |addr|
+      unless addr.mobile.empty?
+        strs << "#{addr.purpose}: #{addr.mobile}"
+      end
+    end
+    strs.join("\n")
+  end
 end
