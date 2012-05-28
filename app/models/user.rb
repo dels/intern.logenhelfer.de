@@ -124,11 +124,11 @@ class User < ActiveRecord::Base
   end
 
   def degrees
-    self.user_roles & Role.degrees
+    self.roles & Role.degrees
   end
 
   def positions
-    self.user_roles & Role.positions
+    self.roles & Role.positions - (Role.where(:name => ['Admin', 'Uploader']))
   end
 
   def self.get_secretary
