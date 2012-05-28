@@ -1,9 +1,10 @@
 <% title t("activerecord.models.event") + ": " + @event.title %>
 
+<%= render 'events/menu' %>
+
 <p class="horizontal-menu">
   <%= edit_link_to @event if can?(:edit, @event) %>
   <%= destroy_link_to @event if can?(:destroy, @event) %>
-  <%= show_link_to_all Event if can?(:index, Event) %>
 </p>
 
 <%= render @event %>

@@ -1,5 +1,6 @@
 class EventsController < AuthorizedController
   def index
+    redirect_to upcoming_calendar_path
   end
 
   def show
@@ -18,10 +19,10 @@ class EventsController < AuthorizedController
 
   def upcoming
     @date = if params[:week].present?
-      last_view = upcoming_calendar_path(week: params[:week])
+      last_view(upcoming_calendar_path(week: params[:week]))
       Date.parse(params[:week]).beginning_of_week
     else
-      last_view = upcoming_calendar_path
+      last_view(upcoming_calendar_path)
       Date.today.beginning_of_week
     end
     events = Event.where('events.date >= ? AND events.date <= ?', @date, @date.end_of_week)
@@ -77,7 +78,7 @@ private
 
   def day
     @date             = Date.parse("#{@year}/#{@month}/#{@day}")
-    last_view         = calendar_path(year: @date.year, month: @date.month, day: @date.day)
+    last_view(calendar_path(year: @date.year, month: @date.month, day: @date.day))
     @partial          = :day
     @events           = Event.where('events.date >= ? AND events.date <= ?', @date.beginning_of_day, @date.end_of_day)
 
@@ -87,7 +88,7 @@ private
 
   def month
     @date             = Date.parse("#{@year}/#{@month}/1")
-    last_view         = calendar_path(year: @date.year, month: @date.month)
+    last_view(calendar_path(year: @date.year, month: @date.month))
     @partial          = :month
     calendar_options  = {
       first_day_of_week: 1, # monday
@@ -111,7 +112,7 @@ private
     end
   end
 
-  def last_view=(where)
+  def last_view(where)
     session[:calendar_last_view] = where
   end
 
