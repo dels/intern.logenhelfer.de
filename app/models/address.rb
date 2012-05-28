@@ -25,7 +25,7 @@ class Address < ActiveRecord::Base
 
   def purpose
     return purpose if 2 == type_of_address
-    "activerecord.address.#{TYPES.rassoc(type_of_address)[0]}"
+    I18n.t("activerecord.address.#{TYPES.rassoc(type_of_address)[0]}")
   end
 
   def street
