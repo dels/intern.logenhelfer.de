@@ -121,6 +121,11 @@ class User < ActiveRecord::Base
   def positions
     self.user_roles & Role.positions
   end
+  
+  def self.get_secretary
+    secretary_user_role = Role.find_by_name("Secretary").user_roles.first
+    secretary_user_role.user if secretary_user_role
+  end
 
   alias to_s fullname
 
