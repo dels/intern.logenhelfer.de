@@ -1,5 +1,5 @@
 class Role < ActiveRecord::Base
-  attr_accessible :description, :name, :display_name
+  attr_accessible :description, :name, :display_name, :group
 
   validates_presence_of :name, :display_name
 
@@ -34,5 +34,9 @@ class Role < ActiveRecord::Base
 
   def to_s
     "#{display_name}"
+  end
+  
+  def is_group?
+    group
   end
 end
