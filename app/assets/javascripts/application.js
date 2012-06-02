@@ -9,6 +9,7 @@
 //= require calendar
 //= require events
 //= require select2
+//= require html54ie
 //= require_self
 
 jQuery(function() {

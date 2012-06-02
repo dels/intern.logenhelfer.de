@@ -1,7 +1,7 @@
 table.calendar {
   th {
     text-align: center;
-    border: 1px solid darken($link-color, 20%);
+    border: 1px solid $dark-color;
   }
   tbody tr {
     min-height: 6em;
@@ -69,7 +69,7 @@ table.calendar {
       font-weight: normal;
     }
     color: $link-color;
-    background-color: lighten($link-color, 40%);
+    background-color: $gray;
     font-style: italic;
     a {
       color: $link-color;
@@ -95,25 +95,21 @@ table.calendar {
 
 table.calendar.week {
   tr:hover {
-    background-color: $main-color;
-
-    td {
-      color: $white;
-    }
+    background-color: $gray;
 
     & td:nth-of-type(2n) {
-      background-color: lighten($main-color, 10%);
+      background-color: darken($gray, 10%);
     }
   }
 
   tr.now {
-    background-color: $light-color;
+    background-color: lighten($light-color, 10%);
     td {
       color: $white;
     }
 
     & td:nth-of-type(2n) {
-      background-color: lighten($light-color, 10%);
+      background-color: $light-color;
     }
   }
 
@@ -164,7 +160,7 @@ table.calendar.week {
   }
 
   td:nth-of-type(2n) {
-    background-color: lighten($link-color, 40%);
+    background-color: $gray;
   }
   td.active:nth-of-type(2n) {
     background-color: lighten($dark-color, 10%);

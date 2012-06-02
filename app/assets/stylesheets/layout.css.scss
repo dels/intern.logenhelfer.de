@@ -1,7 +1,7 @@
 html {
-  @include linear-gradient($main-color, darken($main-color, 5%));
+  @include linear-gradient($gray, darken($gray, 5%));
   background-repeat: no-repeat;
-  font: normal #{$box-distance}/#{$line-height} $font-family;
+  font: normal #{$font-size}/#{$line-height} $font-family;
   padding: 2em 0;
   color: $black;
 }
@@ -15,7 +15,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: $font-family;
   font-weight: bold;
-  color: $dark-color;
+  color: $main-color;
   margin: 1.75em 0 1em;
 }
 
@@ -59,22 +59,28 @@ nav#left {
     list-style: none;
     margin: 0;
     padding: 0;
+
+    ul {
+      margin: 0 -1em;
+      ul { margin: 0; }
+    }
   }
-  ul li, ul ul a {
-    padding: 2px 1em;
+  ul li,
+  ul ul a {
+    padding: 3px 1em;
   }
   ul ul li {
     padding: 0;
   }
   ul ul a {
     display: block;
-    background-color: $dark-color;
+    background-color: $link-color;
     color: $white;
     text-decoration: none;
-    margin: 1px 0;
+    margin: 0;
 
     &:hover {
-      color: $dark-color;
+      color: $link-color;
       background-color: $white;
     }
   }
@@ -83,8 +89,8 @@ nav#left {
     text-align: right;
   }
   ul ul ul a {
-    background-color: $light-color;
-    color: $dark-color;
+    background-color: $dark-color;
+    color: $white;
     margin-left: 1ex;
   }
   ul ul .active ul a {
@@ -171,7 +177,7 @@ ul.horizontal {
 section, footer {
   margin: 0 0 $box-distance ($nav-width + $box-distance);
   padding: 2em 3em;
-  background-color: $white;
+  background: $white;
   @include shadow($radius: 10px);
   @include radii();
 
@@ -198,6 +204,10 @@ section, footer {
 	::-webkit-scrollbar-thumb:hover {
 		background: darken($link-color, 20%);
 	}
+}
+
+section {
+  background: $white image-url('bijoux-klein.png') top right no-repeat;
 
 	nav#top-menu {
 	  float: right;
@@ -242,7 +252,7 @@ footer {
   margin: $box-distance 0;
   clear: both;
   padding: 1ex 1em;
-  color: $gray;
+  color: $dark-color;
   font-size: x-small;
 }
 
@@ -273,6 +283,7 @@ dd {
 
   p, ul, ol {
     margin: 0 0 .5ex;
+    padding: 0;
   }
   dl {
     margin: 0 0 10px;
@@ -331,7 +342,7 @@ table {
   }
 
   th {
-    background-color: darken($link-color, 20%);
+    background-color: $dark-color;
     color: $white;
 
     a, a:hover { color: $white; }
@@ -350,10 +361,10 @@ table {
   tr {
     background-color: $white;
     &:hover {
-      background-color: lighten($link-color, 45%);
+      background-color: darken($gray, 10%);
     }
     &:nth-child(odd) {
-      background-color: lighten($link-color, 40%);
+      background-color: $gray;
     }
   }
   .asc:before {  content: "\2191 "; }

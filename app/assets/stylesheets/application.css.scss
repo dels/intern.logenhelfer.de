@@ -1,16 +1,26 @@
-$main-color:      adjust-hue(#66a, -30deg);
-$link-color:      desaturate($main-color, 90%);
-$dark-color:      darken($main-color, 25%);
-$light-color:     lighten($main-color, 25%);
-$gray:            #333;
-$white:           #fefefe;
-$black:           #050505;
+// $main-color:            #002E61;
+// $footer-color:          #EDE2C9;
+// $text-color:            #111;
+// $gray:                  #e3e3e3;
+// $dark-gray:             darken($gray, 20%);
+// $white:                 #f9f9f9;
 
-$box-distance:    13px;
+$black:           #111;
+$gray:            #e3e3e3;
+$white:           #f9f9f9;
+
+$main-color:      #00153b; // from bijoux
+$light-color:     #d5b05e; // from bijoux
+$dark-color:      darken($light-color, 10%);
+$link-color:      $main-color;
+
+
+$box-distance:    12px;
 $font-family:     "DejaVu Sans Condensed", Tahoma, Helvetica, Arial, sans-serif;
-$line-height:     $box-distance * 1.45;
-$default-radius:  3px;
-$nav-width:       210px;
+$font-size:       13px;
+$line-height:     1.45;
+$default-radius:  1px;
+$nav-width:       180px;
 
 
 @mixin radii($radius: $default-radius) {
@@ -61,7 +71,7 @@ label {
 .ui-widget select,
 .ui-widget textarea,
 .ui-widget button {
-  font: normal #{$box-distance}/#{$line-height} $font-family;
+  font: normal #{$font-size}/#{$line-height} $font-family;
 }
 input {
   width: 20em;
