@@ -13,7 +13,7 @@ class AttachedFile < ActiveRecord::Base
 
   attr_accessible :filename, :content, :content_type, :directory_id, :role_ids
 
-  default_scope where(:deleted => false)
+  default_scope where(:deleted => APP_CONFIG[:archive])
   
   def size
     content.length

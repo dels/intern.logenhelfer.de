@@ -13,5 +13,5 @@ class Directory < ActiveRecord::Base
   has_many :directory_roles
   has_many :roles, :through => :directory_roles
 
-  default_scope where(:deleted => false)
+  default_scope where(:deleted => false) unless APP_CONFIG[:archive]
 end
