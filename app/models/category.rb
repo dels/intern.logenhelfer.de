@@ -12,5 +12,5 @@ class Category < ActiveRecord::Base
   has_many :category_roles
   has_many :roles, :through => :category_roles
 
-  default_scope where(:deleted => false)
+  default_scope where(:deleted => false) unless APP_CONFIG[:archive]
 end
