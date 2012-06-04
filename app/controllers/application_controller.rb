@@ -46,7 +46,6 @@ protected
   
   def get_pdf_list(headings, values)
     pdf = Prawn::Document.new(:page_layout => :landscape)
-    
     arr = []
     # defining cell headlines
     arr << headings
@@ -56,7 +55,6 @@ protected
       row(0).border_width = 2
       row(0).font_style = :bold
     end
-
     pdf
   end
 
