@@ -39,7 +39,7 @@ class UsersController < AuthorizedController
         # positions
         addr_arr << usr.positions.join("\n")
         addr_arr
-      }
+      }, :column_widths => {7 => 120, 8 => 120}
     )
 
     pdf.encrypt_document(:user_password => params[:password], :owner_password => :random,

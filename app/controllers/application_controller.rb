@@ -44,16 +44,17 @@ protected
     end
   end
   
-  def get_pdf_list(headings, values)
+  def get_pdf_list(headings, values, options = {}, cell_style = {})
     pdf = Prawn::Document.new(:page_layout => :landscape)
     arr = []
     # defining cell headlines
     arr << headings
     # adding table
     arr.concat values.map{|row| row.map{|col| col.to_s.strip}}
-    pdf.table(arr, :row_colors => [ "FFFFFF", "DDDDDD" ]) do
+    pdf.table(arr, {:row_colors => [ "FFFFFF", "DDDDDD" ], :cell_style => {:size => 7}.merge(cell_style)}.merge(options)) do
       row(0).border_width = 2
       row(0).font_style = :bold
+      row(0).size = 8
     end
     pdf
   end
