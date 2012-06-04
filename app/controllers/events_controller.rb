@@ -13,7 +13,7 @@ class EventsController < AuthorizedController
     @ctx   = view_context
 
     return day    if params[:day]
-    return month  if params[:month]
+#    return month  if params[:month]
     month
   end
 
