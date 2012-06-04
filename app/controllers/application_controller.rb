@@ -56,6 +56,7 @@ protected
       row(0).font_style = :bold
       row(0).size = 8
     end
+
     pdf
   end
 
