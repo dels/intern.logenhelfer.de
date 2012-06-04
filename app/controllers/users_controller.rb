@@ -11,47 +11,36 @@ class UsersController < AuthorizedController
       flash[:error] = t("helpers.pdf.password_needed") if params[:hidden_field]
       return
     end
-    pdf = Prawn::Document.new(:page_size => "A4" ,:page_layout => :landscape, :compress => :true)
-    pdf.font_size = 10
-    usr_arr = []
-    addr_arr = []
-    # defining cell headlines
-    usr_arr << [ "MNr. ", "Name", "Beruf", "Grad", "Aufg. am" , "Ang. am", "Geburtstag",
-                 "beruflich", "privat", "Ämter" ]
-    # adding table
-    @users.order(:lastname).order(:firstname).order(:matriculation_number).each do |usr|
-      bsns_addr = usr.business_address
-      priv_addr = usr.private_address
-      addr_arr = []
-
-      addr_arr << usr.matriculation_number
-      addr_arr << usr.to_s.gsub!(/\s/, "\n")
-      addr_arr << usr.job_title
-      addr_arr << usr.num_degree
-      addr_arr << I18n.l(usr.entered_apprentice_since)
-      addr_arr << ((usr.accepted_at) ? I18n.l(usr.accepted_at) : "-")
-      addr_arr << I18n.l(usr.date_of_birth)
-
-      # business address
-      if bsns_addr
-        addr_arr << "#{bsns_addr.street}\n#{bsns_addr.zip} #{bsns_addr.city}\nTel: #{bsns_addr.phone}\nMobil: #{bsns_addr.mobile}\nFax: #{bsns_addr.fax}\nE-Mail: #{bsns_addr.email}"
-      else
-        addr_arr << "-"
-      end
-      if priv_addr
-        addr_arr << "#{priv_addr.street}\n#{priv_addr.zip} #{priv_addr.city}\nTel: #{priv_addr.phone}\nMobil: #{priv_addr.mobile}\nFax: #{priv_addr.fax}\nE-Mail: #{priv_addr.email}"
-      else
-        addr_arr << "-"
-      end
-      # positions
-      addr_arr << usr.positions.join("\n")
-      usr_arr << addr_arr
-    end
-    logger.fatal(usr_arr)
-    pdf.table(usr_arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
-      row(0).border_width = 2
-      row(0).font_style = :bold
-    end
+    pdf = get_pdf_list([ "MNr. ", "Name", "Beruf", "Grad", "Aufg. am" , "Ang. am", "Geburtstag", "beruflich", "privat", "Ämter" ],
+      @users.order(:lastname).order(:firstname).order(:matriculation_number).map {|usr|
+        bsns_addr = usr.business_address
+        priv_addr = usr.private_address
+        addr_arr = []
+  
+        addr_arr << usr.matriculation_number
+        addr_arr << usr.to_s.gsub!(/\s/, "\n")
+        addr_arr << usr.job_title
+        addr_arr << usr.num_degree
+        addr_arr << I18n.l(usr.entered_apprentice_since)
+        addr_arr << ((usr.accepted_at) ? I18n.l(usr.accepted_at) : "-")
+        addr_arr << I18n.l(usr.date_of_birth)
+  
+        # business address
+        if bsns_addr
+          addr_arr << "#{bsns_addr.street}\n#{bsns_addr.zip} #{bsns_addr.city}\nTel: #{bsns_addr.phone}\nMobil: #{bsns_addr.mobile}\nFax: #{bsns_addr.fax}\nE-Mail: #{bsns_addr.email}"
+        else
+          addr_arr << "-"
+        end
+        if priv_addr
+          addr_arr << "#{priv_addr.street}\n#{priv_addr.zip} #{priv_addr.city}\nTel: #{priv_addr.phone}\nMobil: #{priv_addr.mobile}\nFax: #{priv_addr.fax}\nE-Mail: #{priv_addr.email}"
+        else
+          addr_arr << "-"
+        end
+        # positions
+        addr_arr << usr.positions.join("\n")
+        addr_arr
+      }
+    )
 
     pdf.encrypt_document(:user_password => params[:password], :owner_password => :random,
                          :permissions => { :print_document     => false,
