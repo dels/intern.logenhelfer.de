@@ -6,7 +6,7 @@
 
 <%= paginate @users if @users.present? %>
 
-<table class='autolink'>
+<table>
   <tr>
     <th><%= sortable :title, User.human_attribute_name(:title) %></th>
     <th><%= sortable :lastname,User.human_attribute_name(:lastname) %></th>
