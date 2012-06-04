@@ -252,7 +252,7 @@ footer {
   margin: $box-distance 0;
   clear: both;
   padding: 1ex 1em;
-  color: $dark-color;
+  color: darken($gray, 20%);
   font-size: x-small;
 }
 
