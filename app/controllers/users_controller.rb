@@ -66,7 +66,7 @@ class UsersController < AuthorizedController
   end
   
   def birthday_list_pdf
-    send_pdf_list([ "Titel", "Nachname", "Vorname", "Geburtstag", "25. Jubiläum" , "50. Jubiläum" ],
+    send_data get_pdf_list([ "Titel", "Nachname", "Vorname", "Geburtstag", "25. Jubiläum" , "50. Jubiläum" ],
       @users.order(:lastname).order(:firstname).to_a.map {|usr|
         [ usr.title_str,
           usr.lastname,
@@ -74,7 +74,7 @@ class UsersController < AuthorizedController
           I18n.l(usr.date_of_birth),
           I18n.l(usr.entered_apprentice_since+25.years),
           I18n.l(usr.entered_apprentice_since+50.years) ]
-      }, "Geburtstagsliste")
+      }).render, type: "application/pdf", :filename => "#{Date.today}-Geburtstagsliste.pdf"
   end
   
   def phone_list
@@ -82,7 +82,7 @@ class UsersController < AuthorizedController
   end
   
   def phone_list_pdf
-    send_pdf_list([ "Titel", "Nachname", "Vorname", "Telefon", "Mobil" , "Fax" ],
+    send_data get_pdf_list([ "Titel", "Nachname", "Vorname", "Telefon", "Mobil" , "Fax" ],
       @users.order(:lastname).order(:firstname).map {|usr|
         [ usr.title_str,
           usr.lastname,
@@ -90,7 +90,7 @@ class UsersController < AuthorizedController
           usr.phone_numbers_printable,
           usr.fax_numbers_printable,
           usr.mobile_numbers_printable ]
-    }, "Telefonliste")
+    }).render, type: "application/pdf", :filename => "#{Date.today}-Telefonliste.pdf"
   end
 
   def show

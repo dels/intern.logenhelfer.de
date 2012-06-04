@@ -44,7 +44,7 @@ protected
     end
   end
   
-  def send_pdf_list(headings, values, filename)
+  def get_pdf_list(headings, values)
     pdf = Prawn::Document.new(:page_layout => :landscape)
     
     arr = []
@@ -57,7 +57,7 @@ protected
       row(0).font_style = :bold
     end
 
-    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-#{filename}.pdf"
+    pdf
   end
 
 end
