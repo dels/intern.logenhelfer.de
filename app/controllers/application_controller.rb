@@ -51,7 +51,7 @@ protected
     # defining cell headlines
     arr << headings
     # adding table
-    arr.concat values
+    arr.concat values.map{|row| row.map{|col| col.to_s.strip}}
     pdf.table(arr, :row_colors => [ "FFFFFF", "DDDDDD" ]) do
       row(0).border_width = 2
       row(0).font_style = :bold
