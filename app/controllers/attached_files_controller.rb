@@ -54,7 +54,11 @@ class AttachedFilesController < ApplicationController
   end
 
   def destroy
-    @attached_file.deleted = true
+    unless APP_CONFIG[:archive]
+      @attached_file.deleted = true
+    else
+      @attached_file.deleted = false
+    end
     @attached_file.save
     redirect_to attached_files_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.attached_file"))
   end

@@ -31,7 +31,11 @@ class CategoriesController < AuthorizedController
   end
 
   def destroy
-    @category.deleted = true
+    unless APP_CONFIG[:archive]
+      @category.deleted = true
+    else
+      @category.deleted = false
+    end
     @category.save
     redirect_to categories_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.category"))
   end
