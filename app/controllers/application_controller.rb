@@ -52,7 +52,7 @@ protected
     arr << headings
     # adding table
     arr.concat values
-    pdf.table(arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
+    pdf.table(arr, :row_colors => [ "FFFFFF", "DDDDDD" ]) do
       row(0).border_width = 2
       row(0).font_style = :bold
     end
