@@ -1,0 +1,30 @@
+<% title t("helpers.pdf.phonelist") %>
+
+<% if can? :create, User %>
+<p class="horizontal-menu"><%= image_link_tag_helper "disk", users_phone_list_pdf_path %></p>
+<% end %>
+
+<%= paginate @users if @users.present? %>
+
+<table class='autolink'>
+  <tr>
+    <th><%= sortable :title, User.human_attribute_name(:title) %></th>
+    <th><%= sortable :lastname,User.human_attribute_name(:lastname) %></th>
+    <th><%= sortable :firstname,User.human_attribute_name(:firstname) %></th>
+    <th><%= User.human_attribute_name(:phone) %></th>
+    <th><%= User.human_attribute_name(:fax) %></th>
+    <th><%= User.human_attribute_name(:mobile) %></th>
+  </tr>
+  <% @users.each do |user| %>
+    <tr>
+      <td><%= user.title_str %></td>
+      <td><%= dash(user.lastname) %></td>
+      <td><%= dash(user.firstname) %></td>
+      <td><%= dash(user.phone_numbers_printable) %></td>
+      <td><%= dash(user.fax_numbers_printable) %></td>
+      <td><%= dash(user.mobile_numbers_printable) %></td>
+    </tr>
+  <% end %>
+</table>
+
+<%= paginate @users if @users.present? %>

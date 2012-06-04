@@ -8,7 +8,9 @@ FwzeIntern::Application.routes.draw do
 
   get 'users/members_list', to: 'users#members_list'
   get 'users/phone_list', to: 'users#phone_list'
+  get 'users/phone_list_pdf', to: 'users#phone_list_pdf'
   get 'users/birthday_list', to: 'users#birthday_list'
+  get 'users/birthday_list_pdf', to: 'users#birthday_list_pdf'
   post 'users/members_list', to: 'users#members_list'
 
 

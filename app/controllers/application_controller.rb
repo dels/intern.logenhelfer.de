@@ -43,5 +43,21 @@ protected
       params[sym][:user_attributes].delete(:password_confirmation) if params[sym][:user_attributes][:password_confirmation].blank?
     end
   end
+  
+  def send_pdf_list(headings, values, filename)
+    pdf = Prawn::Document.new(:page_layout => :landscape)
+    
+    arr = []
+    # defining cell headlines
+    arr << headings
+    # adding table
+    arr.concat values
+    pdf.table(arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
+      row(0).border_width = 2
+      row(0).font_style = :bold
+    end
+
+    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-#{filename}.pdf"
+  end
 
 end

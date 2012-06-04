@@ -3,7 +3,7 @@ class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
   
   def index
-    @users = @users.order(sort_column + " " + sort_direction).page(params[:page])
+    @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
   end
 
   def members_list
@@ -62,39 +62,35 @@ class UsersController < AuthorizedController
   end
   
   def birthday_list
-    pdf = Prawn::Document.new(:page_layout => :landscape)
-    
-    usr_arr = []
-    # defining cell headlines
-    usr_arr << [ "Titel", "Nachname", "Vorname", "Geburtstag", "25. Jubiläum" , "50. Jubiläum" ]
-    # adding table
-    @users.order(:lastname).order(:firstname).each do |usr|
-      usr_arr << [ usr.title_str, usr.lastname, usr.firstname, usr.date_of_birth, usr.entered_apprentice_since+25.years, usr.entered_apprentice_since+50.years ]
-    end
-    pdf.table(usr_arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
-      row(0).border_width = 2
-      row(0).font_style = :bold
-    end
-
-    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Geburtstagsliste.pdf"
+    @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
+  end
+  
+  def birthday_list_pdf
+    send_pdf_list([ "Titel", "Nachname", "Vorname", "Geburtstag", "25. Jubiläum" , "50. Jubiläum" ],
+      @users.order(:lastname).order(:firstname).to_a.map {|usr|
+        [ usr.title_str,
+          usr.lastname,
+          usr.firstname,
+          I18n.l(usr.date_of_birth),
+          I18n.l(usr.entered_apprentice_since+25.years),
+          I18n.l(usr.entered_apprentice_since+50.years) ]
+      }, "Geburtstagsliste")
   end
   
   def phone_list
-    pdf = Prawn::Document.new(:page_layout => :landscape)
-    
-    usr_arr = []
-    # defining cell headlines
-    usr_arr << [ "Titel", "Nachname", "Vorname", "Telefon", "Mobil" , "Fax" ]
-    # adding table
-    @users.order(:lastname).order(:firstname).each do |usr|
-      usr_arr << [ usr.title_str, usr.lastname, usr.firstname, usr.phone_numbers_printable, usr.fax_numbers_printable, usr.mobile_numbers_printable ]
-    end
-    pdf.table(usr_arr, :row_colors => [ "F0F0F0", "FFFFCC" ]) do
-      row(0).border_width = 2
-      row(0).font_style = :bold
-    end
-
-    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Telefonliste.pdf"
+    @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
+  end
+  
+  def phone_list_pdf
+    send_pdf_list([ "Titel", "Nachname", "Vorname", "Telefon", "Mobil" , "Fax" ],
+      @users.order(:lastname).order(:firstname).map {|usr|
+        [ usr.title_str,
+          usr.lastname,
+          usr.firstname,
+          usr.phone_numbers_printable,
+          usr.fax_numbers_printable,
+          usr.mobile_numbers_printable ]
+    }, "Telefonliste")
   end
 
   def show

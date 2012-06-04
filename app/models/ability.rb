@@ -20,7 +20,7 @@ class Ability
       [] != (f.roles & @user.roles)
     end
     can [:index, :show, :members_list], User, ["users.deleted = ?", false] do |u|
-      [] != (u.roles & @user.roles)
+      [] != (u.roles - [Role.find_by_name("Admin")])
     end
   end
 
