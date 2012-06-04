@@ -360,9 +360,6 @@ table {
 
   tr {
     background-color: $white;
-    &:hover {
-      background-color: darken($gray, 10%);
-    }
     &:nth-child(odd) {
       background-color: $gray;
     }
