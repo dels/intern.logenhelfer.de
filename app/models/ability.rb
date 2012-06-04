@@ -19,8 +19,9 @@ class Ability
     can [:index, :show, :download], AttachedFile, ['attached_files.deleted = ?', false] do |f|
       [] != (f.roles & @user.roles)
     end
+    admin_role = Role.find_by_name("Admin")
     can [:index, :show, :members_list], User, ["users.deleted = ?", false] do |u|
-      [] != (u.roles - [Role.find_by_name("Admin")])
+      APP_CONFIG[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
     end
   end
 

@@ -1,11 +1,14 @@
 development:
   domain: localhost:3000
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+  show_admins: false
 
 test:
   domain: test.host
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+  show_admins: false
 
 production:
   domain: fwze.de
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+  show_admins: false
