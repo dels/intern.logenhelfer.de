@@ -71,15 +71,14 @@ class UsersController < AuthorizedController
   end
   
   def phone_list_pdf
-    send_data get_pdf_list([ "Titel", "Nachname", "Vorname", "Telefon", "Mobil" , "Fax" ],
+    send_data get_pdf_list([ "Titel", "Name", "Telefon", "Mobil" , "Fax" ],
       @users.order(:lastname).order(:firstname).map {|usr|
         [ usr.title_str,
-          usr.lastname,
-          usr.firstname,
+          usr.to_s.gsub!(/\s/, "\n"),
           usr.phone_numbers_printable,
           usr.fax_numbers_printable,
           usr.mobile_numbers_printable ]
-    }).render, type: "application/pdf", :filename => "#{Date.today}-Telefonliste.pdf"
+    }, :column_widths => {2 => 120, 3 => 120, 4 => 120}).render, type: "application/pdf", :filename => "#{Date.today}-Telefonliste.pdf"
   end
 
   def show
