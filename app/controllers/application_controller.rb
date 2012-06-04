@@ -55,6 +55,7 @@ protected
       row(0).border_width = 2
       row(0).font_style = :bold
     end
+
     pdf
   end
 
