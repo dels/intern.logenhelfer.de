@@ -1,6 +1,10 @@
 FwzeIntern::Application.routes.draw do
 
   match 'calendar/upcoming',                          to: 'events#upcoming',  as: :upcoming_calendar
+  get 'calendar/public_workingplan',                  to: 'events#public_workingplan'
+  post 'calendar/public_workingplan',                 to: 'events#public_workingplan'
+  get 'calendar/internal_workingplan',                to: 'events#internal_workingplan'
+  post 'calendar/internal_workingplan',               to: 'events#internal_workingplan'
   match 'calendar/(:year(/:month(/:day)))(.:format)', to: 'events#date',      as: :calendar
   resources :events
 

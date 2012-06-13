@@ -1,0 +1,16 @@
+
+<% title t("helpers.pdf.public_workingplan")%>
+
+<p>&nbsp;</p>
+<%= form_tag("/calendar/public_workingplan", :method => "post", :autocomplete => :off) do %>
+
+<dt><%= label_tag(:date_from, t("helpers.pdf.date_from")) %></dt>
+<dd><%= text_field_tag(:date_from, l(Date.today), class: jqueryui_small_input_classes + " datepicker") %></dd>
+
+<dt><%= label_tag(:date_from, t("helpers.pdf.date_to")) %></dt>
+<dd><%= text_field_tag(:date_to, l(Date.today), class: jqueryui_small_input_classes + " datepicker") %></dd>
+
+<%= hidden_field_tag(:hidden_field) %>
+<dt></dt>
+<dd><%= submit_tag(t("helpers.pdf.generate")) %></dd>
+<% end %>
