@@ -17,38 +17,12 @@ class EventsController < AuthorizedController
     month
   end
 
-  def public_workingplan
-    from = nil
-    to = nil
-    begin
-      from = Date.parse(params[:date_from])
-      to = Date.parse(params[:date_from])
-    rescue Exception
-      flash[:error] = t("helpers.pdf.invalid_date") if params[:hidden_field]
-      return
-    end
-    send_data get_pdf_list([ "Datum", "Uhrzeit", "Beschreibung" ],
-      @events.where('date >= ?', from).where('date <= ?', to).order(:date).order(:time).map {|event|
-        [I18n.l(event.date), (event.duration.present? ? "#{I18n.l event.time, format: :time} - #{I18n.l event.end_time, format: :time}" : I18n.l(event.time, format: :time)), event.public_description]
-      }
-    ).render, type: "application/pdf", :filename => "Arbeitsplan_oeffentlich_#{I18n.l(from)}-#{I18n.l(to)}.pdf"
+  def internal_workingplan
+    workingplan(params, true)
   end
 
-  def internal_workingplan
-    from = nil
-    to = nil
-    begin
-      from = Date.parse(params[:date_from])
-      to = Date.parse(params[:date_from])
-    rescue Exception
-      flash[:error] = t("helpers.pdf.invalid_date") if params[:hidden_field]
-      return
-    end
-    send_data get_pdf_list([ "Datum", "Uhrzeit", "Beschreibung" ],
-      @events.where('date >= ?', from).where('date <= ?', to).order(:date).order(:time).map {|event|
-        [I18n.l(event.date), event.duration.present? ? "#{I18n.l event.time, format: :time} - #{I18n.l event.end_time, format: :time}" : I18n.l(event.time, format: :time), event.private_description]
-      }
-    ).render, type: "application/pdf", :filename => "Arbeitsplan_intern_#{I18n.l(from)}-#{I18n.l(to)}.pdf"
+  def public_workingplan
+    workingplan(params, false)
   end
 
   def upcoming
@@ -148,6 +122,31 @@ private
 
   def last_view(where)
     session[:calendar_last_view] = where
+  end
+  
+  def workingplan(params, internal = false)
+    from = nil
+    to = nil
+    begin
+      from = Date.parse(params[:date_from])
+      to = Date.parse(params[:date_from])
+    rescue Exception
+      flash[:error] = t("helpers.pdf.invalid_date") if params[:hidden_field]
+      return
+    end
+    pdf = create_pdf_with_header
+    add_pdf_title("Arbeitsplan vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
+    events_by_month = @events.where('date >= ?', from).where('date <= ?', to).order(:date).order(:time).group_by { |event| event.date.month }
+    events_by_month.each_key do |month_number|
+      add_pdf_section(I18n.t("date.month_names")[month_number], pdf)
+      get_pdf_list([ "Wochentag", "Datum", "Uhrzeit", "Beschreibung" ],
+        events_by_month[month_number].map {|event|
+          [I18n.t("date.day_names")[event.date.wday], I18n.l(event.date), (event.duration.present? ? "#{I18n.l event.time, format: :time} - #{I18n.l event.end_time, format: :time}" : I18n.l(event.time, format: :time)), internal ? event.private_description : event.public_description]
+        }, {:width => pdf.bounds.width, :column_widths => {3 => 370}}, {}, pdf)
+    end
+    pdf.start_new_page
+    add_pdf_html(I18n.t("helpers.pdf.workingplan.bottom_message"), pdf)
+    send_data pdf.render, type: "application/pdf", :filename => "Arbeitsplan_#{internal ? 'intern' : 'oeffentlich'}_#{I18n.l(from)}-#{I18n.l(to)}.pdf"
   end
 
 end

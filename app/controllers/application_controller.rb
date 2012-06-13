@@ -44,17 +44,42 @@ protected
     end
   end
   
-  def get_pdf_list(headings, values, options = {}, cell_style = {})
-    pdf = Prawn::Document.new(:page_layout => :landscape)
+  def create_pdf_with_header
+    top_margin = 40
+    spacing_below_header = 10
+    header_height = 160 + spacing_below_header
+    pdf = Prawn::Document.new(:page_size => "A4", :page_layout => :portrait, :top_margin => top_margin+header_height)
+    pdf.repeat :all do
+      img = pdf.image "#{Rails.root}/app/assets/images/pdf_header.png", :at => [0, pdf.bounds.absolute_top+header_height], :width => pdf.bounds.width
+    end
+    pdf
+  end
+  
+  def add_pdf_title(title, pdf)
+    pdf.text title, :align => :center, :size => 18
+  end
+  
+  def add_pdf_section(title, pdf)
+    pdf.text title, :style => :bold, :size => 12
+    pdf.outline.section title, :destination => pdf.page_number 
+  end
+  
+  def add_pdf_html(html, pdf)
+    pdf.formatted_text(Prawn::Text::Formatted::Parser.to_array(html))
+  end
+  
+  def get_pdf_list(headings, values, options = {}, cell_style = {}, pdf = nil)
+    pdf ||= Prawn::Document.new(:page_size => "A4", :page_layout => :landscape)
     arr = []
     # defining cell headlines
     arr << headings
     # adding table
     arr.concat values.map{|row| row.map{|col| col.to_s.strip}}
-    pdf.table(arr, {:row_colors => [ "FFFFFF", "DDDDDD" ], :cell_style => {:size => 7}.merge(cell_style)}.merge(options)) do
+    pdf.table(arr, {:header => true, :row_colors => [ "FFFFFF", "DDDDDD" ], :cell_style => {:size => 7}.merge(cell_style)}.merge(options)) do
       row(0).border_width = 2
       row(0).font_style = :bold
       row(0).size = 8
+      yield if block_given?
     end
 
     pdf
