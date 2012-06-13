@@ -13,7 +13,8 @@ class AttachedFile < ActiveRecord::Base
 
   attr_accessible :filename, :content, :content_type, :directory_id, :role_ids
 
-  default_scope where(:deleted => APP_CONFIG[:archive])
+  default_scope where(:deleted => (Rails.env.archive? || Rails.env.archive_dev?))
+  
   
   def size
     content.length
@@ -21,5 +22,16 @@ class AttachedFile < ActiveRecord::Base
   
   def path_array
     [directory.category, directory, self]
+  end
+  
+    
+  def delete
+    if APP_CONFIG[:archive]
+      deleted = false
+      directory.delete
+    else
+      deleted = true
+    end
+    save
   end
 end

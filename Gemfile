@@ -4,7 +4,7 @@ gem 'rails', '3.2.3'
 gem 'thin'
 gem 'pg'
 
-group :development do
+group :development, :archive_dev do
   gem 'silent-postgres'
   gem 'quiet_assets'
   gem 'rails_best_practices', :require => false

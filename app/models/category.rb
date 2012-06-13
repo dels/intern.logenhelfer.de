@@ -12,5 +12,15 @@ class Category < ActiveRecord::Base
   has_many :category_roles
   has_many :roles, :through => :category_roles
 
-  default_scope where(:deleted => false) unless APP_CONFIG[:archive]
+  default_scope where(:deleted => false) unless (Rails.env.archive? || Rails.env.archive_dev?)
+  
+  def delete
+    if APP_CONFIG[:archive]
+      deleted = false
+    else
+      deleted = true
+      directories.all.each {|dir| dir.delete}
+    end
+    save
+  end
 end
