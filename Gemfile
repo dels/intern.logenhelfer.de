@@ -35,7 +35,7 @@ gem 'jquery-ui-rails'
 gem 'friendly_id', '~> 4.0.0'
 gem 'uuid'
 gem 'devise'
-gem 'cancan'
+gem 'cancan', '1.6.7'
 gem "bcrypt-ruby", :require => "bcrypt"
 gem 'rails-i18n'
 gem 'copycopter_client', '~> 2.0.0'
