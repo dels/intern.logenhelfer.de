@@ -17,7 +17,9 @@ module LayoutHelper
     content_for(:head) { javascript_include_tag(*args) }
   end
 
-  def image_link_tag_helper image, target, opts={}
+  def image_link_tag_helper(image, target, opts={})
+    logger.debug target
+    logger.debug opts
     link_to image_tag("#{image}.png", :alt => opts[:title]), target, opts
   end
 
