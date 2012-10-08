@@ -10,3 +10,4 @@ thin.yml
 config/database.yml
 restart.sh
 public/assets/
+config/app_config.yml
