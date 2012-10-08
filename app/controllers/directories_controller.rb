@@ -31,12 +31,7 @@ class DirectoriesController < AuthorizedController
   end
 
   def destroy
-    unless APP_CONFIG[:archive]
-      @directory.deleted = true
-    else
-      @directory.deleted = false
-    end
-    @directory.save
+    @directory.delete
     redirect_to @directory.category, notice: t("activerecord.destroy_success", model: t("activerecord.models.directory"))
   end
 
