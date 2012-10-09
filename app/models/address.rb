@@ -44,4 +44,8 @@ class Address < ActiveRecord::Base
     purpose
   end
 
+  def to_s
+    return "" if(street.strip && street.strip.empty?)
+    [street, "#{zip} #{city}"].compact.join(", ")
+  end
 end
