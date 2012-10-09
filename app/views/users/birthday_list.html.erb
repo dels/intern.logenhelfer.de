@@ -5,7 +5,6 @@
 <% end %>
 
 <%= paginate @users if @users.present? %>
-
 <table>
   <tr>
     <th><%= sortable :lastname,User.human_attribute_name(:lastname) %></th>
