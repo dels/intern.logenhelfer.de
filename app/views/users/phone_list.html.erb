@@ -18,9 +18,9 @@
     <tr>
       <td><%= dash(user.lastname) %></td>
       <td><%= dash(user.firstname) %></td>
-      <td><%= dash(user.phone_numbers_printable) %></td>
-      <td><%= dash(user.fax_numbers_printable) %></td>
-      <td><%= dash(user.mobile_numbers_printable) %></td>
+      <td><%= dash(raw(user.phone_numbers_printable.gsub(/\n/,"<br />"))) %></td>
+      <td><%= dash(raw(user.fax_numbers_printable.gsub(/\n/,"<br />"))) %></td>
+      <td><%= dash(raw(user.mobile_numbers_printable.gsub(/\n/,"<br />"))) %></td>
     </tr>
   <% end %>
 </table>
