@@ -29,15 +29,16 @@ class User < ActiveRecord::Base
   TITLES = {
     "Dipl. Ing."                 => 1,
     "Dipl. Kfm."                 => 10,
-    "Dipl. Ing."                 => 20,
-    "Dipl. Ökonom"               => 30,
-    "Dipl. Bankbetriebswirt"     => 40,
-    "Dipl.-Betr.Wirt"            => 50,
-    "Dr."                        => 60,
-    "Dr-Ing."                    => 70,
-    "Prof. Dipl.-Ing."           => 80,
-    "Prof. Dr."                  => 90,
-    "Prof. Dr-Ing."              => 100
+    "Dipl.-Inf."                 => 20,
+    "Dipl. Ing."                 => 30,
+    "Dipl. Ökonom"               => 40,
+    "Dipl. Bankbetriebswirt"     => 50,
+    "Dipl.-Betr.Wirt"            => 60,
+    "Dr."                        => 70,
+    "Dr-Ing."                    => 80,
+    "Prof. Dipl.-Ing."           => 90,
+    "Prof. Dr."                  => 100,
+    "Prof. Dr.-Ing."             => 110
   }
 
   def title_str

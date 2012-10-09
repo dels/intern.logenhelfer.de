@@ -52,7 +52,7 @@ block 'create roles' do
   log Role.create!(:name => "SeniorDeacon", :display_name => "1. Schaffer")
 
 end
-
+=begin
 block 'create users' do
   log u = User.create!(
                        :matriculation_number => 890,
@@ -137,7 +137,7 @@ block 'create users' do
   u.user_roles << UserRole.create!(:role => er, :user => u, :role_added_at => Date.today - 1.years)
   u.save!
 end
-
+=end
 rite_cat = nil
 lit_cat = nil
 paint_cat = nil
