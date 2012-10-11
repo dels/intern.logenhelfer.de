@@ -10,6 +10,7 @@
 //= require events
 //= require select2
 //= require html54ie
+//= require jquery.mailto
 //= require_self
 
 jQuery(function() {
@@ -39,6 +40,8 @@ jQuery(function() {
     $('#hide_former_teachers').hide();
     $('#show_former_teachers').show();
   });
+
+  $('[data-behaviour="mailto"]').mailTo();
 });
 
 function hideDiv(element, hide){
