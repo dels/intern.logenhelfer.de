@@ -16,11 +16,11 @@ class Category < ActiveRecord::Base
   
   def delete
     if APP_CONFIG[:archive]
-      deleted = false
+      self.deleted = false
     else
-      deleted = true
-      directories.all.each {|dir| dir.delete}
+      self.deleted = true
+      self.directories.all.each {|dir| dir.delete}
     end
-    save
+    self.save
   end
 end

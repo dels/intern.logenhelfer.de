@@ -17,12 +17,12 @@ class Directory < ActiveRecord::Base
   
   def delete
     if APP_CONFIG[:archive]
-      deleted = false
-      category.delete
+      self.deleted = false
+      self.category.delete
     else
-      deleted = true
-      attached_files.all.each {|f| f.delete}
+      self.deleted = true
+      self.attached_files.all.each {|f| f.delete}
     end
-    save
+    self.save
   end
 end
