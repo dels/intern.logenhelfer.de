@@ -69,17 +69,17 @@ FwzeIntern::Application.configure do
 
 
   config.action_mailer.smtp_settings = {
-    :address => "mail.paedagogikum.de",
-    :port => 25,
-    :domain => "paedagogikum.de",
-    :user_name => "website@paedagogikum.de",
-    :password => "thenewpaedagogikumpasswordsince:2012",
-    :authentication => :login,
-    :openssl_verify_mode => 'none'
+    address:                'mail.paedagogikum.de',
+    port:                   25,
+    domain:                 'paedagogikum.de',
+    user_name:              'website@paedagogikum.de',
+    password:               'thenewpaedagogikumpasswordsince:2012',
+    authentication:         :login,
+    openssl_verify_mode:    'none'
   }
 
   config.middleware.use ExceptionNotifier,
-    :email_prefix => "[Exception] ",
-    :sender_address => %{"Exception Notifier" <technik@fwze.de>},
-    :exception_recipients => %w{de@deftwork.com}
+    email_prefix:           "[Exception] ",
+    sender_address:         %{"Exception Notifier" <technik@fwze.de>},
+    exception_recipients:   %w{de@deftwork.com}
 end
