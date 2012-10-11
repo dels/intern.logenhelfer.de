@@ -27,11 +27,11 @@ class AttachedFile < ActiveRecord::Base
     
   def delete
     if APP_CONFIG[:archive]
-      deleted = false
-      directory.delete
+      self.deleted = false
+      self.directory.delete
     else
-      deleted = true
+      self.deleted = true
     end
-    save
+    self.save
   end
 end
