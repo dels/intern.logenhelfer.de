@@ -2,7 +2,7 @@
 
 <p class="horizontal-menu">
   <%= edit_link_to [@directory.category, @directory] if can?(:edit, @directory) %>
-  <%= destroy_link_to @directory if can?(:destroy, @directory) %>
+  <%= destroy_link_to [@directory.category, @directory] if can?(:destroy, @directory) %>
   <%= show_link_to_all @directory.category if can?(:show, @directory.category) %>
 </p>
 
@@ -11,7 +11,7 @@
   <dd><%= dash @directory.description %></dd>
   <dt><%= t 'activerecord.attributes.directory.category_id' %>:</dt>
   <dd><%= @directory.category.name %></dd>
-  
+
   <dt><%= t 'helpers.visible_to' %>:</dt>
   <dd><ul>
     <% @directory.roles.each do |role| %>
