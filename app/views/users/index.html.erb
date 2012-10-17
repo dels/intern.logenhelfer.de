@@ -20,8 +20,8 @@
   <% @users.each do |user| %>
     <tr>
       <td><%= user.matriculation_number %></td>
-      <td><%= dash(user.firstname) %></td>
       <td><%= dash(user.lastname) %></td>
+      <td><%= dash(user.firstname) %></td>
       <td><%= dash(user.private_address.to_s) %></td>
       <td><%= dash(user.private_address.phone) %></td>
       <td><%= dash(user.private_address.mobile) %></td>
