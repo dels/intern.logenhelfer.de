@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121025121916) do
+ActiveRecord::Schema.define(:version => 20121025173953) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -44,15 +44,16 @@ ActiveRecord::Schema.define(:version => 20121025121916) do
   add_index "attached_file_roles", ["role_id"], :name => "index_attached_file_roles_on_role_id"
 
   create_table "attached_files", :force => true do |t|
-    t.string   "uuid",         :limit => 36
+    t.string   "uuid",           :limit => 36
     t.string   "filename"
     t.binary   "content"
     t.string   "content_type"
     t.integer  "directory_id"
     t.integer  "uploader_id"
-    t.boolean  "deleted",                    :default => false
-    t.datetime "created_at",                                    :null => false
-    t.datetime "updated_at",                                    :null => false
+    t.boolean  "deleted",                      :default => false
+    t.datetime "created_at",                                      :null => false
+    t.datetime "updated_at",                                      :null => false
+    t.integer  "content_length",               :default => -1
   end
 
   add_index "attached_files", ["deleted"], :name => "index_attached_files_on_deleted"

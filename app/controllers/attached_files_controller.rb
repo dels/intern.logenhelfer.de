@@ -35,6 +35,7 @@ class AttachedFilesController < ApplicationController
       af.directory_id = Directory.find(params[:directory_id]).id
       af.role_ids = params[:attached_file][:role_ids]
     end
+    @attached_file.content_length = @attached_file.content.length
     if @attached_file.save
       redirect_to [@attached_file.directory.category, @attached_file.directory], notice: t("activerecord.create_success", model: t("activerecord.models.attached_file"))
     else

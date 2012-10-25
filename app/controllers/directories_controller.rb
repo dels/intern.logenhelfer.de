@@ -2,7 +2,7 @@ class DirectoriesController < AuthorizedController
   helper_method :sort_column, :sort_direction
   
   def show
-    @attached_files = view_context.get_authorized_paginated(@directory.attached_files.order(:filename)).page(params[:page])
+    @attached_files = view_context.get_authorized_paginated(@directory.attached_files.order(:filename).select('id, filename, directory_id, uuid, content_length')).page(params[:page])
   end
 
   def new

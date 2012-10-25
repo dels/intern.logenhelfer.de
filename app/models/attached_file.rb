@@ -17,7 +17,12 @@ class AttachedFile < ActiveRecord::Base
   
   
   def size
-    content.length
+    if 0 > self.content_length
+      reload
+      self.content_length = self.content.length 
+      self.save
+    end
+    content_length
   end
   
   def path_array
