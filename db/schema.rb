@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120528123116) do
+ActiveRecord::Schema.define(:version => 20121025121916) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -40,6 +40,9 @@ ActiveRecord::Schema.define(:version => 20120528123116) do
     t.datetime "updated_at",       :null => false
   end
 
+  add_index "attached_file_roles", ["attached_file_id"], :name => "index_attached_file_roles_on_attached_file_id"
+  add_index "attached_file_roles", ["role_id"], :name => "index_attached_file_roles_on_role_id"
+
   create_table "attached_files", :force => true do |t|
     t.string   "uuid",         :limit => 36
     t.string   "filename"
@@ -51,6 +54,10 @@ ActiveRecord::Schema.define(:version => 20120528123116) do
     t.datetime "created_at",                                    :null => false
     t.datetime "updated_at",                                    :null => false
   end
+
+  add_index "attached_files", ["deleted"], :name => "index_attached_files_on_deleted"
+  add_index "attached_files", ["directory_id"], :name => "index_attached_files_on_directory_id"
+  add_index "attached_files", ["filename"], :name => "index_attached_files_on_filename"
 
   create_table "categories", :force => true do |t|
     t.string   "name"
@@ -67,6 +74,9 @@ ActiveRecord::Schema.define(:version => 20120528123116) do
     t.datetime "updated_at",  :null => false
   end
 
+  add_index "category_roles", ["category_id"], :name => "index_category_roles_on_category_id"
+  add_index "category_roles", ["role_id"], :name => "index_category_roles_on_role_id"
+
   create_table "directories", :force => true do |t|
     t.string   "name"
     t.text     "description"
@@ -76,12 +86,18 @@ ActiveRecord::Schema.define(:version => 20120528123116) do
     t.datetime "updated_at",                     :null => false
   end
 
+  add_index "directories", ["category_id"], :name => "index_directories_on_category_id"
+  add_index "directories", ["deleted"], :name => "index_directories_on_deleted"
+
   create_table "directory_roles", :force => true do |t|
     t.integer  "directory_id"
     t.integer  "role_id"
     t.datetime "created_at",   :null => false
     t.datetime "updated_at",   :null => false
   end
+
+  add_index "directory_roles", ["directory_id"], :name => "index_directory_roles_on_directory_id"
+  add_index "directory_roles", ["role_id"], :name => "index_directory_roles_on_role_id"
 
   create_table "events", :force => true do |t|
     t.string   "title"
