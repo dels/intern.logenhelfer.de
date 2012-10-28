@@ -3885,6 +3885,9 @@ de:
         matriculation_number: Matrikelnummer
         password: Passwort
     link:
+      show: Anzeigen
+      edit: Bearbeiten
+      view_all: Alle Anzeigen
       destroy: Löschen
       destroy_confirmation: Sind sie sich sicher?
       restore: Wiederherstellen
