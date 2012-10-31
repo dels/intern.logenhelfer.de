@@ -123,13 +123,13 @@ private
   def last_view(where)
     session[:calendar_last_view] = where
   end
-  
+
   def workingplan(params, internal = false)
     from = nil
     to = nil
     begin
       from = Date.parse(params[:date_from])
-      to = Date.parse(params[:date_from])
+      to = Date.parse(params[:date_to])
     rescue Exception
       flash[:error] = t("helpers.pdf.invalid_date") if params[:hidden_field]
       return
