@@ -21,7 +21,6 @@ gem 'kaminari'
 gem 'exception_notification'
 
 group :development, :archive_dev do
-  gem 'silent-postgres'
   gem 'quiet_assets'
   gem 'rails_best_practices',   require: false
   gem 'rails-erd'
