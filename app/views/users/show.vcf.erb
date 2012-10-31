@@ -19,7 +19,7 @@ TEL;TYPE=fax,<%= addr.vcf_type %>:<%= addr.fax %>
 <% unless addr.street.empty? %>
 ADR;TYPE=postal,parcel,<%= addr.vcf_type %>:;;<%= addr.street %>;<%= addr.city %>;;<%= addr.zip %>;
 <% end %>
-<% unless addr.remarks.empty? %>
+<% if addr.remarks && false == addr.remarks.empty? %>
 NOTE:<%= addr.remarks %>
 <% end %>
 <% end %>

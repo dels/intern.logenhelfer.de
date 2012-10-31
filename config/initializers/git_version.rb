@@ -1,6 +1,6 @@
 APP_VERSION = {
   :major => 0,
-  :minor => 1,
+  :minor => 2,
   :patch => `git log -n1 --date=short --pretty=format:"%h"`.chomp,
   :deployed_at => `git log -n1 --date=short --pretty=format:"%ad."`.chomp
 }.freeze

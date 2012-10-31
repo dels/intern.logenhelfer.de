@@ -29,13 +29,7 @@ class Address < ActiveRecord::Base
   end
 
   def street
-    # XXX: for educational reasons, I won't delete this:
-    # return ""                       if street1.blank?
-    # return street1                  if street2.blank? && street3.blank?
-    # return "#{street1}\n#{street3}" if street2.blank? && street3.present?
-    # "#{street1}\n#{street2}\n#{street3}"
-
-    [street1, street2, street3].compact.join("\n")
+    [street1, street2, street3].compact.join("\n").strip
   end
 
   def vcf_type
@@ -44,4 +38,8 @@ class Address < ActiveRecord::Base
     purpose
   end
 
+  def to_s
+    return "" if(street.strip && street.strip.empty?)
+    [street, "#{zip} #{city}"].compact.join(", ")
+  end
 end

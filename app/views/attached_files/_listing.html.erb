@@ -13,7 +13,7 @@
   <% @attached_files.each do |attached_file| %>
     <tr>
       <td><%= attached_file.filename %></td>
-      <td><%= attached_file.size %></td>
+      <td><%= number_to_human_size(attached_file.size, :precision => 1, :significant => false) %></td>
       <td>
         <%= show_link_to download_category_directory_attached_file_path(attached_file.directory.category, attached_file.directory, attached_file) if can?(:show, attached_file) %>
         <%= image_link_tag_helper 'show', category_directory_attached_file_path(attached_file.directory.category, attached_file.directory, attached_file), :title => I18n.t('helpers.link.show') %>

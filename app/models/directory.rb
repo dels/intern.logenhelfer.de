@@ -13,5 +13,16 @@ class Directory < ActiveRecord::Base
   has_many :directory_roles
   has_many :roles, :through => :directory_roles
 
-  default_scope where(:deleted => false) unless APP_CONFIG[:archive]
+  default_scope where(:deleted => false) unless (Rails.env.archive? || Rails.env.archive_dev?)
+
+  def delete
+    if APP_CONFIG[:archive]
+      self.deleted = false
+      self.category.delete
+    else
+      self.deleted = true
+      self.attached_files.all.each {|f| f.delete}
+    end
+    self.save
+  end
 end

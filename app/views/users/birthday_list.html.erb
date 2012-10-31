@@ -5,22 +5,21 @@
 <% end %>
 
 <%= paginate @users if @users.present? %>
-
 <table>
   <tr>
-    <th><%= sortable :title, User.human_attribute_name(:title) %></th>
     <th><%= sortable :lastname,User.human_attribute_name(:lastname) %></th>
     <th><%= sortable :firstname,User.human_attribute_name(:firstname) %></th>
     <th><%= sortable :date_of_birth,User.human_attribute_name(:date_of_birth) %></th>
-    <th><%= sortable :entered_apprentice_since,User.human_attribute_name(:twentyfifth_jubilee) %></th>
-    <th><%= sortable :entered_apprentice_since,User.human_attribute_name(:fiftieth_jubilee) %></th>
+    <th><%= User.human_attribute_name(:age) %></th>
+    <th><%= User.human_attribute_name(:twentyfifth_jubilee) %></th>
+    <th><%= User.human_attribute_name(:fiftieth_jubilee) %></th>
   </tr>
   <% @users.each do |user| %>
     <tr>
-      <td><%= user.title_str %></td>
       <td><%= dash(user.lastname) %></td>
       <td><%= dash(user.firstname) %></td>
       <td><%= dash(user.date_of_birth ? l(user.date_of_birth) : nil) %></td>
+      <td><%= user.age %></td>
       <td><%= dash(user.entered_apprentice_since ? l(user.entered_apprentice_since+25.years) : nil) %></td>
       <td><%= dash(user.entered_apprentice_since ? l(user.entered_apprentice_since+50.years) : nil) %></td>
     </tr>

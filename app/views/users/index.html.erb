@@ -9,21 +9,23 @@
 <table class='autolink'>
   <tr>
     <th><%= sortable :matriculation_number, User.human_attribute_name(:matriculation_number) %></th>
-    <th><%= sortable :title, User.human_attribute_name(:title) %></th>
-    <th><%= sortable :firstname,User.human_attribute_name(:firstname) %></th>
     <th><%= sortable :lastname,User.human_attribute_name(:lastname) %></th>
+    <th><%= sortable :firstname,User.human_attribute_name(:firstname) %></th>
+    <th><%= User.human_attribute_name(:address) %></th>
+    <th><%= User.human_attribute_name(:phone) %></th>
+    <th><%= User.human_attribute_name(:mobile) %></th>
     <th><%= sortable :date_of_birth,User.human_attribute_name(:date_of_birth) %></th>
-    <th><%= sortable :accpected_at,User.human_attribute_name(:accepted_at) %></th>
     <th></th>
   </tr>
   <% @users.each do |user| %>
     <tr>
       <td><%= user.matriculation_number %></td>
-      <td><%= user.title_str %></td>
-      <td><%= dash(user.firstname) %></td>
       <td><%= dash(user.lastname) %></td>
+      <td><%= dash(user.firstname) %></td>
+      <td><%= dash(user.private_address.to_s) %></td>
+      <td><%= dash(user.private_address.phone) %></td>
+      <td><%= dash(user.private_address.mobile) %></td>
       <td><%= dash(user.date_of_birth ? l(user.date_of_birth) : nil) %></td>
-      <td><%= dash(user.accepted_at ? l(user.accepted_at) : nil) %></td>
       <td>
         <%= show_link_to user if can?(:show, user) %>
         <%= edit_link_to user if can?(:edit, user) %>

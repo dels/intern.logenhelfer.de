@@ -8,7 +8,6 @@
 
 <table>
   <tr>
-    <th><%= sortable :title, User.human_attribute_name(:title) %></th>
     <th><%= sortable :lastname,User.human_attribute_name(:lastname) %></th>
     <th><%= sortable :firstname,User.human_attribute_name(:firstname) %></th>
     <th><%= User.human_attribute_name(:phone) %></th>
@@ -17,12 +16,11 @@
   </tr>
   <% @users.each do |user| %>
     <tr>
-      <td><%= user.title_str %></td>
       <td><%= dash(user.lastname) %></td>
       <td><%= dash(user.firstname) %></td>
-      <td><%= dash(user.phone_numbers_printable) %></td>
-      <td><%= dash(user.fax_numbers_printable) %></td>
-      <td><%= dash(user.mobile_numbers_printable) %></td>
+      <td><%= dash(raw(user.phone_numbers_printable.gsub(/\n/,"<br />"))) %></td>
+      <td><%= dash(raw(user.fax_numbers_printable.gsub(/\n/,"<br />"))) %></td>
+      <td><%= dash(raw(user.mobile_numbers_printable.gsub(/\n/,"<br />"))) %></td>
     </tr>
   <% end %>
 </table>

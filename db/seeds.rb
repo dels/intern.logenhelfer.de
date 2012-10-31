@@ -36,7 +36,7 @@ block 'create roles' do
   log mr = Role.create!(:name => "MasterMason", :display_name => "Meister", :group => true)
   log wmr = Role.create!(:name => "WorshipfulMaster", :display_name => "MvSt")
   log sr = Role.create!(:name => "InternalSecretary", :display_name => "Protokolliernder Schriftführer")
-  log sr = Role.create!(:name => "Secretary", :display_name => "Korrespondierder Schriftführer")
+  log sr = Role.create!(:name => "Secretary", :display_name => "Korrespondierender Schriftführer")
   log ser = Role.create!(:name => "SeniorWarden", :display_name => "1. Aufseher")
   log jwr = Role.create!(:name => "JuniorWarden", :display_name => "2. Aufseher")
   log mocr = Role.create!(:name => "MemberOfCouncil", :display_name => "Mitglieder des Beamtenrates", :group => true)
@@ -45,14 +45,14 @@ block 'create roles' do
   log Role.create!(:name => "Musician", :display_name => "Musikmeister")
   log Role.create!(:name => "MasterOfCeremony", :display_name => "Zeremonienmeister")
   log Role.create!(:name => "PreparingBrother", :display_name => "Vorbereitender Bruder")
-  log Role.create!(:name => "PastMaster", :display_name => "Altstuhlmaster", :group => true)
+  log Role.create!(:name => "PastMaster", :display_name => "Altstuhlmeister", :group => true)
   log Role.create!(:name => "DedicatedMaster", :display_name => "zug. Meister", :group => true)
   log Role.create!(:name => "Treasurer", :display_name => "Schatzmeister")
   log Role.create!(:name => "JuniorDeacon", :display_name => "2. Schaffer")
   log Role.create!(:name => "SeniorDeacon", :display_name => "1. Schaffer")
 
 end
-
+=begin
 block 'create users' do
   log u = User.create!(
                        :matriculation_number => 890,
@@ -137,7 +137,7 @@ block 'create users' do
   u.user_roles << UserRole.create!(:role => er, :user => u, :role_added_at => Date.today - 1.years)
   u.save!
 end
-
+=end
 rite_cat = nil
 lit_cat = nil
 paint_cat = nil
