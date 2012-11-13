@@ -1,7 +1,9 @@
+#encoding: utf-8
+
 # -*- coding: utf-8 -*-
 class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
-  
+
   def index
     @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
   end
@@ -16,7 +18,7 @@ class UsersController < AuthorizedController
         bsns_addr = usr.business_address
         priv_addr = usr.private_address
         addr_arr = []
-  
+
         addr_arr << usr.matriculation_number
         addr_arr << usr.to_s.gsub!(/\s/, "\n")
         addr_arr << usr.job_title
@@ -24,7 +26,7 @@ class UsersController < AuthorizedController
         addr_arr << I18n.l(usr.entered_apprentice_since)
         addr_arr << ((usr.accepted_at) ? I18n.l(usr.accepted_at) : "-")
         addr_arr << I18n.l(usr.date_of_birth)
-  
+
         # business address
         if bsns_addr
           addr_arr << "#{bsns_addr.street}\n#{bsns_addr.zip} #{bsns_addr.city}\nTel: #{bsns_addr.phone}\nMobil: #{bsns_addr.mobile}\nFax: #{bsns_addr.fax}\nE-Mail: #{bsns_addr.email}"
@@ -49,11 +51,11 @@ class UsersController < AuthorizedController
                            :modify_annotations => false })
     send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Mitgliederverzeichnis.pdf"
   end
-  
+
   def birthday_list
     @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
   end
-  
+
   def birthday_list_pdf
     send_data get_pdf_list([ "Titel", "Nachname", "Vorname", "Geburtstag", "25. Jubiläum" , "50. Jubiläum" ],
       @users.order(:lastname).order(:firstname).to_a.map {|usr|
@@ -65,11 +67,11 @@ class UsersController < AuthorizedController
           I18n.l(usr.entered_apprentice_since+50.years) ]
       }).render, type: "application/pdf", :filename => "#{Date.today}-Geburtstagsliste.pdf"
   end
-  
+
   def phone_list
     @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
   end
-  
+
   def phone_list_pdf
     send_data get_pdf_list([ "Titel", "Name", "Telefon", "Mobil" , "Fax" ],
       @users.order(:lastname).order(:firstname).map {|usr|
@@ -116,9 +118,13 @@ class UsersController < AuthorizedController
     redirect_to users_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.user"))
   end
 
+  def substitute
+    sign_in(:user, User.find(params[:id]))
+    redirect_to root_url
+  end
 
-  private
-  
+private
+
   def limited_editing
     [] == (current_user.roles & (Role.where(:name => ['Admin', 'Secretary'])))
   end
@@ -132,7 +138,7 @@ class UsersController < AuthorizedController
 
     return unless current_user.roles.include?(Role.find_by_name('Admin'))
 
-    @user.entered_apprentice_since = params[:user][:entered_apprentice_since] 
+    @user.entered_apprentice_since = params[:user][:entered_apprentice_since]
     @user.fellow_craft_since = params[:user][:fellow_craft_since]
     @user.master_mason_since = params[:user][:master_mason_since]
 

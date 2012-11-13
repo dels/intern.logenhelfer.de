@@ -17,9 +17,6 @@ FwzeIntern::Application.routes.draw do
   get 'users/birthday_list_pdf', to: 'users#birthday_list_pdf'
   post 'users/members_list', to: 'users#members_list'
 
-
-  resources :users
-
   resources :categories do
     resources :directories do
       resources :attached_files do
@@ -33,7 +30,7 @@ FwzeIntern::Application.routes.draw do
   devise_for :users, path_prefix: 'auth'
   resources :users do
     member do
-      get 'substitute'
+      put 'substitute'
       put 'lock'
       put 'unlock'
       put 'disable'

@@ -6,14 +6,14 @@ class Role < ActiveRecord::Base
   has_many :user_roles
 
   has_many :category_roles
-  has_many :categories, :through => :category_roles
+  has_many :categories, through: :category_roles
 
   def self.positions
-    Role.all - Role.where(:name => ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
+    Role.all - Role.where(name: ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
   end
-  
+
   def self.degrees
-    Role.all & Role.where(:name => ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
+    Role.all & Role.where(name: ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
   end
 
   def self.degree_ids
@@ -35,7 +35,7 @@ class Role < ActiveRecord::Base
   def to_s
     "#{display_name}"
   end
-  
+
   def is_group?
     group
   end

@@ -24,8 +24,11 @@ group :development, :archive_dev do
   gem 'quiet_assets'
   gem 'rails_best_practices',   require: false
   gem 'rails-erd'
-  gem 'debugger'
   gem 'letter_opener'
+
+  # disable for now
+  # gem 'debugger'
+  # gem 'debugger-ruby_core_source'
 end
 
 group :assets do
@@ -38,7 +41,7 @@ end
 
 group :test do
   gem 'turn',                   require: false
-  gem 'mocha'
+  gem 'mocha',                  require: false
   gem 'rspec'
   gem 'rspec-rails'
   gem 'rspec-core'

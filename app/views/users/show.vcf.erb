@@ -6,21 +6,21 @@ FN:<%= @user.fullname %>
 ORG:<%= APP_CONFIG[:organisation] %>
 URL:http://<%= APP_CONFIG[:domain] %>/
 EMAIL;TYPE=INTERNET:<%= @user.email %>
-<% @user.addresses.each do |addr| %>
-<% unless addr.phone.empty? %>
+<%- @user.addresses.each do |addr| -%>
+<%- if addr.phone.present? -%>
 TEL;TYPE=voice,<%= addr.vcf_type %>:<%= addr.phone %>
-<% end %>
-<% unless addr.mobile.empty? %>
+<%- end -%>
+<%- if addr.mobile.present? -%>
 TEL;TYPE=voice,cell,<%= addr.vcf_type %>:<%= addr.mobile %>
-<% end %>
-<% unless addr.fax.empty? %>
+<%- end -%>
+<%- if addr.fax.present? -%>
 TEL;TYPE=fax,<%= addr.vcf_type %>:<%= addr.fax %>
-<% end %>
-<% unless addr.street.empty? %>
+<%- end -%>
+<%- if addr.street.present? -%>
 ADR;TYPE=postal,parcel,<%= addr.vcf_type %>:;;<%= addr.street %>;<%= addr.city %>;;<%= addr.zip %>;
-<% end %>
-<% if addr.remarks && false == addr.remarks.empty? %>
+<%- end -%>
+<%- if addr.remarks && false == addr.remarks.empty? -%>
 NOTE:<%= addr.remarks %>
-<% end %>
-<% end %>
+<%- end -%>
+<%- end -%>
 END:VCARD
