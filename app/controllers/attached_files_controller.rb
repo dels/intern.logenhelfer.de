@@ -70,6 +70,6 @@ class AttachedFilesController < ApplicationController
       @attached_file.deleted = false
     end
     @attached_file.save
-    redirect_to [@attached_file.directory.category, @attached_file.directory], notice: t("activerecord.destroy_success", model: t("activerecord.models.attached_file"))
+    redirect_to attached_files_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.attached_file"))
   end
 end
