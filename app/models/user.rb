@@ -1,3 +1,5 @@
+#encoding: utf-8
+
 # -*- coding: utf-8 -*-
 class User < ActiveRecord::Base
   include ActsAsAddressable
@@ -25,6 +27,8 @@ class User < ActiveRecord::Base
   has_many :user_roles
   has_many :roles, :through => :user_roles
   has_many :attached_files
+
+  scope :undeleted, where(deleted: false)
 
   TITLES = {
     "Dipl. Ing."                 => 1,
@@ -164,7 +168,7 @@ class User < ActiveRecord::Base
       }
     }
   end
-  
+
   def phone_numbers_printable
     strs = []
     addresses.each do |addr|
@@ -174,7 +178,7 @@ class User < ActiveRecord::Base
     end
     strs.join("\n")
   end
-  
+
   def fax_numbers_printable
     strs = []
     addresses.each do |addr|
@@ -184,7 +188,7 @@ class User < ActiveRecord::Base
     end
     strs.join("\n")
   end
-  
+
   def mobile_numbers_printable
     strs = []
     addresses.each do |addr|
@@ -198,6 +202,10 @@ class User < ActiveRecord::Base
   def age
     now = Time.now.utc.to_date
     now.year - date_of_birth.year - ((now.month > date_of_birth.month || (now.month == date_of_birth.month && now.day >= date_of_birth.day)) ? 0 : 1)
+  end
+
+  def active_for_authentication?
+    super && !deleted?
   end
 
 end

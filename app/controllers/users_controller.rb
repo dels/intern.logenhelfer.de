@@ -5,7 +5,7 @@ class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
 
   def index
-    @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
+    @users = view_context.get_authorized_paginated(User.undeleted.order(sort_column + " " + sort_direction)).page(params[:page])
   end
 
   def members_list
@@ -41,15 +41,20 @@ class UsersController < AuthorizedController
         # positions
         addr_arr << usr.positions.join("\n")
         addr_arr
-      }, :column_widths => {1 => 50, 2=> 80, 7 => 120, 8 => 120}, :header => true
+      }, column_widths: {1 => 50, 2=> 80, 7 => 120, 8 => 120}, header: true
     )
 
-    pdf.encrypt_document(:user_password => params[:password], :owner_password => :random,
-                         :permissions => { :print_document     => false,
-                           :modify_contents    => false,
-                           :copy_contents      => false,
-                           :modify_annotations => false })
-    send_data pdf.render, type: "application/pdf", :filename => "#{Date.today}-Mitgliederverzeichnis.pdf"
+    pdf.encrypt_document(
+      user_password: params[:password],
+      owner_password: :random,
+      permissions: {
+        print_document: false,
+        modify_contents: false,
+        copy_contents: false,
+        modify_annotations: false
+      }
+    )
+    send_data pdf.render, type: "application/pdf", filename: "#{Date.today}-Mitgliederverzeichnis.pdf"
   end
 
   def birthday_list
@@ -65,7 +70,7 @@ class UsersController < AuthorizedController
           I18n.l(usr.date_of_birth),
           I18n.l(usr.entered_apprentice_since+25.years),
           I18n.l(usr.entered_apprentice_since+50.years) ]
-      }).render, type: "application/pdf", :filename => "#{Date.today}-Geburtstagsliste.pdf"
+      }).render, type: "application/pdf", filename: "#{Date.today}-Geburtstagsliste.pdf"
   end
 
   def phone_list
@@ -80,7 +85,7 @@ class UsersController < AuthorizedController
           usr.phone_numbers_printable,
           usr.fax_numbers_printable,
           usr.mobile_numbers_printable ]
-    }, :column_widths => {2 => 120, 3 => 120, 4 => 120}).render, type: "application/pdf", :filename => "#{Date.today}-Telefonliste.pdf"
+    }, column_widths: {2 => 120, 3 => 120, 4 => 120}).render, type: "application/pdf", filename: "#{Date.today}-Telefonliste.pdf"
   end
 
   def show
@@ -114,6 +119,14 @@ class UsersController < AuthorizedController
 
   def destroy
     @user.deleted = true
+    # reset email, so that
+    # (a) a login fails (deleted users are not able to login, though a
+    #     "your account is not active" message will be diplayed, marking the
+    #     presence of the account)
+    # (b) the email address might be reused later -- without undeleting this
+    #     user account and all its privileges (this is still possible using the
+    #     archive).
+    @user.email = "deleted-#{Time.now.to_i}-#{@user.email}"
     @user.save
     redirect_to users_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.user"))
   end
@@ -126,7 +139,7 @@ class UsersController < AuthorizedController
 private
 
   def limited_editing
-    [] == (current_user.roles & (Role.where(:name => ['Admin', 'Secretary'])))
+    [] == (current_user.roles & (Role.where(name: ['Admin', 'Secretary'])))
   end
 
   def sort_column
