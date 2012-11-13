@@ -128,9 +128,13 @@ class UsersController < AuthorizedController
   end
 
   def set_user_degree_dates params
-    @user.entered_apprentice_since= params[:user][:entered_apprentice_since] 
-    @user.fellow_craft_since= params[:user][:fellow_craft_since]
-    @user.master_mason_since= params[:user][:master_mason_since]
+    # since roles and degrees can only be changed by an admin we can return if the current user is no admin
+
+    return unless current_user.roles.include?(Role.find_by_name('Admin'))
+
+    @user.entered_apprentice_since = params[:user][:entered_apprentice_since] 
+    @user.fellow_craft_since = params[:user][:fellow_craft_since]
+    @user.master_mason_since = params[:user][:master_mason_since]
 
     params[:user][:role_ids] << Role.find_by_name('EnteredApprentice').id if(@user.entered_apprentice_since)
     params[:user][:role_ids] << Role.find_by_name('FellowCraft').id if(@user.fellow_craft_since)

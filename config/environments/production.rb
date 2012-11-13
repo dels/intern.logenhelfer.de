@@ -69,11 +69,11 @@ FwzeIntern::Application.configure do
 
 
   config.action_mailer.smtp_settings = {
-    address:                'mail.paedagogikum.de',
+    address:                'mail.fwze.de',
     port:                   25,
-    domain:                 'paedagogikum.de',
-    user_name:              'website@paedagogikum.de',
-    password:               'thenewpaedagogikumpasswordsince:2012',
+    domain:                 'fwze.de',
+    user_name:              'website@fwze.de',
+    password:               'superduperkeks1024',
     authentication:         :login,
     openssl_verify_mode:    'none'
   }

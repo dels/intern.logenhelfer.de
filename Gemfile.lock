@@ -224,6 +224,7 @@ DEPENDENCIES
   coffee-rails (~> 3.2.1)
   compass-rails
   debugger
+  debugger-ruby_core_source
   devise
   exception_notification
   friendly_id (~> 4.0.0)
