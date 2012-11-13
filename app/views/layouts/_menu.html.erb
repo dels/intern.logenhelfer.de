@@ -5,11 +5,13 @@
     <li class="more space-top">
       <ul>
         <%= authorized_menu_item Event, upcoming_calendar_path do -%>
-          <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/public_workingplan/ ? 'active' : nil) do -%>
-            <%= link_to t("helpers.pdf.public_workingplan"), calendar_public_workingplan_path -%>
-          <%- end -%>
-          <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/internal_workingplan/ ? 'active' : nil) do -%>
-            <%= link_to t("helpers.pdf.internal_workingplan"), calendar_internal_workingplan_path -%>
+          <%- if request.fullpath =~ /^\/(events|calendar)/ -%>
+            <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/public_workingplan/ ? 'active' : nil) do -%>
+              <%= link_to t("helpers.pdf.public_workingplan"), calendar_public_workingplan_path -%>
+            <%- end -%>
+            <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/internal_workingplan/ ? 'active' : nil) do -%>
+              <%= link_to t("helpers.pdf.internal_workingplan"), calendar_internal_workingplan_path -%>
+            <%- end -%>
           <%- end -%>
         <%- end -%>
 
