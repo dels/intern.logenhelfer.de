@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails',                    '3.2.8'
+gem 'rails',                    '3.2.9'
 gem 'thin'
 gem 'pg'
 
@@ -21,7 +21,6 @@ gem 'kaminari'
 gem 'exception_notification'
 
 group :development, :archive_dev do
-  gem 'silent-postgres'
   gem 'quiet_assets'
   gem 'rails_best_practices',   require: false
   gem 'rails-erd'
