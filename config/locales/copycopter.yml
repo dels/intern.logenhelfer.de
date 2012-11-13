@@ -2,34 +2,34 @@
 de:
   activemodel:
     errors:
-      format: ! '%{attribute} %{message}'
+      format: '%{attribute} %{message}'
       messages:
         accepted: muss akzeptiert werden
         blank: muss ausgefüllt werden
         confirmation: stimmt nicht mit der Bestätigung überein
         empty: muss ausgefüllt werden
-        equal_to: muss genau %{count} sein
+        equal_to: 'muss genau %{count} sein'
         even: muss gerade sein
         exclusion: ist nicht verfügbar
-        greater_than: muss größer als %{count} sein
-        greater_than_or_equal_to: muss größer oder gleich %{count} sein
+        greater_than: 'muss größer als %{count} sein'
+        greater_than_or_equal_to: 'muss größer oder gleich %{count} sein'
         inclusion: ist kein gültiger Wert
         invalid: ist nicht gültig
-        less_than: muss kleiner als %{count} sein
-        less_than_or_equal_to: muss kleiner oder gleich %{count} sein
+        less_than: 'muss kleiner als %{count} sein'
+        less_than_or_equal_to: 'muss kleiner oder gleich %{count} sein'
         not_a_number: ist keine Zahl
         not_an_integer: muss ganzzahlig sein
         odd: muss ungerade sein
-        record_invalid: ! 'Gültigkeitsprüfung ist fehlgeschlagen: %{errors}'
+        record_invalid: 'Gültigkeitsprüfung ist fehlgeschlagen: %{errors}'
         taken: ist bereits vergeben
-        too_long: ist zu lang (nicht mehr als %{count} Zeichen)
-        too_short: ist zu kurz (nicht weniger als %{count} Zeichen)
-        wrong_length: hat die falsche Länge (muss genau %{count} Zeichen haben)
+        too_long: 'ist zu lang (nicht mehr als %{count} Zeichen)'
+        too_short: 'ist zu kurz (nicht weniger als %{count} Zeichen)'
+        wrong_length: 'hat die falsche Länge (muss genau %{count} Zeichen haben)'
       template:
-        body: ! 'Bitte überprüfen Sie die folgenden Felder:'
+        body: 'Bitte überprüfen Sie die folgenden Felder:'
         header:
-          one: ! 'Konnte %{model} nicht speichern: ein Fehler.'
-          other: ! 'Konnte %{model} nicht speichern: %{count} Fehler.'
+          one: 'Konnte %{model} nicht speichern: ein Fehler.'
+          other: 'Konnte %{model} nicht speichern: %{count} Fehler.'
   activerecord:
     actions:
       create_new: Erstellen
@@ -53,10 +53,10 @@ de:
         remarks: Anmerkungen
         remove_fields: Adresse entfernen
         street1: Straße
-        street1_info: (Straße/Nr., Postfach)
+        street1_info: '(Straße/Nr., Postfach)'
         street2: Straße
         street3: Zustellanweisung
-        street3_info: (z. Hd., c/o)
+        street3_info: '(z. Hd., c/o)'
         title: Titel
         type_of_address: Zweck
         zip: Postleitzahl
@@ -93,7 +93,7 @@ de:
         public_description: Beschreibung (öffentlich)
         time: Zeit
         title: Bezeichnung
-        type/birthday: Geburtstag
+        type/birthday: 'Geburtstag'
         updated_by: geändert von
         whole_day: ganztägig?
       file_download:
@@ -135,36 +135,35 @@ de:
         type_of_address: Addresses type of address
       user_role:
         role_id: Role
-    create_success: ! '%{model} erfolgreich erstellt'
-    destroy_success: ! '%{model} wurde erfolgreich gelöscht.'
+    create_success: '%{model} erfolgreich erstellt'
+    destroy_success: '%{model} wurde erfolgreich gelöscht.'
     errors:
-      format: ! '%{attribute} %{message}'
+      format: '%{attribute} %{message}'
       header: Invalid Fields
-      maximum_business_addresses_exceeded: Es darf nur eine geschäftliche Adresse
-        geben
+      maximum_business_addresses_exceeded: Es darf nur eine geschäftliche Adresse geben
       maximum_private_addresses_exceeded: Es darf nur eine private Adresse geben
       messages:
         accepted: muss akzeptiert werden
         blank: muss ausgefüllt werden
         confirmation: stimmt nicht mit der Bestätigung überein
         empty: muss ausgefüllt werden
-        equal_to: muss genau %{count} sein
+        equal_to: 'muss genau %{count} sein'
         even: muss gerade sein
         exclusion: ist nicht verfügbar
-        greater_than: muss größer als %{count} sein
-        greater_than_or_equal_to: muss größer oder gleich %{count} sein
+        greater_than: 'muss größer als %{count} sein'
+        greater_than_or_equal_to: 'muss größer oder gleich %{count} sein'
         inclusion: ist kein gültiger Wert
         invalid: ist nicht gültig
-        less_than: muss kleiner als %{count} sein
-        less_than_or_equal_to: muss kleiner oder gleich %{count} sein
+        less_than: 'muss kleiner als %{count} sein'
+        less_than_or_equal_to: 'muss kleiner oder gleich %{count} sein'
         not_a_number: ist keine Zahl
         not_an_integer: muss ganzzahlig sein
         odd: muss ungerade sein
-        record_invalid: ! 'Gültigkeitsprüfung ist fehlgeschlagen: %{errors}'
+        record_invalid: 'Gültigkeitsprüfung ist fehlgeschlagen: %{errors}'
         taken: ist bereits vergeben
-        too_long: ist zu lang (nicht mehr als %{count} Zeichen)
-        too_short: ist zu kurz (nicht weniger als %{count} Zeichen)
-        wrong_length: hat die falsche Länge (muss genau %{count} Zeichen haben)
+        too_long: 'ist zu lang (nicht mehr als %{count} Zeichen)'
+        too_short: 'ist zu kurz (nicht weniger als %{count} Zeichen)'
+        wrong_length: 'hat die falsche Länge (muss genau %{count} Zeichen haben)'
       models:
         address:
           attributes:
@@ -205,10 +204,10 @@ de:
             role_id:
               taken: ist bereits vergeben
       template:
-        body: ! 'Bitte überprüfen Sie die folgenden Felder:'
+        body: 'Bitte überprüfen Sie die folgenden Felder:'
         header:
-          one: ! 'Konnte %{model} nicht speichern: ein Fehler.'
-          other: ! 'Konnte %{model} nicht speichern: %{count} Fehler.'
+          one: 'Konnte %{model} nicht speichern: ein Fehler.'
+          other: 'Konnte %{model} nicht speichern: %{count} Fehler.'
     models:
       address: Address
       addresses: Adressen
@@ -226,12 +225,12 @@ de:
       user: Mitglied
       user_role: User role
       users: Mitglieder
+    upload_failure: Bitte wählen Sie eine Datei zum Hochladen aus.
     update_success: Aktualisierung erfolgreich
   attributes:
     attached_file: Datei
     attached_file_id: Datei
-    description: ! '<p><span style="font-size: 13px; background-color: rgb(255, 255,
-      255); ">Beschreibung</span><br></p>'
+    description: '<p><span style="font-size: 13px; background-color: rgb(255, 255, 255); ">Beschreibung</span><br></p>'
     file: Datei
     filename: Dateiname
     job_title: Beruf
