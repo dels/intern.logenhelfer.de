@@ -102,7 +102,7 @@ private
       first_day_of_week: 1, # monday
       yield_surrounding_days: true,
       calendar_class: 'calendar month',
-      current_month:  lambda {|d| I18n.l d, :format => '%B %Y' },
+      current_month:  lambda {|d| I18n.l d, format: '%B %Y' },
       previous_month: lambda {|d| @ctx.link_to("&laquo; #{I18n.l d, format: '%B'}".html_safe, @ctx.calendar_path(year: d.year, month: d.month)) },
       next_month:     lambda {|d| @ctx.link_to("#{I18n.l d, format: '%B'} &raquo;".html_safe, @ctx.calendar_path(year: d.year, month: d.month)) }
     }
@@ -136,17 +136,24 @@ private
     end
     pdf = create_pdf_with_header
     add_pdf_title("Arbeitsplan vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
-    events_by_month = @events.where('date >= ?', from).where('date <= ?', to).order(:date).order(:time).group_by { |event| event.date.month }
+    events_by_month = @events.where('date >= ?', from).where('date <= ?', to).order('date ASC, time ASC').group_by { |event| event.date.month }
     events_by_month.each_key do |month_number|
       add_pdf_section(I18n.t("date.month_names")[month_number], pdf)
-      get_pdf_list([ "Wochentag", "Datum", "Uhrzeit", "Beschreibung" ],
+      get_pdf_list(
+        %w[Wochentag Datum Uhrzeit Beschreibung],
         events_by_month[month_number].map {|event|
-          [I18n.t("date.day_names")[event.date.wday], I18n.l(event.date), (event.duration.present? ? "#{I18n.l event.time, format: :time} - #{I18n.l event.end_time, format: :time}" : I18n.l(event.time, format: :time)), internal ? event.private_description : event.public_description]
-        }, {:width => pdf.bounds.width, :column_widths => {3 => 370}}, {}, pdf)
+          [
+            I18n.t("date.day_names")[event.date.wday],
+            I18n.l(event.date),
+            I18n.l(event.time, format: :time),
+            internal ? event.private_description : event.public_description
+          ]
+        }, { width: pdf.bounds.width, column_widths: { 3 => 370 } }, {}, pdf
+      )
     end
     pdf.start_new_page
     add_pdf_html(I18n.t("helpers.pdf.workingplan.bottom_message"), pdf)
-    send_data pdf.render, type: "application/pdf", :filename => "Arbeitsplan_#{internal ? 'intern' : 'oeffentlich'}_#{I18n.l(from)}-#{I18n.l(to)}.pdf"
+    send_data pdf.render, type: "application/pdf", filename: "Arbeitsplan_#{internal ? 'intern' : 'oeffentlich'}_#{I18n.l(from)}-#{I18n.l(to)}.pdf"
   end
 
 end

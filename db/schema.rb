@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121114171043) do
+ActiveRecord::Schema.define(:version => 20121114220659) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -110,7 +110,6 @@ ActiveRecord::Schema.define(:version => 20121114171043) do
     t.text     "public_description"
     t.text     "private_description"
     t.boolean  "whole_day"
-    t.integer  "duration"
     t.integer  "created_by_id"
     t.integer  "updated_by_id"
     t.boolean  "deleted",             :default => false

@@ -10,11 +10,7 @@
     <dd><%= l event.date %></dd>
 
     <dt><%= Event.human_attribute_name :time %>:</dt>
-    <%- if event.duration.present? -%>
-      <dd><%= l event.time, format: :time %>–<%= l event.end_time, format: :time %> Uhr</dd>
-    <%- else -%>
-      <dd><%= l event.time, format: :time %> Uhr</dd>
-    <%- end -%>
+    <dd><%= l event.time, format: :time %> Uhr</dd>
   <% end %>
 
   <dt><%= Event.human_attribute_name :public_description %>:</dt>

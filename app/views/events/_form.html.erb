@@ -6,7 +6,6 @@
     <dt><%= f.label :whole_day %></dt>
     <dd><%= f.check_box :whole_day %></dd>
     <%= f.time_select :time, { minute_step: 5 }, jui: :tiny %>
-    <%= f.number_field :duration, step: 15, min: 0, jui: :small %>
     <%= f.text_area :public_description %>
     <%= f.text_area :private_description %>
     <%= f.submit %>
@@ -16,7 +15,7 @@
 <script type="text/javascript">
   $(function() {
     $('#event_whole_day').change(function() {
-      $('.fields_for_event_time, .fields_for_event_duration').toggle();
+      $('.fields_for_event_time').toggle();
     })
   })
 </script>

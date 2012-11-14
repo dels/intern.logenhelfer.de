@@ -1,6 +1,6 @@
 class Event < ActiveRecord::Base
   attr_accessible :title, :public_description, :private_description,
-      :date, :time, :duration, :whole_day
+      :date, :time, :whole_day
 
   default_scope where(deleted: false).order('date ASC')
 
@@ -11,10 +11,6 @@ class Event < ActiveRecord::Base
   belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User'
 
   attr_accessor :target
-
-  def end_time
-    self.time + self.duration.minutes
-  end
 
   def to_s
     title
