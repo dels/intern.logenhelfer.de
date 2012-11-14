@@ -1,7 +1,7 @@
 <% title t("helpers.pdf.birthdaylist") %>
 
 <% if can? :create, User %>
-<p class="horizontal-menu"><%= image_link_tag_helper "disk", users_birthday_list_pdf_path %></p>
+<p class="horizontal-menu"><%= image_link_tag_helper "disk", birthday_list_pdf_users_path %></p>
 <% end %>
 
 <%= paginate @users if @users.present? %>

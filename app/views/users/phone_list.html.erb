@@ -1,7 +1,7 @@
 <% title t("helpers.pdf.phonelist") %>
 
 <% if can? :create, User %>
-<p class="horizontal-menu"><%= image_link_tag_helper "disk", users_phone_list_pdf_path %></p>
+<p class="horizontal-menu"><%= image_link_tag_helper "disk", phone_list_pdf_users_path %></p>
 <% end %>
 
 <%= paginate @users if @users.present? %>
@@ -18,9 +18,9 @@
     <tr>
       <td><%= dash(user.lastname) %></td>
       <td><%= dash(user.firstname) %></td>
-      <td><%= dash(raw(user.phone_numbers_printable.gsub(/\n/,"<br />"))) %></td>
-      <td><%= dash(raw(user.fax_numbers_printable.gsub(/\n/,"<br />"))) %></td>
-      <td><%= dash(raw(user.mobile_numbers_printable.gsub(/\n/,"<br />"))) %></td>
+      <td><%= raw dash(user.phone_numbers_printable).gsub(/\n/,"<br />") %></td>
+      <td><%= raw dash(user.fax_numbers_printable).gsub(/\n/,"<br />") %></td>
+      <td><%= raw dash(user.mobile_numbers_printable).gsub(/\n/,"<br />") %></td>
     </tr>
   <% end %>
 </table>

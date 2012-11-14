@@ -586,9 +586,6 @@ de:
     address_attributes: Adressen
   user_mailer:
     change_notification:
-      message: ! "Guten Tag %{secretary_name},\r\n\r\ndie Daten von %{changed_user_name}
-        wurden soeben geändert. \r\n\r\nMit freundlichen Grüßen\r\n\r\n----\r\n\r\nDies
-        ist eine automatisch generierte E-Mail. Bei Fragen wende Dich bitte an mail@elsbroek.com."
       subject: Änderungsbenachrichtigung für Benutzer
   views:
     pagination:

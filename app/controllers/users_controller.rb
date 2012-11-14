@@ -85,7 +85,7 @@ class UsersController < AuthorizedController
 
   def phone_list_pdf
     send_data get_pdf_list(I18n.t('pdf.phone_list.header'),
-      @users.order('lastname ASC, firstname ASC').map {|usr|
+      @users.undeleted.order('lastname ASC, firstname ASC').map {|usr|
         [ usr.title_str,
           usr.to_s.gsub!(/\s/, "\n"),
           usr.phone_numbers_printable,

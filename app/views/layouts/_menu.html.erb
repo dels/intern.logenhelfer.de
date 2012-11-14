@@ -7,10 +7,10 @@
         <%= authorized_menu_item Event, upcoming_calendar_path do -%>
           <%- if request.fullpath =~ /^\/(events|calendar)/ -%>
             <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/public_workingplan/ ? 'active' : nil) do -%>
-              <%= link_to t("helpers.pdf.public_workingplan"), calendar_public_workingplan_path -%>
+              <%= link_to t("helpers.pdf.public_workingplan"), public_workingplan_path -%>
             <%- end -%>
             <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/internal_workingplan/ ? 'active' : nil) do -%>
-              <%= link_to t("helpers.pdf.internal_workingplan"), calendar_internal_workingplan_path -%>
+              <%= link_to t("helpers.pdf.internal_workingplan"), internal_workingplan_path -%>
             <%- end -%>
           <%- end -%>
         <%- end -%>
@@ -18,13 +18,13 @@
         <%= authorized_menu_item User, users_path do -%>
           <%- if request.fullpath =~ /^\/users/ -%>
             <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/members_list/ ? 'active' : '')) do -%>
-              <%= link_to(t("helpers.pdf.memberslist"), users_members_list_path) -%>
+              <%= link_to(t("helpers.pdf.memberslist"), members_list_users_path) -%>
             <%- end -%>
             <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/phone_list/ ? 'active' : '')) do -%>
-              <%= link_to(t("helpers.pdf.phonelist"), users_phone_list_path) -%>
+              <%= link_to(t("helpers.pdf.phonelist"), phone_list_users_path) -%>
             <%- end -%>
             <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/birthday_list/ ? 'active space-bottom' : 'space-bottom')) do -%>
-              <%= link_to(t("helpers.pdf.birthdaylist"), users_birthday_list_path) -%>
+              <%= link_to(t("helpers.pdf.birthdaylist"), birthday_list_users_path) -%>
             <%- end -%>
           <%- end -%>
         <%- end -%>

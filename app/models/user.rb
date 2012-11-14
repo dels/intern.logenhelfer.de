@@ -172,7 +172,7 @@ class User < ActiveRecord::Base
   def phone_numbers_printable
     strs = []
     addresses.each do |addr|
-      unless addr.phone.empty?
+      if addr.phone.present?
         strs << "#{addr.purpose}: #{addr.phone}"
       end
     end
@@ -182,7 +182,7 @@ class User < ActiveRecord::Base
   def fax_numbers_printable
     strs = []
     addresses.each do |addr|
-      unless addr.fax.empty?
+      if addr.fax.present?
         strs << "#{addr.purpose}: #{addr.fax}"
       end
     end
@@ -192,7 +192,7 @@ class User < ActiveRecord::Base
   def mobile_numbers_printable
     strs = []
     addresses.each do |addr|
-      unless addr.mobile.empty?
+      if addr.mobile.present?
         strs << "#{addr.purpose}: #{addr.mobile}"
       end
     end
