@@ -1,22 +1,16 @@
 FwzeIntern::Application.routes.draw do
 
-  match 'calendar/upcoming',                          to: 'events#upcoming',  as: :upcoming_calendar
-  get 'calendar/public_workingplan',                  to: 'events#public_workingplan'
-  post 'calendar/public_workingplan',                 to: 'events#public_workingplan'
-  get 'calendar/internal_workingplan',                to: 'events#internal_workingplan'
-  post 'calendar/internal_workingplan',               to: 'events#internal_workingplan'
-  match 'calendar/(:year(/:month(/:day)))(.:format)', to: 'events#date',      as: :calendar
+  scope 'calendar' do
+    match 'upcoming',                                 to: 'events#upcoming',  as: :upcoming_calendar
+    get   'public_workingplan',                       to: 'events#public_workingplan'
+    post  'public_workingplan',                       to: 'events#public_workingplan'
+    get   'internal_workingplan',                     to: 'events#internal_workingplan'
+    post  'internal_workingplan',                     to: 'events#internal_workingplan'
+    match '(:year(/:month(/:day)))(.:format)',        to: 'events#date',      as: :calendar
+  end
   resources :events
 
   resources :file_downloads
-
-  get 'users/members_list', to: 'users#members_list'
-  get 'users/phone_list', to: 'users#phone_list'
-  get 'users/phone_list_pdf', to: 'users#phone_list_pdf'
-  get 'users/birthday_list', to: 'users#birthday_list'
-  get 'users/birthday_list_pdf', to: 'users#birthday_list_pdf'
-  post 'users/members_list', to: 'users#members_list'
-
   resources :categories do
     resources :directories do
       resources :attached_files do
@@ -29,6 +23,15 @@ FwzeIntern::Application.routes.draw do
 
   devise_for :users, path_prefix: 'auth'
   resources :users do
+    collection do
+      # XXX: both get/post to 'users/members_list' are going to call users#members_list???
+      get 'members_list'
+      get 'phone_list'
+      get 'phone_list_pdf'
+      get 'birthday_list'
+      get 'birthday_list_pdf'
+      post 'members_list'
+    end
     member do
       put 'substitute'
       put 'lock'
