@@ -149,7 +149,7 @@ module LayoutHelper
   def categories_menu
     res = "".html_safe
     get_authorized(Category.order(:name)).each do |cat|
-      active = request.fullpath =~ /^\/categories\/#{URI.escape(cat.name)}/
+      active = request.fullpath =~ /^\/categories\/#{cat.slug}/
       res << content_tag(:li, class: active ? 'active' : nil) do
         blockres = "".html_safe
         blockres << link_to(cat.name, category_path(cat))
@@ -171,7 +171,7 @@ module LayoutHelper
     res << content_tag(:ul, :class => 'space-bottom' ) do
       blockres = "".html_safe
       (get_authorized category.directories.order(:name)).each do |dir|
-        active = request.fullpath =~ /^\/categories\/#{category.name}\/directories\/#{URI.escape(dir.name)}/
+        active = request.fullpath =~ /^\/categories\/#{category.slug}\/directories\/#{dir.slug}/
         blockres << content_tag(:li, :class => active ? 'active' : nil) do
           link_to(dir.name, category_directory_path(category, dir))
         end

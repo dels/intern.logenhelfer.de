@@ -1,6 +1,6 @@
 class Category < ActiveRecord::Base
   extend FriendlyId
-  friendly_id :name
+  friendly_id :name, use: :slugged
 
   attr_accessible :name, :description, :roles, :role_ids
 
@@ -13,7 +13,7 @@ class Category < ActiveRecord::Base
   has_many :roles, :through => :category_roles
 
   default_scope where(:deleted => false) unless (Rails.env.archive? || Rails.env.archive_dev?)
-  
+
   def delete
     if APP_CONFIG[:archive]
       self.deleted = false

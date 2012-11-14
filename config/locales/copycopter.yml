@@ -119,8 +119,8 @@ de:
         duration: Dauer (in Minuten)
         only_date: Only date
         only_time: Only time
-        private_description: Beschreibung (intern)
-        public_description: Beschreibung (öffentlich)
+        private_description: Beschr. (intern)
+        public_description: Beschr. (öffentlich)
         time: Zeit
         title: Bezeichnung
         type/birthday: 'Geburtstag'

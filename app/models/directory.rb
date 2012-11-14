@@ -1,6 +1,6 @@
 class Directory < ActiveRecord::Base
   extend FriendlyId
-  friendly_id :name
+  friendly_id :name, use: :slugged
 
   attr_accessible :name, :description, :category_id, :role_ids, :roles, :category
 

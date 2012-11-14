@@ -30,7 +30,7 @@ class Ability
 
   # korrespondierender Schriftfuehrer
   def secretary_abilities
-    can [:index, :create, :new, :show, :edit, :update], Event
+    can [:index, :create, :new, :show, :edit, :update, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
     can [:index, :show, :edit, :update], User
   end
 

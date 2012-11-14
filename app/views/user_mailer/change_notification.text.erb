@@ -1,1 +1,16 @@
-<%= t('user_mailer.change_notification.message', :changed_user_name => @changed_user.fullname, :secretary_name => @secretary.fullname) %>
+Guten Tag <%= @secretary.fullname %>,
+
+die Daten von <%= @changed_user.fullname %> wurden soeben geändert.
+
+<%-
+  @user.previous_changes.each do |attribute,(old_value,new_value)|
+    next if %w[updated_at created_at].include?(attribute)
+-%>
+  - <%= t("activerecord.attributes.user.#{attribute}") %>: <%= new_value %> (war <%= old_value %>)
+<%- end -%>
+
+Mit freundlichen Grüßen
+
+--
+Dies ist eine automatisch generierte E-Mail.
+Bei Fragen wenden Sie sich bitte an mail@elsbroek.com

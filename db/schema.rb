@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121026101932) do
+ActiveRecord::Schema.define(:version => 20121114171043) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -66,7 +66,10 @@ ActiveRecord::Schema.define(:version => 20121026101932) do
     t.boolean  "deleted",     :default => false
     t.datetime "created_at",                     :null => false
     t.datetime "updated_at",                     :null => false
+    t.string   "slug"
   end
+
+  add_index "categories", ["slug"], :name => "index_categories_on_slug"
 
   create_table "category_roles", :force => true do |t|
     t.integer  "category_id"
@@ -85,10 +88,12 @@ ActiveRecord::Schema.define(:version => 20121026101932) do
     t.boolean  "deleted",     :default => false
     t.datetime "created_at",                     :null => false
     t.datetime "updated_at",                     :null => false
+    t.string   "slug"
   end
 
   add_index "directories", ["category_id"], :name => "index_directories_on_category_id"
   add_index "directories", ["deleted"], :name => "index_directories_on_deleted"
+  add_index "directories", ["slug"], :name => "index_directories_on_slug"
 
   create_table "directory_roles", :force => true do |t|
     t.integer  "directory_id"

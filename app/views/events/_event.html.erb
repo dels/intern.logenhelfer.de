@@ -17,9 +17,6 @@
     <%- end -%>
   <% end %>
 
-  <dt><%= Event.human_attribute_name :title %>:</dt>
-  <dd><%= event.title %></dd>
-
   <dt><%= Event.human_attribute_name :public_description %>:</dt>
   <dd><%= simple_format dash event.public_description %></dd>
 
