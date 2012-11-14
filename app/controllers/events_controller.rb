@@ -125,8 +125,7 @@ private
   end
 
   def workingplan(params, internal = false)
-    from = nil
-    to = nil
+    from, to = nil, nil
     begin
       from = Date.parse(params[:date_from])
       to = Date.parse(params[:date_to])
@@ -134,8 +133,10 @@ private
       flash[:error] = t("helpers.pdf.invalid_date") if params[:hidden_field]
       return
     end
+
     pdf = create_pdf_with_header
     add_pdf_title("Arbeitsplan vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
+
     events_by_month = @events.where('date >= ?', from).where('date <= ?', to).order('date ASC, time ASC').group_by { |event| event.date.month }
     events_by_month.each_key do |month_number|
       add_pdf_section(I18n.t("date.month_names")[month_number], pdf)

@@ -436,3 +436,11 @@ span.add {
 .relation-people.details {
   display: none; // initially, will be toggled by javascript
 }
+
+.icon {
+  padding-left: 24px;
+  background: transparent left center no-repeat;
+
+  &.add { background-image: image-url('add.png'); }
+  &.disk { background-image: image-url('disk.png'); }
+}
