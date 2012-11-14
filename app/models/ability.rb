@@ -12,7 +12,7 @@ class Ability
       self.send(method) if self.respond_to?(method)
     end
     can [:show, :edit, :update], User, :id => @user.id unless APP_CONFIG[:archive]
-    can [:index, :show, :upcoming, :date], Event
+    # can [:index, :show, :upcoming, :date], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
       [] != (c.roles & @user.roles)
     end
@@ -50,7 +50,7 @@ class Ability
   end
 
     def admin_archive_abilities
-#    can [:index, :show, :destroy], Event
+    # can [:index, :show, :destroy], Event
     can [:index, :show, :destroy], Category
     can [:index, :show, :destroy], Directory
     can [:index, :show, :destroy], AttachedFile
