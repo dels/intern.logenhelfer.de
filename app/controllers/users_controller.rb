@@ -1,6 +1,3 @@
-#encoding: utf-8
-
-# -*- coding: utf-8 -*-
 class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
 
@@ -13,8 +10,8 @@ class UsersController < AuthorizedController
       flash[:error] = t("helpers.pdf.password_needed") if params[:hidden_field]
       return
     end
-    pdf = get_pdf_list([ "MNr. ", "Name", "Beruf", "Grad", "Aufg. am" , "Ang. am", "Geburtstag", "beruflich", "privat", "Ämter" ],
-      @users.order(:lastname).order(:firstname).order(:matriculation_number).map {|usr|
+    pdf = get_pdf_list(I18n.t('pdf.members_list.header'),
+      @users.undeleted.order('lastname ASC, firstname ASC, matriculation_number ASC').map {|usr|
         bsns_addr = usr.business_address
         priv_addr = usr.private_address
         addr_arr = []
@@ -23,25 +20,27 @@ class UsersController < AuthorizedController
         addr_arr << usr.to_s.gsub!(/\s/, "\n")
         addr_arr << usr.job_title
         addr_arr << usr.num_degree
-        addr_arr << I18n.l(usr.entered_apprentice_since)
+        addr_arr << (I18n.l(usr.entered_apprentice_since) rescue '')
         addr_arr << ((usr.accepted_at) ? I18n.l(usr.accepted_at) : "-")
-        addr_arr << I18n.l(usr.date_of_birth)
+        addr_arr << (I18n.l(usr.date_of_birth) rescue '')
 
         # business address
+        address_template = "%s\n%s %s\nTel: %s\nMobil: %s\nFax: %s\nE-Mail: %s"
+
         if bsns_addr
-          addr_arr << "#{bsns_addr.street}\n#{bsns_addr.zip} #{bsns_addr.city}\nTel: #{bsns_addr.phone}\nMobil: #{bsns_addr.mobile}\nFax: #{bsns_addr.fax}\nE-Mail: #{bsns_addr.email}"
+          addr_arr << address_template % [bsns_addr.street, bsns_addr.zip, bsns_addr.city, bsns_addr.phone, bsns_addr.mobile, bsns_addr.fax, bsns_addr.email]
         else
           addr_arr << "-"
         end
         if priv_addr
-          addr_arr << "#{priv_addr.street}\n#{priv_addr.zip} #{priv_addr.city}\nTel: #{priv_addr.phone}\nMobil: #{priv_addr.mobile}\nFax: #{priv_addr.fax}\nE-Mail: #{priv_addr.email}"
+          addr_arr << address_template % [priv_addr.street, priv_addr.zip, priv_addr.city, priv_addr.phone, priv_addr.mobile, priv_addr.fax, priv_addr.email]
         else
           addr_arr << "-"
         end
         # positions
         addr_arr << usr.positions.join("\n")
         addr_arr
-      }, column_widths: {1 => 50, 2=> 80, 7 => 120, 8 => 120}, header: true
+      }, column_widths: { 1 => 50, 2 => 80, 7 => 120, 8 => 120 }, header: true
     )
 
     pdf.encrypt_document(
@@ -62,14 +61,14 @@ class UsersController < AuthorizedController
   end
 
   def birthday_list_pdf
-    send_data get_pdf_list([ "Titel", "Nachname", "Vorname", "Geburtstag", "25. Jubiläum" , "50. Jubiläum" ],
-      @users.order(:lastname).order(:firstname).to_a.map {|usr|
+    send_data get_pdf_list(I18n.t('pdf.birthday_list.header'),
+      @users.undeleted.order('lastname ASC, firstname ASC').to_a.map {|usr|
         [ usr.title_str,
           usr.lastname,
           usr.firstname,
           I18n.l(usr.date_of_birth),
-          I18n.l(usr.entered_apprentice_since+25.years),
-          I18n.l(usr.entered_apprentice_since+50.years) ]
+          I18n.l(usr.entered_apprentice_since + 25.years),
+          I18n.l(usr.entered_apprentice_since + 50.years) ]
       }).render, type: "application/pdf", filename: "#{Date.today}-Geburtstagsliste.pdf"
   end
 
@@ -78,8 +77,8 @@ class UsersController < AuthorizedController
   end
 
   def phone_list_pdf
-    send_data get_pdf_list([ "Titel", "Name", "Telefon", "Mobil" , "Fax" ],
-      @users.order(:lastname).order(:firstname).map {|usr|
+    send_data get_pdf_list(I18n.t('pdf.phone_list.header'),
+      @users.order('lastname ASC, firstname ASC').map {|usr|
         [ usr.title_str,
           usr.to_s.gsub!(/\s/, "\n"),
           usr.phone_numbers_printable,

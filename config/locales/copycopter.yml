@@ -1,5 +1,33 @@
 ---
 de:
+  pdf:
+    members_list:
+      header:
+        - MNr.
+        - Name
+        - Beruf
+        - Grad
+        - Aufg. am
+        - Ang. am
+        - Geburtstag
+        - beruflich
+        - privat
+        - Ämter
+    birthday_list:
+      header:
+        - Titel
+        - Nachname
+        - Vorname
+        - Geburtstag
+        - 25. Jubiläum
+        - 50. Jubiläum
+    phone_list:
+      header:
+        - Titel
+        - Name
+        - Telefon
+        - Mobil
+        - Fax
   activemodel:
     errors:
       format: '%{attribute} %{message}'
@@ -247,38 +275,38 @@ de:
     distance_in_words:
       about_x_hours:
         one: etwa eine Stunde
-        other: etwa %{count} Stunden
+        other: 'etwa %{count} Stunden'
       about_x_months:
         one: etwa ein Monat
-        other: etwa %{count} Monate
+        other: 'etwa %{count} Monate'
       about_x_years:
         one: etwa ein Jahr
-        other: etwa %{count} Jahre
+        other: 'etwa %{count} Jahre'
       almost_x_years:
         one: fast ein Jahr
-        other: fast %{count} Jahre
+        other: 'fast %{count} Jahre'
       half_a_minute: eine halbe Minute
       less_than_x_minutes:
         one: weniger als eine Minute
-        other: weniger als %{count} Minuten
+        other: 'weniger als %{count} Minuten'
       less_than_x_seconds:
         one: weniger als eine Sekunde
-        other: weniger als %{count} Sekunden
+        other: 'weniger als %{count} Sekunden'
       over_x_years:
         one: mehr als ein Jahr
-        other: mehr als %{count} Jahre
+        other: 'mehr als %{count} Jahre'
       x_days:
         one: ein Tag
-        other: ! '%{count} Tage'
+        other: '%{count} Tage'
       x_minutes:
         one: eine Minute
-        other: ! '%{count} Minuten'
+        other: '%{count} Minuten'
       x_months:
         one: ein Monat
-        other: ! '%{count} Monate'
+        other: '%{count} Monate'
       x_seconds:
         one: eine Sekunde
-        other: ! '%{count} Sekunden'
+        other: '%{count} Sekunden'
     prompts:
       day: Tag
       hour: Stunden
@@ -289,11 +317,8 @@ de:
   devise:
     confirmations:
       confirmed: Ihr Account wurde erfolgreich bestätigt. Sie können sich nun anmelden.
-      send_instructions: Sie werden in Kürze eine E-Mail mit einer Bestätigungsanweisung
-        erhalten.
-      send_paranoid_instructions: If your email address exists in our database, you
-        will receive an email with instructions about how to confirm your account
-        in a few minutes.
+      send_instructions: Sie werden in Kürze eine E-Mail mit einer Bestätigungsanweisung erhalten.
+      send_paranoid_instructions: 'If your email address exists in our database, you will receive an email with instructions about how to confirm your account in a few minutes.'
     error:
       access_denied: Zugriff verweigert!
     failure:
@@ -308,10 +333,9 @@ de:
       user:
         invalid: Ungültige E-Mail oder Passwort.
         timeout: Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
-        unauthenticated: Sie sind nicht angemeldet. Sie müssen sich anmelden, um diese
-          Seite sehen zu können.
+        unauthenticated: 'Sie sind nicht angemeldet. Sie müssen sich anmelden, um diese Seite sehen zu können.'
     information:
-      signed_in_as: Eingeloggt als %{user}
+      signed_in_as: 'Eingeloggt als %{user}'
     links:
       forgot_password: Passwort vergessen?
       send_reset_password_instructions: Senden
@@ -327,8 +351,8 @@ de:
       unlock_instructions:
         subject: Entsperren
     omniauth_callbacks:
-      failure: Could not authenticate you from %{kind} because "%{reason}".
-      success: Successfully authenticated from %{kind} account.
+      failure: 'Could not authenticate you from %{kind} because "%{reason}".'
+      success: 'Successfully authenticated from %{kind} account.'
     pages:
       sign_in:
         header: Anmelden
