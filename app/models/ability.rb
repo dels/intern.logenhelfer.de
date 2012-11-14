@@ -49,7 +49,7 @@ class Ability
     can :index, FileDownload
   end
 
-    def admin_archive_abilities
+  def admin_archive_abilities
     # can [:index, :show, :destroy], Event
     can [:index, :show, :destroy], Category
     can [:index, :show, :destroy], Directory

@@ -1,10 +1,13 @@
 <% title t("activerecord.models.users") %>
 
-<% if can? :create, User %>
 <p class="horizontal-menu">
-  <%= link_to t("activerecord.actions.create_new", model: t("activerecord.models.user")), new_user_path %>
+  <%- if can? :create, User -%>
+    <%= link_to t('activerecord.actions.create_new', model: t('activerecord.models.user')), new_user_path %>
+  <%- end -%>
+  <%- if can? :show, User -%>
+    <%= link_to t('activerecord.actions.download_vcards'), users_path(format: :vcf) %>
+  <%- end -%>
 </p>
-<% end %>
 
 <%= paginate @users if @users.present? %>
 

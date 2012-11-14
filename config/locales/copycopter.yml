@@ -62,6 +62,8 @@ de:
     actions:
       create_new: Erstellen
       edit: Bearbeiten
+      download_all: alle herunterladen
+      download_vcards: Mitglieder als Kontaktliste exportieren
     address:
       business: Geschäftlich
       other: Andere

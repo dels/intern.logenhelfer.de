@@ -46,5 +46,4 @@ FwzeIntern::Application.routes.draw do
   get '/impressum', to: 'statics#impressum', as: :impressum
 
   root to: 'statics#index'
-
 end
