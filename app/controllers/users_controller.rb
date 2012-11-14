@@ -24,7 +24,7 @@ class UsersController < AuthorizedController
         addr_arr = []
 
         addr_arr << usr.matriculation_number
-        addr_arr << usr.to_s.gsub!(/\s/, "\n")
+        addr_arr << usr.to_s.gsub(/\s/, "\n")
         addr_arr << usr.job_title
         addr_arr << usr.num_degree
         addr_arr << (I18n.l(usr.entered_apprentice_since) rescue '')
@@ -34,16 +34,15 @@ class UsersController < AuthorizedController
         # business address
         address_template = "%s\n%s %s\nTel: %s\nMobil: %s\nFax: %s\nE-Mail: %s"
 
-        if bsns_addr
-          addr_arr << address_template % [bsns_addr.street, bsns_addr.zip, bsns_addr.city, bsns_addr.phone, bsns_addr.mobile, bsns_addr.fax, bsns_addr.email]
-        else
-          addr_arr << "-"
+        # business and private address (in order)
+        [bsns_addr, priv_addr].each do |a|
+          if a.present?
+            addr_arr << address_template % [ a.street, a.zip, a.city, a.phone, a.mobile, a.fax, a.email]
+          else
+            addr_arr << "-"
+          end
         end
-        if priv_addr
-          addr_arr << address_template % [priv_addr.street, priv_addr.zip, priv_addr.city, priv_addr.phone, priv_addr.mobile, priv_addr.fax, priv_addr.email]
-        else
-          addr_arr << "-"
-        end
+
         # positions
         addr_arr << usr.positions.join("\n")
         addr_arr

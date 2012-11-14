@@ -1,13 +1,35 @@
 Guten Tag <%= @secretary.fullname %>,
 
-die Daten von <%= @changed_user.fullname %> wurden soeben geändert.
+die Daten von <%= @user.fullname %> wurden soeben geändert.
 
-<%-
-  @user.previous_changes.each do |attribute,(old_value,new_value)|
-    next if %w[updated_at created_at].include?(attribute)
--%>
-  - <%= t("activerecord.attributes.user.#{attribute}") %>: <%= new_value %> (war <%= old_value %>)
+Änderungen an den Stammdaten:
+<%- if @user_changes.empty? -%>
+  - keine Änderungen
+<%- else -%>
+  <%- @user_changes.each do |attribute, (oval, nval)| -%>
+  - <%= t("activerecord.attributes.user.#{attribute}") %>: <%= nval || './.' %> (war <%= oval || './.' %>)
+  <%- end -%>
 <%- end -%>
+
+Adressänderungen:
+<%- if @user_changes.empty? && @address_changes.empty? && @new_addresses.empty? -%>
+  - Änderung unbekannt, vermutlich wurde eine Adresse gelöscht.
+<%- elsif @address_changes.empty? && @new_addresses.empty? -%>
+  - keine Änderungen
+<%- else -%>
+  <%- @address_changes.each do |addr, changes| -%>
+  - <%= addr.purpose %>:
+    <%- changes.each do |attribute, (oval, nval)| -%>
+    - <%= t("activerecord.attributes.address.#{attribute}") %>: <%= nval || './.' %> (war <%= oval || './.' %>)
+    <%- end -%>
+  <%- end -%>
+  <%- @new_addresses.each do |addr| -%>
+  - <%= addr.purpose %> (neu)
+  <%- end -%>
+<%- end -%>
+
+Der vollständige Datensatz kann hier eingesehen werden:
+<<%= user_url(@user) %>>
 
 Mit freundlichen Grüßen
 
