@@ -161,9 +161,24 @@ ul.horizontal {
 }
 
 .hidden { display: none; }
-.center { text-align: center !important; }
-.right { text-align: right !important; }
-.left { text-align: left !important; }
+.center {
+  text-align: center !important;
+  &.float {
+    margin: 0 auto;
+  }
+}
+.right {
+  text-align: right !important;
+  &.float {
+    float: right;
+  }
+}
+.left {
+  text-align: left !important;
+  &.float {
+    float: left;
+  }
+}
 
 .translation_missing {
   padding-right: 20px;
@@ -443,4 +458,5 @@ span.add {
 
   &.add { background-image: image-url('add.png'); }
   &.disk { background-image: image-url('disk.png'); }
+  &.search { background-image: image-url('search.png'); }
 }

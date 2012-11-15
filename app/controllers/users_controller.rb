@@ -2,12 +2,17 @@ class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
 
   def index
+    users = User.undeleted
+    if params[:search].present?
+      users = users.search(params[:search])
+    end
+
     respond_to do |format|
       format.html do
-        @users = view_context.get_authorized_paginated(User.undeleted.order(sort_column + " " + sort_direction)).page(params[:page])
+        @users = view_context.get_authorized_paginated(users.order(sort_column + " " + sort_direction)).page(params[:page])
       end
       format.vcf do
-        @users = User.undeleted.order('lastname ASC, firstname ASC, matriculation_number ASC').all
+        @users = users.order('lastname ASC, firstname ASC, matriculation_number ASC').all
       end
     end
   end
