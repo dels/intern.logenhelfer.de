@@ -1,8 +1,0 @@
-<% title t("activerecord.models.events") %>
-
-<ul class="horizontal">
-  <% if can? :create, Event %>
-    <li><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.event")), new_event_path %></li>
-  <% end %>
-</ul>
-
