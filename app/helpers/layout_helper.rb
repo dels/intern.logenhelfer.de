@@ -148,7 +148,7 @@ module LayoutHelper
 
   def categories_menu
     res = "".html_safe
-    get_authorized(Category.order(:name)).each do |cat|
+    get_authorized(Category.order('name ASC')).each do |cat|
       active = request.fullpath =~ /^\/categories\/#{cat.slug}/
       res << content_tag(:li, class: active ? 'active' : nil) do
         blockres = "".html_safe

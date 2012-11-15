@@ -18,11 +18,15 @@ class EventsController < AuthorizedController
   end
 
   def internal_workingplan
-    workingplan(params, true)
+    return if request.method == 'POST' && workingplan(params, true)
+    @from_date = Date.today.beginning_of_week
+    @to_date   = (@from_date + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
   end
 
   def public_workingplan
-    workingplan(params, false)
+    return if request.method == 'POST' && workingplan(params, false)
+    @from_date = Date.today.beginning_of_week
+    @to_date   = (@from_date + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
   end
 
   def upcoming
@@ -125,14 +129,8 @@ private
   end
 
   def workingplan(params, internal=false)
-    from, to = nil, nil
-    begin
-      from = Date.parse(params[:date_from])
-      to = Date.parse(params[:date_to])
-    rescue Exception
-      flash[:error] = t("helpers.pdf.invalid_date") if params[:hidden_field]
-      return
-    end
+    from = Date.parse(params[:date_from])
+    to = Date.parse(params[:date_to])
 
     pdf = create_pdf_with_header
     add_pdf_title("Arbeitsplan vom #{I18n.l from} bis zum #{I18n.l to}", pdf)

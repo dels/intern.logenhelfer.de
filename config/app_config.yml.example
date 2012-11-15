@@ -2,23 +2,33 @@ development:
   domain: localhost:3000
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
-  
+  # allowed values for default_workingplan_timespan:
+  # - int     == days   (ex: 4)
+  # - int+"d" == days   (ex: 4d)
+  # - int+"w" == weeks  (ex: 2w)
+  # - int+"m" == months (ex: 1m)
+  default_workingplan_timespan: 4w
+
 archive_dev:
   domain: localhost:3000
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
+  default_workingplan_timespan: 4w
 
 test:
   domain: test.host
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
+  default_workingplan_timespan: 4w
 
 production:
   domain: fwze.de
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
+  default_workingplan_timespan: 4w
 
 archive:
   domain: fwze.de
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
+  default_workingplan_timespan: 4w
