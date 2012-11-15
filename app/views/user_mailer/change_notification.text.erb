@@ -12,9 +12,7 @@ die Daten von <%= @user.fullname %> wurden soeben geändert.
 <%- end -%>
 
 Adressänderungen:
-<%- if @user_changes.empty? && @address_changes.empty? && @new_addresses.empty? -%>
-  - Änderung unbekannt, vermutlich wurde eine Adresse gelöscht.
-<%- elsif @address_changes.empty? && @new_addresses.empty? -%>
+<%- if @deleted_addresses.empty? && @address_changes.empty? && @new_addresses.empty? -%>
   - keine Änderungen
 <%- else -%>
   <%- @address_changes.each do |addr, changes| -%>
@@ -25,6 +23,9 @@ Adressänderungen:
   <%- end -%>
   <%- @new_addresses.each do |addr| -%>
   - <%= addr.purpose %> (neu)
+  <%- end -%>
+  <%- @deleted_addresses.each do |addr| -%>
+  - <%= addr[:purpose] %> (gelöscht)
   <%- end -%>
 <%- end -%>
 

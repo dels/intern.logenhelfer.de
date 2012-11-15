@@ -3,7 +3,7 @@
     # show remove link, iff parent object has many addresses (= not has only one address)
     if f.parent_builder.object.class.reflect_on_association(:address).nil?
   %>
-    <p><%= link_to_remove_fields Address.human_attribute_name(:remove_fields), f %></p>
+    <p><%= link_to_remove_fields Address.human_attribute_name(:remove_fields), f, :remove_address_fields %></p>
   <% end %>
   <dl>
     <%= f.select :type_of_address, Address::TYPES.to_a.map{|k,v| [I18n.t("activerecord.address.#{k}"), v]}, { include_blank: true }, data: { placeholder: I18n.t('helpers.select.prompt') }, class: "type_of_address" %>

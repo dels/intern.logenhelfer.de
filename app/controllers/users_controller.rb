@@ -115,7 +115,12 @@ class UsersController < AuthorizedController
   def update
     set_user_degree_dates(params)
     if @user.update_attributes(params[:user])
-      UserMailer.change_notification(@user).deliver
+      deleted_addresses = []
+      params[:user][:addresses_attributes].try :each do |_,a|
+        deleted_addresses << a if a[:_destroy] == "1"
+      end
+
+      UserMailer.change_notification(@user, deleted_addresses).deliver
       redirect_to @user, notice: t("activerecord.update_success", model: t("activerecord.models.user"))
     else
       render :edit

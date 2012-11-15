@@ -2,7 +2,7 @@ class UserMailer < ActionMailer::Base
   default from: "notice@fwze.de"
 
 
-  def change_notification(changed_user)
+  def change_notification(changed_user, deleted_addresses)
     @user       = changed_user
     @secretary  = UserRole.where(role_id: Role.where(name: 'Secretary').first).first.user
 
@@ -12,9 +12,9 @@ class UserMailer < ActionMailer::Base
     @user_changes.delete("updated_at")
     @user_changes.delete("created_at")
 
-    @new_addresses = []
-
-    @address_changes = @user.addresses.map {|a|
+    @new_addresses      = []
+    @deleted_addresses  = deleted_addresses
+    @address_changes    = @user.addresses.map do |a|
       changes = a.previous_changes
       next if changes.empty?
       if changes.key?('id')
@@ -28,7 +28,7 @@ class UserMailer < ActionMailer::Base
 
       changes['purpose'] = a.purpose if changes.key?('purpose')
       [a, changes]
-    }.compact
+    end.compact
 
     mail to: "korr.schriftfuehrer@fwze.de", subject: I18n.t('user_mailer.change_notification.subject')
   end
