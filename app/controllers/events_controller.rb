@@ -124,7 +124,7 @@ private
     session[:calendar_last_view] = where
   end
 
-  def workingplan(params, internal = false)
+  def workingplan(params, internal=false)
     from, to = nil, nil
     begin
       from = Date.parse(params[:date_from])
@@ -137,24 +137,28 @@ private
     pdf = create_pdf_with_header
     add_pdf_title("Arbeitsplan vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
 
-    events_by_month = @events.where('date >= ?', from).where('date <= ?', to).order('date ASC, time ASC').group_by { |event| event.date.month }
+    events_by_month = @events.where('date >= ? AND date <= ?', from, to)
+        .order('date ASC, time ASC')
+        .group_by { |event| event.date.month }
     events_by_month.each_key do |month_number|
       add_pdf_section(I18n.t("date.month_names")[month_number], pdf)
-      get_pdf_list(
-        %w[Wochentag Datum Uhrzeit Beschreibung],
-        events_by_month[month_number].map {|event|
-          [
-            I18n.t("date.day_names")[event.date.wday],
-            I18n.l(event.date),
-            I18n.l(event.time, format: :time),
-            internal ? event.private_description : event.public_description
-          ]
-        }, { width: pdf.bounds.width, column_widths: { 3 => 370 } }, {}, pdf
-      )
+
+      event_list = events_by_month[month_number].map do |event|
+        [
+          I18n.t("date.day_names")[event.date.wday],
+          I18n.l(event.date),
+          event.whole_day? ? 'ganztags' : I18n.l(event.time, format: :time),
+          internal ? event.private_description : event.public_description
+        ]
+      end
+
+      get_pdf_list(%w[Wochentag Datum Uhrzeit Beschreibung], event_list, { width: pdf.bounds.width, column_widths: { 3 => 370 } }, {}, pdf)
     end
+
     pdf.start_new_page
     add_pdf_html(I18n.t("helpers.pdf.workingplan.bottom_message"), pdf)
-    send_data pdf.render, type: "application/pdf", filename: "Arbeitsplan_#{internal ? 'intern' : 'oeffentlich'}_#{I18n.l(from)}-#{I18n.l(to)}.pdf"
+    filename = "Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]
+    send_data pdf.render, type: "application/pdf", filename: filename
   end
 
 end
