@@ -9,7 +9,7 @@
 
 <%= form_tag users_path, method: :get, class: 'search icon' do %>
   <p>
-    <%= text_field_tag :search, params[:search], class: jqueryui_input_classes %>
+    <%= text_field_tag :search, params[:search], class: jqueryui_input_classes, placeholder: t('helpers.label.user.search_placeholder') %>
     <%= submit_tag 'Suchen', name: nil %>
   </p>
 <% end %>
