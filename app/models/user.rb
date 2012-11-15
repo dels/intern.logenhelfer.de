@@ -29,7 +29,14 @@ class User < ActiveRecord::Base
   has_many :attached_files
 
   scope :undeleted, where(deleted: false)
-  scope :search, ->(param) { where('email ILIKE :param OR firstname ILIKE :param OR lastname ILIKE :param', param: "%#{param}%") }
+  scope :search, ->(param) {
+    where([
+        'email ILIKE :param',
+        'firstname ILIKE :param',
+        'lastname ILIKE :param',
+        'matriculation_number::text ILIKE :param'
+    ].join(' OR '), param: "%#{param}%" )
+  }
 
   TITLES = {
     "Dipl. Ing."                 => 1,
