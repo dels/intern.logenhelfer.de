@@ -12,6 +12,10 @@ class EventsController < AuthorizedController
     @year  = params[:year]  || Date.today.year
     @ctx   = view_context
 
+    @new_event_path_params = {
+      date: "#{@year}-#{@month}-#{@day}"
+    }
+
     return day    if params[:day]
 #    return month  if params[:month]
     month
