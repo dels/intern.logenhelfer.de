@@ -6,7 +6,7 @@
 
 <table class='autolink'>
   <tr>
-    <th><%= Directory.human_attribute_name(:name) %></th>
+    <th><%= sortable :name, Directory.human_attribute_name(:name) %></th>
     <th><%= Directory.human_attribute_name(:description) %></th>
     <th></th>
   </tr>

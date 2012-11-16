@@ -136,7 +136,7 @@ class UsersController < AuthorizedController
     @user.deleted = true
     # reset email, so that
     # (a) a login fails (deleted users are not able to login, though a
-    #     "your account is not active" message will be diplayed, marking the
+    #     "your account is not active" message will be displayed, indicating the
     #     presence of the account)
     # (b) the email address might be reused later -- without undeleting this
     #     user account and all its privileges (this is still possible using the
@@ -163,7 +163,6 @@ private
 
   def set_user_degree_dates params
     # since roles and degrees can only be changed by an admin we can return if the current user is no admin
-
     return unless current_user.roles.include?(Role.find_by_name('Admin'))
 
     @user.entered_apprentice_since = params[:user][:entered_apprentice_since]
