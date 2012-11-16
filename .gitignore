@@ -14,3 +14,4 @@ config/app_config.yml
 2012_09_29_FWzE_MitgliederVerzeichnis/
 memberlist.csv
 cur_dump.sql
+*.tar.gz.gpg
