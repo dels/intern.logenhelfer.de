@@ -29,7 +29,7 @@ class UsersController < AuthorizedController
         addr_arr = []
 
         addr_arr << usr.matriculation_number
-        addr_arr << usr.to_s.gsub(/\s/, "\n")
+        addr_arr << usr.fullname_with_title.gsub(/\s/, "\n")
         addr_arr << usr.job_title
         addr_arr << usr.num_degree
         addr_arr << (I18n.l(usr.entered_apprentice_since) rescue '')
@@ -91,7 +91,7 @@ class UsersController < AuthorizedController
     send_data get_pdf_list(I18n.t('pdf.phone_list.header'),
       @users.undeleted.order('lastname ASC, firstname ASC').map {|usr|
         [ usr.title_str,
-          usr.to_s.gsub!(/\s/, "\n"),
+          usr.fullname.gsub!(/\s/, "\n"),
           usr.phone_numbers_printable,
           usr.fax_numbers_printable,
           usr.mobile_numbers_printable ]
