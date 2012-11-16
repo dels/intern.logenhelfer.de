@@ -102,6 +102,7 @@ class UsersController < AuthorizedController
   end
 
   def new
+    @user.matriculation_number = User.maximum(:matriculation_number)
   end
 
   def create

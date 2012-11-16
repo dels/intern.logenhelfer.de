@@ -4,8 +4,8 @@
     <%= f.number_field :matriculation_number, :readonly => @limited_editing %>
     <%= f.text_field :email, :readonly => @limited_editing %>
 
-    <%= f.password_field :password, :autocomplete => :off %>
-    <%= f.password_field :password_confirmation, :autocomplete => :off %>
+    <%#= f.password_field :password, :autocomplete => :off %>
+    <%#= f.password_field :password_confirmation, :autocomplete => :off %>
 
     <%= f.collection_select :title, User::TITLES, :second, :first, :include_blank => :true, :readonly => @limited_editing %>
     <%= f.text_field :firstname, :readonly => @limited_editing %>
