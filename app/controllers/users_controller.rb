@@ -102,10 +102,13 @@ class UsersController < AuthorizedController
   end
 
   def new
-    @user.matriculation_number = User.maximum(:matriculation_number)
+    @user.matriculation_number = User.maximum(:matriculation_number) + 1
   end
 
   def create
+    @user.password = SecureRandom.hex(16)
+    @user.password_confirmation = @user.password
+    logger.info "GENERATED PASSWORD: #{@user.password_confirmation}"
     set_user_degree_dates(params)
     if @user.save
       redirect_to @user, notice: t("activerecord.create_success", model: t("activerecord.models.user"))
