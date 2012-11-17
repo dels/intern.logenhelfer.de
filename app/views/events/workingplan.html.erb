@@ -1,0 +1,16 @@
+<%- title t('.workingplan.header', date: l(@from, format: '%B %Y')) -%>
+
+<p><%= t '.workingplan.pretext', from: l(@from, format: '%d.'), to: l(@to, format: '%d.%m.%Y') %></p>
+
+<dl class="inverse-width">
+  <%- @events.group_by(&:date).each do |date, events| -%>
+    <dt><%= l date %></dt>
+    <%- events.each do |e| -%>
+      <dd>
+        <strong><%= e.whole_day? ? 'ganztags' : l(e.time) %></strong>:
+        <%= e.title %>
+      </dd>
+      <dd><%= e.public_description %></dd>
+    <%- end -%>
+  <%- end -%>
+</dl>

@@ -1,12 +1,13 @@
 FwzeIntern::Application.routes.draw do
 
+  get 'arbeitsplan(.:format)',                  to: 'events#workingplan'
   scope 'calendar' do
-    match 'upcoming',                                 to: 'events#upcoming',  as: :upcoming_calendar
-    get   'public_workingplan',                       to: 'events#public_workingplan'
-    post  'public_workingplan',                       to: 'events#public_workingplan'
-    get   'internal_workingplan',                     to: 'events#internal_workingplan'
-    post  'internal_workingplan',                     to: 'events#internal_workingplan'
-    match '(:year(/:month(/:day)))(.:format)',        to: 'events#date',      as: :calendar
+    match 'upcoming',                           to: 'events#upcoming',  as: :upcoming_calendar
+    get   'public_workingplan',                 to: 'events#public_workingplan'
+    post  'public_workingplan',                 to: 'events#public_workingplan'
+    get   'internal_workingplan',               to: 'events#internal_workingplan'
+    post  'internal_workingplan',               to: 'events#internal_workingplan'
+    match '(:year(/:month(/:day)))(.:format)',  to: 'events#date',      as: :calendar
   end
   resources :events
 

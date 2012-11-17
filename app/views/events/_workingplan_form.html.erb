@@ -1,0 +1,10 @@
+<dl>
+  <dt><%= label_tag(:date_from, t("helpers.pdf.date_from")) %></dt>
+  <dd><%= text_field_tag(:date_from, l(@from_date), class: jqueryui_small_input_classes + " datepicker") %></dd>
+
+  <dt><%= label_tag(:date_from, t("helpers.pdf.date_to")) %></dt>
+  <dd><%= text_field_tag(:date_to, l(@to_date), class: jqueryui_small_input_classes + " datepicker") %></dd>
+
+  <dt></dt>
+  <dd><%= submit_tag(t("helpers.pdf.generate")) %></dd>
+</dl>

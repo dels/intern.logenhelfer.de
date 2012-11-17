@@ -2,6 +2,7 @@ class Ability
   include CanCan::Ability
 
   def initialize(user)
+    can :workingplan, Event
     return unless user
     @user = user
 

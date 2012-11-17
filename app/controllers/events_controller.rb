@@ -1,4 +1,6 @@
 class EventsController < AuthorizedController
+  skip_before_filter :authenticate_user!, only: :workingplan
+
   def index
     redirect_to upcoming_calendar_path
   end
@@ -21,14 +23,33 @@ class EventsController < AuthorizedController
     month
   end
 
+  def workingplan
+    respond_to do |format|
+      format.html do
+        @from   = Date.today.beginning_of_month
+        @to     = Date.today.end_of_month
+        @events = @events.where('date >= ? AND date <= ?', @from, @to)
+                    .order('date ASC, whole_day ASC, time ASC')
+
+        render layout: 'simplistic'
+      end
+      format.ics do
+        @from   = Date.today
+        @to     = 3.months.from_now
+
+        render layout: false
+      end
+    end
+  end
+
   def internal_workingplan
-    return if request.method == 'POST' && workingplan(params, true)
+    return if request.method == 'POST' && export_workingplan(params, true)
     @from_date = Date.today.beginning_of_week
     @to_date   = (@from_date + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
   end
 
   def public_workingplan
-    return if request.method == 'POST' && workingplan(params, false)
+    return if request.method == 'POST' && export_workingplan(params, false)
     @from_date = Date.today.beginning_of_week
     @to_date   = (@from_date + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
   end
@@ -132,7 +153,7 @@ private
     session[:calendar_last_view] = where
   end
 
-  def workingplan(params, internal=false)
+  def export_workingplan(params, internal=false)
     from = Date.parse(params[:date_from])
     to = Date.parse(params[:date_to])
 

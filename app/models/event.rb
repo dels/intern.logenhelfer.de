@@ -2,6 +2,9 @@ class Event < ActiveRecord::Base
   attr_accessible :title, :public_description, :private_description,
       :date, :time, :whole_day
 
+  include UuidHelper
+  before_create :generate_uuid
+
   default_scope where(deleted: false).order('date ASC')
 
   validates_presence_of :date, :title, :created_by_id
@@ -32,5 +35,28 @@ class Event < ActiveRecord::Base
   def target
     return @target if @event_type.present?
     self
+  end
+
+  def self.icalendar from, to
+    cal = Icalendar::Calendar.new
+
+    where('date >= ? AND date <= ?', from, to).order('date ASC, whole_day ASC, time ASC').each do |e|
+      event               = cal.event
+      event.summary       = e.title
+      event.description   = e.public_description
+      event.uid           = "#{e.uuid}@#{APP_CONFIG[:domain]}"
+      event.transp        = 'TRANSPARENT'
+
+      event.dtstamp       = e.created_at.to_datetime
+      event.last_modified = e.updated_at.to_datetime if e.updated_at.present? && e.created_at != e.updated_at
+      if e.whole_day?
+        event.dtstart     = e.date.to_datetime.beginning_of_day
+        event.dtend       = e.date.to_datetime.end_of_day
+      else
+        event.dtstart     = e.date.to_datetime.change hour: e.time.hour, min: e.time.min
+      end
+    end
+
+    cal.to_ical
   end
 end
