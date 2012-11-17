@@ -459,4 +459,11 @@ span.add {
   &.add { background-image: image-url('add.png'); }
   &.disk { background-image: image-url('disk.png'); }
   &.search { background-image: image-url('search.png'); }
+  &.calendar { background-image: image-url('calendar.png'); }
+
+  &.top { background-position: left top; }
+}
+
+.avoid-bijoux {
+  margin-right: 140px;
 }

@@ -30,8 +30,8 @@ de:
   events:
     workingplan:
       workingplan:
-        header: Arbeitsplan %{date}
-        pretext: '...'
+        header: 'Arbeitsplan %{date}'
+        pretext: 'Um den Arbeitsplan in Ihrem Kalender zu importieren, benutzen Sie bitte diese Adresse: <tt>%{url}</tt>'
   activemodel:
     errors:
       format: '%{attribute} %{message}'

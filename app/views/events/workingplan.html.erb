@@ -1,13 +1,13 @@
 <%- title t('.workingplan.header', date: l(@from, format: '%B %Y')) -%>
 
-<p><%= t '.workingplan.pretext', from: l(@from, format: '%d.'), to: l(@to, format: '%d.%m.%Y') %></p>
+<p class="top calendar icon avoid-bijoux"><%= raw t '.workingplan.pretext', url: calender_export_url %></p>
 
 <dl class="inverse-width">
   <%- @events.group_by(&:date).each do |date, events| -%>
     <dt><%= l date %></dt>
     <%- events.each do |e| -%>
       <dd>
-        <strong><%= e.whole_day? ? 'ganztags' : l(e.time) %></strong>:
+        <strong><%= e.whole_day? ? 'ganztags' : l(e.time, format: '%H:%M Uhr') %></strong>:
         <%= e.title %>
       </dd>
       <dd><%= e.public_description %></dd>
