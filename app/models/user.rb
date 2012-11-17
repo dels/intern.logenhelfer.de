@@ -62,8 +62,13 @@ class User < ActiveRecord::Base
   end
 
   def fullname
+    [ firstname, lastname ].compact.join(' ')
+  end
+
+  def fullname_with_title
     [ title_str, firstname, lastname ].compact.join(' ')
   end
+
 
   def num_degree
     degree = 1

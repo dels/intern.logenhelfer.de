@@ -29,7 +29,7 @@ class UsersController < AuthorizedController
         addr_arr = []
 
         addr_arr << usr.matriculation_number
-        addr_arr << usr.to_s.gsub(/\s/, "\n")
+        addr_arr << usr.fullname_with_title.gsub(/\s/, "\n")
         addr_arr << usr.job_title
         addr_arr << usr.num_degree
         addr_arr << (I18n.l(usr.entered_apprentice_since) rescue '')
@@ -91,7 +91,7 @@ class UsersController < AuthorizedController
     send_data get_pdf_list(I18n.t('pdf.phone_list.header'),
       @users.undeleted.order('lastname ASC, firstname ASC').map {|usr|
         [ usr.title_str,
-          usr.to_s.gsub!(/\s/, "\n"),
+          usr.fullname.gsub!(/\s/, "\n"),
           usr.phone_numbers_printable,
           usr.fax_numbers_printable,
           usr.mobile_numbers_printable ]
@@ -102,9 +102,13 @@ class UsersController < AuthorizedController
   end
 
   def new
+    @user.matriculation_number = User.maximum(:matriculation_number) + 1
   end
 
   def create
+    @user.password = SecureRandom.hex(16)
+    @user.password_confirmation = @user.password
+    logger.info "GENERATED PASSWORD: #{@user.password_confirmation}"
     set_user_degree_dates(params)
     if @user.save
       redirect_to @user, notice: t("activerecord.create_success", model: t("activerecord.models.user"))
@@ -114,7 +118,7 @@ class UsersController < AuthorizedController
   end
 
   def edit
-    @limited_editing = limited_editing()
+    #@limited_editing = limited_editing()
   end
 
   def update
@@ -136,7 +140,7 @@ class UsersController < AuthorizedController
     @user.deleted = true
     # reset email, so that
     # (a) a login fails (deleted users are not able to login, though a
-    #     "your account is not active" message will be diplayed, marking the
+    #     "your account is not active" message will be displayed, indicating the
     #     presence of the account)
     # (b) the email address might be reused later -- without undeleting this
     #     user account and all its privileges (this is still possible using the
@@ -153,17 +157,12 @@ class UsersController < AuthorizedController
 
 private
 
-  def limited_editing
-    [] == (current_user.roles & (Role.where(name: ['Admin', 'Secretary'])))
-  end
-
   def sort_column
     (User.column_names).include?(params[:sort_by]) ? params[:sort_by] : "lastname ASC, firstname ASC, email "
   end
 
   def set_user_degree_dates params
     # since roles and degrees can only be changed by an admin we can return if the current user is no admin
-
     return unless current_user.roles.include?(Role.find_by_name('Admin'))
 
     @user.entered_apprentice_since = params[:user][:entered_apprentice_since]

@@ -2,7 +2,7 @@ class DirectoriesController < AuthorizedController
   helper_method :sort_column, :sort_direction
   
   def show
-    @attached_files = view_context.get_authorized_paginated(@directory.attached_files.order(:filename).select('id, filename, directory_id, uuid, content_length')).page(params[:page])
+    @attached_files = view_context.get_authorized_paginated(@directory.attached_files.order(sort_column + " " + sort_direction).select('id, filename, directory_id, uuid, content_length')).page(params[:page])
   end
 
   def new
@@ -35,10 +35,9 @@ class DirectoriesController < AuthorizedController
     redirect_to @directory.category, notice: t("activerecord.destroy_success", model: t("activerecord.models.directory"))
   end
 
-
   private
   
   def sort_column
-    (Directory.column_names).include?(params[:sort_by]) ? params[:sort_by] : "name ASC"
+    (Directory.column_names).include?(params[:sort_by]) ? params[:sort_by] : "filename"
   end
 end
