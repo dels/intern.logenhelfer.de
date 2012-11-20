@@ -165,9 +165,26 @@ class User < ActiveRecord::Base
     end
   end
 
+  # quick fix from https://github.com/railslove/birthday/blob/master/lib/railslove/acts/birthday/adapter/postgresql_adapter.rb#L7
+  # TODO: use Postgres' AGE() function
   scope :upcoming_birthdays, ->(from,to) {
-    extracton = 'EXTRACT(day FROM date_of_birth - date_trunc(\'year\', date_of_birth))'
-    where("#{extracton} >= ? AND #{extracton} <= ?", from.yday, to.yday)
+    from = from.to_date
+
+    if ((to.respond_to?(:empty?) && to.empty?) || !to)
+      where_sql = "to_char(\"date_of_birth\", 'MMDD') = '#{from.strftime('%m%d')}'"
+    else
+      to = to.to_date
+      if to.strftime('%m%d') < from.strftime('%m%d')
+        where_sql = [
+          "to_char(\"date_of_birth\", 'MMDD') BETWEEN '0101' AND '#{to.strftime('%m%d')}'",
+          "to_char(\"date_of_birth\", 'MMDD') BETWEEN '#{from.strftime('%m%d')}' AND '1231'"
+        ].join(' OR ')
+      else
+        where_sql = "to_char(\"date_of_birth\", 'MMDD') BETWEEN '#{from.strftime('%m%d')}' AND '#{to.strftime('%m%d')}'"
+      end
+    end
+
+    where(where_sql)
   }
 
   def self.upcoming_birthday_events(start_date, end_date)
