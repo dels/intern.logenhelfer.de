@@ -41,6 +41,7 @@ class Event < ActiveRecord::Base
     cal = Icalendar::Calendar.new
 
     where('date >= ? AND date <= ?', from, to).order('date ASC, whole_day ASC, time ASC').each do |e|
+      next if e.public_description.blank?
       event               = cal.event
       event.summary       = e.title
       event.description   = e.public_description
