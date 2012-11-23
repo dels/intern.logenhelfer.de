@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121117212557) do
+ActiveRecord::Schema.define(:version => 20121123155233) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -118,6 +118,7 @@ ActiveRecord::Schema.define(:version => 20121117212557) do
     t.date     "date",                                                 :null => false
     t.time     "time",                                                 :null => false
     t.string   "uuid",                :limit => 36
+    t.string   "location"
   end
 
   add_index "events", ["created_by_id"], :name => "index_events_on_created_by_id"
