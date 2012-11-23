@@ -81,6 +81,7 @@ class EventsController < AuthorizedController
   def new
     @event.date = Date.parse(params[:date]) if params[:date].present?
     @event.time = Time.parse(params[:time]) if params[:time].present?
+    @event.location = APP_CONFIG[:default_event_location]
   end
 
   def create

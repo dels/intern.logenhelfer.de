@@ -121,6 +121,7 @@ de:
         created_by: erstellt von
         date: Datum
         duration: Dauer (in Minuten)
+        location: Ort
         only_date: Only date
         only_time: Only time
         private_description: Beschr. (intern)
