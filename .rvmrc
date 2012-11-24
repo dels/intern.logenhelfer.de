@@ -1,1 +1,1 @@
-rvm use ruby-1.9.3-p286@fwze-intern --create
+rvm use ruby-1.9.3-p286@intern.logenhelfer.de --create
