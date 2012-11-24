@@ -167,16 +167,24 @@ private
     pdf = create_pdf_with_header
     add_pdf_title("Arbeitsplan vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
 
-    events_by_month = @events.where('date >= ? AND date <= ?', from, to)
-        .order('date ASC, time ASC')
-        .group_by { |event| event.date.month }
-    events_by_month.each_key do |month_number|
+    @events.where('date >= ? AND date <= ?', from, to).order('date ASC, time ASC').group_by { |event|
+      event.date.month
+    }.each do |month_number,events|
       add_pdf_section(I18n.t("date.month_names")[month_number], pdf)
+      day_names = I18n.t('date.day_names')
 
-      event_list = events_by_month[month_number].map do |event|
+      current_date = nil
+      event_list = events.map do |event|
+        if current_date == event.date
+          date = ''
+        else
+          current_date = event.date
+          date = I18n.l(current_date)
+        end
+
         [
-          I18n.t("date.day_names")[event.date.wday],
-          I18n.l(event.date),
+          day_names[event.date.wday],
+          date,
           event.whole_day? ? 'ganztags' : I18n.l(event.time, format: :time),
           internal ? event.private_description : event.public_description
         ]
