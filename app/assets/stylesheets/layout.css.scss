@@ -457,6 +457,7 @@ span.add {
   background: transparent left center no-repeat;
 
   &.add { background-image: image-url('add.png'); }
+  &.pdf { background-image: image-url('pdf.png'); }
   &.disk { background-image: image-url('disk.png'); }
   &.search { background-image: image-url('search.png'); }
   &.calendar { background-image: image-url('calendar.png'); }
