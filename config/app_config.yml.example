@@ -8,27 +8,32 @@ development:
   # - int+"w" == weeks  (ex: 2w)
   # - int+"m" == months (ex: 1m)
   default_workingplan_timespan: 4w
+  default_event_location: Kurfürstenallee 15
 
 archive_dev:
   domain: localhost:3000
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
   default_workingplan_timespan: 4w
+  default_event_location: Kurfürstenallee 15
 
 test:
   domain: test.host
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
   default_workingplan_timespan: 4w
+  default_event_location: Kurfürstenallee 15
 
 production:
   domain: fwze.de
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
   default_workingplan_timespan: 4w
+  default_event_location: Kurfürstenallee 15
 
 archive:
   domain: fwze.de
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
   show_admins: false
   default_workingplan_timespan: 4w
+  default_event_location: Kurfürstenallee 15

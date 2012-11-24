@@ -3,6 +3,7 @@
   <dl>
     <%= f.text_field :title %>
     <%= f.date_select :date %>
+    <%= f.text_field :location %>
     <dt><%= f.label :whole_day %></dt>
     <dd><%= f.check_box :whole_day %></dd>
     <%= f.time_select :time, { minute_step: 5 }, jui: :tiny %>

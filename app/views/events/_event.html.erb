@@ -2,6 +2,9 @@
   <dt><%= Event.human_attribute_name :title %>:</dt>
   <dd><%= event.title %></dd>
 
+  <dt><%= Event.human_attribute_name :location %>:</dt>
+  <dd><%= dash event.location %></dd>
+
   <% if event.whole_day? %>
     <dt><%= Event.human_attribute_name :date %>:</dt>
     <dd><%= l event.date %>, ganztägig</dd>
@@ -13,17 +16,19 @@
     <dd><%= l event.time, format: :time %> Uhr</dd>
   <% end %>
 
-  <dt><%= Event.human_attribute_name :public_description %>:</dt>
-  <dd><%= simple_format dash event.public_description %></dd>
+  <% unless event.birthday? %>
+    <dt><%= Event.human_attribute_name :public_description %>:</dt>
+    <dd><%= simple_format dash event.public_description %></dd>
 
-  <dt><%= Event.human_attribute_name :private_description %>:</dt>
-  <dd><%= simple_format dash event.private_description %></dd>
+    <dt><%= Event.human_attribute_name :private_description %>:</dt>
+    <dd><%= simple_format dash event.private_description %></dd>
 
-  <dt><%= Event.human_attribute_name :created_by %>:</dt>
-  <dd><%= event.created_by %>, <%= l event.created_at %></dd>
+    <dt><%= Event.human_attribute_name :created_by %>:</dt>
+    <dd><%= event.created_by %>, <%= l event.created_at %></dd>
 
-  <% if event.created_at != event.updated_at %>
-    <dt><%= Event.human_attribute_name :updated_by %>:</dt>
-    <dd><%= event.updated_by %>, <%= l event.updated_at %></dd>
+    <% if event.created_at != event.updated_at %>
+      <dt><%= Event.human_attribute_name :updated_by %>:</dt>
+      <dd><%= event.updated_by %>, <%= l event.updated_at %></dd>
+    <% end %>
   <% end %>
 </dl>
