@@ -70,6 +70,7 @@ protected
   end
 
   def add_pdf_section(title, pdf)
+    pdf.move_down 10
     pdf.text title, style: :bold, size: 12
     pdf.outline.section title, destination: pdf.page_number
   end

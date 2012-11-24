@@ -1,6 +1,6 @@
 class Event < ActiveRecord::Base
   attr_accessible :title, :public_description, :private_description,
-      :date, :time, :whole_day
+      :date, :time, :whole_day, :location
 
   include UuidHelper
   before_create :generate_uuid
