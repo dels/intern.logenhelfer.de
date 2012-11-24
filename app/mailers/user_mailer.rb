@@ -4,7 +4,9 @@ class UserMailer < ActionMailer::Base
 
   def change_notification(changed_user, deleted_addresses)
     @user       = changed_user
-    @secretary  = UserRole.where(role_id: Role.where(name: 'Secretary').first).first.user
+    @secretary  = UserRole.where(role_id: Role.where(name: 'Secretary').first).first
+    return unless @secretary
+    @secretary = @secretary.user
 
     # XXX: return if @user.id == @secretary.id
 
