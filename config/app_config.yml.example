@@ -1,6 +1,7 @@
 development:
   domain: localhost:3000
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+  lodge: Friedrich Wilhelm zur Eintracht
   show_admins: false
   # allowed values for default_workingplan_timespan:
   # - int     == days   (ex: 4)
@@ -13,6 +14,7 @@ development:
 archive_dev:
   domain: localhost:3000
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+  lodge: Friedrich Wilhelm zur Eintracht
   show_admins: false
   default_workingplan_timespan: 4w
   default_event_location: Kurfürstenallee 15
@@ -20,6 +22,7 @@ archive_dev:
 test:
   domain: test.host
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+  lodge: Friedrich Wilhelm zur Eintracht
   show_admins: false
   default_workingplan_timespan: 4w
   default_event_location: Kurfürstenallee 15
@@ -27,6 +30,7 @@ test:
 production:
   domain: fwze.de
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+  lodge: Friedrich Wilhelm zur Eintracht
   show_admins: false
   default_workingplan_timespan: 4w
   default_event_location: Kurfürstenallee 15
@@ -34,6 +38,7 @@ production:
 archive:
   domain: fwze.de
   organisation: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+  lodge: Friedrich Wilhelm zur Eintracht
   show_admins: false
   default_workingplan_timespan: 4w
   default_event_location: Kurfürstenallee 15

@@ -521,9 +521,6 @@ de:
   jquery:
     datepicker: dd.mm.yy
     datepicker-mmyy: mm/y
-  links:
-    pages:
-      index: Friedrich Wilhelm zur Eintracht
   number:
     currency:
       format:
