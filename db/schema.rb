@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121123155233) do
+ActiveRecord::Schema.define(:version => 20121124132823) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -131,6 +131,7 @@ ActiveRecord::Schema.define(:version => 20121123155233) do
     t.boolean  "deleted",          :default => false
     t.datetime "created_at",                          :null => false
     t.datetime "updated_at",                          :null => false
+    t.string   "filename"
   end
 
   add_index "file_downloads", ["deleted"], :name => "index_file_downloads_on_deleted"

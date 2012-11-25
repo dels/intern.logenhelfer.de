@@ -48,6 +48,8 @@ class Ability
     can :manage, AttachedFile
     can :manage, User
     can :index, FileDownload
+    can :manage, Statistic
+
   end
 
   def admin_archive_abilities

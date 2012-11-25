@@ -22,6 +22,12 @@ FwzeIntern::Application.routes.draw do
     end
   end
 
+  resources :statistics do
+    collection do
+      get 'user_stats'
+    end
+  end
+
   devise_for :users, path_prefix: 'auth'
   resources :users do
     collection do

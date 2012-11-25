@@ -34,7 +34,9 @@
             <%= link_to t("activerecord.models.cateories"), categories_path -%>
           <%- end -%>
         <%- end -%>
-        <%= authorized_menu_item FileDownload, file_downloads_path -%>
+        <%#= authorized_menu_item FileDownload, file_downloads_path -%>
+        <%= authorized_menu_item Statistic, user_stats_statistics_path -%>
+        <%#= link_to t("helpers.pages.statistics"), user_stats_statistics_path -%>
       </ul>
 
       <ul class="more space-top"><%= categories_menu %></ul>

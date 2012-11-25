@@ -8,6 +8,7 @@ class AttachedFilesController < ApplicationController
     fd = FileDownload.new
     fd.user = current_user
     fd.attached_file = @attached_file
+    fd.filename = @attached_file.filename
     fd.remote_ip = current_user.current_sign_in_ip
     fd.save!
     send_data @attached_file.content, :filename => @attached_file.filename, :type => @attached_file.content_type

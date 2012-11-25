@@ -454,6 +454,8 @@ de:
         matriculation_number: Matrikelnummer
         password: Passwort
         search_placeholder: 'Vorname, Name, M.-Nr. oder E-Mail'
+    pages:
+      statistics: Statistiken
     link:
       show: Anzeigen
       edit: Bearbeiten

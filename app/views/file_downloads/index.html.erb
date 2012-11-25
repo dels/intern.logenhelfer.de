@@ -12,7 +12,7 @@
   </tr>
   <% @file_downloads.each do |file_download| %>
     <tr>
-      <td><%= file_download.attached_file.filename %></td>
+      <td><%= file_download.filename %></td>
       <td><%= file_download.user.fullname %></td>
       <td><%= file_download.remote_ip %></td>
       <td><%= l file_download.created_at %></td>

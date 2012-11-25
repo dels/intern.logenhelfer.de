@@ -1,0 +1,32 @@
+<% title t("activerecord.models.users") %>
+
+<% if @users.count > 0 %>
+  <table class='autolink'>
+    <tr>
+      <th><%= User.human_attribute_name(:matriculation_number) %></th>
+      <th><%= User.human_attribute_name(:lastname) %></th>
+      <th><%= User.human_attribute_name(:firstname) %></th>
+      <th><%= User.human_attribute_name(:sign_in_count) %></th>
+      <th><%= User.human_attribute_name(:last_sign_in_at) %></th>
+      <th></th>
+    </tr>
+    <% @users.each do |user| %>
+      <tr>
+        <td><%= user.matriculation_number %></td>
+        <td><%= dash(user.lastname) %></td>
+        <td><%= dash(user.firstname) %></td>
+        <td><%= dash(user.sign_in_count) %></td>
+        <td><%= l user.last_sign_in_at %></td>
+        <td>
+          <%= show_link_to user if can?(:show, user) %>
+          <%= edit_link_to user if can?(:edit, user) %>
+          <%= image_link_tag_helper 'substitute', substitute_user_path(user), method: :put if can?(:substitute, user) %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+<%- else -%>
+  <p>Keine Mitglieder gefunden.</p>
+<%- end -%>
+
+
