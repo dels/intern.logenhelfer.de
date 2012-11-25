@@ -21,7 +21,7 @@ class StatisticsController < AuthorizedController
 
   # show
   def user_file_stats
-    @users = User.all(:select=> "distinct users.id, users.matriculation_number, users.firstname, users.lastname, count(*)", :joins => :file_downloads, :group => "users.id, users.matriculation_number, users.firstname, users.lastname", :order => "count DESC")
+    @users = User.all(:select=> "distinct users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname, count(*)", :joins => :file_downloads, :group => "users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname", :order => "count DESC")
   end
 
 private
