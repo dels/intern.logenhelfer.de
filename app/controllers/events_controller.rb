@@ -27,9 +27,8 @@ class EventsController < AuthorizedController
     respond_to do |format|
       format.html do
         @from   = Date.today.beginning_of_month
-        @to     = Date.today.end_of_month
-        @events = @events.where('date >= ? AND date <= ?', @from, @to)
-                    .order('date ASC, whole_day ASC, time ASC')
+        @to     = (@from + 35.days).end_of_month
+        @events = @events.where('date >= ? AND date <= ?', @from, @to).order('date ASC, whole_day ASC, time ASC')
 
         render layout: 'simplistic'
       end

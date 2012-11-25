@@ -1,4 +1,8 @@
-<%- title t('.workingplan.header', date: l(@from, format: '%B %Y')) -%>
+<%-
+  title t('.workingplan.header',
+    from: l(@from, format: @from.year == @to.year ? '%b.' : '%b. %Y'), # apr-may 2011 vs. dec 2011-jan 2012
+    to: l(@to, format: '%b. %Y'))
+-%>
 
 <p class="top pdf icon avoid-bijoux"><%= raw t '.workingplan.pdf_export', url: calender_export_url(format: :pdf) %></p>
 <p class="top calendar icon avoid-bijoux"><%= raw t '.workingplan.ical_export', url: calender_export_url(format: :ics) %></p>
