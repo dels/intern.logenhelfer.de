@@ -1,6 +1,6 @@
 FwzeIntern::Application.routes.draw do
 
-  get 'arbeitsplan(.:format)',                  to: 'events#workingplan',   as: :calender_export
+  get 'arbeitsplan(.:format)',                  to: 'events#workingplan',   as: :calendar_export
   scope 'calendar' do
     match 'upcoming',                           to: 'events#upcoming',      as: :upcoming_calendar
     get   'public_workingplan',                 to: 'events#public_workingplan'

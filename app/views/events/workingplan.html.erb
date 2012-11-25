@@ -4,8 +4,8 @@
     to: l(@to, format: '%b. %Y'))
 -%>
 
-<p class="top pdf icon avoid-bijoux"><%= raw t '.workingplan.pdf_export', url: calender_export_url(format: :pdf) %></p>
-<p class="top calendar icon avoid-bijoux"><%= raw t '.workingplan.ical_export', url: calender_export_url(format: :ics) %></p>
+<p class="top pdf icon avoid-bijoux"><%= raw t '.workingplan.pdf_export', url: calendar_export_url(format: :pdf) %></p>
+<p class="top calendar icon avoid-bijoux"><%= raw t '.workingplan.ical_export', url: calendar_export_url(format: :ics) %></p>
 
 <dl class="inverse-width">
   <%- @events.group_by(&:date).each do |date, events| -%>
