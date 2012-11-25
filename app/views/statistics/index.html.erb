@@ -1,1 +1,20 @@
 <% title t("activerecord.models.statistics") %>
+
+
+<dl>
+  <dt><%= t 'helpers.stats_for' %>:</dt>
+  <dd><ul>
+      <%- if can? :user_stats, Statistic -%>
+        <li><%= link_to t("helpers.pages.user_stats"), user_stats_statistics_path -%></li>
+      <%- end -%>
+      <%- if can? :downloads, Statistic -%>
+      <li><%= link_to t("helpers.pages.downloads"), downloads_statistics_path -%></li>
+      <%- end -%>
+      <%- if can? :file_stats, Statistic -%>
+      <li><%= link_to t("helpers.pages.file_stats"), file_stats_statistics_path -%></li>
+      <%- end -%>
+      <%- if can? :user_file_stats, Statistic -%>
+      <li><%= link_to t("helpers.pages.user_file_stats"), user_file_stats_statistics_path -%></li>
+      <%- end -%>
+  </ul></dd>
+</dl>

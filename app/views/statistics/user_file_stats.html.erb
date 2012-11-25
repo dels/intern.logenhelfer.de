@@ -1,31 +1,27 @@
 <% title t("activerecord.models.users") %>
 
-<% if @users.count > 0 %>
-  <table class='autolink'>
-    <tr>
-      <th><%= User.human_attribute_name(:matriculation_number) %></th>
-      <th><%= User.human_attribute_name(:lastname) %></th>
-      <th><%= User.human_attribute_name(:firstname) %></th>
-      <th><%= t 'activerecord.attributes.statistics.user_file_stats.count' %></th>
-      <th></th>
-    </tr>
-    <% @users.each do |user| %>
-      <tr>
-        <td><%= user.matriculation_number %></td>
-        <td><%= dash(user.lastname) %></td>
-        <td><%= dash(user.firstname) %></td>
-        <td><%= user.count %></td>
-        <td>
-          <%= show_link_to user if can?(:show, user) %>
-          <%= edit_link_to user if can?(:edit, user) %>
-          <%= image_link_tag_helper 'substitute', substitute_user_path(user), method: :put if can?(:substitute, user) %>
-        </td>
-      </tr>
-    <% end %>
-  </table>
-<%- else -%>
-  <p>Keine Mitglieder gefunden.</p>
-<%- end -%>
+<table class='autolink'>
+  <tr>
+    <th><%= sortable :matriculation_number, User.human_attribute_name(:matriculation_number) %></th>
+    <th><%= sortable :lastname, User.human_attribute_name(:lastname) %></th>
+    <th><%= sortable :firstname, User.human_attribute_name(:firstname) %></th>
+    <th><%= sortable "6", t('activerecord.attributes.statistics.user_file_stats.count') %></th>
+    <th></th>
+  </tr>
+  <% @users.each do |user| %>
+  <tr>
+    <td><%= user.matriculation_number %></td>
+    <td><%= dash(user.lastname) %></td>
+    <td><%= dash(user.firstname) %></td>
+    <td><%= user.count %></td>
+    <td>
+      <%= show_link_to user if can?(:show, user) %>
+      <%= edit_link_to user if can?(:edit, user) %>
+      <%= image_link_tag_helper 'substitute', substitute_user_path(user), method: :put if can?(:substitute, user) %>
+    </td>
+  </tr>
+  <% end %>
+</table>
 
 
 
