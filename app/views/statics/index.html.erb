@@ -1,11 +1,35 @@
 <% title APP_CONFIG[:lodge] %>
 <% if user_signed_in? %>
-  <p><strong>Willkommen Br. <%= current_user.fullname %></strong></p>
+  <h2>Willkommen Br. <%= current_user.fullname %></h2>
   
-  
-
   <p>
+    Hier im internen Bereich kannst Du den Arbeitsplan einsehen, Dateien herunterladen und einiges mehr, abhängig von Deinem Grad und Deinen Ämtern, die Du in der Loge übernommen hast. 
   </p>
+
+  <h3>Aktueller Arbeitsplan</h3>
+    <p>
+
+    </p>
+
+  <h3>Anpassen der eigenen Kontaktdaten</h3>
+    <p>
+
+    </p>
+
+
+  <h3>Herunterladen von Dateien</h3>
+    <p>
+
+    </p>
+
+
+  <h3>Falls es mal nicht ganz rund läuft...</h3>
+    <p>
+      ... dann siehst Du eine Meldung, wie diese <%= link_to "hier", "https://intern.fwze.de/500.html", :target => "_blank" %>. Sobald Du diese Meldung siehst, wird im Hintergrund eine E-Mail an die Technik gesendet. Wir sehen, dann was Du gerade gemacht hast, wer Du bist und (hoffentlich), was den Fehler verursacht hat, den Du gerade gesehen hast. 
+    </p>
+    <p>
+      Wir werden dann schnellstmöglich den Fehler beheben. Wenn Du unser eine E-Mail an <%= mail_to "technik@fwze.de" %> sendest, so werden wir Dir bescheid sagen, sobal der Fehler behoben ist. 
+    </p>
 <% else %>
   <p>Bitte loggen Sie sich ein:</p>
   <%= render 'devise/sessions/form' %>
