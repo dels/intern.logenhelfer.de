@@ -16,7 +16,7 @@ class StatisticsController < AuthorizedController
 
   # show how often each file has been downloaded
   def file_stats
-    @file_downloads = FileDownload.select("filename, count(*), attached_file_id").order("2 DESC").group(:filename, "file_downloads.attached_file_id ").page(params[:page])
+    @file_downloads = FileDownload.select("filename, count(*), attached_file_id").order(sort_column + " " + sort_direction).group(:filename, "file_downloads.attached_file_id ").page(params[:page])
   end
 
   # show
@@ -27,7 +27,7 @@ class StatisticsController < AuthorizedController
 private
 
   def sort_column
-    (User.column_names).include?(params[:sort_by]) ? params[:sort_by] : "last_sign_in_at DESC, sign_in_count"
+    (User.column_names + FileDownload.column_names + %w|2|).include?(params[:sort_by]) ? params[:sort_by] : "last_sign_in_at DESC, sign_in_count"
   end
 
 

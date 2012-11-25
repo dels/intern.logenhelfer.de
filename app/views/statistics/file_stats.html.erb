@@ -4,8 +4,8 @@
 
 <table>
   <tr>
-    <th><%= t 'activerecord.attributes.statistics.download_stats.filename' %></th>
-    <th><%= t 'activerecord.attributes.statistics.download_stats.count' %></th>
+    <th><%= sortable :filename, t('activerecord.attributes.statistics.download_stats.filename') %></th>
+    <th><%= sortable "2", t('activerecord.attributes.statistics.download_stats.count') %></th>
     <th></th>
   </tr>
   <% @file_downloads.each do |file_download| %>
