@@ -48,9 +48,7 @@ class Ability
     can :manage, Directory
     can :manage, AttachedFile
     can :manage, User
-    can :index, FileDownload
     can :manage, Statistic
-
   end
 
   def admin_archive_abilities
@@ -59,7 +57,6 @@ class Ability
     can [:index, :show, :destroy], Directory
     can [:index, :show, :destroy], AttachedFile
     can [:index, :show], User
-    can :index, FileDownload
   end
 
   #

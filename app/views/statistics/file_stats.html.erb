@@ -1,5 +1,21 @@
 <% title t("activerecord.models.statistics") %>
 
+<%= paginate @file_downloads if @file_downloads.present? %>
+
+<table>
+  <tr>
+    <th><%= t 'activerecord.attributes.statistics.download_stats.filename' %></th>
+    <th><%= t 'activerecord.attributes.statistics.download_stats.count' %></th>
+  </tr>
+  <% @file_downloads.each do |file_download| %>
+    <tr>
+      <td><%= file_download.filename %></td>
+      <td><%= file_download.count %></td>
+    </tr>
+  <% end %>
+</table>
+
+<%= paginate @file_downloads if @file_downloads.present? %>
 
 
 

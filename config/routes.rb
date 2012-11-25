@@ -26,8 +26,8 @@ FwzeIntern::Application.routes.draw do
     collection do
       get 'user_stats'
       get 'file_stats'
-      get 'download_stats'
       get 'downloads'
+      get 'user_file_stats'
     end
   end
 
