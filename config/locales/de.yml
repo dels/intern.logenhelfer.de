@@ -31,7 +31,8 @@ de:
     workingplan:
       workingplan:
         header: 'Arbeitsplan %{date}'
-        pretext: 'Um den Arbeitsplan in Ihrem Kalender zu importieren, benutzen Sie bitte diese Adresse: <tt>%{url}</tt>'
+        pdf_export: 'Diese Ansicht kann auch <a href="%{url}">als PDF</a> heruntergeladen werden.'
+        ical_export: 'Um den Arbeitsplan in Ihrem Kalender zu importieren, benutzen Sie bitte diese Adresse: <tt>%{url}</tt>'
   activemodel:
     errors:
       format: '%{attribute} %{message}'
@@ -523,9 +524,6 @@ de:
   jquery:
     datepicker: dd.mm.yy
     datepicker-mmyy: mm/y
-  links:
-    pages:
-      index: Friedrich Wilhelm zur Eintracht
   number:
     currency:
       format:

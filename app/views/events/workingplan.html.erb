@@ -1,6 +1,7 @@
 <%- title t('.workingplan.header', date: l(@from, format: '%B %Y')) -%>
 
-<p class="top calendar icon avoid-bijoux"><%= raw t '.workingplan.pretext', url: calender_export_url %></p>
+<p class="top pdf icon avoid-bijoux"><%= raw t '.workingplan.pdf_export', url: calender_export_url(format: :pdf) %></p>
+<p class="top calendar icon avoid-bijoux"><%= raw t '.workingplan.ical_export', url: calender_export_url(format: :ics) %></p>
 
 <dl class="inverse-width">
   <%- @events.group_by(&:date).each do |date, events| -%>

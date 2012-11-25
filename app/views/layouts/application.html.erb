@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for?(:title) ? "#{yield(:title)} - Friedrich Wilhelm zur Eintracht" : "FWzE" %></title>
+    <title><%= content_for?(:title) ? "#{yield(:title)} - #{APP_CONFIG[:lodge]}" : APP_CONFIG[:lodge] %></title>
     <%= render 'layouts/jquery_format_locales' %>
     <%= stylesheet_link_tag "application" %>
     <%= javascript_include_tag "application" %>
@@ -15,7 +15,6 @@
     </nav>
 
     <section>
-
       <nav id="top-menu">
         <%= render 'layouts/top_menu' %>
       </nav>

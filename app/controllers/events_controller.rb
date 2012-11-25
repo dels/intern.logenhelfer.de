@@ -39,17 +39,23 @@ class EventsController < AuthorizedController
 
         render layout: false
       end
+      format.pdf do
+        date_from = Date.today.beginning_of_week
+        date_to   = (date_from + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
+
+        export_workingplan(false, date_from, date_to)
+      end
     end
   end
 
   def internal_workingplan
-    return if request.method == 'POST' && export_workingplan(params, true)
+    return if request.method == 'POST' && export_workingplan(true)
     @from_date = Date.today.beginning_of_week
     @to_date   = (@from_date + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
   end
 
   def public_workingplan
-    return if request.method == 'POST' && export_workingplan(params, false)
+    return if request.method == 'POST' && export_workingplan(false)
     @from_date = Date.today.beginning_of_week
     @to_date   = (@from_date + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
   end
@@ -154,23 +160,31 @@ private
     session[:calendar_last_view] = where
   end
 
-  def export_workingplan(params, internal=false)
-    from = Date.parse(params[:date_from])
-    to = Date.parse(params[:date_to])
+  def export_workingplan(internal=false, date_from=nil, date_to=nil)
+    from = date_from || Date.parse(params[:date_from])
+    to   = date_to   || Date.parse(params[:date_to])
 
     pdf = create_pdf_with_header
     add_pdf_title("Arbeitsplan vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
 
-    events_by_month = @events.where('date >= ? AND date <= ?', from, to)
-        .order('date ASC, time ASC')
-        .group_by { |event| event.date.month }
-    events_by_month.each_key do |month_number|
+    @events.where('date >= ? AND date <= ?', from, to).order('date ASC, time ASC').group_by { |event|
+      event.date.month
+    }.each do |month_number,events|
       add_pdf_section(I18n.t("date.month_names")[month_number], pdf)
+      day_names = I18n.t('date.day_names')
 
-      event_list = events_by_month[month_number].map do |event|
+      current_date = nil
+      event_list = events.map do |event|
+        if current_date == event.date
+          date = ''
+        else
+          current_date = event.date
+          date = I18n.l(current_date)
+        end
+
         [
-          I18n.t("date.day_names")[event.date.wday],
-          I18n.l(event.date),
+          day_names[event.date.wday],
+          date,
           event.whole_day? ? 'ganztags' : I18n.l(event.time, format: :time),
           internal ? event.private_description : event.public_description
         ]

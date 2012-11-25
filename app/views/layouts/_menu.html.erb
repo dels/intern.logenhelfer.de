@@ -43,7 +43,7 @@
     </li>
 <%- else -%>
   <ul>
-    <%= content_tag :li, link_to(t("links.pages.index"), root_url) -%>
+    <%= content_tag :li, link_to(APP_CONFIG[:lodge], root_url) -%>
     <%= content_tag :li, link_to(t("devise.links.sign_in"), new_user_session_path) -%>
   </ul>
 <%- end -%>
