@@ -6,6 +6,7 @@ class StatisticsController < AuthorizedController
   end
 
   def download_stats
+    @file_downloads = FileDownload.select("filename, count(*)").order("2 DESC").group(:filename).page(params[:page])
   end
 
   def downloads

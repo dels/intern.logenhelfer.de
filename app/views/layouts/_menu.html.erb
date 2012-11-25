@@ -39,14 +39,14 @@
           <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/user_stats/ ? 'active' : nil) do -%>
             <%= link_to t("helpers.pages.user_stats"), user_stats_statistics_path -%>
           <%- end -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/downloads/ ? 'active' : nil) do -%>
+            <%= link_to t("helpers.pages.downloads"), downloads_statistics_path -%>
+          <%- end -%>
           <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/file_stats/ ? 'active' : nil) do -%>
             <%= link_to t("helpers.pages.file_stats"), file_stats_statistics_path -%>
           <%- end -%>
           <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/download_stats/ ? 'active' : nil) do -%>
             <%= link_to t("helpers.pages.download_stats"), download_stats_statistics_path -%>
-          <%- end -%>
-          <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/downloads/ ? 'active' : nil) do -%>
-            <%= link_to t("helpers.pages.downloads"), downloads_statistics_path -%>
           <%- end -%>
 
 

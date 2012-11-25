@@ -171,6 +171,10 @@ de:
         type_of_address: Addresses type of address
       user_role:
         role_id: Role
+      statistics:
+        download_stats:
+          filename: Dateiname
+          count: Anzahl der Downlodas
     create_success: '%{model} erfolgreich erstellt'
     destroy_success: '%{model} wurde erfolgreich gelöscht.'
     errors:
