@@ -261,6 +261,7 @@ de:
       user: Mitglied
       user_role: User role
       users: Mitglieder
+      statistics: Statistiken
     upload_failure: Bitte wählen Sie eine Datei zum Hochladen aus.
     update_success: Aktualisierung erfolgreich
   attributes:
@@ -456,7 +457,10 @@ de:
         password: Passwort
         search_placeholder: 'Vorname, Name, M.-Nr. oder E-Mail'
     pages:
-      statistics: Statistiken
+      user_stats: Benutzer
+      file_stats: Dateien
+      download_stats: Download Statistiken
+      downloads: Downloads
     link:
       show: Anzeigen
       edit: Bearbeiten

@@ -34,10 +34,25 @@
             <%= link_to t("activerecord.models.cateories"), categories_path -%>
           <%- end -%>
         <%- end -%>
-        <%#= authorized_menu_item FileDownload, file_downloads_path -%>
-        <%= authorized_menu_item Statistic, user_stats_statistics_path -%>
-        <%#= link_to t("helpers.pages.statistics"), user_stats_statistics_path -%>
-      </ul>
+        <%= authorized_menu_item Statistic, statistics_path do -%>
+          <%- if request.fullpath =~ /^\/statistics/ -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/user_stats/ ? 'active' : nil) do -%>
+            <%= link_to t("helpers.pages.user_stats"), user_stats_statistics_path -%>
+          <%- end -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/file_stats/ ? 'active' : nil) do -%>
+            <%= link_to t("helpers.pages.file_stats"), file_stats_statistics_path -%>
+          <%- end -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/download_stats/ ? 'active' : nil) do -%>
+            <%= link_to t("helpers.pages.download_stats"), download_stats_statistics_path -%>
+          <%- end -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/downloads/ ? 'active' : nil) do -%>
+            <%= link_to t("helpers.pages.downloads"), downloads_statistics_path -%>
+          <%- end -%>
+
+
+          <% end %>
+        <% end %>
+        </ul>
 
       <ul class="more space-top"><%= categories_menu %></ul>
     </li>

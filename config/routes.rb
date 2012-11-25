@@ -25,6 +25,9 @@ FwzeIntern::Application.routes.draw do
   resources :statistics do
     collection do
       get 'user_stats'
+      get 'file_stats'
+      get 'download_stats'
+      get 'downloads'
     end
   end
 

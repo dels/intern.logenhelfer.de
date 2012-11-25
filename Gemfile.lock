@@ -74,7 +74,7 @@ GEM
       faraday (>= 0.7.4, < 0.9)
     friendly_id (4.0.9)
     fssm (0.2.9)
-    hashery (2.0.1)
+    hashery (2.1.0)
     hashie (1.2.0)
     hike (1.2.1)
     http_parser.rb (0.5.3)
