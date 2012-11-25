@@ -11,12 +11,12 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121124132823) do
+ActiveRecord::Schema.define(:version => 20121124132824) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
     t.string   "addressable_type"
-    t.string   "purpose",          :default => "geschäftlich"
+    t.string   "purpose"
     t.string   "street1"
     t.string   "street2"
     t.string   "street3"
@@ -27,8 +27,8 @@ ActiveRecord::Schema.define(:version => 20121124132823) do
     t.string   "email"
     t.text     "remarks"
     t.boolean  "deleted",          :default => false
-    t.datetime "created_at",                                   :null => false
-    t.datetime "updated_at",                                   :null => false
+    t.datetime "created_at",                          :null => false
+    t.datetime "updated_at",                          :null => false
     t.integer  "type_of_address"
     t.string   "mobile"
   end
