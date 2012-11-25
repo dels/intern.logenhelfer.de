@@ -6,7 +6,9 @@
       <th><%= User.human_attribute_name(:matriculation_number) %></th>
       <th><%= User.human_attribute_name(:lastname) %></th>
       <th><%= User.human_attribute_name(:firstname) %></th>
-      <th><%= User.human_attribute_name(:last_sign_in_ip) %></th>
+      <% if current_user.roles.include?(Role.where(:name => 'Admin')) %>
+        <th><%= User.human_attribute_name(:last_sign_in_ip) %></th>
+      <% end %>
       <th><%= sortable :sign_in_count, User.human_attribute_name(:sign_in_count) %></th>
       <th><%= sortable :last_sign_in_at, User.human_attribute_name(:last_sign_in_at) %></th>
       <th></th>
@@ -16,7 +18,9 @@
         <td><%= user.matriculation_number %></td>
         <td><%= dash(user.lastname) %></td>
         <td><%= dash(user.firstname) %></td>
-        <td><%= dash(user.last_sign_in_ip) %></td>
+        <% if current_user.roles.include?(Role.where(:name => 'Admin')) %>
+          <td><%= dash(user.last_sign_in_ip) %></td>
+        <% end %>
         <td><%= dash(user.sign_in_count) %></td>
         <td><%= l user.last_sign_in_at %></td>
         <td>

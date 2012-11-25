@@ -17,12 +17,12 @@ class StatisticsController < AuthorizedController
 
   # show how often each file has been downloaded
   def file_stats
-    @file_downloads = FileDownload.select("filename, count(*)").order("2 DESC").group(:filename).page(params[:page])
+    @file_downloads = FileDownload.select("filename, count(*), attached_file_id").order("2 DESC").group(:filename, "file_downloads.attached_file_id ").page(params[:page])
   end
 
   # show 
   def user_file_stats
-    
+    @users = User.all(:select=> "distinct users.id, users.firstname, users.lastname, count(*)", :joins => :file_downloads, :group => "users.id, users.firstname, users.lastname")
   end
 
 private
