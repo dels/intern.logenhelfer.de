@@ -6,11 +6,15 @@
   <tr>
     <th><%= t 'activerecord.attributes.statistics.download_stats.filename' %></th>
     <th><%= t 'activerecord.attributes.statistics.download_stats.count' %></th>
+    <th></th>
   </tr>
   <% @file_downloads.each do |file_download| %>
     <tr>
       <td><%= file_download.filename %></td>
       <td><%= file_download.count %></td>
+      <td>
+        <%= image_link_tag_helper 'show', category_directory_attached_file_path(file_download.attached_file.directory.category, file_download.attached_file.directory, file_download.attached_file), :title => I18n.t('helpers.link.show') %>
+        </td>
     </tr>
   <% end %>
 </table>
