@@ -12,8 +12,9 @@ class Ability
 
       self.send(method) if self.respond_to?(method)
     end
-    can [:show, :edit, :update], User, :id => @user.id unless APP_CONFIG[:archive]
-    # can [:index, :show, :upcoming, :date], Event
+    can [:show, :edit, :update], User, id: @user.id unless APP_CONFIG[:archive]
+
+    can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
       [] != (c.roles & @user.roles)
     end
