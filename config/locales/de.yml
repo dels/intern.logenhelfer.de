@@ -463,7 +463,7 @@ de:
     pages:
       user_stats: Benutzer
       file_stats: Dateien
-      download_stats: Download Statistiken
+      user_file_stats: Benutzer Downloads
       downloads: Downloads
     link:
       show: Anzeigen
