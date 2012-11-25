@@ -2,7 +2,7 @@ class StatisticsController < AuthorizedController
   helper_method :sort_column, :sort_direction
 
   def index
-    
+
   end
 
   # show last users activity and last login
@@ -20,13 +20,13 @@ class StatisticsController < AuthorizedController
     @file_downloads = FileDownload.select("filename, count(*), attached_file_id").order("2 DESC").group(:filename, "file_downloads.attached_file_id ").page(params[:page])
   end
 
-  # show 
+  # show
   def user_file_stats
     @users = User.all(:select=> "distinct users.id, users.firstname, users.lastname, count(*)", :joins => :file_downloads, :group => "users.id, users.firstname, users.lastname")
   end
 
 private
-  
+
   def sort_column
     (User.column_names).include?(params[:sort_by]) ? params[:sort_by] : "last_sign_in_at DESC, sign_in_count"
   end
