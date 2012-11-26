@@ -22,6 +22,12 @@ FwzeIntern::Application.routes.draw do
     end
   end
 
+  # I'd like to use `resource :app_config`, but Rails refuses to use AppConfigController
+  # and I refuse to rename AppConfigController to AppConfigsController (that just
+  # doesn't sound right)...
+  get 'app_config',                             to: 'app_config#index',     as: :app_config
+  put 'app_config',                             to: 'app_config#update'
+
   resources :statistics do
     collection do
       get 'user_stats'

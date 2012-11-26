@@ -76,6 +76,7 @@ label {
 input {
   width: 20em;
   height: 1.8em;
+  padding: .125em .5em;
 }
 input.large {
   width: 30em;
@@ -106,7 +107,7 @@ input.datepicker {
     repeat: no-repeat;
   }
   padding-left: 2em;
-  width: 18em;
+  width: 18.5em;
 }
 dd div input.ui-autocomplete-input {
   width: 15em;

@@ -45,7 +45,7 @@ class Event < ActiveRecord::Base
       event               = cal.event
       event.summary       = e.title
       event.description   = e.public_description
-      event.uid           = "#{e.uuid}@#{APP_CONFIG[:domain]}"
+      event.uid           = "#{e.uuid}@#{AppConfig[:domain]}"
       event.transp        = 'TRANSPARENT'
 
       event.dtstamp       = e.created_at.to_datetime

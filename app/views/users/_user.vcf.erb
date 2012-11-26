@@ -3,8 +3,8 @@ VERSION:3.0
 CLASS:CONFIDENTIAL
 N:<%= user.lastname %>; <%= user.firstname %>
 FN:<%= user.fullname %>
-ORG:<%= APP_CONFIG[:organisation] %>
-URL:http://<%= APP_CONFIG[:domain] %>/
+ORG:<%= AppConfig[:organisation] %>
+URL:http://<%= AppConfig[:domain] %>/
 EMAIL;TYPE=INTERNET:<%= user.email %>
 <%- user.addresses.each do |addr| -%>
 <%- if addr.phone.present? -%>

@@ -27,6 +27,35 @@ de:
         - Telefon
         - Mobil
         - Fax
+  app_config:
+    index:
+      header: Anwendungs-Konfiguration
+      intro: 'Die hier dargestellten Optionen beziehen sich ausschließlich auf die <tt>%{env}</tt>-Umgebung. Das Eintragen ungültiger Werte geschieht auf eigene Gefahr, eine Überprüfung findet nicht statt.'
+      options:
+        archive:
+          name: Archiv-Modus
+          description: 'Verändern nur auf eigene Gefahr!'
+        domain:
+          name: Domain
+          description: Die Domain dieser Anwendung (ohne Protokoll). Wird für den Export von Kontakten benutzt und dient als Identifikator im Kalender-Export.
+        organisation:
+          name: Vereinsname
+          description: Wird hauptsächlich in Kontakt-Exporten benutzt.
+        lodge:
+          name: Loge
+          description: Angezeigter Logenname auf der Startseite und im Seitentitel.
+        show_admins:
+          name: Administratoren in Benutzerliste anzeigen?
+        default_workingplan_timespan:
+          name: Vorgegebene Zeitspanne für die Arbeitsplan-Exporte
+          description: 'Zahlwert in Tagen. Optional kann "d", "w" oder "m" nachgestellt werden, um explizit Tage, Wochen oder Monate anzugeben. Beispiele: "4d" = vier Tage; "3m" = drei Monate.'
+        default_event_location:
+          name: Ortsvorgabe für neue Termine
+          description: Das Feld "Ort" im Formular für neue Termine wird mit diesem Wert vorausgefüllt.
+      option_key: Schlüssel
+      option_name: Bedeutung
+      option_value: Wert
+      option_description: Beschreibung
   events:
     workingplan:
       workingplan:
@@ -268,6 +297,8 @@ de:
       user_role: User role
       users: Mitglieder
       statistics: Statistiken
+      app_config: Konfiguration
+      app_configs: Konfiguration
     upload_failure: Bitte wählen Sie eine Datei zum Hochladen aus.
     update_success: Aktualisierung erfolgreich
   attributes:

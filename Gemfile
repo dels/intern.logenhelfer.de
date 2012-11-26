@@ -26,6 +26,7 @@ group :development, :archive_dev do
   gem 'rails_best_practices',   require: false
   gem 'rails-erd'
   gem 'letter_opener'
+  gem 'sextant'
 
   # disable for now
   # gem 'debugger'

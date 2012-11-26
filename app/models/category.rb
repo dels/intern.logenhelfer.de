@@ -15,7 +15,7 @@ class Category < ActiveRecord::Base
   default_scope where(:deleted => false) unless (Rails.env.archive? || Rails.env.archive_dev?)
 
   def delete
-    if APP_CONFIG[:archive]
+    if AppConfig[:archive]
       self.deleted = false
     else
       self.deleted = true

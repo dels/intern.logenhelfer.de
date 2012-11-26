@@ -7,12 +7,12 @@ class Ability
     @user = user
 
     @user.roles.each do |role|
-      archive = APP_CONFIG[:archive] ? 'archive_' : ''
+      archive = AppConfig[:archive] ? 'archive_' : ''
       method = :"#{role.name.underscore}_#{archive}abilities"
 
       self.send(method) if self.respond_to?(method)
     end
-    can [:show, :edit, :update], User, id: @user.id unless APP_CONFIG[:archive]
+    can [:show, :edit, :update], User, id: @user.id unless AppConfig[:archive]
 
     can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
@@ -26,7 +26,7 @@ class Ability
     end
     admin_role = Role.find_by_name("Admin")
     can [:index, :show, :members_list, :phone_list, :birthday_list], User, ["users.deleted = false"] do |u|
-      APP_CONFIG[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+      AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
     end
     can [:index, :file_stats],Statistic
   end
@@ -50,6 +50,7 @@ class Ability
     can :manage, AttachedFile
     can :manage, User
     can :manage, Statistic
+    can :manage, AppConfig
   end
 
   def admin_archive_abilities

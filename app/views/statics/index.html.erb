@@ -1,17 +1,17 @@
-<% title APP_CONFIG[:lodge] %>
+<% title AppConfig[:lodge] %>
 <% if user_signed_in? %>
   <h2>Willkommen Br. <%= current_user.fullname %></h2>
-  
+
   <p>
-    Hier im internen Bereich kannst Du den Arbeitsplan einsehen, Dateien herunterladen und einiges mehr, abhängig von Deinem Grad und Deinen Ämtern, die Du in der Loge übernommen hast. 
+    Hier im internen Bereich kannst Du den Arbeitsplan einsehen, Dateien herunterladen und einiges mehr, abhängig von Deinem Grad und Deinen Ämtern, die Du in der Loge übernommen hast.
   </p>
 
   <h3>Aktueller Arbeitsplan</h3>
     <p>
-      Du findest den aktuellen Arbeitsplan immer links oben im Menü. Wenn Du auf den Arbeitsplan klickst, dann klappt sich ein Untermenü aus, über das Du einen internen Arbeitsplan generieren kannst und einen externen. Im internen Arbeitsplan sind Klarnamen verwendet und es werden keine Abkürzungen verwendet. 
+      Du findest den aktuellen Arbeitsplan immer links oben im Menü. Wenn Du auf den Arbeitsplan klickst, dann klappt sich ein Untermenü aus, über das Du einen internen Arbeitsplan generieren kannst und einen externen. Im internen Arbeitsplan sind Klarnamen verwendet und es werden keine Abkürzungen verwendet.
       Der externe Arbeitsplan eignet sich, um Ihn anderen Brr. zu schicken oder zu veröffentlichen.
 
-      Bei beiden Versionen kannst Du einen Zeitraum angeben, für den der Arbeitsplan erzeugt werden soll. 
+      Bei beiden Versionen kannst Du einen Zeitraum angeben, für den der Arbeitsplan erzeugt werden soll.
     </p>
 
     <p>
@@ -25,9 +25,9 @@
     </p>
 
     <p>
-      Dazu kannst Du im Menü links auf Mitglieder klicken. Du kannst nun Deinen Namen in der Liste suchen oder Deinen Namen, Deine E-Mail oder Deine Matrikel-Nummer in das Suche-Feld eingeben. 
+      Dazu kannst Du im Menü links auf Mitglieder klicken. Du kannst nun Deinen Namen in der Liste suchen oder Deinen Namen, Deine E-Mail oder Deine Matrikel-Nummer in das Suche-Feld eingeben.
 
-      Wenn Du Deinen Namen gefunden hast, so kannst Du neben Deinem Namen auf das Stift-Icon klicken und Deine Daten editieren. Die Daten Deiner Aufnahme, Beförderung oder Erhebung kannst aber nur der Sekretär der Loge ändern. 
+      Wenn Du Deinen Namen gefunden hast, so kannst Du neben Deinem Namen auf das Stift-Icon klicken und Deine Daten editieren. Die Daten Deiner Aufnahme, Beförderung oder Erhebung kannst aber nur der Sekretär der Loge ändern.
     </p>
 
     <p>
@@ -36,7 +36,7 @@
 
   <h3>Herunterladen des Mitgliederverzeichnisses</h3>
     <p>
-      Diese Software erlaubt es jedem Br. das aktuelle Mitgliederverzeichnis zu generieren und herunter zu laden. Hierzu kannst Du links im Menü auf "Mitglieder" klicken. Du siehst dann im mittleren Teil die Liste alle Mitglieder Deiner Loge. Im linken Menü sind unter Mitglieder weitere Menüpunkte entstanden. Hierzu gehören "Geburtstagsliste", "Telefonliste" und "Mitgliederverzeichnis". Wenn Du auf "Mitgliederverzeichnis" klickst, so musst Du ein Passwort angeben, welche Du frei wählen kannst, mit dem die PDF-Datei geschützt werden soll, die Du gleich erzeugst. Hast Du ein Passwort gewählt und auf den Button "erzeugen" geklickt, dann lädt Dein Browser automatisch das aktuelle MV als PDF. 
+      Diese Software erlaubt es jedem Br. das aktuelle Mitgliederverzeichnis zu generieren und herunter zu laden. Hierzu kannst Du links im Menü auf "Mitglieder" klicken. Du siehst dann im mittleren Teil die Liste alle Mitglieder Deiner Loge. Im linken Menü sind unter Mitglieder weitere Menüpunkte entstanden. Hierzu gehören "Geburtstagsliste", "Telefonliste" und "Mitgliederverzeichnis". Wenn Du auf "Mitgliederverzeichnis" klickst, so musst Du ein Passwort angeben, welche Du frei wählen kannst, mit dem die PDF-Datei geschützt werden soll, die Du gleich erzeugst. Hast Du ein Passwort gewählt und auf den Button "erzeugen" geklickt, dann lädt Dein Browser automatisch das aktuelle MV als PDF.
     </p>
 
   <h3>Herunterladen von Dateien</h3>
@@ -45,16 +45,16 @@
     </p>
 
     <p>
-      Zu Kategorien, Ordnern und Dateien kann es immer eine Beschreibung geben, welche beschreibt, was man in der Kategorie etc. vorfindet. Um eine Datei herunter zu laden musst Du lediglich auf die Datei klicken und Deine Browser lädt die Datei automatisch. Wenn Du eine Datei herunter lädst, so merkt sich die Software, wie oft die Datei herunter geladen word ist, damit jede Loge weiss, was für die Brr. besonders Interessant ist. So kann der Internetbeauftrage der Loge die Software nach den Bedürfnissen der Brr. gestalten. 
+      Zu Kategorien, Ordnern und Dateien kann es immer eine Beschreibung geben, welche beschreibt, was man in der Kategorie etc. vorfindet. Um eine Datei herunter zu laden musst Du lediglich auf die Datei klicken und Deine Browser lädt die Datei automatisch. Wenn Du eine Datei herunter lädst, so merkt sich die Software, wie oft die Datei herunter geladen word ist, damit jede Loge weiss, was für die Brr. besonders Interessant ist. So kann der Internetbeauftrage der Loge die Software nach den Bedürfnissen der Brr. gestalten.
     </p>
 
 
   <h3>Falls es mal nicht ganz rund läuft...</h3>
     <p>
-      ... dann siehst Du eine Meldung, wie diese <%= link_to "hier", "https://intern.fwze.de/500.html", :target => "_blank" %>. Sobald Du diese Meldung siehst, wird im Hintergrund eine E-Mail an die Technik gesendet. Wir sehen, dann was Du gerade gemacht hast, wer Du bist und (hoffentlich), was den Fehler verursacht hat, den Du gerade gesehen hast. 
+      ... dann siehst Du eine Meldung, wie diese <%= link_to "hier", "https://intern.fwze.de/500.html", :target => "_blank" %>. Sobald Du diese Meldung siehst, wird im Hintergrund eine E-Mail an die Technik gesendet. Wir sehen, dann was Du gerade gemacht hast, wer Du bist und (hoffentlich), was den Fehler verursacht hat, den Du gerade gesehen hast.
     </p>
     <p>
-      Wir werden dann schnellstmöglich den Fehler beheben. Wenn Du unser eine E-Mail an <%= mail_to "technik@fwze.de" %> sendest, so werden wir Dir bescheid sagen, sobald der Fehler behoben ist. 
+      Wir werden dann schnellstmöglich den Fehler beheben. Wenn Du unser eine E-Mail an <%= mail_to "technik@fwze.de" %> sendest, so werden wir Dir bescheid sagen, sobald der Fehler behoben ist.
     </p>
 <% else %>
   <p>Bitte loggen Sie sich ein:</p>

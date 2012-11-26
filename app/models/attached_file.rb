@@ -31,7 +31,7 @@ class AttachedFile < ActiveRecord::Base
   end
 
   def delete
-    if APP_CONFIG[:archive]
+    if AppConfig[:archive]
       self.deleted = false
       # FIXME: warum das?????
       self.directory.delete

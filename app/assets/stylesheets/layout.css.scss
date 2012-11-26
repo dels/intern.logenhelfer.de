@@ -407,6 +407,18 @@ table.autolink {
   }
 }
 
+table.wide {
+  td, th {
+    padding: 1ex 1.5ex;
+  }
+  th {
+    width: 200px;
+  }
+  tr:nth-child(even) th {
+    background-color: lighten($dark-color, 10%);
+  }
+}
+
 #throbble-container {
   display: none;
   position: absolute;

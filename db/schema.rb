@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121124132824) do
+ActiveRecord::Schema.define(:version => 20121126190345) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -32,6 +32,13 @@ ActiveRecord::Schema.define(:version => 20121124132824) do
     t.integer  "type_of_address"
     t.string   "mobile"
   end
+
+  create_table "app_config_adapters", :force => true do |t|
+    t.string "key"
+    t.string "value"
+  end
+
+  add_index "app_config_adapters", ["key"], :name => "index_app_config_adapters_on_key", :unique => true
 
   create_table "attached_file_roles", :force => true do |t|
     t.integer  "attached_file_id"

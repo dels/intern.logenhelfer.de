@@ -1,0 +1,88 @@
+<%- title t('.header') -%>
+
+<p><%= raw t('.intro', env: Rails.env) %></p>
+
+<%= form_tag app_config_path, method: :put do %>
+  <table class="wide" id="app-config">
+    <tr>
+      <th><%= t '.options.archive.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[archive]', '1', AppConfig[:archive] %> ja<label>
+        <label><%= radio_button_tag 'app_config[archive]', '0', !AppConfig[:archive] %> nein</label>
+      </td>
+      <%- if t('.options.archive').key?(:description) -%>
+        <td><%= t '.options.archive.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:archive</tt></td>
+    </tr>
+    <tr>
+      <th><%= t '.options.domain.name' %></th>
+      <td><%= text_field_tag 'app_config[domain]', AppConfig[:domain], class: jqueryui_input_classes %></td>
+      <%- if t('.options.domain').key?(:description) -%>
+        <td><%= t '.options.domain.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:domain</tt></td>
+    </tr>
+    <tr>
+      <th><%= t '.options.organisation.name' %></th>
+      <td><%= text_field_tag 'app_config[organisation]', AppConfig[:organisation], class: jqueryui_input_classes %></td>
+      <%- if t('.options.organisation').key?(:description) -%>
+        <td><%= t '.options.organisation.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:organisation</tt></td>
+    </tr>
+    <tr>
+      <th><%= t '.options.lodge.name' %></th>
+      <td><%= text_field_tag 'app_config[lodge]', AppConfig[:lodge], class: jqueryui_input_classes %></td>
+      <%- if t('.options.lodge').key?(:description) -%>
+        <td><%= t '.options.lodge.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:lodge</tt></td>
+    </tr>
+    <tr>
+      <th><%= t '.options.show_admins.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[show_admins]', '1', AppConfig[:show_admins] %> ja<label>
+        <label><%= radio_button_tag 'app_config[show_admins]', '0', !AppConfig[:show_admins] %> nein</label>
+      </td>
+      <%- if t('.options.show_admins').key?(:description) -%>
+        <td><%= t '.options.show_admins.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:show_admins</tt></td>
+    </tr>
+    <tr>
+      <th><%= t '.options.default_workingplan_timespan.name' %></th>
+      <td><%= text_field_tag 'app_config[default_workingplan_timespan]', AppConfig[:default_workingplan_timespan], class: jqueryui_input_classes %></td>
+      <%- if t('.options.default_workingplan_timespan').key?(:description) -%>
+        <td><%= t '.options.default_workingplan_timespan.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:default_workingplan_timespan</tt></td>
+    </tr>
+    <tr>
+      <th><%= t '.options.default_event_location.name' %></th>
+      <td><%= text_field_tag 'app_config[default_event_location]', AppConfig[:default_event_location], class: jqueryui_input_classes %></td>
+      <%- if t('.options.default_event_location').key?(:description) -%>
+        <td><%= t '.options.default_event_location.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:default_event_location</tt></td>
+    </tr>
+  </table>
+  <dl class="buttons">
+    <dt>&nbsp;</dt>
+    <dd><%= submit_tag t('helpers.button.update', model: t('activerecord.models.app_config')), name: nil %></dd>
+  </dl>
+<%- end -%>

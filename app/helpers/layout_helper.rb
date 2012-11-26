@@ -61,11 +61,11 @@ module LayoutHelper
   def destroy_link_to(target, opts={})
     target = polymorphic_path_helper(target)
     opts = {
-      :title => (APP_CONFIG[:archive] ? I18n.t('helpers.link.restore') : I18n.t('helpers.link.destroy')),
-      :confirm => (APP_CONFIG[:archive] ? I18n.t('helpers.link.restore_confirmation') : I18n.t('helpers.link.destroy_confirmation')),
+      :title => (AppConfig[:archive] ? I18n.t('helpers.link.restore') : I18n.t('helpers.link.destroy')),
+      :confirm => (AppConfig[:archive] ? I18n.t('helpers.link.restore_confirmation') : I18n.t('helpers.link.destroy_confirmation')),
       :method => :delete
     }.merge(opts)
-    image_link_tag_helper (APP_CONFIG[:archive] ? 'recycle' : 'destroy'), target, opts
+    image_link_tag_helper (AppConfig[:archive] ? 'recycle' : 'destroy'), target, opts
   end
 
   # Rails has an `ActionView::Helpers::UrlHelper#current_page?` method. Some parts were borrowed from there :-)

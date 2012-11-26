@@ -65,7 +65,7 @@ class AttachedFilesController < ApplicationController
   end
 
   def destroy
-    unless APP_CONFIG[:archive]
+    unless AppConfig[:archive]
       @attached_file.deleted = true
     else
       @attached_file.deleted = false
