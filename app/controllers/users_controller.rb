@@ -72,6 +72,13 @@ class UsersController < AuthorizedController
   end
 
   def birthday_list_pdf
+
+    fd = FileDownload.new
+    fd.user = current_user
+    fd.attached_file = nil
+    fd.filename = "Geburtstagsliste"
+    fd.remote_ip = current_user.current_sign_in_ip
+    fd.save!
     send_data get_pdf_list(I18n.t('pdf.birthday_list.header'),
       @users.undeleted.order('lastname ASC, firstname ASC').to_a.map {|usr|
         [ usr.title_str,
@@ -88,6 +95,13 @@ class UsersController < AuthorizedController
   end
 
   def phone_list_pdf
+    fd = FileDownload.new
+    fd.user = current_user
+    fd.attached_file = nil
+    fd.filename = "Telefonliste"
+    fd.remote_ip = current_user.current_sign_in_ip
+    fd.save!
+
     send_data get_pdf_list(I18n.t('pdf.phone_list.header'),
       @users.undeleted.order('lastname ASC, firstname ASC').map {|usr|
         [ usr.title_str,

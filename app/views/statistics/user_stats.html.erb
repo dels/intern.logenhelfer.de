@@ -1,6 +1,9 @@
 <% title t("activerecord.models.users") %>
 
 <% if @users.count > 0 %>
+
+<%= paginate @users if @users.present? %>
+
   <table class='autolink'>
     <tr>
       <th><%= User.human_attribute_name(:matriculation_number) %></th>
@@ -31,6 +34,7 @@
       </tr>
     <% end %>
   </table>
+<%= paginate @users if @users.present? %>
 <%- else -%>
   <p>Keine Mitglieder gefunden.</p>
 <%- end -%>
