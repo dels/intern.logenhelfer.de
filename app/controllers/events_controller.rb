@@ -1,3 +1,5 @@
+#encoding: utf-8
+
 # -*- coding: utf-8 -*-
 class EventsController < AuthorizedController
   skip_before_filter :authenticate_user!, only: :workingplan
@@ -41,23 +43,23 @@ class EventsController < AuthorizedController
       end
       format.pdf do
         date_from = Date.today.beginning_of_week
-        date_to   = (date_from + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
+        date_to   = (date_from + AppConfig[:default_workingplan_timespan].days).end_of_week
 
-        export_workingplan(false, date_from, date_to)
+        render_workingplan(false, date_from, date_to)
       end
     end
   end
 
   def internal_workingplan
-    return if request.method == 'POST' && export_workingplan(true)
+    return if request.method == 'POST' && render_workingplan(true)
     @from_date = Date.today.beginning_of_week
-    @to_date   = (@from_date + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
+    @to_date   = (@from_date + AppConfig[:default_workingplan_timespan].days).end_of_week
   end
 
   def public_workingplan
-    return if request.method == 'POST' && export_workingplan(false)
+    return if request.method == 'POST' && render_workingplan(false)
     @from_date = Date.today.beginning_of_week
-    @to_date   = (@from_date + APP_CONFIG[:default_workingplan_timespan].days).end_of_week
+    @to_date   = (@from_date + AppConfig[:default_workingplan_timespan].days).end_of_week
   end
 
   def upcoming
@@ -87,7 +89,7 @@ class EventsController < AuthorizedController
   def new
     @event.date = Date.parse(params[:date]) if params[:date].present?
     @event.time = Time.parse(params[:time]) if params[:time].present?
-    @event.location = APP_CONFIG[:default_event_location]
+    @event.location = AppConfig[:default_event_location]
   end
 
   def create
@@ -160,7 +162,7 @@ private
     session[:calendar_last_view] = where
   end
 
-  def export_workingplan(internal=false, date_from=nil, date_to=nil)
+  def render_workingplan(internal=false, date_from=nil, date_to=nil)
     from = date_from || Date.parse(params[:date_from])
     to   = date_to   || Date.parse(params[:date_to])
 
@@ -184,13 +186,15 @@ private
       event_list = events.map do |event|
         if current_date == event.date
           date = ''
+          wday = ''
         else
           current_date = event.date
           date = I18n.l(current_date)
+          wday = day_names[event.date.wday]
         end
 
         [
-          day_names[event.date.wday],
+          wday,
           date,
           event.whole_day? ? 'ganztags' : I18n.l(event.time, format: :time),
           internal ? event.private_description : event.public_description
