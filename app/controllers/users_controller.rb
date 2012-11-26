@@ -22,6 +22,12 @@ class UsersController < AuthorizedController
       flash[:error] = t("helpers.pdf.password_needed") if params[:hidden_field]
       return
     end
+    fd = FileDownload.new
+    fd.user = current_user
+    fd.attached_file = nil
+    fd.filename = "Mitgliederverzeichnis"
+    fd.remote_ip = current_user.current_sign_in_ip
+    fd.save!
     pdf = get_pdf_list(I18n.t('pdf.members_list.header'),
       @users.undeleted.order('lastname ASC, firstname ASC, matriculation_number ASC').map {|usr|
         bsns_addr = usr.business_address
@@ -72,7 +78,6 @@ class UsersController < AuthorizedController
   end
 
   def birthday_list_pdf
-
     fd = FileDownload.new
     fd.user = current_user
     fd.attached_file = nil

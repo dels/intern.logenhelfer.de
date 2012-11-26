@@ -10,7 +10,7 @@
   </tr>
   <% @users.each do |user| %>
   <tr>
-    <td><%= user.matriculation_number %></td>
+    <td><%= dash(user.matriculation_number) %></td>
     <td><%= dash(user.lastname) %></td>
     <td><%= dash(user.firstname) %></td>
     <td><%= user.count %></td>

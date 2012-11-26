@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 class EventsController < AuthorizedController
   skip_before_filter :authenticate_user!, only: :workingplan
 
@@ -162,6 +163,13 @@ private
   def export_workingplan(internal=false, date_from=nil, date_to=nil)
     from = date_from || Date.parse(params[:date_from])
     to   = date_to   || Date.parse(params[:date_to])
+
+    fd = FileDownload.new
+    fd.user = current_user
+    fd.attached_file = nil
+    fd.filename = internal ? "Arbeitsplan (intern)" : "Arbeitsplan (öffentlich)"
+    fd.remote_ip = current_user ? current_user.current_sign_in_ip : request.remote_ip
+    fd.save!
 
     pdf = create_pdf_with_header
     add_pdf_title("Arbeitsplan vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
