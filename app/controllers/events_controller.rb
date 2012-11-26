@@ -9,6 +9,10 @@ class EventsController < AuthorizedController
   end
 
   def show
+    respond_to do |format|
+      format.html
+      format.ics
+    end
   end
 
   def date
@@ -21,8 +25,7 @@ class EventsController < AuthorizedController
       date: "#{@year}-#{@month}-#{@day}"
     }
 
-    return day    if params[:day]
-#    return month  if params[:month]
+    return day if params[:day]
     month
   end
 
@@ -70,20 +73,33 @@ class EventsController < AuthorizedController
       last_view(upcoming_calendar_path)
       Date.today.beginning_of_week
     end
-    events = Event.where('events.date >= ? AND events.date <= ?', @date, @date.end_of_week)
 
-    @events = Hash.new {|h,k| h[k] = [] }
-    events.where('events.whole_day = ?', false).each do |event|
-      @events[event.date.days_to_week_start] << event
+    respond_to do |format|
+      format.html do
+        events = Event.where('events.date >= ? AND events.date <= ?', @date, @date.end_of_week)
+
+        @events = Hash.new {|h,k| h[k] = [] }
+        events.where('events.whole_day = ?', false).each do |event|
+          @events[event.date.days_to_week_start] << event
+        end
+
+        @whole_day_events = Hash.new {|h,k| h[k] = [] }
+        events.where('events.whole_day = ?', true).each do |event|
+          @whole_day_events[event.date.days_to_week_start] << event
+        end
+        User.upcoming_birthday_events(@date, @date.end_of_week).each do |event|
+          @whole_day_events[event.date.days_to_week_start] << event
+        end
+      end
+
+      format.ics do
+        @from = @date
+        @to   = @date.end_of_week
+
+        render layout: false
+      end
     end
 
-    @whole_day_events = Hash.new {|h,k| h[k] = [] }
-    events.where('events.whole_day = ?', true).each do |event|
-      @whole_day_events[event.date.days_to_week_start] << event
-    end
-    User.upcoming_birthday_events(@date, @date.end_of_week).each do |event|
-      @whole_day_events[event.date.days_to_week_start] << event
-    end
   end
 
   def new
@@ -123,38 +139,59 @@ class EventsController < AuthorizedController
 private
 
   def day
-    @date             = Date.parse("#{@year}/#{@month}/#{@day}")
-    last_view(calendar_path(year: @date.year, month: @date.month, day: @date.day))
-    @partial          = :day
-    @events           = Event.where('events.date >= ? AND events.date <= ?', @date.beginning_of_day, @date.end_of_day)
+    @date = Date.parse("#{@year}/#{@month}/#{@day}")
 
-    @whole_day_events = @events.where(whole_day: true).to_a + User.upcoming_birthday_events(@date.beginning_of_day, @date.end_of_day)
-    @events           = @events.where(whole_day: false)
+    respond_to do |format|
+      format.html do
+        last_view(calendar_path(year: @date.year, month: @date.month, day: @date.day))
+        @partial          = :day
+        @events           = Event.where('events.date >= ? AND events.date <= ?', @date.beginning_of_day, @date.end_of_day)
+
+        @whole_day_events = @events.where(whole_day: true).to_a + User.upcoming_birthday_events(@date.beginning_of_day, @date.end_of_day)
+        @events           = @events.where(whole_day: false)
+      end
+
+      format.ics do
+        @from = @to = @date
+        render layout: false
+      end
+    end
   end
 
   def month
-    @date             = Date.parse("#{@year}/#{@month}/1")
-    last_view(calendar_path(year: @date.year, month: @date.month))
-    @partial          = :month
-    calendar_options  = {
-      first_day_of_week: 1, # monday
-      yield_surrounding_days: true,
-      calendar_class: 'calendar month',
-      current_month:  lambda {|d| I18n.l d, format: '%B %Y' },
-      previous_month: lambda {|d| @ctx.link_to("&laquo; #{I18n.l d, format: '%B'}".html_safe, @ctx.calendar_path(year: d.year, month: d.month)) },
-      next_month:     lambda {|d| @ctx.link_to("#{I18n.l d, format: '%B'} &raquo;".html_safe, @ctx.calendar_path(year: d.year, month: d.month)) }
-    }
+    @date = Date.parse("#{@year}/#{@month}/1")
 
-    events = Event.where('events.date >= ? AND events.date <= ?', @date - 7.days, @date + 35.days).to_a +
-        User.upcoming_birthday_events(@date - 7.days, @date + 35.days)
+    respond_to do |format|
+      format.html do
+        last_view(calendar_path(year: @date.year, month: @date.month))
+        @partial          = :month
+        calendar_options  = {
+          first_day_of_week: 1, # monday
+          yield_surrounding_days: true,
+          calendar_class: 'calendar month',
+          current_month:  ->(d) { I18n.l d, format: '%B %Y' },
+          previous_month: ->(d) { @ctx.link_to("&laquo; #{I18n.l d, format: '%B'}".html_safe, @ctx.calendar_path(year: d.year, month: d.month)) },
+          next_month:     ->(d) { @ctx.link_to("#{I18n.l d, format: '%B'} &raquo;".html_safe, @ctx.calendar_path(year: d.year, month: d.month)) }
+        }
 
-    @events_by_date = Hash.new {|h,k| h[k] = Hash.new {|l,m| l[m] = [] } }
-    events.each do |event|
-      @events_by_date[event.date.month][event.date.day] << event
-    end
+        events = Event.where('events.date >= ? AND events.date <= ?', @date - 7.days, @date + 35.days).to_a +
+            User.upcoming_birthday_events(@date - 7.days, @date + 35.days)
 
-    @calendar = LaterDude::Calendar.new(@date.year, @date.month, calendar_options) do |date|
-      @ctx.render 'month_day', date: date, events: @events_by_date
+        @events_by_date = Hash.new {|h,k| h[k] = Hash.new {|l,m| l[m] = [] } }
+        events.each do |event|
+          @events_by_date[event.date.month][event.date.day] << event
+        end
+
+        @calendar = LaterDude::Calendar.new(@date.year, @date.month, calendar_options) do |date|
+          @ctx.render 'month_day', date: date, events: @events_by_date
+        end
+      end
+
+      format.ics do
+        @from = @date
+        @to   = @date.end_of_month
+        render layout: false
+      end
     end
   end
 

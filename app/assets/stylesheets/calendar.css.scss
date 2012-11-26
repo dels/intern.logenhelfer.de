@@ -150,8 +150,8 @@ table.calendar.week {
         padding-left: 20px;
       }
     }
-    li.event.whole-day        a { background-image: image-url("event_all_day.png"); }
-    li.event.type-birthday    a { background-image: image-url("event_birthday.png"); }
+    li.event.whole-day      a { background-image: image-url("event_all_day.png"); }
+    li.event.type-birthday  a { background-image: image-url("event_birthday.png"); }
 
     a {
       color: $black;
@@ -164,5 +164,81 @@ table.calendar.week {
   }
   td.active:nth-of-type(2n) {
     background-color: lighten($dark-color, 10%);
+  }
+}
+
+div.event {
+  position: relative;
+  padding:  1em 1em 1em 10em;
+  background-color: $white;
+  margin: 2em 0 1em;
+  @include shadow($radius: 10px);
+  @include radii();
+
+  .date {
+    border: 2px solid $main-color;
+    position: absolute;
+    left: 1em;
+    top: 1em;
+    width: 6em;
+
+    span {
+      display: block;
+      text-align: center;
+      line-height: 1;
+    }
+  }
+
+  span {
+    &.month {
+      padding: 5px 7px;
+      background-color: $main-color;
+      color: $white;
+    }
+
+    &.day {
+      padding: 4px 7px;
+      background-color: $gray;
+      font-size: 2.5em;
+      font-family: "Bree Serif", Georgia, serif;
+      font-weight: bold;
+    }
+
+    &.dow {
+      padding: 2px 7px;
+      background-color: $gray;
+      font-weight: bold;
+    }
+
+    &.year {
+      padding: 2px 7px;
+      background-color: $gray;
+    }
+  }
+
+  h3 {
+    margin: 0 0 1em;
+
+    span {
+      font-weight: normal;
+      padding-right: 1em;
+    }
+  }
+
+  p.label {
+    float: left;
+    width: 12em;
+    margin: 0;
+  }
+
+  p.description {
+    margin: 1ex 0 1ex 14em;
+  }
+
+  p.meta {
+    color: $light-color;
+    text-align: right;
+    font-style: italic;
+    font-size: 0.9em;
   }
 }

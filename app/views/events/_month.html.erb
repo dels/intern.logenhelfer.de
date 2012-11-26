@@ -1,3 +1,5 @@
 <% title "Monats-Kalender #{l @date, :format => '%B %Y'}" %>
 
+<p class="calendar icon"><%= raw t '.ical_export', url: export_ical_path %></p>
+
 <%= @calendar.to_html %>

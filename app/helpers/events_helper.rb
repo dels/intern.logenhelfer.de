@@ -23,4 +23,7 @@ module EventsHelper
     menu
   end
 
+  def export_ical_path(opts={})
+    url_for opts.merge(format: :ics)
+  end
 end

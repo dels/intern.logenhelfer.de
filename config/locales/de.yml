@@ -62,6 +62,15 @@ de:
         header: 'Arbeitsplan %{from}-%{to}'
         pdf_export: 'Diese Ansicht kann auch <a href="%{url}">als PDF</a> heruntergeladen werden.'
         ical_export: 'Um den Arbeitsplan in Ihrem Kalender zu importieren, benutzen Sie bitte diese Adresse: <tt>%{url}</tt>'
+    event:
+      ical_export: 'Diesen Termin in den lokalen Kalender <a href="%{url}">importieren</a>.'
+      actions: weitere Aktionen
+    day:
+      ical_export: 'Öffentlich einsehbare Termine dieses Tages in den lokalen Kalender <a href="%{url}">importieren</a>.'
+    month:
+      ical_export: 'Öffentlich einsehbare Termine dieses Monats in den lokalen Kalender <a href="%{url}">importieren</a>.'
+    upcoming:
+      ical_export: 'Öffentlich einsehbare Termine dieser Woche in den lokalen Kalender <a href="%{url}">importieren</a>.'
   activemodel:
     errors:
       format: '%{attribute} %{message}'

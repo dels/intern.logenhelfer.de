@@ -2,9 +2,4 @@
 
 <%= render 'events/menu' %>
 
-<p class="horizontal-menu">
-  <%= edit_link_to @event if can?(:edit, @event) %>
-  <%= destroy_link_to @event if can?(:destroy, @event) %>
-</p>
-
 <%= render @event %>

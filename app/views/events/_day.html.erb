@@ -1,18 +1,11 @@
 <% title "Übersicht für den #{l @date, format: :long}" %>
 
-<h2>Termine</h2>
-<dl class="inverse-width">
-  <dt>ganztägig</dt>
-  <%- if @whole_day_events.count > 0 -%>
-    <%- @whole_day_events.each do |event| -%>
-      <dd><%= render event %></dd>
-    <%- end -%>
-  <%- else -%>
-    <dd>keine ganztägigen Termine</dd>
-  <%- end -%>
+<p class="calendar icon"><%= raw t '.ical_export', url: export_ical_path %></p>
 
-  <%- @events.each do |event| -%>
-    <dt><%= l event.time, format: :time %></dt>
-    <dd><%= render event %></dd>
-  <%- end -%>
-</dl>
+<%- @whole_day_events.each do |event| -%>
+  <%= render event %>
+<%- end -%>
+
+<%- @events.each do |event| -%>
+  <%= render event %>
+<%- end -%>

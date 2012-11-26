@@ -17,8 +17,16 @@ module LayoutHelper
     content_for(:head) { javascript_include_tag(*args) }
   end
 
-  def image_link_tag_helper(image, target, opts={})
-    link_to image_tag("#{image}.png", :alt => opts[:title]), target, opts
+  def image_link_tag_helper(image, target, verbose=false, opts={})
+    if Hash === verbose
+      opts = verbose
+      verbose = false
+    end
+    if verbose
+      link_to opts[:title], target, opts.merge(class: [image, 'icon'])
+    else
+      link_to image_tag("#{image}.png", alt: opts[:title]), target, opts
+    end
   end
 
   def polymorphic_path_helper *args
@@ -43,29 +51,33 @@ module LayoutHelper
     root_url
   end
 
-  def show_link_to_all target
+  def show_link_to_all target, verbose=false
     target = polymorphic_path_helper(target)
-    image_link_tag_helper 'all', target, :title => I18n.t('helpers.link.view_all')
+    image_link_tag_helper 'all', target, verbose, title: I18n.t('helpers.link.view_all')
   end
 
-  def show_link_to target
+  def show_link_to target, verbose=false
     target = polymorphic_path_helper(target)
-    image_link_tag_helper 'show', target, :title => I18n.t('helpers.link.show'), :class => 'show'
+    image_link_tag_helper 'show', target, verbose, title: I18n.t('helpers.link.show'), class: 'show'
   end
 
-  def edit_link_to target
-    target = polymorphic_path_helper(target, :action => :edit)
-    image_link_tag_helper 'edit', target, :title => I18n.t('helpers.link.edit')
+  def edit_link_to target, verbose=false
+    target = polymorphic_path_helper(target, action: :edit)
+    image_link_tag_helper 'edit', target, verbose, title: I18n.t('helpers.link.edit')
   end
 
-  def destroy_link_to(target, opts={})
+  def destroy_link_to(target, verbose=false, opts={})
+    if Hash === verbose
+      opts = verbose
+      verbose = false
+    end
     target = polymorphic_path_helper(target)
     opts = {
-      :title => (AppConfig[:archive] ? I18n.t('helpers.link.restore') : I18n.t('helpers.link.destroy')),
-      :confirm => (AppConfig[:archive] ? I18n.t('helpers.link.restore_confirmation') : I18n.t('helpers.link.destroy_confirmation')),
-      :method => :delete
+      title: (AppConfig[:archive] ? I18n.t('helpers.link.restore') : I18n.t('helpers.link.destroy')),
+      confirm: (AppConfig[:archive] ? I18n.t('helpers.link.restore_confirmation') : I18n.t('helpers.link.destroy_confirmation')),
+      method: :delete
     }.merge(opts)
-    image_link_tag_helper (AppConfig[:archive] ? 'recycle' : 'destroy'), target, opts
+    image_link_tag_helper (AppConfig[:archive] ? 'recycle' : 'destroy'), target, verbose, opts
   end
 
   # Rails has an `ActionView::Helpers::UrlHelper#current_page?` method. Some parts were borrowed from there :-)
@@ -123,9 +135,9 @@ module LayoutHelper
   def datepicker_field f, field
     obj = f.object.try(field)
     if obj.present?
-      f.plain_text_field field, :value => l(obj), :class => jqueryui_input_classes + " datepicker"
+      f.plain_text_field field, value: l(obj), class: jqueryui_input_classes + " datepicker"
     else
-      f.plain_text_field field, :class => jqueryui_input_classes + " datepicker"
+      f.plain_text_field field, class: jqueryui_input_classes + " datepicker"
     end
   end
 
@@ -168,11 +180,11 @@ module LayoutHelper
 
   def directories_menu category
     res = "".html_safe
-    res << content_tag(:ul, :class => 'space-bottom' ) do
+    res << content_tag(:ul, class: 'space-bottom' ) do
       blockres = "".html_safe
       (get_authorized category.directories.order(:name)).each do |dir|
         active = request.fullpath =~ /^\/categories\/#{category.slug}\/directories\/#{dir.slug}/
-        blockres << content_tag(:li, :class => active ? 'active' : nil) do
+        blockres << content_tag(:li, class: active ? 'active' : nil) do
           link_to(dir.name, category_directory_path(category, dir))
         end
       end

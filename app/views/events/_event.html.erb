@@ -1,34 +1,44 @@
-<dl>
-  <dt><%= Event.human_attribute_name :title %>:</dt>
-  <dd><%= event.title %></dd>
+<div class="event">
+  <%- unless event.birthday? -%>
+    <div class="date">
+      <span class="month"><%= l(event.date, format: '%b').upcase %></span>
+      <span class="day"><%= l event.date, format: '%d' %></span>
+      <span class="dow"><%= l(event.date, format: '%a').upcase %></span>
+      <span class="year"><%= l event.date, format: '%Y' %></span>
+    </div>
+  <%- end -%>
 
-  <dt><%= Event.human_attribute_name :location %>:</dt>
-  <dd><%= dash event.location %></dd>
+  <h3>
+    <%- if event.whole_day? -%>
+      <span class="time">ganztags:</span>
+    <%- else -%>
+      <span class="time"><%= l event.time, format: :time %> Uhr:</span>
+    <%- end -%>
+    <%= event.title %>
+  </h3>
+  <%- unless event.birthday? -%>
+    <p class="map icon"><%= dash event.location %></p>
+    <p class="private icon label"><%= Event.human_attribute_name :private_description %>:</p>
+    <%= simple_format dash(event.private_description), class: 'description' %>
+    <p class="public icon label"><%= Event.human_attribute_name :public_description %>:</p>
+    <%= simple_format dash(event.public_description), class: 'description' %>
 
-  <% if event.whole_day? %>
-    <dt><%= Event.human_attribute_name :date %>:</dt>
-    <dd><%= l event.date %>, ganztägig</dd>
-  <% else %>
-    <dt><%= Event.human_attribute_name :date %>:</dt>
-    <dd><%= l event.date %></dd>
+    <p class="action icon label"><%= t '.actions' %></p>
+    <p class="description calendar icon"><%=  raw t '.ical_export', url: event_path(event, format: :ics) %></p>
+    <%- if can?(:edit, event) -%>
+      <p class="description"><%= edit_link_to(event, true) %></p>
+    <%- end -%>
+    <%- if can?(:edit, event) -%>
+      <p class="description"><%= destroy_link_to(event, true) %></p>
+    <%- end -%>
 
-    <dt><%= Event.human_attribute_name :time %>:</dt>
-    <dd><%= l event.time, format: :time %> Uhr</dd>
-  <% end %>
-
-  <% unless event.birthday? %>
-    <dt><%= Event.human_attribute_name :public_description %>:</dt>
-    <dd><%= simple_format dash event.public_description %></dd>
-
-    <dt><%= Event.human_attribute_name :private_description %>:</dt>
-    <dd><%= simple_format dash event.private_description %></dd>
-
-    <dt><%= Event.human_attribute_name :created_by %>:</dt>
-    <dd><%= event.created_by %>, <%= l event.created_at %></dd>
-
-    <% if event.created_at != event.updated_at %>
-      <dt><%= Event.human_attribute_name :updated_by %>:</dt>
-      <dd><%= event.updated_by %>, <%= l event.updated_at %></dd>
-    <% end %>
-  <% end %>
-</dl>
+    <p class="meta">
+      <%= Event.human_attribute_name :created_by %>
+      <%= event.created_by %>, <%= l event.created_at -%>
+      <%- if event.created_at != event.updated_at -%>
+        <br><%= Event.human_attribute_name :updated_by %>
+        <%= event.updated_by %>, <%= l event.updated_at -%>
+      <%- end -%>
+    </p>
+  <%- end -%>
+</div>

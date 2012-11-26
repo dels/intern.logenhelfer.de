@@ -13,10 +13,16 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: $font-family;
+  font-family: "Bree Serif", Georgia, serif;
   font-weight: bold;
   color: $main-color;
   margin: 1.75em 0 1em;
+  -webkit-text-shadow: 2px 2px 2px $gray;
+  -khtml-text-shadow: 2px 2px 2px $gray;
+  -moz-text-shadow: 2px 2px 2px $gray;
+  -ms-text-shadow: 2px 2px 2px $gray;
+  -o-text-shadow: 2px 2px 2px $gray;
+  text-shadow: 2px 2px 2px $gray;
 }
 
 section h1:first-of-type {
@@ -468,11 +474,18 @@ span.add {
   padding-left: 24px;
   background: transparent left center no-repeat;
 
-  &.add { background-image: image-url('add.png'); }
   &.pdf { background-image: image-url('pdf.png'); }
   &.disk { background-image: image-url('disk.png'); }
   &.search { background-image: image-url('search.png'); }
+
   &.calendar { background-image: image-url('calendar.png'); }
+  &.map { background-image: image-url('map.png'); }
+  &.private { background-image: image-url('private.png'); }
+  &.public { background-image: image-url('public.png'); }
+
+  &.add { background-image: image-url('add.png'); }
+  &.edit { background-image: image-url('edit.png'); }
+  &.destroy { background-image: image-url('destroy.png'); }
 
   &.top { background-position: left top; }
 }

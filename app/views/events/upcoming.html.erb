@@ -2,6 +2,8 @@
 
 <%= render 'events/menu', date: @date -%>
 
+<p class="calendar icon"><%= raw t '.ical_export', url: export_ical_path(week: @date) %></p>
+
 <table class="calendar week">
   <thead>
     <tr>

@@ -5,6 +5,9 @@ class Event < ActiveRecord::Base
   include UuidHelper
   before_create :generate_uuid
 
+  extend FriendlyId
+  friendly_id :uuid
+
   default_scope where(deleted: false).order('date ASC')
 
   validates_presence_of :date, :title, :created_by_id
@@ -37,25 +40,37 @@ class Event < ActiveRecord::Base
     self
   end
 
+  def ical_event(calendar=nil)
+    calendar ||= Icalendar::Calendar.new
+
+    event               = calendar.event
+    event.summary       = title
+    event.description   = public_description
+    event.uid           = "#{uuid}@#{AppConfig[:domain]}"
+    event.transp        = 'TRANSPARENT'
+
+    event.dtstamp       = created_at.to_datetime
+    event.last_modified = updated_at.to_datetime if updated_at.present? && created_at != updated_at
+    if whole_day?
+      event.dtstart     = date.to_datetime.beginning_of_day
+      event.dtend       = date.to_datetime.end_of_day
+    else
+      event.dtstart     = date.to_datetime.change hour: time.hour, min: time.min
+    end
+
+    calendar
+  end
+
+  def to_ical(calendar=nil)
+    ical_event(calendar).to_ical
+  end
+
   def self.icalendar from, to
     cal = Icalendar::Calendar.new
 
-    where('date >= ? AND date <= ?', from, to).order('date ASC, whole_day ASC, time ASC').each do |e|
-      next if e.public_description.blank?
-      event               = cal.event
-      event.summary       = e.title
-      event.description   = e.public_description
-      event.uid           = "#{e.uuid}@#{AppConfig[:domain]}"
-      event.transp        = 'TRANSPARENT'
-
-      event.dtstamp       = e.created_at.to_datetime
-      event.last_modified = e.updated_at.to_datetime if e.updated_at.present? && e.created_at != e.updated_at
-      if e.whole_day?
-        event.dtstart     = e.date.to_datetime.beginning_of_day
-        event.dtend       = e.date.to_datetime.end_of_day
-      else
-        event.dtstart     = e.date.to_datetime.change hour: e.time.hour, min: e.time.min
-      end
+    where('date >= ? AND date <= ?', from, to).order('date ASC, whole_day ASC, time ASC').each do |event|
+      next if event.public_description.blank?
+      event.ical_event(cal)
     end
 
     cal.to_ical
