@@ -32,6 +32,6 @@ class UserMailer < ActionMailer::Base
       [a, changes]
     end.compact
 
-    mail to: APP_CONFIG[:user_change_notification_email], subject: I18n.t('user_mailer.change_notification.subject')
+    mail to: AppConfig[:user_change_notification_email], subject: I18n.t('user_mailer.change_notification.subject')
   end
 end
