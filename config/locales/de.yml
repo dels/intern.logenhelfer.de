@@ -52,6 +52,9 @@ de:
         default_event_location:
           name: Ortsvorgabe für neue Termine
           description: Das Feld "Ort" im Formular für neue Termine wird mit diesem Wert vorausgefüllt.
+        user_change_notification_email:
+          name: Benachrichtungs E-Mail Adresse
+          description: E-Mail Adresse an die der Bericht über die Datenänderung gesendet wird, wenn die Daten eine Br. verändert worden sind
       option_key: Schlüssel
       option_name: Bedeutung
       option_value: Wert
