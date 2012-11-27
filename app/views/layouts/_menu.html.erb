@@ -35,7 +35,9 @@
           <%- end -%>
         <%- end -%>
 
-        <%- if request.fullpath =~ /^\/statistics/ -%>
+        <%= authorized_menu_item AppConfig, app_config_path -%>
+
+        <%- if (request.fullpath =~ /^\/statistics/) || (can? :index, Statistic) -%>
           <%= authorized_menu_item Statistic, statistics_path do -%>
             <%- if request.fullpath =~ /^\/statistics/ -%>
               <%- if can? :user_stats, Statistic -%>
@@ -62,7 +64,6 @@
           <%- end -%>
         <%- end -%>
 
-        <%= authorized_menu_item AppConfig, app_config_path -%>
       </ul>
 
       <ul class="more space-top"><%= categories_menu %></ul>
