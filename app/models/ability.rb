@@ -28,13 +28,16 @@ class Ability
     can [:index, :show, :members_list, :phone_list, :birthday_list], User, ["users.deleted = false"] do |u|
       AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
     end
-    can [:index, :file_stats],Statistic
+    can [:index, :file_stats], Statistic
   end
 
   # korrespondierender Schriftfuehrer
   def secretary_abilities
     can [:index, :create, :new, :show, :edit, :update, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
-    can [:index, :show, :edit, :update], User
+    admin_role = Role.find_by_name("Admin")
+    can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update], User, ["users.deleted = false"] do |u|
+      AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+    end
   end
 
   def secretary_archive_abilities
