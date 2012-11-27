@@ -85,7 +85,7 @@
       <th><%= t '.options.user_change_notification_email.name' %></th>
       <td><%= text_field_tag 'app_config[user_change_notification_email]', AppConfig[:user_change_notification_email], class: jqueryui_input_classes %></td>
       <%- if t('.options.user_change_notification_email').key?(:description) -%>
-        <td><%= t '.options.default_event_location.description' %></td>
+        <td><%= t '.options.user_change_notification_email.description' %></td>
       <%- else -%>
         <td></td>
       <%- end -%>
