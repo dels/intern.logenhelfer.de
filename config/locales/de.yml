@@ -506,6 +506,7 @@ de:
         password: Passwort
         search_placeholder: 'Vorname, Name, M.-Nr. oder E-Mail'
     pages:
+      stats_for: Statistiken über
       user_stats: Benutzer
       file_stats: Dateien
       user_file_stats: Benutzer Downloads

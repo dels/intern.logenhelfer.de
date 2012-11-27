@@ -2,7 +2,7 @@
 
 
 <dl>
-  <dt><%= t 'helpers.stats_for' %>:</dt>
+  <dt><%= t 'helpers.pages.stats_for' %>:</dt>
   <dd><ul>
       <%- if can? :user_stats, Statistic -%>
         <li><%= link_to t("helpers.pages.user_stats"), user_stats_statistics_path -%></li>

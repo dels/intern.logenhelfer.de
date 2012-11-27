@@ -2,32 +2,8 @@
   <ul>
     <li><%= t "devise.information.signed_in_as", user: current_user.email %></li>
     <li class="space-bottom"><%= link_to t("devise.links.sign_out"), destroy_user_session_path %></li>
-    <li class="more space-top">
+    <li>
       <ul>
-        <%= authorized_menu_item Event, upcoming_calendar_path do -%>
-          <%- if request.fullpath =~ /^\/(events|calendar)/ -%>
-            <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/public_workingplan/ ? 'active' : nil) do -%>
-              <%= link_to t("helpers.pdf.public_workingplan"), public_workingplan_path -%>
-            <%- end -%>
-            <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/internal_workingplan/ ? 'active' : nil) do -%>
-              <%= link_to t("helpers.pdf.internal_workingplan"), internal_workingplan_path -%>
-            <%- end -%>
-          <%- end -%>
-        <%- end -%>
-
-        <%= authorized_menu_item User, users_path do -%>
-          <%- if request.fullpath =~ /^\/users/ -%>
-            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/members_list/ ? 'active' : '')) do -%>
-              <%= link_to(t("helpers.pdf.memberslist"), members_list_users_path) -%>
-            <%- end -%>
-            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/phone_list/ ? 'active' : '')) do -%>
-              <%= link_to(t("helpers.pdf.phonelist"), phone_list_users_path) -%>
-            <%- end -%>
-            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/birthday_list/ ? 'active space-bottom' : 'space-bottom')) do -%>
-              <%= link_to(t("helpers.pdf.birthdaylist"), birthday_list_users_path) -%>
-            <%- end -%>
-          <%- end -%>
-        <%- end -%>
 
         <%- if can? :create, Category -%>
           <%= content_tag :li, class: (request.fullpath =~ /^\/categories$/ ? 'active' : nil) do -%>
@@ -60,6 +36,34 @@
                   <%= link_to t("helpers.pages.user_file_stats"), user_file_stats_statistics_path -%>
                 <%- end -%>
               <%- end -%>
+            <%- end -%>
+          <%- end -%>
+        <%- end -%>
+
+      </ul>
+    <li>
+      <ul>
+        <%= authorized_menu_item Event, upcoming_calendar_path do -%>
+          <%- if request.fullpath =~ /^\/(events|calendar)/ -%>
+            <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/public_workingplan/ ? 'active' : nil) do -%>
+              <%= link_to t("helpers.pdf.public_workingplan"), public_workingplan_path -%>
+            <%- end -%>
+            <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/internal_workingplan/ ? 'active' : nil) do -%>
+              <%= link_to t("helpers.pdf.internal_workingplan"), internal_workingplan_path -%>
+            <%- end -%>
+          <%- end -%>
+        <%- end -%>
+
+        <%= authorized_menu_item User, users_path do -%>
+          <%- if request.fullpath =~ /^\/users/ -%>
+            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/members_list/ ? 'active' : '')) do -%>
+              <%= link_to(t("helpers.pdf.memberslist"), members_list_users_path) -%>
+            <%- end -%>
+            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/phone_list/ ? 'active' : '')) do -%>
+              <%= link_to(t("helpers.pdf.phonelist"), phone_list_users_path) -%>
+            <%- end -%>
+            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/birthday_list/ ? 'active space-bottom' : 'space-bottom')) do -%>
+              <%= link_to(t("helpers.pdf.birthdaylist"), birthday_list_users_path) -%>
             <%- end -%>
           <%- end -%>
         <%- end -%>
