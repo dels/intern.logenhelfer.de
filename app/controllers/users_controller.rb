@@ -2,6 +2,7 @@ class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
 
   def index
+    
     users = User.undeleted
     if params[:search].present?
       users = users.search(params[:search])
