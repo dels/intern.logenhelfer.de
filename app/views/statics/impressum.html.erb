@@ -27,5 +27,5 @@
 <h4>Technische Umsetzung, Kontakt bei technischen Fragen, Anmerkungen u.ä.:</h4>
 
 <p>
-  Internetbeauftragter der Loge FWzE (<a href="#" data-behaviour="mailto">web [at] fwze [punkt] de</a>)
+  Internetbeauftragter der Loge FWzE (<a href="#" data-behaviour="mailto"><%= AppConfig[:technical_contact_email].gsub(/[@\.]/, '@' => ' [at] ', '.' => ' [punkt] ') %></a>)
 </p>

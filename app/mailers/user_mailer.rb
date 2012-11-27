@@ -1,5 +1,5 @@
 class UserMailer < ActionMailer::Base
-  default from: "notice@fwze.de"
+  default from: AppConfig[:default_from_email]
 
 
   def change_notification(changed_user, deleted_addresses)
