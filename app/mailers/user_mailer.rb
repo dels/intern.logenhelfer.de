@@ -1,5 +1,5 @@
 class UserMailer < ActionMailer::Base
-  default from: "notice@fwze.de"
+  default from: AppConfig[:default_from_email]
 
 
   def change_notification(changed_user, deleted_addresses)
@@ -32,6 +32,6 @@ class UserMailer < ActionMailer::Base
       [a, changes]
     end.compact
 
-    mail to: "korr.schriftfuehrer@fwze.de", subject: I18n.t('user_mailer.change_notification.subject')
+    mail to: AppConfig[:user_change_notification_email], subject: I18n.t('user_mailer.change_notification.subject')
   end
 end

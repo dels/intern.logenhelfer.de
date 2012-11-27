@@ -52,6 +52,15 @@ de:
         default_event_location:
           name: Ortsvorgabe für neue Termine
           description: Das Feld "Ort" im Formular für neue Termine wird mit diesem Wert vorausgefüllt.
+        user_change_notification_email:
+          name: Benachrichtungs E-Mail Adresse
+          description: E-Mail Adresse an die der Bericht über die Datenänderung gesendet wird, wenn die Daten eine Br. verändert worden sind
+        default_from_email:
+          name: Default from in E-Mails
+          description: Absender aller E-Mails die die Anwendung versendet
+        technical_contact_email:
+          name: Technischer Kontakt
+          description: Als technischer Kontakt wird über all diese E-Mail Adresse angegeben
       option_key: Schlüssel
       option_name: Bedeutung
       option_value: Wert
@@ -503,6 +512,7 @@ de:
         password: Passwort
         search_placeholder: 'Vorname, Name, M.-Nr. oder E-Mail'
     pages:
+      stats_for: Statistiken über
       user_stats: Benutzer
       file_stats: Dateien
       user_file_stats: Benutzer Downloads

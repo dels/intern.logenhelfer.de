@@ -4,6 +4,8 @@
 
 <%= form_tag app_config_path, method: :put do %>
   <table class="wide" id="app-config">
+
+    <!-- current instance acts as archive -->
     <tr>
       <th><%= t '.options.archive.name' %></th>
       <td>
@@ -17,6 +19,7 @@
       <%- end -%>
       <td><tt>:archive</tt></td>
     </tr>
+    <!-- default domain name for calendar and contact export -->
     <tr>
       <th><%= t '.options.domain.name' %></th>
       <td><%= text_field_tag 'app_config[domain]', AppConfig[:domain], class: jqueryui_input_classes %></td>
@@ -27,6 +30,7 @@
       <%- end -%>
       <td><tt>:domain</tt></td>
     </tr>
+    <!-- name of the organisation of the current instance -->
     <tr>
       <th><%= t '.options.organisation.name' %></th>
       <td><%= text_field_tag 'app_config[organisation]', AppConfig[:organisation], class: jqueryui_input_classes %></td>
@@ -37,6 +41,7 @@
       <%- end -%>
       <td><tt>:organisation</tt></td>
     </tr>
+    <!-- name of the lodge of the current instance -->
     <tr>
       <th><%= t '.options.lodge.name' %></th>
       <td><%= text_field_tag 'app_config[lodge]', AppConfig[:lodge], class: jqueryui_input_classes %></td>
@@ -47,6 +52,7 @@
       <%- end -%>
       <td><tt>:lodge</tt></td>
     </tr>
+    <!-- show admins? -->
     <tr>
       <th><%= t '.options.show_admins.name' %></th>
       <td>
@@ -70,6 +76,8 @@
       <%- end -%>
       <td><tt>:default_workingplan_timespan</tt></td>
     </tr>
+
+    <!-- default event location -->
     <tr>
       <th><%= t '.options.default_event_location.name' %></th>
       <td><%= text_field_tag 'app_config[default_event_location]', AppConfig[:default_event_location], class: jqueryui_input_classes %></td>
@@ -79,6 +87,41 @@
         <td></td>
       <%- end -%>
       <td><tt>:default_event_location</tt></td>
+    </tr>
+
+    <!-- default notification e-mail address -->
+    <tr>
+      <th><%= t '.options.user_change_notification_email.name' %></th>
+      <td><%= text_field_tag 'app_config[user_change_notification_email]', AppConfig[:user_change_notification_email], class: jqueryui_input_classes %></td>
+      <%- if t('.options.user_change_notification_email').key?(:description) -%>
+        <td><%= t '.options.user_change_notification_email.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:user_change_notification_email</tt></td>
+    </tr>
+
+    <!-- default from e-mail address -->
+    <tr>
+      <th><%= t '.options.default_from_email.name' %></th>
+      <td><%= text_field_tag 'app_config[default_from_email]', AppConfig[:default_from_email], class: jqueryui_input_classes %></td>
+      <%- if t('.options.default_from_email').key?(:description) -%>
+        <td><%= t '.options.default_from_email.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:user_change_notification_email</tt></td>
+    </tr>
+    <!-- technical contact e-mail address -->
+    <tr>
+      <th><%= t '.options.technical_contact_email.name' %></th>
+      <td><%= text_field_tag 'app_config[technical_contact_email]', AppConfig[:technical_contact_email], class: jqueryui_input_classes %></td>
+      <%- if t('.options.technical_contact_email').key?(:description) -%>
+        <td><%= t '.options.technical_contact_email.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:technical_contact_email</tt></td>
     </tr>
   </table>
   <dl class="buttons">

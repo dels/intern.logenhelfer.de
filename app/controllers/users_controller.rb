@@ -12,7 +12,7 @@ class UsersController < AuthorizedController
         @users = view_context.get_authorized_paginated(users.order(sort_column + " " + sort_direction)).page(params[:page])
       end
       format.vcf do
-        @users = users.order('lastname ASC, firstname ASC, matriculation_number ASC').all
+        @users = view_context.get_authorized(users.order('lastname ASC, firstname ASC, matriculation_number ASC').all)
       end
     end
   end
@@ -29,7 +29,7 @@ class UsersController < AuthorizedController
     fd.remote_ip = current_user.current_sign_in_ip
     fd.save!
     pdf = get_pdf_list(I18n.t('pdf.members_list.header'),
-      @users.undeleted.order('lastname ASC, firstname ASC, matriculation_number ASC').map {|usr|
+      view_context.get_authorized(@users.undeleted.order('lastname ASC, firstname ASC, matriculation_number ASC')).map {|usr|
         bsns_addr = usr.business_address
         priv_addr = usr.private_address
         addr_arr = []
