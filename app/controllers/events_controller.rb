@@ -33,30 +33,29 @@ class EventsController < AuthorizedController
     fd = FileDownload.new
     fd.user = current_user
     fd.attached_file = nil
-    fd.filename = internal ? "Arbeitsplan (intern)" : "Arbeitsplan (öffentlich)"
+        fd.filename = "Arbeitsplan (öffentlich)"
     fd.remote_ip = current_user ? current_user.current_sign_in_ip : request.remote_ip
-
 
     respond_to do |format|
       format.html do
         @from   = Date.today.beginning_of_month
         @to     = (@from + 35.days).end_of_month
         @events = @events.where('date >= ? AND date <= ?', @from, @to).order('date ASC, whole_day ASC, time ASC')
-        fd.filename = "Arbeitsplan (HTML abruf)"
+        fd.filename = "Arbeitsplan (Abruf per HTML)"
         fd.save!
         render layout: 'simplistic'
       end
       format.ics do
         @from   = Date.today
         @to     = 3.months.from_now
-        fd.filename = "Arbeitsplan (ICS abruf)"
+        fd.filename = "Arbeitsplan (Abruf per ICS)"
         fd.save!
         render layout: false
       end
       format.pdf do
         date_from = Date.today.beginning_of_week
         date_to   = (date_from + AppConfig[:default_workingplan_timespan].days).end_of_week
-        fd.filename = "Arbeitsplan (PDF abruf)"
+        fd.filename = "Arbeitsplan (Abruf der öffentlichen PDF)"
         fd.save!
         render_workingplan(false, date_from, date_to)
       end
