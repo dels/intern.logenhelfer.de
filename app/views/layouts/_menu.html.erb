@@ -37,7 +37,7 @@
 
         <%= authorized_menu_item AppConfig, app_config_path -%>
 
-        <%- if (request.fullpath =~ /^\/statistics/) || (can? :index, Statistic) -%>
+        <%- if (request.fullpath =~ /^\/statistics/) || current_user.roles.include?(Role.find_by_name('Admin') -%>
           <%= authorized_menu_item Statistic, statistics_path do -%>
             <%- if request.fullpath =~ /^\/statistics/ -%>
               <%- if can? :user_stats, Statistic -%>
