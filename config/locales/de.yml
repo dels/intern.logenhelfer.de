@@ -71,6 +71,7 @@ de:
         header: 'Arbeitsplan %{from}-%{to}'
         pdf_export: 'Diese Ansicht kann auch <a href="%{url}">als PDF</a> heruntergeladen werden.'
         ical_export: 'Um den Arbeitsplan in Ihrem Kalender zu importieren, benutzen Sie bitte diese Adresse: <tt>%{url}</tt>'
+      no_events: 'Derzeit keine Termine verfügbar.'
     event:
       ical_export: 'Diesen Termin in den lokalen Kalender <a href="%{url}">importieren</a>.'
       actions: weitere Aktionen

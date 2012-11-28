@@ -216,8 +216,32 @@ div.event {
     }
   }
 
+  &.small {
+    padding-left: 8em;
+    @include no-shadow;
+    @include radii(0px);
+
+    .date {
+      width: 5em;
+      font-size: 0.8em;
+    }
+
+    span {
+      &.month, &.day {
+        padding: 2px 3px;
+      }
+      &.dow, &.year {
+        padding: 1px 3px;
+      }
+    }
+  }
+
+  .date + h3 {
+    margin-top: 0;
+  }
+
   h3 {
-    margin: 0 0 1em;
+    margin: 2em 0 1em;
 
     span {
       font-weight: normal;

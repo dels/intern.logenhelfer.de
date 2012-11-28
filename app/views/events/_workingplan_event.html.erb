@@ -1,0 +1,25 @@
+<div class="event small">
+  <div class="date">
+    <span class="month"><%= l(date, format: '%b').upcase %></span>
+    <span class="day"><%= l date, format: '%d' %></span>
+    <span class="dow"><%= l(date, format: '%a').upcase %></span>
+    <span class="year"><%= l date, format: '%Y' %></span>
+  </div>
+
+  <%- events.each do |event| -%>
+    <h3>
+      <%- if event.whole_day? -%>
+        <span class="time">ganztags:</span>
+      <%- else -%>
+        <span class="time"><%= l event.time, format: :time %> Uhr:</span>
+      <%- end -%>
+      <%= event.title %>
+    </h3>
+    <%- unless event.birthday? -%>
+      <p class="map icon"><%= dash event.location %></p>
+      <div class="public icon">
+        <%= simple_format dash(event.public_description) %>
+      </div>
+    <%- end -%>
+  <%- end -%>
+</div>
