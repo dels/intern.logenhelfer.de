@@ -190,7 +190,7 @@ GEM
       activesupport (>= 3.2)
       rails (>= 3.2)
     simple_oauth (0.1.9)
-    sprockets (2.2.1)
+    sprockets (2.2.2)
       hike (~> 1.2)
       multi_json (~> 1.0)
       rack (~> 1.0)

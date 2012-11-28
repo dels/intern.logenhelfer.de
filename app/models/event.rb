@@ -40,8 +40,14 @@ class Event < ActiveRecord::Base
     self
   end
 
+  def ical_date(date, &block)
+    _d = date.to_datetime.in_time_zone(Time.zone)
+    _d = yield _d if block_given?
+    _d.in_time_zone('UTC').tap {|d| d.icalendar_tzid = 'UTC' }
+  end
+
   def ical_event(calendar=nil)
-    calendar ||= Icalendar::Calendar.new
+    calendar          ||= Icalendar::Calendar.new
 
     event               = calendar.event
     event.summary       = title
@@ -49,13 +55,13 @@ class Event < ActiveRecord::Base
     event.uid           = "#{uuid}@#{AppConfig[:domain]}"
     event.transp        = 'TRANSPARENT'
 
-    event.dtstamp       = created_at.to_datetime
-    event.last_modified = updated_at.to_datetime if updated_at.present? && created_at != updated_at
+    event.dtstamp       = ical_date created_at
+    event.last_modified = ical_date updated_at if updated_at.present? && created_at != updated_at
     if whole_day?
-      event.dtstart     = date.to_datetime.beginning_of_day
-      event.dtend       = date.to_datetime.end_of_day
+      event.dtstart     = ical_date(date) {|d| d.beginning_of_day }
+      event.dtend       = ical_date(date) {|d| d.end_of_day }
     else
-      event.dtstart     = date.to_datetime.change hour: time.hour, min: time.min
+      event.dtstart     = ical_date(date) {|d| d.change(hour: time.hour, min: time.min) }
     end
 
     calendar
