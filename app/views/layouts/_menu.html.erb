@@ -4,7 +4,6 @@
     <li class="space-bottom"><%= link_to t("devise.links.sign_out"), destroy_user_session_path %></li>
     <li>
       <ul>
-
         <%- if can? :create, Category -%>
           <%= content_tag :li, class: (request.fullpath =~ /^\/categories$/ ? 'active' : nil) do -%>
             <%= link_to t("activerecord.models.cateories"), categories_path -%>
@@ -39,10 +38,9 @@
             <%- end -%>
           <%- end -%>
         <%- end -%>
-
       </ul>
-    <li>
-      <ul>
+
+      <ul class="space-top">
         <%= authorized_menu_item Event, upcoming_calendar_path do -%>
           <%- if request.fullpath =~ /^\/(events|calendar)/ -%>
             <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/public_workingplan/ ? 'active' : nil) do -%>
@@ -67,11 +65,11 @@
             <%- end -%>
           <%- end -%>
         <%- end -%>
-
       </ul>
 
-      <ul class="more space-top"><%= categories_menu %></ul>
+      <ul class="space-top"><%= categories_menu %></ul>
     </li>
+  </ul>
 <%- else -%>
   <ul>
     <%= content_tag :li, link_to(AppConfig[:lodge], root_url) -%>
