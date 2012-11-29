@@ -11,12 +11,12 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121126190345) do
+ActiveRecord::Schema.define(:version => 20121129162622) do
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
     t.string   "addressable_type"
-    t.string   "purpose",          :default => "geschäftlich"
+    t.string   "purpose"
     t.string   "street1"
     t.string   "street2"
     t.string   "street3"
@@ -27,15 +27,15 @@ ActiveRecord::Schema.define(:version => 20121126190345) do
     t.string   "email"
     t.text     "remarks"
     t.boolean  "deleted",          :default => false
-    t.datetime "created_at",                                   :null => false
-    t.datetime "updated_at",                                   :null => false
+    t.datetime "created_at",                          :null => false
+    t.datetime "updated_at",                          :null => false
     t.integer  "type_of_address"
     t.string   "mobile"
   end
 
   create_table "app_config_adapters", :force => true do |t|
     t.string "key"
-    t.string "value"
+    t.text   "value"
   end
 
   add_index "app_config_adapters", ["key"], :name => "index_app_config_adapters_on_key", :unique => true

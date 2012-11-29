@@ -1,31 +1,3 @@
 <% title 'Impressum' %>
 
-<h2>Anbieter</h2>
-<dl>
-  <dt>Adresse</dt>
-  <dd>
-    <address>
-      <p>
-        Friedrich Wilhelm zur Eintracht<br />
-        Kurfürstenallee 15<br />
-        D-28211 Bremen<br />
-        Deutschland<br />
-      </p>
-    </address>
-  </dd>
-
-  <dt>E-Mail:</dt>
-  <dd><%= obfuscated_mail_to AppConfig[:mvst_email] %></dd>
-</dl>
-
-<h4>Inhaltlich Verantwortlicher gemäß §10 Absatz 3 MDStV:</h4>
-
-<p>
-  Der Meister vom Stuhl der Loge FWzE (<%= obfuscated_mail_to AppConfig[:mvst_email] %>)
-</p>
-
-<h4>Technische Umsetzung, Kontakt bei technischen Fragen, Anmerkungen u.ä.:</h4>
-
-<p>
-  Internetbeauftragter der Loge FWzE (<%= obfuscated_mail_to AppConfig[:technical_contact_email] %>)
-</p>
+<%= impressum_from_config %>

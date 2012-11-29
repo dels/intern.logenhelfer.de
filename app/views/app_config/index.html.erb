@@ -110,7 +110,7 @@
       <%- else -%>
         <td></td>
       <%- end -%>
-      <td><tt>:user_change_notification_email</tt></td>
+      <td><tt>:default_from_email</tt></td>
     </tr>
     <!-- technical contact e-mail address -->
     <tr>
@@ -133,6 +133,19 @@
         <td></td>
       <%- end -%>
       <td><tt>:mvst_email</tt></td>
+    </tr>
+    <!-- impressum text -->
+    <tr>
+      <th rowspan="2"><%= t '.options.impressum.name' %></th>
+      <%- if t('.options.impressum').key?(:description) -%>
+        <td colspan="2"><%= t '.options.impressum.description' %></td>
+      <%- else -%>
+        <td colspan="2"></td>
+      <%- end -%>
+      <td><tt>:impressum</tt></td>
+    </tr>
+    <tr>
+      <td colspan="3"><%= text_area_tag 'app_config[impressum]', AppConfig[:impressum], class: jqueryui_input_classes, style: 'width:99%;height:14em' %></td>
     </tr>
   </table>
   <dl class="buttons">

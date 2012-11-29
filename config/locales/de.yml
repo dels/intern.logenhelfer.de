@@ -63,7 +63,10 @@ de:
           description: Als technischer Kontakt wird überall diese E-Mail Adresse ausgegeben.
         mvst_email:
           name: Kontakt-Adresse des MvSt.
-          description: 'Wird (öffentlich, aber vor Missbrauch geschützt) im Impressum ausgegeben'
+          description: 'Kann im Impressum ausgegeben werden.'
+        impressum:
+          name: Impressums-Text
+          description: 'HTML-Formatierung. Es können die Variablen in der Form <tt>:varname</tt> genutzt werden (siehe rechte Spalte); E-Mail-Adressen werden dabei obfuskiert.'
       option_key: Schlüssel
       option_name: Bedeutung
       option_value: Wert
