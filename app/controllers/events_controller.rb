@@ -48,8 +48,6 @@ class EventsController < AuthorizedController
       format.ics do
         @from   = Date.today
         @to     = 3.months.from_now
-        fd.filename = "Arbeitsplan (Abruf per ICS)"
-        fd.save!
         render layout: false
       end
       format.pdf do
