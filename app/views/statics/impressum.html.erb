@@ -15,17 +15,17 @@
   </dd>
 
   <dt>E-Mail:</dt>
-  <dd><a href="#" data-behaviour="mailto">mvst [at] fwze [punkt] de</a></dd>
+  <dd><%= obfuscated_mail_to AppConfig[:mvst_email] %></dd>
 </dl>
 
 <h4>Inhaltlich Verantwortlicher gemäß §10 Absatz 3 MDStV:</h4>
 
 <p>
-  Der Meister vom Stuhl der Loge FWzE (<a href="#" data-behaviour="mailto">mvst [at] fwze [punkt] de</a>)
+  Der Meister vom Stuhl der Loge FWzE (<%= obfuscated_mail_to AppConfig[:mvst_email] %>)
 </p>
 
 <h4>Technische Umsetzung, Kontakt bei technischen Fragen, Anmerkungen u.ä.:</h4>
 
 <p>
-  Internetbeauftragter der Loge FWzE (<a href="#" data-behaviour="mailto"><%= AppConfig[:technical_contact_email].gsub(/[@\.]/, '@' => ' [at] ', '.' => ' [punkt] ') %></a>)
+  Internetbeauftragter der Loge FWzE (<%= obfuscated_mail_to AppConfig[:technical_contact_email] %>)
 </p>

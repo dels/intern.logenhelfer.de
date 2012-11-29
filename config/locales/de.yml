@@ -53,14 +53,17 @@ de:
           name: Ortsvorgabe für neue Termine
           description: Das Feld "Ort" im Formular für neue Termine wird mit diesem Wert vorausgefüllt.
         user_change_notification_email:
-          name: Benachrichtungs E-Mail Adresse
-          description: E-Mail Adresse an die der Bericht über die Datenänderung gesendet wird, wenn die Daten eine Br. verändert worden sind
+          name: E-Mail-Adresse für Benachrichtungen
+          description: 'E-Mail Adresse, an die der Bericht über die Datenänderung gesendet wird, wenn die Daten eines Br. verändert worden sind.'
         default_from_email:
-          name: Default from in E-Mails
-          description: Absender aller E-Mails die die Anwendung versendet
+          name: Default-Absender-Adresse für System-Mails
+          description: Absender aller E-Mails die die Anwendung versendet.
         technical_contact_email:
           name: Technischer Kontakt
-          description: Als technischer Kontakt wird über all diese E-Mail Adresse angegeben
+          description: Als technischer Kontakt wird überall diese E-Mail Adresse ausgegeben.
+        mvst_email:
+          name: Kontakt-Adresse des MvSt.
+          description: 'Wird (öffentlich, aber vor Missbrauch geschützt) im Impressum ausgegeben'
       option_key: Schlüssel
       option_name: Bedeutung
       option_value: Wert
