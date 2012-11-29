@@ -1,22 +1,26 @@
+<% if limited_editing? %>
+  <p>limited_editing</p>
+<% end %>
+
 <%= form_for @user, builder: DefiniteFormBuilder do |f| %>
   <%= f.error_messages %>
   <dl>
-    <%= f.number_field :matriculation_number, :readonly => @limited_editing %>
-    <%= f.text_field :email, :readonly => limited_editing %>
+    <%= f.number_field :matriculation_number,     readonly: limited_editing? %>
+    <%= f.text_field :email,                      readonly: limited_editing? %>
 
-    <%#= f.password_field :password, :autocomplete => :off %>
-    <%#= f.password_field :password_confirmation, :autocomplete => :off %>
+    <%#= f.password_field :password, autocomplete: :off %>
+    <%#= f.password_field :password_confirmation, autocomplete: :off %>
 
-    <%= f.collection_select :title, User::TITLES, :second, :first, :include_blank => :true, :readonly => limited_editing %>
-    <%= f.text_field :firstname, :readonly => limited_editing %>
-    <%= f.text_field :lastname, :readonly => limited_editing %>
+    <%= f.collection_select :title, User::TITLES, :second, :first, include_blank: :true, readonly: limited_editing? %>
+    <%= f.text_field :firstname,                  readonly: limited_editing? %>
+    <%= f.text_field :lastname,                   readonly: limited_editing? %>
     <%= f.text_field :job_title %>
-    <%= f.date_select :date_of_birth, :readonly => limited_editing %>
-    <%= f.date_select :accepted_at, :readonly => limited_editing %>
+    <%= f.date_select :date_of_birth,             readonly: limited_editing? %>
+    <%= f.date_select :accepted_at,               readonly: limited_editing? %>
 
-    <%= f.date_select :entered_apprentice_since, :readonly => limited_editing %>
-    <%= f.date_select :fellow_craft_since, :readonly => limited_editing %>
-    <%= f.date_select :master_mason_since, :readonly => limited_editing %>
+    <%= f.date_select :entered_apprentice_since,  readonly: limited_editing? %>
+    <%= f.date_select :fellow_craft_since,        readonly: limited_editing? %>
+    <%= f.date_select :master_mason_since,        readonly: limited_editing? %>
 
     <% if current_user.roles.include?(Role.find_by_name('Admin')) %>
       <%= f.collection_select :roles, Role.position_ids, :id, :to_s, { selected: @user.role_ids }, style: 'width:300px', multiple: true, name: 'user[role_ids][]' %>
@@ -34,7 +38,7 @@
   <p><%= link_to_add_fields Address.human_attribute_name(:add_fields), f, :addresses %></p>
   <dl>
     <%= f.fields_for :addresses do |builder| %>
-      <%= render 'addresses/form_fields', :f => builder %>
+      <%= render 'addresses/form_fields', f: builder %>
     <% end %>
     <%= f.submit %>
   </dl>

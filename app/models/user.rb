@@ -1,6 +1,4 @@
 #encoding: utf-8
-
-# -*- coding: utf-8 -*-
 class User < ActiveRecord::Base
   include ActsAsAddressable
   include UuidHelper
@@ -17,9 +15,7 @@ class User < ActiveRecord::Base
       :title, :entered_apprentice_since, :fellow_craft_since, :master_mason_since
 
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
-
   validates_uniqueness_of :matriculation_number
-
   validate :validate_addresses
 
   has_many_addresses

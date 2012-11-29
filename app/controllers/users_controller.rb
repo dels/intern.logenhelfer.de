@@ -1,5 +1,6 @@
 class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
+  include UserHelper
 
   def index
     users = User.undeleted
@@ -137,11 +138,22 @@ class UsersController < AuthorizedController
   end
 
   def edit
-    #@limited_editing = limited_editing()
   end
 
   def update
     set_user_degree_dates(params)
+
+    # ticket: #1199 - only admin+secretary may change user email
+    if limited_editing?
+      [
+        :matriculation_number, :email, :firstname, :lastname, :date_of_birth,
+        :accepted_at, :entered_apprentice_since, :fellow_craft_since,
+        :master_mason_since, :title
+      ].each do |attribute|
+        params[:user].delete(attribute)
+      end
+    end
+
     if @user.update_attributes(params[:user])
       deleted_addresses = []
       params[:user][:addresses_attributes].try :each do |_,a|

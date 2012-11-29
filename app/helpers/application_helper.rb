@@ -44,7 +44,4 @@ module ApplicationHelper
     end
   end
 
-  def limited_editing
-    [] == (current_user.roles & (Role.where(name: ['Admin', 'Secretary'])))
-  end
 end
