@@ -100,6 +100,9 @@ input[type="checkbox"] {
   width: auto;
   height: auto;
 }
+input[readonly] {
+  color: lighten($black, 40%);
+}
 input.ui-autocomplete-input {
   width: 17.7em;
 }
