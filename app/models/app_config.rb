@@ -6,6 +6,7 @@
 module AppConfig
   # cached records
   @@records = {}
+  @@access_times = Hash.new {|h,k| h[k] = 20.seconds.ago }
 
   class << self
     # ActiveRecord specific.
@@ -21,10 +22,14 @@ module AppConfig
     def [](key, uncached=false)
       key = key.to_sym
       q = AppConfig::Adapter.where(key: "#{Rails.env}_#{key}")
-      if uncached
+      if uncached || @@access_times[key] < 20.seconds.ago
         @@records[key] = q.first
+        @@access_times[key] = Time.zone.now
       else
-        @@records[key] ||= q.first
+        @@records[key] ||= begin
+          @@access_times[key] = Time.zone.now
+          q.first
+        end
       end
 
       @@records[key].try :value
@@ -40,6 +45,7 @@ module AppConfig
       end
       @@records[key].value = value.to_s
       @@records[key].save!
+      @@access_times[key] = Time.zone.now
 
       @@records[key].value
     end
@@ -47,6 +53,7 @@ module AppConfig
     # Force reload the next time `key` is accessed.
     def dirty!(key)
       key = key.to_sym
+      @@access_times[key] = 1.hour.ago
       @@records[key] = nil
     end
 
