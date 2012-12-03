@@ -51,8 +51,8 @@ block 'create roles' do
   log         Role.create!(name: 'DedicatedMaster',   display_name: 'zug. Meister',                 group: true)
   log         Role.create!(name: 'Treasurer',         display_name: 'Schatzmeister')
   log         Role.create!(name: 'JuniorDeacon',      display_name: '2. Schaffer')
-  log         Role.create!(name: 'SeniorDeacon',      display_name: "1. Schaffer")
-
+  log         Role.create!(name: 'SeniorDeacon',      display_name: '1. Schaffer')
+  log         Role.where(name: 'NetDelegate',         display_name: 'Internet-Beauftragter').first_or_create
 end
 =begin
 block 'create users' do

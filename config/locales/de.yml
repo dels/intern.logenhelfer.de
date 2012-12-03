@@ -223,7 +223,7 @@ de:
         phone: Telefon
         positions: Ämter
         roles: Roles
-        academic_title: Titel
+        academic_title_id: Titel
         twentyfifth_jubilee: 25. Jubiläum
       user/addresses:
         addressable_id: Addresses addressable
@@ -240,6 +240,7 @@ de:
           count: Anzahl der Downlodas
     create_failure: '%{model} konnte nicht gespeichert werden.'
     create_success: '%{model} erfolgreich erstellt.'
+    destroy_failure: '%{model} konnte nicht gelöscht werden.'
     destroy_success: '%{model} wurde erfolgreich gelöscht.'
     errors:
       format: '%{attribute} %{message}'

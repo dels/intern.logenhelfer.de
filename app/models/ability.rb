@@ -113,6 +113,16 @@ class Ability
 
   def member_of_council_archive_abilities
   end
+
+  # Internet-Beauftragter
+  def net_delegate_abilities
+    can :manage, AppConfig
+    can :manage, AcademicTitle
+    can [:index, :file_stats, :user_stats, :user_file_stats], Statistic
+  end
+
+  def net_delegate_archive_abilities
+  end
 end
 
 

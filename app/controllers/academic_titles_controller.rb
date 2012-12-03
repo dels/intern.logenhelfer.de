@@ -18,9 +18,12 @@ class AcademicTitlesController < AuthorizedController
   end
 
   def destroy
-    @academic_title.deleted = true
-    @academic_title.save
-    redirect_to app_config_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.academic_title"))
+    if @academic_title.users.count > 0
+      redirect_to app_config_url, notice: t("activerecord.destroy_failure", model: t("activerecord.models.academic_title"))
+    else
+      @academic_title.destroy
+      redirect_to app_config_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.academic_title"))
+    end
   end
 
 end

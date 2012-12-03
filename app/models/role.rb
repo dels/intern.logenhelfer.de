@@ -3,16 +3,20 @@ class Role < ActiveRecord::Base
 
   validates_presence_of :name, :display_name
 
-  has_many :user_roles
+  has_many :user_roles, dependent: :destroy
 
   has_many :category_roles
-  has_many :categories, through: :category_roles
+  has_many :categories, through: :category_roles, dependent: :destroy
 
   def self.positions
+    # XXX: Role.where('name NOT IN (*)', ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
+    # XXX: scope :positions, where(...)
     Role.all - Role.where(name: ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
   end
 
   def self.degrees
+    # XXX: Role.where(name: ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
+    # XXX: scope :degrees, where(...)
     Role.all & Role.where(name: ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
   end
 
@@ -33,10 +37,10 @@ class Role < ActiveRecord::Base
   end
 
   def to_s
-    "#{display_name}"
+    display_name
   end
 
   def is_group?
-    group
+    group?
   end
 end
