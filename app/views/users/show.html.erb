@@ -8,34 +8,34 @@
 </p>
 
 <dl>
-  <dt><%= t 'activerecord.attributes.user.matriculation_number' %>:</dt>
+  <dt><%= User.human_attribute_name :matriculation_number %>:</dt>
   <dd><%= @user.matriculation_number %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.email' %>:</dt>
+  <dt><%= User.human_attribute_name :email %>:</dt>
   <dd><%= @user.email %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.title' %>:</dt>
+  <dt><%= User.human_attribute_name :academic_title_id %>:</dt>
   <dd><%= dash(@user.academic_title) %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.firstname' %>:</dt>
+  <dt><%= User.human_attribute_name :firstname %>:</dt>
   <dd><%= @user.firstname %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.lastname' %>:</dt>
+  <dt><%= User.human_attribute_name :lastname %>:</dt>
   <dd><%= @user.lastname %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.job_title' %>:</dt>
+  <dt><%= User.human_attribute_name :job_title %>:</dt>
   <dd><%= dash(@user.job_title) %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.num_degree' %>:</dt>
+  <dt><%= User.human_attribute_name :num_degree %>:</dt>
   <dd><%= @user.rome_degree %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.accepted_at' %>:</dt>
+  <dt><%= User.human_attribute_name :accepted_at %>:</dt>
   <dd><%= dash(@user.accepted_at ? l(@user.accepted_at) : nil) %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.date_of_birth' %>:</dt>
+  <dt><%= User.human_attribute_name :date_of_birth %>:</dt>
   <dd><%= dash(@user.date_of_birth ? l(@user.date_of_birth) : nil) %></dd>
 
-  <dt><%= t 'activerecord.attributes.user.degrees' %>:</dt>
+  <dt><%= User.human_attribute_name :degrees %>:</dt>
   <dd>
     <%
       roles = @user.user_roles.where(role_id: Role.degrees)
@@ -51,7 +51,7 @@
     <% end %>
   </dd>
 
-  <dt><%= t 'activerecord.attributes.user.positions' %>:</dt>
+  <dt><%= User.human_attribute_name :positions %>:</dt>
   <dd><ul>
     <% @user.roles.positions.each do |role| %>
       <li><%= role %></li>
