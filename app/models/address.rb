@@ -2,15 +2,21 @@ class Address < ActiveRecord::Base
   attr_accessible :purpose, :street1, :street2, :street3, :mobile,
       :zip, :city, :phone, :fax, :email, :remarks, :type_of_address
 
+  belongs_to :addressable, polymorphic: true
+
   default_scope where(:deleted => false)
 
-  validates_presence_of :purpose, :type_of_address
+  RE_DIAL_NUMBER = /\A\+\d{1,4}\d+(?:-\d*)?\z/
+
+  validates_presence_of     :purpose, :type_of_address
   validates_numericality_of :type_of_address, :greater_or_equal => 0, :less_or_equal => 3
+  validates_format_of :mobile, :phone, :fax,
+      with: RE_DIAL_NUMBER, allow_blank: true, allow_nil: true
 
   TYPES = {
-    :private => 0,
-    :business => 1,
-    :other => 2
+    private:  0,
+    business: 1,
+    other:    2
   }
 
   TYPES.each_pair{|type,id|
@@ -20,8 +26,6 @@ class Address < ActiveRecord::Base
       end
     }
   }
-
-  belongs_to :addressable, :polymorphic => true
 
   def purpose
     return read_attribute(:purpose) if type_of_address == 2 || type_of_address.blank?

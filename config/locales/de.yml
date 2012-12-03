@@ -27,6 +27,9 @@ de:
         - Telefon
         - Mobil
         - Fax
+  addresses:
+    form_fields:
+      number_format: 'Rufnummern müssen der Form <em>„+Landeskennzahl Ortskennzahl Rufnummer“</em> bzw. <em>„+Landeskennzahl Ortskennzahl Rufnummer-Durchwahl“</em> folgen, jeweils ohne Leerzeichen und Klammern. Die Ortskennzahl ist ohne führende 0 anzugeben, die Durchwahl von der Rufnummer durch ein „-“ abzutrennen und der Landeskennzahl (49 für Deutschland) ein „+“ voranzustellen.'
   app_config:
     index:
       header:
@@ -137,12 +140,10 @@ de:
         short: Kurzform
       address:
         add_fields: Adresse hinzufügen
-        addressable_id: Addressable
-        addressable_type: Addressable type
         city: Ort
         email: E-Mail
         fax: Fax
-        mobile: Mobile
+        mobile: Mobil
         phone: Telefon
         purpose: Art
         purpose_info: Landhaus / Ferienwohnung / Wochenendhaus
@@ -156,8 +157,6 @@ de:
         title: Titel
         type_of_address: Zweck
         zip: Postleitzahl
-      addresses:
-        base: Adressen
       attached_file:
         attached_file: Datei
         content: Inhalt der Datei
@@ -226,10 +225,23 @@ de:
         academic_title_id: Titel
         twentyfifth_jubilee: 25. Jubiläum
       user/addresses:
-        addressable_id: Addresses addressable
-        addressable_type: Addresses addressable type
-        base: Addresses base
-        type_of_address: Addresses type of address
+        city: Ort
+        email: E-Mail
+        fax: Fax
+        mobile: Mobil
+        phone: Telefon
+        purpose: Art
+        purpose_info: Landhaus / Ferienwohnung / Wochenendhaus
+        remarks: Anmerkungen
+        remove_fields: Adresse entfernen
+        street1: Straße
+        street1_info: '(Straße/Nr., Postfach)'
+        street2: Straße
+        street3: Zustellanweisung
+        street3_info: '(z. Hd., c/o)'
+        title: Titel
+        type_of_address: Zweck
+        zip: Postleitzahl
       user_role:
         role_id: Role
       statistics:
