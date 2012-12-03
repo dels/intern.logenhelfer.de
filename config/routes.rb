@@ -27,6 +27,7 @@ FwzeIntern::Application.routes.draw do
   # doesn't sound right)...
   get 'app_config',                             to: 'app_config#index',     as: :app_config
   put 'app_config',                             to: 'app_config#update'
+  resources :academic_titles,                   only: [:create, :update, :destroy]
 
   resources :statistics do
     collection do

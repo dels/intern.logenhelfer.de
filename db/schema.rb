@@ -11,7 +11,18 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121129162622) do
+ActiveRecord::Schema.define(:version => 20121130151736) do
+
+  create_table "academic_titles", :force => true do |t|
+    t.string   "title"
+    t.string   "short"
+    t.boolean  "deleted",    :default => false
+    t.datetime "created_at",                    :null => false
+    t.datetime "updated_at",                    :null => false
+  end
+
+  add_index "academic_titles", ["short"], :name => "index_academic_titles_on_short", :unique => true
+  add_index "academic_titles", ["title"], :name => "index_academic_titles_on_title", :unique => true
 
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
@@ -183,6 +194,7 @@ ActiveRecord::Schema.define(:version => 20121129162622) do
     t.integer  "matriculation_number"
     t.string   "job_title"
     t.integer  "title"
+    t.integer  "academic_title_id"
   end
 
   add_index "users", ["email"], :name => "index_users_on_email", :unique => true

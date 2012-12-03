@@ -1,6 +1,8 @@
-<%- title t('.header') -%>
+<%- title t('.header.configuration') -%>
 
 <p><%= raw t('.intro', env: Rails.env) %></p>
+
+<h2><%= t '.header.general_configuration' %></h2>
 
 <%= form_tag app_config_path, method: :put do %>
   <table class="wide" id="app-config">
@@ -153,3 +155,30 @@
     <dd><%= submit_tag t('helpers.button.update', model: t('activerecord.models.app_config')), name: nil %></dd>
   </dl>
 <%- end -%>
+
+
+<h2><%= t '.header.academic_titles' %></h2>
+
+
+<dl>
+  <dt><%= t '.header.academic_titles' %></dt>
+  <dd>
+    <table class="narrow">
+      <%- @academic_titles.each do |at| -%>
+        <tr>
+          <td class="wide-25em"><%= best_in_place at, :short %></td>
+          <td><%= at.users.count %> <%= t 'activerecord.models.users' %></td>
+          <td><%= destroy_link_to at %></td>
+        </tr>
+      <%- end -%>
+    </table>
+  </dd>
+
+  <dt><%= t 'activerecord.attributes.academic_title.add_fields' %></dt>
+  <dd>
+    <%= form_for AcademicTitle.new do |f| -%>
+      <%= f.text_field :short %>
+      <%= f.submit %>
+    <%- end -%>
+  </dd>
+</dl>

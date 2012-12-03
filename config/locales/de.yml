@@ -29,7 +29,10 @@ de:
         - Fax
   app_config:
     index:
-      header: Anwendungs-Konfiguration
+      header:
+        configuration: Anwendungs-Konfiguration
+        general_configuration: Allgemeine Einstellungen
+        academic_titles: Akademische Titel
       intro: 'Die hier dargestellten Optionen beziehen sich ausschließlich auf die <tt>%{env}</tt>-Umgebung. Das Eintragen ungültiger Werte geschieht auf eigene Gefahr, eine Überprüfung findet nicht statt.'
       options:
         archive:
@@ -128,6 +131,10 @@ de:
       other: Andere
       private: Privat
     attributes:
+      academic_title:
+        add_fields: Titel hinzufügen
+        title: Langform
+        short: Kurzform
       address:
         add_fields: Adresse hinzufügen
         addressable_id: Addressable
@@ -216,7 +223,7 @@ de:
         phone: Telefon
         positions: Ämter
         roles: Roles
-        title: Titel
+        academic_title: Titel
         twentyfifth_jubilee: 25. Jubiläum
       user/addresses:
         addressable_id: Addresses addressable
@@ -231,7 +238,8 @@ de:
           count: Anzahl der Downlodas
         user_file_stats:
           count: Anzahl der Downlodas
-    create_success: '%{model} erfolgreich erstellt'
+    create_failure: '%{model} konnte nicht gespeichert werden.'
+    create_success: '%{model} erfolgreich erstellt.'
     destroy_success: '%{model} wurde erfolgreich gelöscht.'
     errors:
       format: '%{attribute} %{message}'
@@ -305,6 +313,8 @@ de:
           one: 'Konnte %{model} nicht speichern: ein Fehler.'
           other: 'Konnte %{model} nicht speichern: %{count} Fehler.'
     models:
+      academic_title: Akad. Titel
+      academic_titles: Akad. Titel
       address: Address
       addresses: Adressen
       attached_file: Datei

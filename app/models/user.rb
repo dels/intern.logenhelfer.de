@@ -1,4 +1,3 @@
-#encoding: utf-8
 class User < ActiveRecord::Base
   include ActsAsAddressable
   include UuidHelper
@@ -8,11 +7,12 @@ class User < ActiveRecord::Base
   friendly_id :uuid
 
   devise :database_authenticatable, :recoverable, :rememberable, :trackable,
-      :validatable, :timeoutable#, :timeout_in => 1.hour
+      :validatable, :timeoutable#, timeout_in: 1.hour
 
-  attr_accessible :email, :password, :password_confirmation, :remember_me, :firstname, :lastname,
-      :date_of_birth, :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title,
-      :title, :entered_apprentice_since, :fellow_craft_since, :master_mason_since
+  attr_accessible :email, :password, :password_confirmation, :remember_me,
+      :firstname, :lastname, :date_of_birth, :academic_title_id,
+      :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title,
+      :entered_apprentice_since, :fellow_craft_since, :master_mason_since
 
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
   validates_uniqueness_of :matriculation_number
@@ -21,9 +21,11 @@ class User < ActiveRecord::Base
   has_many_addresses
   has_many :file_downloads
   has_many :user_roles
-  has_many :roles, :through => :user_roles
+  has_many :roles, through: :user_roles
   has_many :attached_files
+  belongs_to :academic_title
 
+  default_scope includes(:academic_title)
   scope :undeleted, where(deleted: false)
   scope :search, ->(param) {
     where([
@@ -34,25 +36,6 @@ class User < ActiveRecord::Base
     ].join(' OR '), param: "%#{param}%" )
   }
 
-  TITLES = {
-    "Dipl. Ing."                 => 1,
-    "Dipl. Kfm."                 => 10,
-    "Dipl.-Inf."                 => 20,
-    "Dipl. Ing."                 => 30,
-    "Dipl. Ökonom"               => 40,
-    "Dipl. Bankbetriebswirt"     => 50,
-    "Dipl.-Betr.Wirt"            => 60,
-    "Dr."                        => 70,
-    "Dr-Ing."                    => 80,
-    "Prof. Dipl.-Ing."           => 90,
-    "Prof. Dr."                  => 100,
-    "Prof. Dr.-Ing."             => 110
-  }
-
-  def title_str
-    @title ||= (r = TITLES.rassoc(self.title)) ? r[0] : nil
-  end
-
   def approved?
     true
   end
@@ -62,9 +45,8 @@ class User < ActiveRecord::Base
   end
 
   def fullname_with_title
-    [ title_str, firstname, lastname ].compact.join(' ')
+    [ academic_title, firstname, lastname ].compact.join(' ')
   end
-
 
   def num_degree
     degree = 1
@@ -74,15 +56,15 @@ class User < ActiveRecord::Base
   end
 
   def business_address
-    addresses.where(:type_of_address => Address::TYPES[:business]).first
+    addresses.where(type_of_address: Address::TYPES[:business]).first
   end
 
   def private_address
-    addresses.where(:type_of_address => Address::TYPES[:private]).first
+    addresses.where(type_of_address: Address::TYPES[:private]).first
   end
 
   def other_addresses
-    addresses.where(:type_of_address => Address::TYPES[:other])
+    addresses.where(type_of_address: Address::TYPES[:other])
   end
 
   def entered_apprentice_since
@@ -105,7 +87,7 @@ class User < ActiveRecord::Base
 
   def entered_apprentice_since=(date)
     return if date.blank?
-    ur = self.user_roles.where(:role_id => Role.find_by_name('EnteredApprentice')).first
+    ur = self.user_roles.where(role_id: Role.find_by_name('EnteredApprentice')).first
     ur = UserRole.new unless ur
     ur.role = Role.find_by_name('EnteredApprentice')
     ur.user = self
@@ -115,7 +97,7 @@ class User < ActiveRecord::Base
 
   def fellow_craft_since=(date)
     return if date.blank?
-    ur = self.user_roles.where(:role_id => Role.find_by_name('FellowCraft')).first
+    ur = self.user_roles.where(role_id: Role.find_by_name('FellowCraft')).first
     ur = UserRole.new unless ur
     ur.role = Role.find_by_name('FellowCraft')
     ur.user = self
@@ -125,7 +107,7 @@ class User < ActiveRecord::Base
 
   def master_mason_since=(date)
     return if date.blank?
-    ur = self.user_roles.where(:role_id => Role.find_by_name('MasterMason')).first
+    ur = self.user_roles.where(role_id: Role.find_by_name('MasterMason')).first
     ur = UserRole.new unless ur
     ur.role = Role.find_by_name('MasterMason')
     ur.user = self
@@ -142,7 +124,7 @@ class User < ActiveRecord::Base
   end
 
   def positions
-    self.roles & Role.positions - (Role.where(:name => ['Admin', 'Uploader']))
+    self.roles & Role.positions - (Role.where(name: ['Admin', 'Uploader']))
   end
 
   def self.get_secretary

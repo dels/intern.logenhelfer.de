@@ -86,8 +86,8 @@ class UsersController < AuthorizedController
     fd.remote_ip = current_user.current_sign_in_ip
     fd.save!
     send_data get_pdf_list(I18n.t('pdf.birthday_list.header'),
-      @users.undeleted.order('lastname ASC, firstname ASC').to_a.map {|usr|
-        [ usr.title_str,
+      @users.undeleted.order('lastname ASC, firstname ASC').includes(:academic_title).to_a.map {|usr|
+        [ usr.academic_title.to_s,
           usr.lastname,
           usr.firstname,
           I18n.l(usr.date_of_birth),
@@ -109,8 +109,8 @@ class UsersController < AuthorizedController
     fd.save!
 
     send_data get_pdf_list(I18n.t('pdf.phone_list.header'),
-      @users.undeleted.order('lastname ASC, firstname ASC').map {|usr|
-        [ usr.title_str,
+      @users.undeleted.order('lastname ASC, firstname ASC').includes(:academic_title).map {|usr|
+        [ usr.academic_title.to_s,
           usr.fullname.gsub!(/\s/, "\n"),
           usr.phone_numbers_printable,
           usr.fax_numbers_printable,

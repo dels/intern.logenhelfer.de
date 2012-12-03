@@ -358,6 +358,10 @@ table {
   width: 100%;
   border-collapse: collapse;
 
+  &.narrow {
+    width: auto;
+  }
+
   p, ul, ol {
     margin: 0;
   }
@@ -371,6 +375,7 @@ table {
 
   td {
     a { color: $link-color; }
+    &.wide-25em { width: 25em; }
   }
 
   th, td {
@@ -492,4 +497,21 @@ span.add {
 
 .avoid-bijoux {
   margin-right: 140px;
+}
+
+.best_in_place {
+  padding: 3px 5px 5px 26px;
+  margin: -3px -5px -5px 0;
+  background: transparent image-url('edit.png') 3px center no-repeat;
+
+  &:hover {
+    background-color: lighten(#ff0, 10%);
+  }
+
+  form {
+    margin: -3px -7px -7px -26px;
+  }
+  input {
+    padding-left: 26px;
+  }
 }

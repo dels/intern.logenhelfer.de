@@ -54,6 +54,7 @@ class Ability
     can :manage, User
     can :manage, Statistic
     can :manage, AppConfig
+    can :manage, AcademicTitle
   end
 
   def admin_archive_abilities
