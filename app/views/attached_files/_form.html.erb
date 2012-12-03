@@ -4,8 +4,8 @@
     <% if f.object.new_record? %>
       <%= f.file_field :file %>
     <% end %>
-    
-    <% unless f.object.new_record? && limited_editing %>
+
+    <% unless f.object.new_record? && limited_editing? %>
       <%= f.text_field :filename %>
     <% end %>
     <%= f.collection_select :roles, Role.all, :id, :to_s, { :selected => @attached_file.role_ids }, { :style => 'width:300px', :multiple => true, :name => 'attached_file[role_ids][]' } %>
