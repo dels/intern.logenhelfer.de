@@ -2,14 +2,18 @@ class UserMailer < ActionMailer::Base
   default from: AppConfig[:default_from_email]
 
 
-  def change_notification(changed_user, deleted_addresses)
-    @user       = changed_user
+  def change_notification(changed_user, deleted_addresses, changing_user)
+    @user = changed_user
     @secretary  = UserRole.where(role_id: Role.where(name: 'Secretary').first).first
     return unless @secretary
-    @secretary = @secretary.user
 
-    # XXX: return if @user.id == @secretary.id
+    @changing_user_info = changing_user.fullname
+    roles = changing_user.roles.where(name: %w[Admin Secretary])
+    if roles.count > 0
+      @changing_user_info << " (#{roles.map(&:display_name).to_sentence})"
+    end
 
+    @secretary    = @secretary.user
     @user_changes = @user.previous_changes
     @user_changes.delete("updated_at")
     @user_changes.delete("created_at")
