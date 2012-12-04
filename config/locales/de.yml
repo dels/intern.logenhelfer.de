@@ -73,6 +73,12 @@ de:
         impressum:
           name: Impressums-Text
           description: 'HTML-Formatierung. Es können die Variablen in der Form <tt>:varname</tt> genutzt werden (siehe rechte Spalte); E-Mail-Adressen werden dabei obfuskiert.'
+        zip:
+          name: PLZ
+          description: Wird (u.a.) im Impressum verwendet.
+        location:
+          name: Ort
+          description: Wird (u.a.) im Impressum verwendet.
       option_key: Schlüssel
       option_name: Bedeutung
       option_value: Wert

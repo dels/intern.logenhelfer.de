@@ -136,6 +136,20 @@
       <%- end -%>
       <td><tt>:mvst_email</tt></td>
     </tr>
+    <!-- zip/location -->
+    <tr>
+      <th><%= t '.options.zip.name' %>/<%= t '.options.location.name' %></th>
+      <td>
+        <%= text_field_tag 'app_config[zip]', AppConfig[:zip], class: jqueryui_small_input_classes %>
+        <%= text_field_tag 'app_config[location]', AppConfig[:location], class: jqueryui_medium_small_input_classes %>
+      </td>
+      <%- if t('.options.location').key?(:description) -%>
+        <td><%= t '.options.location.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:zip</tt>, <tt>:location</tt></td>
+    </tr>
     <!-- impressum text -->
     <tr>
       <th rowspan="2"><%= t '.options.impressum.name' %></th>
