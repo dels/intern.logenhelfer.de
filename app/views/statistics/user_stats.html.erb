@@ -10,10 +10,10 @@
       <th><%= User.human_attribute_name(:lastname) %></th>
       <th><%= User.human_attribute_name(:firstname) %></th>
       <% if current_user.roles.include?(Role.where(:name => 'Admin').first) %>
-        <th><%= User.human_attribute_name(:last_sign_in_ip) %></th>
+        <th><%= User.human_attribute_name(:current_sign_in_ip) %></th>
       <% end %>
       <th><%= sortable :sign_in_count, User.human_attribute_name(:sign_in_count) %></th>
-      <th><%= sortable :last_sign_in_at, User.human_attribute_name(:last_sign_in_at) %></th>
+      <th><%= sortable :last_sign_in_at, User.human_attribute_name(:current_sign_in_at) %></th>
       <th></th>
     </tr>
     <% @users.each do |user| %>
@@ -22,10 +22,10 @@
         <td><%= dash(user.lastname) %></td>
         <td><%= dash(user.firstname) %></td>
         <% if current_user.roles.include?(Role.where(:name => 'Admin').first) %>
-          <td><%= dash(user.last_sign_in_ip) %></td>
+          <td><%= dash(user.current_sign_in_ip) %></td>
         <% end %>
         <td><%= dash(user.sign_in_count) %></td>
-        <td><%= l user.last_sign_in_at %></td>
+        <td><%= l user.current_sign_in_at %></td>
         <td>
           <%= show_link_to user if can?(:show, user) %>
           <%= edit_link_to user if can?(:edit, user) %>
