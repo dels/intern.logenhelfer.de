@@ -6,7 +6,7 @@ class StatisticsController < AuthorizedController
 
   # show last users activity and last login
   def user_stats
-    @users = view_context.get_authorized_paginated(User.where("last_sign_in_at IS NOT NULL").order(sort_column(User.column_names, "last_sign_in_at DESC, sign_in_count") + " " + sort_direction)).page(params[:page])
+    @users = view_context.get_authorized_paginated(User.where("current_sign_in_at IS NOT NULL").order(sort_column(User.column_names, "current_sign_in_at DESC, sign_in_count") + " " + sort_direction)).page(params[:page])
   end
 
   # show all downlodas
