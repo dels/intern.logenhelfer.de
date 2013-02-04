@@ -432,8 +432,9 @@ de:
       unconfirmed: You have to confirm your account before continuing.
       user:
         invalid: Ungültige E-Mail oder Passwort.
+        not_found_in_database: Ungültige E-Mail oder Passwort.
         timeout: Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
-        unauthenticated: 'Sie sind nicht angemeldet. Sie müssen sich anmelden, um diese Seite sehen zu können.'
+        unauthenticated: 'Sie sind nicht angemeldet. Sie müssen sich anmelden, um diese Seite aufrufen zu können.'
     information:
       signed_in_as: 'Eingeloggt als %{user}'
     links:

@@ -53,6 +53,7 @@ module AppConfig
     # Force reload the next time `key` is accessed.
     def dirty!(key)
       key = key.to_sym
+      # perhaps 100.years to be safe in future?
       @@access_times[key] = 1.hour.ago
       @@records[key] = nil
     end

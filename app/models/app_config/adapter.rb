@@ -36,7 +36,7 @@ class AppConfig::Adapter < ActiveRecord::Base
   end
 
   def setter_bool
-    [true, 1, 'true', '1'].any? {|t| t == @value } ? '1' : '0'
+    [true, 1, 'true', '1', 't'].any? {|t| t == @value } ? '1' : '0'
   end
 
   alias_method :setter_archive,     :setter_bool
