@@ -29,7 +29,7 @@ de:
         - Fax
   addresses:
     form_fields:
-      number_format: 'Rufnummern müssen der Form <em>„+Landeskennzahl Ortskennzahl Rufnummer“</em> bzw. <em>„+Landeskennzahl Ortskennzahl Rufnummer-Durchwahl“</em> folgen, jeweils ohne Leerzeichen und Klammern. Die Ortskennzahl ist ohne führende 0 anzugeben, die Durchwahl von der Rufnummer durch ein „-“ abzutrennen und der Landeskennzahl (49 für Deutschland) ein „+“ voranzustellen.'
+      number_format: 'Rufnummern müssen der Form <em>„+Landeskennzahl (Ortskennzahl) Rufnummer“</em> bzw. <em>„+Landeskennzahl (Ortskennzahl) Rufnummer-Durchwahl“</em> folgen. Die Ortskennzahl ist ohne führende 0 anzugeben, die Durchwahl von der Rufnummer durch ein „-“ abzutrennen und der Landeskennzahl (49 für Deutschland) ein „+“ voranzustellen.'
   app_config:
     index:
       header:

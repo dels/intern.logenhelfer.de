@@ -127,7 +127,6 @@ class UsersController < AuthorizedController
   def create
     @user.password = SecureRandom.hex(16)
     @user.password_confirmation = @user.password
-    logger.info "GENERATED PASSWORD: #{@user.password_confirmation}"
     set_user_degree_dates(params)
     if @user.save
       redirect_to @user, notice: t("activerecord.create_success", model: t("activerecord.models.user"))

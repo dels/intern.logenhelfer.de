@@ -6,7 +6,7 @@ class Address < ActiveRecord::Base
 
   default_scope where(:deleted => false)
 
-  RE_DIAL_NUMBER = /\A\+\d{1,4}\d+(?:-\d*)?\z/
+  RE_DIAL_NUMBER = /\A\+\d{1,4}\s\([^0]\d{2,5}\)\s[\d\s]+\s+-?\s?\d+\z/
 
   validates_presence_of     :purpose, :type_of_address
   validates_numericality_of :type_of_address, :greater_or_equal => 0, :less_or_equal => 3
