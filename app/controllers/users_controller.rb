@@ -74,7 +74,7 @@ class UsersController < AuthorizedController
   end
 
   def birthday_list
-    @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
+    @users = view_context.get_authorized_paginated(User.undeleted.order(sort_column + " " + sort_direction)).page(params[:page])
   end
 
   def birthday_list_pdf
@@ -96,7 +96,7 @@ class UsersController < AuthorizedController
   end
 
   def phone_list
-    @users = view_context.get_authorized_paginated(User.order(sort_column + " " + sort_direction)).page(params[:page])
+    @users = view_context.get_authorized_paginated(User.undeleted.order(sort_column + " " + sort_direction)).page(params[:page])
   end
 
   def phone_list_pdf
