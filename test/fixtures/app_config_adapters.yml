@@ -1,0 +1,25 @@
+---
+app_config_adapters_001:
+  id: '1'
+  key: development_domain
+  value: localhost:5600
+app_config_adapters_002:
+  id: '2'
+  key: development_organisation
+  value: Johannis Freimaurer Loge Friedrich Wilhelm zur Eintracht Nr. 436 i.O. Bremen
+app_config_adapters_003:
+  id: '3'
+  key: development_show_admins
+  value: '1'
+app_config_adapters_004:
+  id: '4'
+  key: development_default_workingplan_timespan
+  value: 4w
+app_config_adapters_005:
+  id: '5'
+  key: development_lodge
+  value: Friedrich Wilhelm zur Eintracht
+app_config_adapters_006:
+  id: '6'
+  key: development_default_event_location
+  value: Kurfürstenallee 15

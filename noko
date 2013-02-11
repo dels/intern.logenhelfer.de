@@ -1,0 +1,8 @@
+gem uninstall nokogiri libxml-ruby && 
+
+
+brew update &&brew uninstall libxml2 && brew install libxml2 --with-xml2-config && brew install libxslt && 
+
+
+
+bundle config build.nokogiri --with-xml2-include=/usr/local/Cellar/libxml2/2.8.0/include/libxml2 --with-xml2-lib=/usr/local/Cellar/libxml2/2.8.0/lib --with-xslt-dir=/usr/local/Cellar/libxslt/1.1.26/ && bundle install

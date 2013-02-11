@@ -1,0 +1,89 @@
+---
+schema_migrations_001:
+  version: '20120518130806'
+schema_migrations_002:
+  version: '20120518130915'
+schema_migrations_003:
+  version: '20120518145409'
+schema_migrations_004:
+  version: '20120518163339'
+schema_migrations_005:
+  version: '20120518163359'
+schema_migrations_006:
+  version: '20120519083449'
+schema_migrations_007:
+  version: '20120519085258'
+schema_migrations_008:
+  version: '20120519111912'
+schema_migrations_009:
+  version: '20120519111931'
+schema_migrations_010:
+  version: '20120519152909'
+schema_migrations_011:
+  version: '20120519162420'
+schema_migrations_012:
+  version: '20120519163218'
+schema_migrations_013:
+  version: '20120520175342'
+schema_migrations_014:
+  version: '20120521192507'
+schema_migrations_015:
+  version: '20120521192530'
+schema_migrations_016:
+  version: '20120525070305'
+schema_migrations_017:
+  version: '20120525092426'
+schema_migrations_018:
+  version: '20120525122112'
+schema_migrations_019:
+  version: '20120525152714'
+schema_migrations_020:
+  version: '20120528082528'
+schema_migrations_021:
+  version: '20120528085324'
+schema_migrations_022:
+  version: '20120528110742'
+schema_migrations_023:
+  version: '20120528122324'
+schema_migrations_024:
+  version: '20120528123116'
+schema_migrations_025:
+  version: '20121025120825'
+schema_migrations_026:
+  version: '20121025120840'
+schema_migrations_027:
+  version: '20121025121843'
+schema_migrations_028:
+  version: '20121025121903'
+schema_migrations_029:
+  version: '20121025121916'
+schema_migrations_030:
+  version: '20121025173953'
+schema_migrations_031:
+  version: '20121026101932'
+schema_migrations_032:
+  version: '20121114171043'
+schema_migrations_033:
+  version: '20121114220659'
+schema_migrations_034:
+  version: '20121117212142'
+schema_migrations_035:
+  version: '20121117212557'
+schema_migrations_036:
+  version: '20121123155233'
+schema_migrations_037:
+  version: '20121124132823'
+schema_migrations_038:
+  version: '20121124132824'
+schema_migrations_039:
+  version: '20121126151500'
+schema_migrations_040:
+  version: '20121126190345'
+schema_migrations_041:
+  version: '20121129162622'
+schema_migrations_042:
+  version: '20121130151636'
+schema_migrations_043:
+  version: '20121130151736'
+schema_migrations_044:
+  version: '20121203132723'

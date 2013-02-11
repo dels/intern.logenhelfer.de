@@ -1,9 +1,1 @@
-one:
-  name: MyString
-  description: MyText
-  deleted: false
-
-two:
-  name: MyString
-  description: MyText
-  deleted: true
+--- {}
