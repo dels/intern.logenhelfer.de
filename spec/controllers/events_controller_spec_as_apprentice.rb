@@ -4,6 +4,8 @@ require 'spec_helper'
 describe EventsController do
   include Devise::TestHelpers
 
+  login_apprentice
+
   it "should get the arbeitsplan" do
     # Note, rails 3.x scaffolding may add lines like get :index, {}, valid_session
     # the valid_session overrides the devise login. Remove the valid_session from your specs
@@ -18,12 +20,10 @@ describe EventsController do
     response.should be_success
   end
 
-
-  it "should not get the internal working plan" do
+  it "should get the internal working plan" do
     # Note, rails 3.x scaffolding may add lines like get :index, {}, valid_session
     # the valid_session overrides the devise login. Remove the valid_session from your specs
     get 'internal_workingplan'
-    response.should_not be_success
+    response.should be_success
   end
-
 end
