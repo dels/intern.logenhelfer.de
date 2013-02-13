@@ -1,0 +1,7 @@
+<p>Hallo Br. <%= @resource.firstname %>!</p>
+
+<p>Dein Account wurde gesperrt, weil mehrfach falsche Benutzdaten zur Anmeldung verwendet worden sind.</p>
+
+<p>Klicke hier um den Account zu entsperren:</p>
+
+<p><%= link_to 'Account entsperren', unlock_url(@resource, :unlock_token => @resource.unlock_token) %></p>
