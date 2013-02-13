@@ -12,7 +12,7 @@ class ApplicationController < ActionController::Base
     exception.backtrace.each do |line|
       logger.debug "\t#{line}"
     end
-    redirect_to root_url, alert: t("devise.error.access_denied")
+    redirect_to login_url, alert: t("devise.error.access_denied")
   end
 
 protected

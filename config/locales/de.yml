@@ -446,6 +446,7 @@ de:
     mailer:
       confirmation_instructions:
         subject: E-Mail Bestätigung
+        
       reset_password_instructions:
         subject: Passwort zurücksetzen
         user_subject: Anweisungen zum Zurücksetzen des Passwortes

@@ -17,3 +17,4 @@ cur_dump.sql
 *.tar.gz.gpg
 pg_dump*
 .DS_Store
+*pg_dump.tar.gz
