@@ -25,45 +25,122 @@ class AddressTest < ActiveSupport::TestCase
     assert(addr.save, "can't save address with type of address of 2 and with purpose")
   end
 
-  test "format of phone, fax and mobile" do
+  test "format of phone with grouping" do
+    addr = Address.new
     addr.type_of_address = 0
     addr.purpose = nil # purpose is now private
     assert(addr.save, "can't save address with type of address of 0 and without purpose")
     phone = '+49 (123) 22 22 22 22'
     addr.phone = phone
     assert(addr.valid?, "addr is invalid with phone #{phone}")
+  end
+
+  test "format of phone with grouping and direct dial but without spaces next to dash" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '+49 (123) 22 22 22-22'
     addr.phone = phone
     assert(addr.valid?, "addr is invalid with phone #{phone}")
+  end
+
+  test "format of phone with grouping and direct dial" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '+49 (123) 22 22 22 - 22'
     addr.phone = phone
     assert(addr.valid?, "addr is invalid with phone #{phone}")
+  end
+
+
+  test "format of phone without grouping" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '+49 (123) 22222222'
     addr.phone = phone
     assert(addr.valid?, "addr is invalid with phone #{phone}")
+  end
+
+  test "format of phone without grouping and direct dial" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '+49 (123) 222222-22'
     addr.phone = phone
     assert(addr.valid?, "addr is invalid with phone #{phone}")
+  end
+
+
+  test "format of phone should be valid with phone grouped and single digit international area code" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
+    phone = '+1 (11234) 22 22 22 22'
+    addr.phone = phone
+    assert(addr.valid?, "addr is invalid with phone #{phone}")
+  end
+
+  test "format of phone should be valid with phone grouped" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '+49 (11234) 22 22 22 22'
     addr.phone = phone
     assert(addr.valid?, "addr is invalid with phone #{phone}")
-    
+  end
+
+  test "format of phone should not be valid with leading 0 in area code" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
 
     phone = '+49 (089) 22 22 22 22'
     addr.phone = phone
     assert(false == addr.valid?, "addr is valid with phone #{phone}")
-    phone = '9 (89) 22 22 22 22'
+  end
+
+  test "format of phone should not be valid without international area code" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
+    phone = '(89) 22 22 22 22'
     addr.phone = phone
     assert(false == addr.valid?, "addr is valid with phone #{phone}")
+  end
+
+  test "format of phone should not be valid without leading +" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '49 (89) 22 22 22 22'
     addr.phone = phone
     assert(false == addr.valid?, "addr is valid with phone #{phone}")
+  end
+
+  test "format of phone should not be valid with leading 00 instead of +" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '0049 (89) 22 22 22 22'
     addr.phone = phone
     assert(false == addr.valid?, "addr is valid with phone #{phone}")
+  end
+
+  test "format of phone should not be valid without brackets" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '+49 89 22 22 22 22'
     addr.phone = phone
     assert(false == addr.valid?, "addr is valid with phone #{phone}")
+  end
+
+  test "format of phone should not be valid with leading 0 in vorwahl" do
+    addr = Address.new
+    addr.type_of_address = 0
+    addr.purpose = nil # purpose is now private
     phone = '+49 (089) 22 22 22 22'
     addr.phone = phone
     assert(false == addr.valid?, "addr is valid with phone #{phone}")

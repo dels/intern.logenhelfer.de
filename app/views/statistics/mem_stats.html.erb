@@ -1,0 +1,13 @@
+<% title t("activerecord.models.statistics") %>
+
+<p>
+  Im System sind zur Zeit <%= @user_count %> Benutzer registriert.
+</p>
+
+<p>
+  Zur Zeit sind <%= @event_count %> Veranstaltungen hinterlegt.
+</p>
+
+<p>
+  Alle Dateien zusammen belegen zur Zeit einen Speicher von <%= number_to_human_size @attached_files_size %>.
+</p>

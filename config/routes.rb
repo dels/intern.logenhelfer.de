@@ -35,6 +35,7 @@ FwzeIntern::Application.routes.draw do
       get 'file_stats'
       get 'downloads'
       get 'user_file_stats'
+      get 'mem_stats'
     end
   end
 
@@ -62,7 +63,7 @@ FwzeIntern::Application.routes.draw do
 
   get '/impressum', to: 'statics#impressum', as: :impressum
 
-  get '/anmelden', to: 'statics#index', as: :anmelden
+  get '/anmelden', to: 'statics#index', as: :login
 
   root to: 'statics#index'
 end

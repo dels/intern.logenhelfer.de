@@ -25,6 +25,14 @@ class StatisticsController < AuthorizedController
     
   end
 
+  # show how many hard disk space (or even better database space) is taken by the files uploaded and some more statistics like user count etc
+  def mem_stats
+    @user_count = User.undeleted.count
+    @attached_files_size = 0
+    AttachedFile.select('content_length').each {|f| @attached_files_size += f.content_length}
+    @event_count = Event.count
+  end
+
 private
 
   def sort_column columns = nil, default = nil
