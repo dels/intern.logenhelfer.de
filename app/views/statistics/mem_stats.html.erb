@@ -11,3 +11,7 @@
 <p>
   Alle Dateien zusammen belegen zur Zeit einen Speicher von <%= number_to_human_size AttachedFile::memory_used %>.
 </p>
+
+<p>
+  Alle Dateien, inklusive der bereits archivierten Dateien, zusammen belegen zur Zeit einen Speicher von <%= number_to_human_size AttachedFile::memory_used_incl_archived %>.
+</p>

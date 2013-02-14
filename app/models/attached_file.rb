@@ -33,7 +33,6 @@ class AttachedFile < ActiveRecord::Base
   def delete
     if AppConfig[:archive]
       self.deleted = false
-      # FIXME: warum das?????
       self.directory.delete
     else
       self.deleted = true
@@ -53,12 +52,14 @@ class AttachedFile < ActiveRecord::Base
   end
 
   def self.memory_used
-    AttachedFile.select('content_length').inject {|sum,file| sum + file.content_length }
+    sum = 0
+    AttachedFile.select('content_length').each {|file| sum += file.content_length }
+    sum
   end
 
-  def self.memory_used_incl_deleted
-    AttachedFile.all.select('content_length').inject {|file,sum| sum + (file.content_length) }
+  def self.memory_used_incl_archived
+    sum = 0
+    AttachedFile.unscoped.select('content_length').each {|file| sum += file.content_length }
+    sum
   end
-
-  
 end

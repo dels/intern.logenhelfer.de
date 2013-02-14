@@ -37,15 +37,13 @@ describe Address do
     addr.should be_valid
   end
 
-
   it "should be valid with type of address 2 and purpose" do
     addr = Address.new
     addr.type_of_address = 2
     addr.purpose = "Wochenendhaus"
     addr.should be_valid
   end
-
-
+  
   describe "format of phone" do
     it "should be valid with correct international area code, valid area, and gouped number" do
       addr = Address.new
@@ -96,15 +94,12 @@ describe Address do
       addr.should_not be_valid
     end
 
-
     it "should not be valid without international area code, correct area code, and grouped number" do
       addr = Address.new
       addr.type_of_address = 0
       addr.phone = '(89) 22 22 22 22'
       addr.should_not be_valid
     end
-
-
 
     it "should not be valid without leading plus in international area code, correct area code, and grouped number" do
       addr = Address.new

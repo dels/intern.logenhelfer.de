@@ -4,6 +4,9 @@
 <dl>
   <dt><%= t 'helpers.pages.stats_for' %>:</dt>
   <dd><ul>
+      <%- if can? :mem_stats, Statistic -%>
+        <li><%= link_to t("helpers.pages.mem_stats"), mem_stats_statistics_path -%></li>
+      <%- end -%>
       <%- if can? :user_stats, Statistic -%>
         <li><%= link_to t("helpers.pages.user_stats"), user_stats_statistics_path -%></li>
       <%- end -%>
