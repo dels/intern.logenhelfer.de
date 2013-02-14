@@ -555,6 +555,7 @@ de:
       file_stats: Dateien
       user_file_stats: Benutzer Downloads
       downloads: Downloads
+      mem_stats: Speicher Verbrauch
     link:
       show: Anzeigen
       edit: Bearbeiten

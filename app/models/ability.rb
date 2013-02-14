@@ -28,7 +28,7 @@ class Ability
     can [:index, :show, :members_list, :phone_list, :birthday_list], User, ["users.deleted = false"] do |u|
       AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
     end
-    can [:index, :file_stats], Statistic
+    can [:index, :file_stats, :space_stats], Statistic
   end
 
   # korrespondierender Schriftfuehrer
@@ -108,7 +108,7 @@ class Ability
 
   # Mitglied des Beamtenrates
   def member_of_council_abilities
-    can [:index, :file_stats, :user_stats, :user_file_stats], Statistic
+    can [:index, :file_stats, :user_stats, :user_file_stats, :space_stats], Statistic
   end
 
   def member_of_council_archive_abilities
@@ -118,7 +118,7 @@ class Ability
   def net_delegate_abilities
     can :manage, AppConfig
     can :manage, AcademicTitle
-    can [:index, :file_stats, :user_stats, :user_file_stats], Statistic
+    can [:index, :file_stats, :user_stats, :user_file_stats, :space_stats], Statistic
   end
 
   def net_delegate_archive_abilities

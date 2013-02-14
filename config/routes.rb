@@ -35,6 +35,7 @@ FwzeIntern::Application.routes.draw do
       get 'file_stats'
       get 'downloads'
       get 'user_file_stats'
+      get 'mem_stats'
     end
   end
 
