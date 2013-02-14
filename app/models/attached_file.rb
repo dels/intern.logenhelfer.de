@@ -51,4 +51,14 @@ class AttachedFile < ActiveRecord::Base
       end while AttachedFile.exists?(filename: self.filename)
     end
   end
+
+  def self.memory_used
+    AttachedFile.select('content_length').inject {|sum,file| sum + file.content_length }
+  end
+
+  def self.memory_used_incl_deleted
+    AttachedFile.all.select('content_length').inject {|file,sum| sum + (file.content_length) }
+  end
+
+  
 end

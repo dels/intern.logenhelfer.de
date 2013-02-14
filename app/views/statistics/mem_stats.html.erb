@@ -1,7 +1,7 @@
 <% title t("activerecord.models.statistics") %>
 
 <p>
-  Im System sind zur Zeit <%= @user_count %> Benutzer registriert.
+  Im System sind zur Zeit <%= User::count_all %> Benutzer registriert.
 </p>
 
 <p>
@@ -9,5 +9,5 @@
 </p>
 
 <p>
-  Alle Dateien zusammen belegen zur Zeit einen Speicher von <%= number_to_human_size @attached_files_size %>.
+  Alle Dateien zusammen belegen zur Zeit einen Speicher von <%= number_to_human_size AttachedFile::memory_used %>.
 </p>

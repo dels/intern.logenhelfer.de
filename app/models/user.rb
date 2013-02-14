@@ -216,4 +216,8 @@ class User < ActiveRecord::Base
     super && !deleted?
   end
 
+  def self.count_all
+    User.undeleted.count
+  end
+
 end
