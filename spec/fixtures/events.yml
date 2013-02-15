@@ -4,7 +4,6 @@ one:
   public_description: MyText
   private_description: MyText
   whole_day: false
-  duration: 1
   created_by: 1
   deleted: false
 
@@ -14,6 +13,5 @@ two:
   public_description: MyText
   private_description: MyText
   whole_day: false
-  duration: 1
   created_by: 1
   deleted: true

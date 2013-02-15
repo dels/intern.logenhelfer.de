@@ -142,7 +142,7 @@ class UsersController < AuthorizedController
     set_user_degree_dates(params)
 
     # ticket: #1199 - only admin+secretary may change user email
-    if view_context.limited_editing?
+    if view_context.limited_user_editing?
       [
         :matriculation_number, :email, :firstname, :lastname, :date_of_birth,
         :accepted_at, :entered_apprentice_since, :fellow_craft_since,

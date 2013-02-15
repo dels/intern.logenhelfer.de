@@ -9,7 +9,6 @@ class Ability
     @user.roles.each do |role|
       archive = AppConfig[:archive] ? 'archive_' : ''
       method = :"#{role.name.underscore}_#{archive}abilities"
-
       self.send(method) if self.respond_to?(method)
     end
     can [:show, :edit, :update], User, id: @user.id unless AppConfig[:archive]
@@ -33,10 +32,18 @@ class Ability
 
   # korrespondierender Schriftfuehrer
   def secretary_abilities
-    can [:index, :create, :new, :show, :edit, :update, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
-    admin_role = Role.find_by_name("Admin")
-    can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update], User, ["users.deleted = false"] do |u|
-      AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+    if "1".eql?(AppConfig[:secretary_is_app_admin])
+      can :manage, AppConfig
+      can :manage, AcademicTitle
+    end
+    if "1".eql?(AppConfig[:secretary_is_event_admin])
+      can [:index, :create, :new, :show, :edit, :update, :destroy, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
+    end
+    if "1".eql?(AppConfig[:secretary_is_user_admin])
+      admin_role = Role.find_by_name("Admin")
+      can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update, :destroy], User, ["users.deleted = false"] do |u|
+        AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+      end
     end
   end
 
@@ -101,6 +108,19 @@ class Ability
 
   # Meister vom Stuhl
   def worshipful_master_abilities
+    if "1".eql?(AppConfig[:worshipful_master_is_app_admin])
+      can :manage, AppConfig
+      can :manage, AcademicTitle
+    end
+    if "1".eql?(AppConfig[:worshipful_master_is_event_admin])
+      can [:index, :create, :new, :show, :edit, :update, :destroy, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
+    end
+    if "1".eql?(AppConfig[:worshipful_master_is_user_admin])
+      admin_role = Role.find_by_name("Admin")
+      can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update, :destroy], User, ["users.deleted = false"] do |u|
+        AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+      end
+    end
   end
 
   def worshipful_master_archive_abilities
@@ -116,9 +136,20 @@ class Ability
 
   # Internet-Beauftragter
   def net_delegate_abilities
-    can :manage, AppConfig
-    can :manage, AcademicTitle
+    if "1".eql?(AppConfig[:net_delegate_is_app_admin])
+      can :manage, AppConfig
+      can :manage, AcademicTitle
+    end
     can [:index, :file_stats, :user_stats, :user_file_stats, :space_stats], Statistic
+    if "1".eql?(AppConfig[:net_delegate_is_event_admin])
+      can [:index, :create, :new, :show, :edit, :update, :destroy, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
+    end
+    if "1".eql?(AppConfig[:net_delegate_is_user_admin])
+      admin_role = Role.find_by_name("Admin")
+      can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update, :destroy], User, ["users.deleted = false"] do |u|
+        AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+      end
+    end
   end
 
   def net_delegate_archive_abilities

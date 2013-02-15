@@ -7,11 +7,155 @@
 <%= form_tag app_config_path, method: :put do %>
   <table class="wide" id="app-config">
 
+    <!-- secretary can administrate users -->
+    <tr>
+      <th><%= t '.options.secretary_is_user_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[secretary_is_user_admin]', '1', AppConfig[:secretary_is_user_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[secretary_is_user_admin]', '0', "0".eql?(AppConfig[:secretary_is_user_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.secretary_is_user_admin').key?(:description) -%>
+        <td><%= t '.options.secretary_is_user_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:secretary_is_user_admin</tt></td>
+    </tr>
+    <!-- secretary can administrate events -->
+    <tr>
+      <th><%= t '.options.secretary_is_event_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[secretary_is_event_admin]', '1', AppConfig[:secretary_is_event_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[secretary_is_event_admin]', '0', "0".eql?(AppConfig[:secretary_is_event_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.secretary_is_event_admin').key?(:description) -%>
+        <td><%= t '.options.secretary_is_event_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:secretary_is_event_admin</tt></td>
+    </tr>
+    <!-- secretary can administrate the application -->
+    <tr>
+      <th><%= t '.options.secretary_is_app_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[secretary_is_app_admin]', '1', AppConfig[:secretary_is_app_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[secretary_is_app_admin]', '0', "0".eql?(AppConfig[:secretary_is_app_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.secretary_is_app_admin').key?(:description) -%>
+        <td><%= t '.options.secretary_is_app_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:secretary_is_app_admin</tt></td>
+    </tr>
+
+    <!-- worshipful master can administrate users -->
+    <tr>
+      <th><%= t '.options.worshipful_master_is_user_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[worshipful_master_is_user_admin]', '1', AppConfig[:worshipful_master_is_user_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[worshipful_master_is_user_admin]', '0', "0".eql?(AppConfig[:worshipful_master_is_user_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.worshipful_master_is_user_admin').key?(:description) -%>
+        <td><%= t '.options.worshipful_master_is_user_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:worshipful_master_is_user_admin</tt></td>
+    </tr>
+    <!-- worshipful master can administrate events -->
+    <tr>
+      <th><%= t '.options.worshipful_master_is_event_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[worshipful_master_is_event_admin]', '1', AppConfig[:worshipful_master_is_event_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[worshipful_master_is_event_admin]', '0', "0".eql?(AppConfig[:worshipful_master_is_event_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.worshipful_master_is_event_admin').key?(:description) -%>
+        <td><%= t '.options.worshipful_master_is_event_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:worshipful_master_is_event_admin</tt></td>
+    </tr>
+    <!-- worshipful master can administrate the application -->
+    <tr>
+      <th><%= t '.options.worshipful_master_is_app_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[worshipful_master_is_app_admin]', '1', AppConfig[:worshipful_master_is_app_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[worshipful_master_is_app_admin]', '0', "0".eql?(AppConfig[:worshipful_master_is_app_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.worshipful_master_is_app_admin').key?(:description) -%>
+        <td><%= t '.options.worshipful_master_is_app_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:worshipful_master_is_app_admin</tt></td>
+    </tr>
+
+
+    <!-- internet delegate master can administrate users -->
+    <tr>
+      <th><%= t '.options.net_delegate_is_user_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[net_delegate_is_user_admin]', '1', AppConfig[:net_delegate_is_user_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[net_delegate_is_user_admin]', '0', "0".eql?(AppConfig[:net_delegate_is_user_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.net_delegate_is_user_admin').key?(:description) -%>
+        <td><%= t '.options.net_delegate_is_user_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:net_delegate_is_user_admin</tt></td>
+    </tr>
+    <!-- internet delegate master can administrate events -->
+    <tr>
+      <th><%= t '.options.net_delegate_is_event_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[net_delegate_is_event_admin]', '1', AppConfig[:net_delegate_is_event_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[net_delegate_is_event_admin]', '0', "0".eql?(AppConfig[:net_delegate_is_event_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.net_delegate_is_event_admin').key?(:description) -%>
+        <td><%= t '.options.net_delegate_is_event_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:net_delegate_is_event_admin</tt></td>
+    </tr>
+    <!-- internet delegate master can administrate the application -->
+    <tr>
+      <th><%= t '.options.net_delegate_is_app_admin.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[net_delegate_is_app_admin]', '1', AppConfig[:net_delegate_is_app_admin] %> ja</label>
+        <label><%= radio_button_tag 'app_config[net_delegate_is_app_admin]', '0', "0".eql?(AppConfig[:net_delegate_is_app_admin]) %> nein</label>
+      </td>
+      <%- if t('.options.net_delegate_is_app_admin').key?(:description) -%>
+        <td><%= t '.options.net_delegate_is_app_admin.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:net_delegate_is_app_admin</tt></td>
+    </tr>
+
+    <!-- public working plan is visible without authentification -->
+    <tr>
+      <th><%= t '.options.public_wp_available_to_anon_users.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[public_wp_available_to_anon_users]', '1', AppConfig[:public_wp_available_to_anon_users] %> ja</label>
+        <label><%= radio_button_tag 'app_config[public_wp_available_to_anon_users]', '0', "0".eql?(AppConfig[:public_wp_available_to_anon_users]) %> nein</label>
+      </td>
+      <%- if t('.options.public_wp_available_to_anon_users').key?(:description) -%>
+        <td><%= t '.options.public_wp_available_to_anon_users.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:public_wp_available_to_anon_users</tt></td>
+    </tr>
     <!-- current instance acts as archive -->
     <tr>
       <th><%= t '.options.archive.name' %></th>
       <td>
-        <label><%= radio_button_tag 'app_config[archive]', '1', AppConfig[:archive] %> ja<label>
+        <label><%= radio_button_tag 'app_config[archive]', '1', AppConfig[:archive] %> ja</label>
         <label><%= radio_button_tag 'app_config[archive]', '0', !AppConfig[:archive] %> nein</label>
       </td>
       <%- if t('.options.archive').key?(:description) -%>

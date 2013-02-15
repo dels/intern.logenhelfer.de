@@ -31,10 +31,10 @@ module ControllerMacros
     apprentice =  FactoryGirl.create(:role, :name => 'EnteredApprentice', :display_name => 'Lehrling', :group => true)
     fellow_craft =  FactoryGirl.create(:role, :name => 'FellowCraft', :display_name => 'Geselle', :group => true)
     master =  FactoryGirl.create(:role, :name => 'MasterMason', :display_name => 'Meister', :group => true)
+    secretary =  FactoryGirl.create(:role, :name => 'Secretary', :display_name => 'Korrespondierender Schriftführer')
     wm = FactoryGirl.create(:role, :name =>  'WorshipfulMaster', :display_name => 'MvSt')
+    net_delegate = FactoryGirl.create(:role, :name =>  'NetDelegate', :display_name => 'Internet Beauftragter')
   end
-
-
 
   def login_apprentice
     app_config
@@ -66,5 +66,52 @@ module ControllerMacros
     end
   end
 
+  def login_admin_user
+    app_config
+    create_roles
+    before(:each) do
+      @request.env["devise.mapping"] = Devise.mappings[:user]
+      user = FactoryGirl.create(:user, :entered_apprentice_since => 5.years.ago, :fellow_craft_since => 4.years.ago, :master_mason_since => 3.years.ago)
+      user.roles << Role.where(:name => 'Admin')
+      user.save
+      sign_in user
+    end
+  end
+
+  def login_secretary
+    app_config
+    create_roles
+    before(:each) do
+      @request.env["devise.mapping"] = Devise.mappings[:user]
+      user = FactoryGirl.create(:user, :entered_apprentice_since => 5.years.ago, :fellow_craft_since => 4.years.ago, :master_mason_since => 3.years.ago)
+      user.roles << Role.where(:name => 'Secretary')
+      user.save
+      sign_in user
+    end
+  end
+
+  def login_whorshipful_master
+    app_config
+    create_roles
+    before(:each) do
+      @request.env["devise.mapping"] = Devise.mappings[:user]
+      user = FactoryGirl.create(:user, :entered_apprentice_since => 5.years.ago, :fellow_craft_since => 4.years.ago, :master_mason_since => 3.years.ago)
+      user.roles << Role.where(:name => 'WhorshipfulMaster')
+      user.save
+      sign_in user
+    end
+  end
+
+  def login_net_delegate
+    app_config
+    create_roles
+    before(:each) do
+      @request.env["devise.mapping"] = Devise.mappings[:user]
+      user = FactoryGirl.create(:user, :entered_apprentice_since => 5.years.ago, :fellow_craft_since => 4.years.ago, :master_mason_since => 3.years.ago)
+      user.roles << Role.where(:name => 'NetDelegate')
+      user.save
+      sign_in user
+    end
+  end
 
 end
