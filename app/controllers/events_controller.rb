@@ -251,7 +251,7 @@ private
     end
 
     pdf.start_new_page
-    add_pdf_html(I18n.t("helpers.pdf.workingplan.bottom_message"), pdf)
+    add_pdf_html(AppConfig[:workingplan_footer], pdf)
     # could be shorter, but lets keep it readable
     if AppConfig[:lodge_short].nil? || AppConfig[:lodge_short].blank?
       filename = "Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]

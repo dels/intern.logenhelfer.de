@@ -7,6 +7,22 @@
 <%= form_tag app_config_path, method: :put do %>
   <table class="wide" id="app-config">
 
+
+    <!-- working plan footer content -->
+    <tr>
+      <th rowspan="2"><%= t '.options.workingplan_footer.name' %></th>
+      <%- if t('.options.workingplan_footer').key?(:description) -%>
+        <td colspan="2"><%= t '.options.workingplan_footer.description' %></td>
+      <%- else -%>
+        <td colspan="2"></td>
+      <%- end -%>
+      <td><tt>:workingplan_footer</tt></td>
+    </tr>
+    <tr>
+      <td colspan="3"><%= text_area_tag 'app_config[workingplan_footer]', AppConfig[:workingplan_footer], class: jqueryui_input_classes, style: 'width:99%;height:14em' %></td>
+    </tr>
+
+
     <!-- secretary can administrate users -->
     <tr>
       <th><%= t '.options.secretary_is_user_admin.name' %></th>
@@ -64,6 +80,7 @@
       <%- end -%>
       <td><tt>:worshipful_master_is_user_admin</tt></td>
     </tr>
+
     <!-- worshipful master can administrate events -->
     <tr>
       <th><%= t '.options.worshipful_master_is_event_admin.name' %></th>
@@ -78,6 +95,7 @@
       <%- end -%>
       <td><tt>:worshipful_master_is_event_admin</tt></td>
     </tr>
+
     <!-- worshipful master can administrate the application -->
     <tr>
       <th><%= t '.options.worshipful_master_is_app_admin.name' %></th>
@@ -108,6 +126,7 @@
       <%- end -%>
       <td><tt>:net_delegate_is_user_admin</tt></td>
     </tr>
+
     <!-- internet delegate master can administrate events -->
     <tr>
       <th><%= t '.options.net_delegate_is_event_admin.name' %></th>
@@ -151,6 +170,7 @@
       <%- end -%>
       <td><tt>:public_wp_available_to_anon_users</tt></td>
     </tr>
+
     <!-- current instance acts as archive -->
     <tr>
       <th><%= t '.options.archive.name' %></th>
@@ -165,6 +185,7 @@
       <%- end -%>
       <td><tt>:archive</tt></td>
     </tr>
+
     <!-- default domain name for calendar and contact export -->
     <tr>
       <th><%= t '.options.domain.name' %></th>
@@ -176,6 +197,7 @@
       <%- end -%>
       <td><tt>:domain</tt></td>
     </tr>
+
     <!-- name of the organisation of the current instance -->
     <tr>
       <th><%= t '.options.organisation.name' %></th>
@@ -187,6 +209,7 @@
       <%- end -%>
       <td><tt>:organisation</tt></td>
     </tr>
+
     <!-- name of the lodge of the current instance -->
     <tr>
       <th><%= t '.options.lodge.name' %></th>
@@ -270,6 +293,7 @@
       <%- end -%>
       <td><tt>:default_from_email</tt></td>
     </tr>
+
     <!-- technical contact e-mail address -->
     <tr>
       <th><%= t '.options.technical_contact_email.name' %></th>
@@ -281,6 +305,7 @@
       <%- end -%>
       <td><tt>:technical_contact_email</tt></td>
     </tr>
+
     <!-- mvst e-mail address -->
     <tr>
       <th><%= t '.options.mvst_email.name' %></th>
@@ -292,6 +317,7 @@
       <%- end -%>
       <td><tt>:mvst_email</tt></td>
     </tr>
+
     <!-- zip/location -->
     <tr>
       <th><%= t '.options.zip.name' %>/<%= t '.options.location.name' %></th>
@@ -306,6 +332,7 @@
       <%- end -%>
       <td><tt>:zip</tt>, <tt>:location</tt></td>
     </tr>
+
     <!-- impressum text -->
     <tr>
       <th rowspan="2"><%= t '.options.impressum.name' %></th>

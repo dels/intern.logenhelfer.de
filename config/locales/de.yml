@@ -108,6 +108,9 @@ de:
         impressum:
           name: Impressums-Text
           description: 'HTML-Formatierung. Es können die Variablen in der Form <tt>:varname</tt> genutzt werden (siehe rechte Spalte); E-Mail-Adressen werden dabei obfuskiert.'
+        workingplan_footer:
+          name: Footer Arbeitsplan
+          description: 'Der hier angebene Text wird als Footer unter den Arbeitsplan geschrieben'
         robots_txt:
           name: Inhalt der robots.txt
           description: 'Angaben zur Indexierung der Website für Suchmaschinen'
@@ -628,13 +631,6 @@ de:
         angegeben werden.
       phonelist: Telefonliste
       public_workingplan: Öffentlicher Arbeitsplan
-      workingplan:
-        bottom_message: ! "<b><u>Anmeldungen:</u></b><br/>\r\n<u>Für Brr. Gäste und
-          Brr. von FwzE bei TA:</u><br/>\r\nBitte fristgerecht anmelden beim 2. Schaffer
-          Br. Werner Herrmann, T. (0421) 236310. , F. (0421) 236320\r\n<br/><br/>\r\n<u>Schwesternnachmittag:</u><br/>\r\nAbwechselnd am 
-          2. Montag im Monat um 19:00 Uhr oder am 2. Mittwoch im Monat um 16:00 Uhr treffen sich die Schwestern zum Essen oder 
-          Kaffeetrinken<br/>\r\nNähere Informationen über weitere Treffen können bei Ingrid Kreiser-Saunders, T. (0421) 1633648, 
-          erfragt werden."
     select:
       prompt: Bitte wählen
     since: seit
