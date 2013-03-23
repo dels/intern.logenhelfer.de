@@ -69,7 +69,7 @@ de:
 
         public_wp_available_to_anon_users:
           name: Öffentlicher Arbeitsplan öffentlich einsehbar
-          description: 'Wenn die Option gesetzt ist, so ist der AP sichtbar auf der Startseite neben dem Login'
+          description: 'Wenn die Option gesetzt ist, so ist der AP sichtbar auf der Startseite neben dem Login. ACHTUNG: Änderungen werden erst nach Neustart der Anwendung aktiv.'
         archive:
           name: Archiv-Modus
           description: 'Verändern nur auf eigene Gefahr!'

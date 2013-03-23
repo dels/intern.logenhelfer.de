@@ -1,8 +1,10 @@
-#encoding: utf-8
-
 # -*- coding: utf-8 -*-
+
 class EventsController < AuthorizedController
-  skip_before_filter :authenticate_user!, only: :workingplan
+
+  if "1".eql?(AppConfig[:public_wp_available_to_anon_users])
+    skip_before_filter :authenticate_user!, only: :workingplan
+  end
 
   def index
     redirect_to upcoming_calendar_path
