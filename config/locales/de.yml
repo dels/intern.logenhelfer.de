@@ -63,7 +63,7 @@ de:
           name: Internetbeauftragte kann AP verwalten
           description: 'Wenn diese Option auf Ja gesetzt ist, so kann der Internetbeauftragte den Arbeitsplan verwalten'
         net_delegate_is_app_admin:
-          name: MvSt kann Anwendung Konfigurieren
+          name: Internetbeauftragte kann Anwendung Konfigurieren
           description: 'Wenn diese Option auf Ja gesetzt ist, so kann der Internetbeauftragte Veränderungen an der Konfiguration der Anwendung vornehmen'
 
 
