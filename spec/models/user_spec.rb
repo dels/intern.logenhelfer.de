@@ -54,4 +54,13 @@ describe User do
 #    master_without_fellow_craft.master_mason_since.should be_nil
   end
 
+  context "upcoming birthdays" do
+    it "does not return birthdays of deleted users" do
+      usr = FactoryGirl.create(:user, :date_of_birth => '01.01.1990')
+      User.upcoming_birthdays('01.01.1990', '01.01.1990').should include(usr)
+      usr.deleted = true
+      usr.save
+      User.upcoming_birthdays('01.01.1990', '01.01.1990').should_not include(usr)
+    end
+  end
 end
