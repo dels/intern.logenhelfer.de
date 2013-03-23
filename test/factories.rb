@@ -5,7 +5,7 @@ FactoryGirl.define do
 end
 
 FactoryGirl.define do
-  sequence(:matriculation_number,333) do |n|
+  sequence(:matriculation_number, 333) do |n|
     n
   end
 end

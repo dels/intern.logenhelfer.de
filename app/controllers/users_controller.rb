@@ -140,8 +140,8 @@ class UsersController < AuthorizedController
 
   def update
     set_user_degree_dates(params)
-
-    # ticket: #1199 - only admin+secretary may change user email
+    
+    # ticket: #1199 - only admin + secretary may change user email
     if view_context.limited_user_editing?
       [
         :matriculation_number, :email, :firstname, :lastname, :date_of_birth,
@@ -157,7 +157,7 @@ class UsersController < AuthorizedController
       params[:user][:addresses_attributes].try :each do |_,a|
         deleted_addresses << a if a[:_destroy] == "1"
       end
-
+      
       UserMailer.change_notification(@user, deleted_addresses, current_user).deliver
       redirect_to @user, notice: t("activerecord.update_success", model: t("activerecord.models.user"))
     else

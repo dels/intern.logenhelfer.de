@@ -6,7 +6,6 @@ class UserTest < ActiveSupport::TestCase
   # end
 
   test "mandatory fields" do
-
     u = User.new 
     u.email = 'test@test.de'
     u.password = 'emptypassword'

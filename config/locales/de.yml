@@ -301,6 +301,7 @@ de:
     errors:
       format: '%{attribute} %{message}'
       header: Invalid Fields
+      must_be_fellow_craft_to_become_master: Um Meister zu werden muss der Benutzer erst Geselle sein. 
       maximum_business_addresses_exceeded: Es darf nur eine geschäftliche Adresse geben
       maximum_private_addresses_exceeded: Es darf nur eine private Adresse geben
       messages:

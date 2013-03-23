@@ -17,6 +17,8 @@ class User < ActiveRecord::Base
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
   validates_uniqueness_of :matriculation_number
   validate :validate_addresses
+  validate :validate_degrees
+#  validate :validate_roles # TODO: only a master mason can have additional roles, such as whorshipful master or secretary
 
   has_many_addresses
   has_many :file_downloads
@@ -133,6 +135,12 @@ class User < ActiveRecord::Base
   end
 
   alias to_s fullname
+
+  def validate_degrees
+    if master_mason_since && fellow_craft_since.nil?
+      errors.add(:base, I18n.t("activerecord.errors.must_be_fellow_craft_to_become_master"))
+    end
+  end
 
   def validate_addresses
     if(1 < (addresses.to_a.select{|addr| 0 == addr.type_of_address }).count)
