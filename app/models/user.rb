@@ -169,7 +169,7 @@ class User < ActiveRecord::Base
         where_sql = "to_char(\"date_of_birth\", 'MMDD') BETWEEN '#{from.strftime('%m%d')}' AND '#{to.strftime('%m%d')}'"
       end
     end
-
+    where_sql += " AND deleted = 'f'"
     where(where_sql)
   }
 
