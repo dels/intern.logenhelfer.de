@@ -307,6 +307,22 @@
     <tr>
       <td colspan="3"><%= text_area_tag 'app_config[impressum]', AppConfig[:impressum], class: jqueryui_input_classes, style: 'width:99%;height:14em' %></td>
     </tr>
+
+
+    <!-- robots.txt content -->
+    <tr>
+      <th rowspan="2"><%= t '.options.robots_txt.name' %></th>
+      <%- if t('.options.robots_txt').key?(:description) -%>
+        <td colspan="2"><%= t '.options.robots_txt.description' %></td>
+      <%- else -%>
+        <td colspan="2"></td>
+      <%- end -%>
+      <td><tt>:robots_txt</tt></td>
+    </tr>
+    <tr>
+      <td colspan="3"><%= text_area_tag 'app_config[robots_txt]', AppConfig[:robots_txt], class: jqueryui_input_classes, style: 'width:99%;height:14em' %></td>
+    </tr>
+
   </table>
   <dl class="buttons">
     <dt>&nbsp;</dt>

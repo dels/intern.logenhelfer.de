@@ -105,6 +105,9 @@ de:
         impressum:
           name: Impressums-Text
           description: 'HTML-Formatierung. Es können die Variablen in der Form <tt>:varname</tt> genutzt werden (siehe rechte Spalte); E-Mail-Adressen werden dabei obfuskiert.'
+        robots_txt:
+          name: Inhalt der robots.txt
+          description: 'Angaben zur Indexierung der Website für Suchmaschinen'
         zip:
           name: PLZ
           description: Wird (u.a.) im Impressum verwendet.

@@ -62,6 +62,7 @@ FwzeIntern::Application.routes.draw do
   end
 
   get '/impressum', to: 'statics#impressum', as: :impressum
+  get '/robots.txt', to: 'statics#robots_txt', as: :robots_txt
 
   get '/anmelden', to: 'statics#index', as: :login
 

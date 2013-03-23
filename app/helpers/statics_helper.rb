@@ -28,4 +28,8 @@ module StaticsHelper
     end
     raw_text.gsub(/:([\w_]+)/) { AppConfig[$1.to_sym] }.html_safe
   end
+
+  def robots_txt_from_config
+    AppConfig[:robots_txt].gsub(/:([\w_]+)/) { AppConfig[$1.to_sym] }.html_safe
+  end
 end
