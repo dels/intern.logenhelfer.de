@@ -4,7 +4,9 @@
     <li><%= link_to "Arbeitsplan", upcoming_calendar_path %></li>
   <% else %>
     <li><%= link_to "Anmelden", login_path %></li>
-    <li><%= link_to "Arbeitsplan", calendar_export_path %></li>
+    <% unless "0".eql?(AppConfig[:public_wp_available_to_anon_users]) %>
+      <li><%= link_to "Arbeitsplan", calendar_export_path %></li>
+    <% end %>
   <% end %>
   <li><%= link_to "Impressum", impressum_path %></li>
 </ul>
