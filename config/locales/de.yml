@@ -82,6 +82,9 @@ de:
         lodge:
           name: Loge
           description: Angezeigter Logenname auf der Startseite und im Seitentitel.
+        lodge_short:
+          name: Abkürzung Loge
+          description: Wird z.B. als Prefix für den Arbeitsplan benutzt.
         show_admins:
           name: Administratoren in Benutzerliste anzeigen?
         default_workingplan_timespan:

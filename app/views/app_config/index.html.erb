@@ -198,6 +198,18 @@
       <%- end -%>
       <td><tt>:lodge</tt></td>
     </tr>
+    <!-- SHORT name of the lodge of the current instance -->
+    <tr>
+      <th><%= t '.options.lodge_short.name' %></th>
+      <td><%= text_field_tag 'app_config[lodge_short]', AppConfig[:lodge_short], class: jqueryui_input_classes %></td>
+      <%- if t('.options.lodge_short').key?(:description) -%>
+        <td><%= t '.options.lodge_short.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:lodge_short</tt></td>
+    </tr>
+
     <!-- show admins? -->
     <tr>
       <th><%= t '.options.show_admins.name' %></th>

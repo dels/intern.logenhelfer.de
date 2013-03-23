@@ -252,7 +252,12 @@ private
 
     pdf.start_new_page
     add_pdf_html(I18n.t("helpers.pdf.workingplan.bottom_message"), pdf)
-    filename = "Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]
+    # could be shorter, but lets keep it readable
+    if AppConfig[:lodge_short].nil? || AppConfig[:lodge_short].blank?
+      filename = "Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]
+    else
+      filename = "#{AppConfig[:lodge_short]}_Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]
+    end
     send_data pdf.render, type: "application/pdf", filename: filename
   end
 
