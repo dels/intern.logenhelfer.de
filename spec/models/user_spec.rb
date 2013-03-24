@@ -55,12 +55,22 @@ describe User do
   end
 
   context "upcoming birthdays" do
+    it "does return birthdays of users" do
+      usr = FactoryGirl.create(:user, :date_of_birth => '01.01.1990')
+      User.upcoming_birthdays('01.01.1990', '01.01.1990').should include(usr)
+      User.upcoming_birthdays('01.01.1990', '01.01.1991').should include(usr)
+      User.upcoming_birthdays('01.01.1989', '01.01.1990').should include(usr)
+    end
+
     it "does not return birthdays of deleted users" do
       usr = FactoryGirl.create(:user, :date_of_birth => '01.01.1990')
       User.upcoming_birthdays('01.01.1990', '01.01.1990').should include(usr)
       usr.deleted = true
-      usr.save
+      usr.save.should be_true
       User.upcoming_birthdays('01.01.1990', '01.01.1990').should_not include(usr)
     end
   end
 end
+
+
+
