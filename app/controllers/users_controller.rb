@@ -64,7 +64,7 @@ class UsersController < AuthorizedController
       user_password: params[:password],
       owner_password: :random,
       permissions: {
-        print_document: false,
+        print_document: true,
         modify_contents: false,
         copy_contents: false,
         modify_annotations: false
