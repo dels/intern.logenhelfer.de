@@ -229,6 +229,7 @@ de:
         fiftieth_jubilee: 50. Jubiläum
         firstname: Vorname
         included_at: Aufgenommen am
+        mother_lodge: Mutterloge
         job_title: Beruf
         lastname: Nachname
         master_mason_since: Meister seit
@@ -276,8 +277,9 @@ de:
       format: '%{attribute} %{message}'
       header: Invalid Fields
       must_be_fellow_craft_to_become_master: Um Meister zu werden muss der Benutzer erst Geselle sein. 
-      maximum_business_addresses_exceeded: Es darf nur eine geschäftliche Adresse geben
-      maximum_private_addresses_exceeded: Es darf nur eine private Adresse geben
+      maximum_business_addresses_exceeded: Es darf nur eine geschäftliche Adresse geben.
+      maximum_private_addresses_exceeded: Es darf nur eine private Adresse geben.
+      mother_lodge_and_accepted_at: Mutterloge und angenommen an müssen beide leer oder ausgefüllt.
       messages:
         accepted: muss akzeptiert werden
         blank: muss ausgefüllt werden
@@ -335,6 +337,7 @@ de:
             password:
               blank: muss ausgefüllt werden
               confirmation: stimmt nicht mit der Bestätigung überein
+            
         user_role:
           attributes:
             role_id:

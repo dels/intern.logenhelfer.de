@@ -32,6 +32,9 @@
   <dt><%= User.human_attribute_name :accepted_at %>:</dt>
   <dd><%= dash(@user.accepted_at ? l(@user.accepted_at) : nil) %></dd>
 
+  <dt><%= User.human_attribute_name :mother_lodge %>:</dt>
+  <dd><%= dash(@user.mother_lodge) %></dd>
+
   <dt><%= User.human_attribute_name :date_of_birth %>:</dt>
   <dd><%= dash(@user.date_of_birth ? l(@user.date_of_birth) : nil) %></dd>
 

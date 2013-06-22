@@ -14,6 +14,7 @@
     <%= f.text_field :job_title %>
     <%= f.date_select :date_of_birth,             readonly: limited_user_editing? %>
     <%= f.date_select :accepted_at,               readonly: limited_user_editing? %>
+    <%= f.text_field :mother_lodge,               readonly: limited_user_editing? %>
 
     <%= f.date_select :entered_apprentice_since,  readonly: limited_user_editing? %>
     <%= f.date_select :fellow_craft_since,        readonly: limited_user_editing? %>

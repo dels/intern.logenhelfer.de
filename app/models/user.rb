@@ -11,14 +11,15 @@ class User < ActiveRecord::Base
 
   attr_accessible :email, :password, :password_confirmation, :remember_me,
       :firstname, :lastname, :date_of_birth, :academic_title_id,
-      :accepted_at, :role_id, :role_ids, :matriculation_number, :job_title,
+      :accepted_at, :mother_lodge, :role_id, :role_ids, :matriculation_number, :job_title,
       :entered_apprentice_since, :fellow_craft_since, :master_mason_since
 
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
   validates_uniqueness_of :matriculation_number
   validate :validate_addresses
   validate :validate_degrees
-  validate :validate_roles 
+  validate :validate_roles   
+  validate :validate_mother_lodge_accepted_at_combi
 
   has_many_addresses
   has_many :file_downloads
@@ -152,9 +153,12 @@ class User < ActiveRecord::Base
   end
 
   def validate_roles
-    logger.error "roles of #{firstname}: #{roles}"
-    logger.error "user roles of #{firstname}:#{user_roles}"
     # TODO: only a master mason can have additional roles, such as whorshipful master or secretary
+  end
+
+  def validate_mother_lodge_accepted_at_combi
+    return if (mother_lodge.blank? and accepted_at.blank?) or (false == mother_lodge.blank? and false == accepted_at.blank?)
+    errors.add(:base, I18n.t("activerecord.errors.mother_lodge_and_accepted_at"))
   end
 
   # quick fix from https://github.com/railslove/birthday/blob/master/lib/railslove/acts/birthday/adapter/postgresql_adapter.rb#L7
