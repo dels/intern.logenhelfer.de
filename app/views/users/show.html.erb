@@ -56,7 +56,7 @@
 
   <dt><%= User.human_attribute_name :positions %>:</dt>
   <dd><ul>
-    <% @user.roles.positions.each do |role| %>
+    <% @user.roles.positions.sort_by(&:display_name).each do |role| %>
       <li><%= role %></li>
     <% end %>
   </ul></dd>

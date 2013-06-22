@@ -13,7 +13,7 @@ namespace :config do
   end
 end
 
-namespace :generate do 
+namespace :generate do
   task obfuscate: :environment do
     desc "reads currents environments' database and obfuscates names and files"
     list_of_firstnames = %w|Aaron Abel Abimelech Abraham Adam Aram Ascher Asur Balthasar Barnabas Baruch Benjamin Boas Dan Daniel David Eleasar Elias Elisa Elkana Ephraim Esau Ezra Gabriel Gad Gideon Henoch Hosea Immanuel Isaak Israel Issachar Jakob Jamin Jeremia Jesaja Joachim Joel Jonas Jonathan Josef Josua Klemens Lazarus Levi Lukas Manasse Markus Matthias Melchior Michael Mose Nahum Nathan Nathanel Noah Obadja Paulus Quartus Quirinius Raphael Ruben Salomon Samuel Samson Saul Saulus Sem Simson Stefan Thomas Timon Timotheus Tobias Uriel Zachäus Zacharias|
@@ -22,37 +22,69 @@ namespace :generate do
 
     r = Random.new
     User.all.each do |usr|
-      next if usr.roles.include? Role.find_by_name("Admin")
+      print "obfuscating #{usr.firstname} #{usr.lastname} to"
+      usr.date_of_birth = Date.today - (r.rand(50)) if usr.date_of_birth.blank?
+      unless usr.accepted_at.blank?
+        usr.mother_lodge = 'Mutter Loge zur Erleuchtung'
+      end
+      usr.entered_apprentice_since = Date.today - (r.rand(50)).years
+      usr.fellow_craft_since = usr.entered_apprentice_since + 1.years
+      usr.master_mason_since = usr.fellow_craft_since + 1.years
+
       if usr.roles.include? Role.find_by_name("Secretary") 
         usr.firstname = "Korrespondierender"
         usr.lastname = "Schriftführer"
         usr.email = "sekretaer@logenhelfer.de"
         usr.password = "Salomon333"
+        usr.roles << Role.find_by_name("WorkingPlanAdmin")
+        usr.roles << Role.find_by_name("UserAdmin")
+        usr.roles << Role.find_by_name("FileAdmin")
+#        usr.roles.uniq!
+        print " (Secretary)"
       elsif usr.roles.include? Role.find_by_name("WorshipfulMaster")
         usr.firstname = "Meister"
         usr.lastname = "vom Stuhl"
         usr.email = "mvst@logenhelfer.de"
         usr.password = "Salomon333"
+        usr.roles << Role.find_by_name("FileAdmin")
+        print " (WorshipfulMaster)"
+      elsif usr.roles.include? Role.find_by_name("NetDelegate")
+        usr.firstname = "Internet"
+        usr.lastname = "Beauftragter"
+        usr.email = "web@logenhelfer.de"
+        usr.password = "Salomon333"
+        usr.roles << Role.find_by_name("WorkingPlanAdmin")
+        usr.roles << Role.find_by_name("UserAdmin")
+        usr.roles << Role.find_by_name("FileAdmin")
+        usr.roles << Role.find_by_name("ApplicationAdmin")
+        print " (NetDeleate)"
+      elsif usr.roles.include? Role.find_by_name("Admin")
+        usr.firstname = "Application"
+        usr.lastname = "Admin"
+        usr.email = "admin@logenhelfer.de"
+        usr.password = "Salomon333"
+        usr.roles << Role.find_by_name("Admin")
+        print " (Admin)"
       else
         begin
           usr.firstname = list_of_firstnames[r.rand(list_of_firstnames.size)]
           usr.lastname = list_of_lastnames[r.rand(list_of_lastnames.size)]
-          usr.email = "#{usr.firstname}.#{usr.lastname}@logenhelfer.de"
+          usr.email = "#{usr.firstname}.#{usr.lastname}@logenhelfer.de".gsub(/[äüöß]/, 'ä' => 'ae', "ü" => 'ue', 'ö' => 'oe', 'ß' => 'ss')
         end while false == User.where(:firstname => usr.firstname, :lastname => usr.lastname).empty?
       end
       begin
         usr.matriculation_number = r.rand(1000)
       end while false == User.where(:matriculation_number => usr.matriculation_number).empty?
-      usr.date_of_birth = (usr.date_of_birth - r.rand(20).years) - r.rand(100).days
+      usr.user_roles.uniq!
       usr.save!
-      puts "saved #{usr}"
+      puts "... to #{usr}"
       usr.addresses.each do |addr|
         if addr.private?
           addr.street1 = 'Muster Str. 1'
           addr.mobile = '+49 (170) 4711 0815'
           addr.phone = '+49 (421) 4711 0815 - 0'
           addr.fax = '+49 (421) 4711 0815 - 99'
-          addr.email = "#{usr.firstname}.#{usr.lastname}@gmail.com"
+          addr.email = "#{usr.firstname}.#{usr.lastname}@logenhelfer.de"
           addr.zip = '0815'
           addr.city = 'Heimatdorf'
           begin
@@ -69,7 +101,7 @@ namespace :generate do
           addr.mobile = '+49 (170) 4711 0815'
           addr.phone = '+49 (421) 4711 0815 - 0'
           addr.fax = '+49 (421) 4711 0815 - 99'
-          addr.email = "#{usr.firstname}.#{usr.lastname}@deftwork.com"
+          addr.email = "#{usr.firstname}.#{usr.lastname}@logenhelfer.de"
           addr.zip = '4711'
           addr.city = 'Arbeitsstadt'
           begin

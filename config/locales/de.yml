@@ -280,6 +280,7 @@ de:
       maximum_business_addresses_exceeded: Es darf nur eine geschäftliche Adresse geben.
       maximum_private_addresses_exceeded: Es darf nur eine private Adresse geben.
       mother_lodge_and_accepted_at: Mutterloge und angenommen an müssen beide leer oder ausgefüllt.
+      user_cant_have_one_role_two_times: Ein oder mehrere Rollen sind dem Benutzer bereits zugeordnet und koennen einem Benutzer nicht mehrfach zugeordnet werden.
       messages:
         accepted: muss akzeptiert werden
         blank: muss ausgefüllt werden

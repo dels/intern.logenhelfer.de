@@ -32,7 +32,7 @@ mocr = nil
 
 block 'create roles' do
   log ar    = Role.create!(name: 'Admin',             display_name: 'Administrator',                group: true)
-  log ur    = Role.create!(name: 'FileAdmin',          display_name: 'Kann Dateien verwalten',       group: true)
+  log ur    = Role.create!(name: 'FileAdmin',         display_name: 'Kann Dateien verwalten',       group: true)
   log er    = Role.create!(name: 'EnteredApprentice', display_name: 'Lehrling',                     group: true)
   log fr    = Role.create!(name: 'FellowCraft',       display_name: 'Geselle',                      group: true)
   log mr    = Role.create!(name: 'MasterMason',       display_name: 'Meister',                      group: true)

@@ -24,7 +24,7 @@ class User < ActiveRecord::Base
   has_many_addresses
   has_many :file_downloads
   has_many :user_roles
-  has_many :roles, through: :user_roles
+  has_many :roles, through: :user_roles, :uniq => true
   has_many :attached_files
   belongs_to :academic_title
 
@@ -91,9 +91,11 @@ class User < ActiveRecord::Base
   def entered_apprentice_since=(date)
     return if date.blank?
     ur = self.user_roles.where(role_id: Role.find_by_name('EnteredApprentice')).first
-    ur = UserRole.new unless ur
-    ur.role = Role.find_by_name('EnteredApprentice')
-    ur.user = self
+    unless ur
+      ur = UserRole.new 
+      ur.role = Role.find_by_name('EnteredApprentice')
+      ur.user = self
+    end
     ur.role_added_at = date
     ur.save!
   end
