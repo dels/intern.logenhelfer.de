@@ -45,8 +45,7 @@ module ApplicationHelper
   end
 
   def limited_user_editing?
-    roles = ['Secretary', 'WorshipfulMaster', 'NetDelegate'].delete_if{|r| false == "1".eql?(AppConfig["#{r.underscore}_is_user_admin".to_sym])}
-    roles << 'Admin'
+    roles = ['Secretary', 'UserAdmin', 'Admin']
     @le ||= current_user.role_ids & Role.where(name: roles).pluck(:id)
     @le.blank?
   end

@@ -52,8 +52,12 @@ block 'create roles' do
   log         Role.create!(name: 'Treasurer',         display_name: 'Schatzmeister')
   log         Role.create!(name: 'JuniorDeacon',      display_name: '2. Schaffer')
   log         Role.create!(name: 'SeniorDeacon',      display_name: '1. Schaffer')
-  log         Role.where(name: 'NetDelegate',         display_name: 'Internet-Beauftragter').first_or_create
+  log         Role.create!(name: 'NetDelegate',       display_name: 'Internet-Beauftragter',  group: true)
+  log         Role.create!(name: 'WorkingPlanAdmin',  display_name: 'Kann Arbeitsplan bearbeiten',  group: true)
+  log         Role.create!(name: 'UserAdmin',         display_name: 'Kann Benutzer verwalten',  group: true)
+  log         Role.create!(name: 'ApplicationAdmin',  display_name: 'Kann Anwendung konfigurieren',  group: true)
 end
+
 =begin
 block 'create users' do
   log u = User.create!(
