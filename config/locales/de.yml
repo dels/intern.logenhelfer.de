@@ -38,35 +38,6 @@ de:
         academic_titles: Akademische Titel
       intro: 'Die hier dargestellten Optionen beziehen sich ausschließlich auf die <tt>%{env}</tt>-Umgebung. Das Eintragen ungültiger Werte geschieht auf eigene Gefahr, eine Überprüfung findet nicht statt.'
       options:
-        secretary_is_user_admin:
-          name: Sekretär kann Benutzer verwalten
-          description: 'Wenn diese Option auf Ja gesetzt ist, so kann der Sekretär die Benutzer verwalten'
-        secretary_is_event_admin:
-          name: Sekretär kann AP verwalten
-          description: 'Wenn diese Option auf true gesetzt ist, so kann der Sekretär den Arbeitsplan verwalten'
-        secretary_is_app_admin:
-          name: Sekretär kann Anwendung Konfigurieren
-          description: 'Wenn diese Option auf Ja gesetzt ist, so kann der Sekretär Veränderungen an der Konfiguration der Anwendung vornehmen'
-        worshipful_master_is_user_admin:
-          name: MvSt kann Benutzer verwalten
-          description: 'Wenn diese Option auf Ja gesetzt ist, so kann der MvSt die Benutzer verwalten'
-        worshipful_master_is_event_admin:
-          name: MvSt kann AP verwalten
-          description: 'Wenn diese Option auf Ja gesetzt ist, so kann der MvSt den Arbeitsplan verwalten'
-        worshipful_master_is_app_admin:
-          name: MvSt kann Anwendung Konfigurieren
-          description: 'Wenn diese Option auf Ja gesetzt ist, so kann der MvSt Veränderungen an der Konfiguration der Anwendung vornehmen'
-        net_delegate_is_user_admin:
-          name: Internetbeauftragte kann Benutzer verwalten
-          description: 'Wenn diese Option auf Ja gesetzt ist, so kann der Internetbeauftragte die Benutzer verwalten'
-        net_delegate_is_event_admin:
-          name: Internetbeauftragte kann AP verwalten
-          description: 'Wenn diese Option auf Ja gesetzt ist, so kann der Internetbeauftragte den Arbeitsplan verwalten'
-        net_delegate_is_app_admin:
-          name: Internetbeauftragte kann Anwendung Konfigurieren
-          description: 'Wenn diese Option auf Ja gesetzt ist, so kann der Internetbeauftragte Veränderungen an der Konfiguration der Anwendung vornehmen'
-
-
         public_wp_available_to_anon_users:
           name: Öffentlicher Arbeitsplan öffentlich einsehbar
           description: 'Wenn die Option gesetzt ist, so ist der AP sichtbar auf der Startseite neben dem Login. ACHTUNG: Änderungen werden erst nach Neustart der Anwendung aktiv.'
