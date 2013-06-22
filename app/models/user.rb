@@ -127,7 +127,7 @@ class User < ActiveRecord::Base
   end
 
   def positions
-    self.roles & Role.positions - (Role.where(name: ['Admin', 'Uploader']))
+    self.roles & Role.positions - (Role.where(name: ['Admin', 'FileAdmin']))
   end
 
   def self.get_secretary

@@ -78,13 +78,13 @@ class Ability
   end
 
   #
-  def uploader_abilities
+  def file_admin_abilities
     can :manage, Category
     can :manage, Directory
     can :manage, AttachedFile
   end
 
-  def uploader_archive_abilities
+  def file_admin_archive_abilities
     can [:index, :show, :destroy], Category
     can [:index, :show, :destroy], Directory
     can [:index, :show, :destroy], AttachedFile

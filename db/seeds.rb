@@ -32,7 +32,7 @@ mocr = nil
 
 block 'create roles' do
   log ar    = Role.create!(name: 'Admin',             display_name: 'Administrator',                group: true)
-  log ur    = Role.create!(name: 'Uploader',          display_name: 'Darf hochladen',               group: true)
+  log ur    = Role.create!(name: 'FileAdmin',          display_name: 'Kann Dateien verwalten',       group: true)
   log er    = Role.create!(name: 'EnteredApprentice', display_name: 'Lehrling',                     group: true)
   log fr    = Role.create!(name: 'FellowCraft',       display_name: 'Geselle',                      group: true)
   log mr    = Role.create!(name: 'MasterMason',       display_name: 'Meister',                      group: true)
@@ -42,6 +42,7 @@ block 'create roles' do
   log ser   = Role.create!(name: 'SeniorWarden',      display_name: '1. Aufseher')
   log jwr   = Role.create!(name: 'JuniorWarden',      display_name: '2. Aufseher')
   log mocr  = Role.create!(name: 'MemberOfCouncil',   display_name: 'Mitglieder des Beamtenrates',  group: true)
+  log         Role.create!(name: 'HonoryMember',      display_name: 'Ehrenmitglied',  group: true)
   log         Role.create!(name: 'Deakan',            display_name: 'Wachhabender')
   log         Role.create!(name: 'Speaker',           display_name: 'Redner')
   log         Role.create!(name: 'Musician',          display_name: 'Musikmeister')
