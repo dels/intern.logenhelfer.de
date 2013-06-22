@@ -151,16 +151,20 @@ class UsersController < AuthorizedController
         params[:user].delete(attribute)
       end
     end
-
-    if @user.update_attributes(params[:user])
-      deleted_addresses = []
-      params[:user][:addresses_attributes].try :each do |_,a|
-        deleted_addresses << a if a[:_destroy] == "1"
+    begin
+      if @user.update_attributes(params[:user])
+        deleted_addresses = []
+        params[:user][:addresses_attributes].try :each do |_,a|
+          deleted_addresses << a if a[:_destroy] == "1"
+        end
+        
+        UserMailer.change_notification(@user, deleted_addresses, current_user).deliver
+        redirect_to @user, notice: t("activerecord.update_success", model: t("activerecord.models.user"))
+      else
+        render :edit
       end
-      
-      UserMailer.change_notification(@user, deleted_addresses, current_user).deliver
-      redirect_to @user, notice: t("activerecord.update_success", model: t("activerecord.models.user"))
-    else
+    rescue Exception => e
+      @user.errors.add(:base, e)
       render :edit
     end
   end

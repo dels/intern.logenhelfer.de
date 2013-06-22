@@ -18,7 +18,7 @@ class User < ActiveRecord::Base
   validates_uniqueness_of :matriculation_number
   validate :validate_addresses
   validate :validate_degrees
-#  validate :validate_roles # TODO: only a master mason can have additional roles, such as whorshipful master or secretary
+  validate :validate_roles 
 
   has_many_addresses
   has_many :file_downloads
@@ -149,6 +149,12 @@ class User < ActiveRecord::Base
     if(1 < (addresses.to_a.select{|addr| 1 == addr.type_of_address }).count)
       errors.add(:base, I18n.t("activerecord.errors.maximum_business_addresses_exceeded"))
     end
+  end
+
+  def validate_roles
+    logger.error "roles of #{firstname}: #{roles}"
+    logger.error "user roles of #{firstname}:#{user_roles}"
+    # TODO: only a master mason can have additional roles, such as whorshipful master or secretary
   end
 
   # quick fix from https://github.com/railslove/birthday/blob/master/lib/railslove/acts/birthday/adapter/postgresql_adapter.rb#L7
