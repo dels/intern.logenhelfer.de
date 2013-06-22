@@ -290,7 +290,7 @@ de:
         type_of_address: Zweck
         zip: Postleitzahl
       user_role:
-        role_id: Role
+        role_id: Rolle
       statistics:
         download_stats:
           filename: Dateiname

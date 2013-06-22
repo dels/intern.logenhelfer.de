@@ -151,6 +151,8 @@ class UsersController < AuthorizedController
         params[:user].delete(attribute)
       end
     end
+
+    #FIXME: there must be a much more elegant way to solve this issue
     begin
       if @user.update_attributes(params[:user])
         deleted_addresses = []
@@ -163,8 +165,8 @@ class UsersController < AuthorizedController
       else
         render :edit
       end
-    rescue Exception => e
-      @user.errors.add(:base, e)
+    rescue ActiveRecord::RecordInvalid => ve
+      @user.errors.add(:base, ve)
       render :edit
     end
   end
