@@ -122,6 +122,12 @@ class UsersController < AuthorizedController
   end
 
   def show
+    respond_to do |format|
+      format.html # show.html.erb
+      format.vcf {
+        response.headers['Content-Disposition'] = "attachment; filename=\"#{@user.lastname}, #{@user.firstname}.vcf\""
+      }
+    end
   end
 
   def new
