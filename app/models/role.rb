@@ -1,9 +1,10 @@
 class Role < ActiveRecord::Base
-  attr_accessible :description, :name, :display_name, :group
+  attr_accessible :email
 
   validates_presence_of :name, :display_name
 
   has_many :user_roles, dependent: :destroy
+  has_many :users, through: :user_roles, dependent: :destroy
 
   has_many :category_roles
   has_many :categories, through: :category_roles, dependent: :destroy
@@ -43,4 +44,5 @@ class Role < ActiveRecord::Base
   def is_group?
     group?
   end
+
 end

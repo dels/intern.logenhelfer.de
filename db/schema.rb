@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130630063931) do
+ActiveRecord::Schema.define(:version => 20130630170432) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -163,6 +163,8 @@ ActiveRecord::Schema.define(:version => 20130630063931) do
     t.string   "display_name"
     t.boolean  "group",                 :default => false
     t.boolean  "administrational_role", :default => true
+    t.string   "email"
+    t.integer  "ordering_number"
   end
 
   create_table "user_roles", :force => true do |t|

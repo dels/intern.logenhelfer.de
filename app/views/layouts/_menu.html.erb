@@ -10,7 +10,13 @@
           <%- end -%>
         <%- end -%>
 
-        <%= authorized_menu_item AppConfig, app_config_path -%>
+        <%= authorized_menu_item AppConfig, app_config_path do -%>
+        <%- if request.fullpath =~ /^\/app_config/ -%>
+        <%= content_tag :li, class: (request.fullpath =~ /^\/app_config\/roles/ ? 'active' : nil) do -%>
+        <%= link_to t("activerecord.models.roles"), roles_path -%>
+        <%- end -%>
+        <%- end -%>
+        <%- end -%>
 
         <%- if (request.fullpath =~ /^\/statistics/) || current_user.roles.include?(Role.find_by_name('Admin')) -%>
           <%= authorized_menu_item Statistic, statistics_path do -%>
@@ -61,6 +67,9 @@
           <%- if request.fullpath =~ /^\/users/ -%>
             <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/members_list/ ? 'active' : '')) do -%>
               <%= link_to(t("helpers.pdf.memberslist"), members_list_users_path) -%>
+            <%- end -%>
+            <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/members_of_council/ ? 'active' : '')) do -%>
+              <%= link_to(t("helpers.pages.members_of_council"), members_of_council_users_path) -%>
             <%- end -%>
             <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/phone_list/ ? 'active' : '')) do -%>
               <%= link_to(t("helpers.pdf.phonelist"), phone_list_users_path) -%>

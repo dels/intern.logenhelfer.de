@@ -27,6 +27,9 @@ FwzeIntern::Application.routes.draw do
   # doesn't sound right)...
   get 'app_config',                             to: 'app_config#index',     as: :app_config
   put 'app_config',                             to: 'app_config#update'
+  scope 'app_config' do
+    resources :roles
+  end
   resources :academic_titles,                   only: [:create, :update, :destroy]
 
   resources :statistics do
@@ -48,6 +51,7 @@ FwzeIntern::Application.routes.draw do
       get 'phone_list_pdf'
       get 'birthday_list'
       get 'birthday_list_pdf'
+      get 'members_of_council'
       post 'members_list'
     end
     member do

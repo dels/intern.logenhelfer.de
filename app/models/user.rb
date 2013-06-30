@@ -132,6 +132,17 @@ class User < ActiveRecord::Base
     self.roles & Role.positions - (Role.where(:administrational_role => true))
   end
 
+  def self.members_of_council
+    User.all(:joins => :roles, :conditions => "roles.name = 'MemberOfCouncil'", :order => 'order_number ASC,roles.display_name ASC')
+  end
+
+  def positions_email_adresses
+    self.roles.map { |r| 
+      nil unless r.email
+      r.email
+    }.compact.join("\n")
+  end
+
   def self.get_secretary
     secretary_user_role = Role.find_by_name("Secretary").user_roles.first
     secretary_user_role.user if secretary_user_role

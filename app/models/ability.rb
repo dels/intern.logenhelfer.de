@@ -46,6 +46,7 @@ class Ability
   def application_admin_abilities
     can :manage, AppConfig
     can :manage, AcademicTitle
+    can :manage, Role
   end
 
   # korrespondierender Schriftfuehrer
@@ -67,6 +68,7 @@ class Ability
     can :manage, Statistic
     can :manage, AppConfig
     can :manage, AcademicTitle
+    can :manage, Role
   end
 
   def admin_archive_abilities

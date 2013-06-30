@@ -215,6 +215,9 @@ de:
         created_at: Heruntergeladen am
         remote_ip: Heruntergeladen von
         user_id: Mitglied
+      role:
+        display_name: Bezeichnung
+        email: E-Mail
       user:
         accepted_at: Angenommen am
         address: Address
@@ -365,8 +368,10 @@ de:
       file_download: Download
       file_downloads: Downloads
       user: Mitglied
-      user_role: User role
+      user_role: Benutzerrolle
       users: Mitglieder
+      role: Rolle
+      roles: Rollen
       statistics: Statistiken
       app_config: Konfiguration
       app_configs: Konfiguration
@@ -573,6 +578,7 @@ de:
       user_file_stats: Benutzer Downloads
       downloads: Downloads
       mem_stats: Speicher Verbrauch
+      members_of_council: Beamtenrat
     link:
       show: Anzeigen
       edit: Bearbeiten

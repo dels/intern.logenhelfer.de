@@ -4,7 +4,7 @@ module ApplicationHelper
     column = column.to_s
     title ||= column.titleize
     css_class = (column == sort_column) ? "current #{sort_direction}" : nil
-    direction = (column == sort_column && sort_direction == "asc") ? "desc" : "asc"
+    direction = (column == sort_column && sort_direction == "aSc") ? "deSc" : "aSc"
     link_to title, {:sort_by => column, :direction => direction}, {:class => css_class}
   end
 
@@ -45,7 +45,7 @@ module ApplicationHelper
   end
 
   def limited_user_editing?
-    roles = ['Secretary', 'UserAdmin', 'Admin']
+    roles = ['UserAdmin', 'Admin']
     @le ||= current_user.role_ids & Role.where(name: roles).pluck(:id)
     @le.blank?
   end

@@ -1,0 +1,18 @@
+<% title t("activerecord.models.roles") %>
+
+<table class='autolink'>
+  <tr>
+    <th><%= sortable :display_name, Role.human_attribute_name(:display_name) %></th>
+    <th><%= sortable :email, Role.human_attribute_name(:email) %></th>
+    <th></th>
+  </tr>
+    <% @roles.each do |role| %>
+  <tr>
+    <td><%= dash(role.display_name) %></td>
+    <td><%= dash(role.email) %></td>
+    <td>
+      <%= edit_link_to role if can?(:edit, role) %>
+    </td>
+  </tr>
+  <% end %>
+</table>

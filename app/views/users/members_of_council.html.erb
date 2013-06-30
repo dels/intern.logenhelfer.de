@@ -1,0 +1,33 @@
+<% title t("helpers.pages.members_of_council") %>
+
+<% #if can? :create, User %>
+<!--
+<p class="horizontal-menu"><%= image_link_tag_helper "disk", phone_list_pdf_users_path %></p>
+-->
+<% #end %>
+
+<%= paginate @users if @users.present? %>
+<table class='autolink'>
+  <tr>
+    <th><%= User.human_attribute_name(:lastname) %></th>
+    <th><%= User.human_attribute_name(:firstname) %></th>
+    <th><%= User.human_attribute_name(:email) %></th>
+    <th><%= User.human_attribute_name(:phone) %></th>
+    <th><%= User.human_attribute_name(:mobile) %></th>
+    <th></th>
+  </tr>
+  <% @users.each do |user| %>
+    <tr>
+      <td><%= dash(user.lastname) %></td>
+      <td><%= dash(user.firstname) %></td>
+      <td><%= raw dash(user.positions_email_adresses).gsub(/\n/,"<br />") %></td>
+      <td><%= raw dash(user.phone_numbers_printable).gsub(/\n/,"<br />") %></td>
+      <td><%= raw dash(user.mobile_numbers_printable).gsub(/\n/,"<br />") %></td>
+      <td>
+        <%= show_link_to user if can?(:show, user) %>
+      </td>
+    </tr>
+  <% end %>
+</table>
+
+<%= paginate @users if @users.present? %>

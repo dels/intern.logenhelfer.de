@@ -73,6 +73,10 @@ class UsersController < AuthorizedController
     send_data pdf.render, type: "application/pdf", filename: "#{Date.today}-Mitgliederverzeichnis.pdf"
   end
 
+ def members_of_council
+   @users = view_context.get_authorized_paginated(Kaminari.paginate_array(User.undeleted.members_of_council)).page(params[:page])
+ end
+
   def birthday_list
     @users = view_context.get_authorized_paginated(User.undeleted.order(sort_column + " " + sort_direction)).page(params[:page])
   end
