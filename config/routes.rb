@@ -67,4 +67,8 @@ FwzeIntern::Application.routes.draw do
   get '/anmelden', to: 'statics#index', as: :login
 
   root to: 'statics#index'
+
+# TODO: the redirection in case of successful login and logout is not correct and would need improvements
+#  root to: 'events#workingplan'
+
 end
