@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130622075246) do
+ActiveRecord::Schema.define(:version => 20130630063931) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -155,27 +155,14 @@ ActiveRecord::Schema.define(:version => 20130622075246) do
   add_index "file_downloads", ["deleted"], :name => "index_file_downloads_on_deleted"
   add_index "file_downloads", ["user_id"], :name => "index_file_downloads_on_user_id"
 
-  create_table "guests", :force => true do |t|
-    t.integer  "user_id"
-    t.string   "short_name"
-    t.string   "token",       :limit => 96
-    t.string   "uuid",        :limit => 36
-    t.datetime "valid_until"
-    t.datetime "created_at",                :null => false
-    t.datetime "updated_at",                :null => false
-  end
-
-  add_index "guests", ["short_name"], :name => "index_guests_on_short_name", :unique => true
-  add_index "guests", ["token"], :name => "index_guests_on_token", :unique => true
-  add_index "guests", ["uuid"], :name => "index_guests_on_uuid", :unique => true
-
   create_table "roles", :force => true do |t|
     t.string   "name"
     t.string   "description"
-    t.datetime "created_at",                      :null => false
-    t.datetime "updated_at",                      :null => false
+    t.datetime "created_at",                               :null => false
+    t.datetime "updated_at",                               :null => false
     t.string   "display_name"
-    t.boolean  "group",        :default => false
+    t.boolean  "group",                 :default => false
+    t.boolean  "administrational_role", :default => true
   end
 
   create_table "user_roles", :force => true do |t|
@@ -209,7 +196,6 @@ ActiveRecord::Schema.define(:version => 20130622075246) do
     t.string   "job_title"
     t.integer  "title"
     t.integer  "academic_title_id"
-    t.boolean  "guest",                  :default => false
     t.string   "mother_lodge"
   end
 
