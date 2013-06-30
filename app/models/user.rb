@@ -133,7 +133,7 @@ class User < ActiveRecord::Base
   end
 
   def self.members_of_council
-    User.all(:joins => :roles, :conditions => "roles.name = 'MemberOfCouncil'", :order => 'ordering_number ASC,roles.display_name ASC')
+    User.all(:joins => :roles, :conditions => "roles.name = 'MemberOfCouncil'", :order => 'roles.ordering_number ASC, roles.display_name ASC, users.lastname')
   end
 
   def positions_email_adresses
