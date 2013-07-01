@@ -6,28 +6,29 @@
 -->
 <% #end %>
 
-<%= paginate @users if @users.present? %>
+
+<%#= paginate @users if @users.present? %>
 <table class='autolink'>
   <tr>
-    <th><%= User.human_attribute_name(:lastname) %></th>
-    <th><%= User.human_attribute_name(:firstname) %></th>
+    <th><%= Role.human_attribute_name(:display_name) %></th>
+    <th><%= Role.human_attribute_name(:email) %></th>
+    <th><%= User.human_attribute_name(:fullname) %></th>
     <th><%= User.human_attribute_name(:email) %></th>
-    <th><%= User.human_attribute_name(:phone) %></th>
-    <th><%= User.human_attribute_name(:mobile) %></th>
     <th></th>
   </tr>
-  <% @users.each do |user| %>
+  <%# @users.each do |user| %>
+  <% @roles.each do |role| %>
     <tr>
-      <td><%= dash(user.lastname) %></td>
-      <td><%= dash(user.firstname) %></td>
-      <td><%= raw dash(user.positions_email_adresses).gsub(/\n/,"<br />") %></td>
-      <td><%= raw dash(user.phone_numbers_printable).gsub(/\n/,"<br />") %></td>
-      <td><%= raw dash(user.mobile_numbers_printable).gsub(/\n/,"<br />") %></td>
+      
+      <td><%= dash(role.display_name) %></td>
+      <td><%= dash(role.email) %></td>
+      <td><%= dash(role.users.first.fullname) %></td>
+      <td><%= raw dash(role.users.first.positions_email_adresses).gsub(/\n/,"<br />") %></td>
       <td>
-        <%= show_link_to user if can?(:show, user) %>
+        <%= show_link_to role.users.first if can?(:show, role.users.first) %>
       </td>
     </tr>
   <% end %>
 </table>
 
-<%= paginate @users if @users.present? %>
+<%#= paginate @users if @users.present? %>
