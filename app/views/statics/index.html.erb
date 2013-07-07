@@ -7,10 +7,10 @@ Hier findest Du die neusten Meldungen Deiner Loge.
   <%= paginate @announcements if @announcements.present? %>
 <% @announcements.each do |announcement| %>
 
-<h3><%= announcement.title %></h3>
-<%= simple_format(announcement.message_body) %>
-  <%= paginate @announcements if @announcements.present? %>
+  <h3><%= announcement.title %></h3>
+  <%= simple_format(announcement.message_body) %>
 <% end %>
+<%= paginate @announcements if @announcements.present? %>
 
 <% else %>
   <p>Bitte loggen Sie sich ein:</p>
