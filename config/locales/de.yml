@@ -175,6 +175,13 @@ de:
         title: Titel
         type_of_address: Zweck
         zip: Postleitzahl
+      announcement:
+        title: Überschrift
+        message_body: Nachricht
+        created_by: Erstellt von
+        updated_by: Aktualisiert von
+        created_at: Erstellt am
+        updated_at: Zuletzt aktualisiert am
       attached_file:
         attached_file: Datei
         content: Inhalt der Datei
@@ -356,6 +363,8 @@ de:
       academic_titles: Akad. Titel
       address: Address
       addresses: Adressen
+      announcement: Nachricht
+      announcements: Nachrichten
       attached_file: Datei
       attached_files: Dateien
       categories: Kategorien
@@ -368,8 +377,8 @@ de:
       file_download: Download
       file_downloads: Downloads
       user: Mitglied
-      user_role: Benutzerrolle
       users: Mitglieder
+      user_role: Benutzerrolle
       role: Rolle
       roles: Rollen
       statistics: Statistiken
@@ -436,6 +445,13 @@ de:
       month: Monat
       second: Sekunden
       year: Jahr
+  menu:
+    overview: Übersicht
+    help: Hilfe
+    working_plan: Arbeitsplan
+    login: Anmelden
+    logout: Abmelden
+    imprint: Impressum
   devise:
     confirmations:
       confirmed: Ihr Account wurde erfolgreich bestätigt. Sie können sich nun anmelden.
@@ -580,6 +596,7 @@ de:
       mem_stats: Speicher Verbrauch
       members_of_council: Beamtenrat
     link:
+      new: Neu
       show: Anzeigen
       edit: Bearbeiten
       view_all: Alle Anzeigen

@@ -1,12 +1,16 @@
 <ul>
   <% if user_signed_in? %>
-    <li><%= link_to "Übersicht", root_path %></li>
-    <li><%= link_to "Arbeitsplan", upcoming_calendar_path %></li>
+    <li><%= link_to t('menu.overview'), root_path %></li>
+    <li><%= link_to t('menu.working_plan'), upcoming_calendar_path %></li>
+    <li><%= link_to t('menu.help'), help_path %></li>
   <% else %>
-    <li><%= link_to "Anmelden", login_path %></li>
+    <li><%= link_to t('menu.login'), login_path %></li>
     <% unless "0".eql?(AppConfig[:public_wp_available_to_anon_users]) %>
-      <li><%= link_to "Arbeitsplan", calendar_export_path %></li>
+      <li><%= link_to t('menu.working_plan'), calendar_export_path %></li>
     <% end %>
   <% end %>
-  <li><%= link_to "Impressum", impressum_path %></li>
+  <li><%= link_to t('menu.imprint'), impressum_path %></li>
+  <% if user_signed_in? %>
+    <li><%= link_to t('menu.logout'), destroy_user_session_path %></li>
+  <% end %>
 </ul>

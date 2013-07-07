@@ -52,6 +52,17 @@
       </ul>
 
       <ul class="space-top">
+        <%= authorized_menu_item Announcement, announcements_path do -%>
+        <%- if request.fullpath =~ /^\/announcements/ && can?(:manage, Announcement) -%>
+        <%= content_tag :li, class: (request.fullpath =~ /^\/announcements\/new/ ? 'active' : nil) do -%>
+        <%= link_to t("helpers.link.new"), new_announcement_path -%>
+        <%- end -%>
+        <%- end -%>
+        <%- end -%>
+      </ul>
+
+
+      <ul class="space-top">
         <%= authorized_menu_item Event, upcoming_calendar_path do -%>
           <%- if request.fullpath =~ /^\/(events|calendar)/ -%>
             <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/public_workingplan/ ? 'active' : nil) do -%>

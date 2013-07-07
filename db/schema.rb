@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130630170432) do
+ActiveRecord::Schema.define(:version => 20130707071403) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -42,6 +42,17 @@ ActiveRecord::Schema.define(:version => 20130630170432) do
     t.datetime "updated_at",                                   :null => false
     t.integer  "type_of_address"
     t.string   "mobile"
+  end
+
+  create_table "announcements", :force => true do |t|
+    t.string   "uuid"
+    t.string   "title"
+    t.text     "message_body"
+    t.integer  "created_by_id"
+    t.integer  "updated_by_id"
+    t.boolean  "deleted",       :default => false
+    t.datetime "created_at",                       :null => false
+    t.datetime "updated_at",                       :null => false
   end
 
   create_table "app_config_adapters", :force => true do |t|

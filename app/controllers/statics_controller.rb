@@ -6,6 +6,10 @@ class StaticsController < ApplicationController
   def index
   end
 
+  def welcome
+    @announcements = Announcement.limit(10)
+  end
+
   def impressum
   end
 

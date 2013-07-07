@@ -12,7 +12,7 @@ class Ability
       self.send(method) if self.respond_to?(method)
     end
     can [:show, :edit, :update], User, id: @user.id unless AppConfig[:archive]
-
+    can [:index, :show], Announcement
     can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
       [] != (c.roles & @user.roles)
@@ -69,6 +69,7 @@ class Ability
     can :manage, AppConfig
     can :manage, AcademicTitle
     can :manage, Role
+    can :manage, Announcement
   end
 
   def admin_archive_abilities
@@ -77,6 +78,14 @@ class Ability
     can [:index, :show, :destroy], Directory
     can [:index, :show, :destroy], AttachedFile
     can [:index, :show], User
+  end
+
+  def announcement_admin_abilities
+    can :manage, Announcement
+  end
+
+  def announcement_admin_archive_abilities
+    can :manage, Announcement
   end
 
   #

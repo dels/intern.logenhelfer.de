@@ -1,0 +1,24 @@
+<% title t("activerecord.models.announcement") %>
+
+<% if can? :create, Announcement %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.announcement")), new_announcement_path %></p>
+<% end %>
+
+<table class='autolink'>
+  <tr>
+    <th><%= t 'activerecord.attributes.announcement.title' %></th>
+    <th><%= t 'activerecord.attributes.announcement.created_at' %></th>
+    <th></th>
+  </tr>
+  <% @announcements.each do |announcement| %>
+    <tr>
+      <td><%= announcement.title %></td>
+      <td><%= l announcement.created_at %></td>
+      <td>
+        <%= show_link_to announcement if can?(:show, announcement) %>
+        <%= edit_link_to announcement if can?(:edit, announcement) %>
+        <%= destroy_link_to announcement if can?(:destroy, announcement) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

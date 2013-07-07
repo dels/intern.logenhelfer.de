@@ -1,5 +1,7 @@
 FwzeIntern::Application.routes.draw do
 
+  resources :announcements
+
   get 'arbeitsplan(.:format)',                  to: 'events#workingplan',   as: :calendar_export
   scope 'calendar' do
     match 'upcoming',                           to: 'events#upcoming',      as: :upcoming_calendar
@@ -68,9 +70,10 @@ FwzeIntern::Application.routes.draw do
   get '/impressum', to: 'statics#impressum', as: :impressum
   get '/robots.txt', to: 'statics#robots_txt', as: :robots_txt
 
-  get '/anmelden', to: 'statics#index', as: :login
+  get '/anmelden', to: 'statics#welcome', as: :login
+  get '/hilfe', to: 'statics#help', as: :help
 
-  root to: 'statics#index'
+  root to: 'statics#welcome'
 
 # TODO: the redirection in case of successful login and logout is not correct and would need improvements
 #  root to: 'events#workingplan'

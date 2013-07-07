@@ -1,0 +1,15 @@
+one:
+  uuid: MyString
+  title: MyString
+  announcement: MyString
+  created_by_id: 
+  updated_by_id: 
+  deleted: false
+
+two:
+  uuid: MyString
+  title: MyString
+  announcement: MyString
+  created_by_id: 
+  updated_by_id: 
+  deleted: true

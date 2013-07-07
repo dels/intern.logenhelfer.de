@@ -1,0 +1,21 @@
+<% title t("activerecord.models.announcement") %>
+
+<p class="horizontal-menu">
+  <%= edit_link_to @announcement if can?(:edit, @announcement) %>
+  <%= destroy_link_to @announcement if can?(:destroy, @announcement) %>
+  <%= show_link_to_all Announcement if can?(:index, Announcement) %>
+</p>
+
+<dl>
+  <dt><%= t 'activerecord.attributes.announcement.title' %>:</dt>
+  <dd><%= @announcement.title %></dd>
+  <dt><%= t 'activerecord.attributes.announcement.message_body' %>:</dt>
+  <dd><%= simple_format(@announcement.message_body) %></dd>
+  <dt><%= t 'activerecord.attributes.announcement.created_by' %>:</dt>
+  <dd><%= @announcement.created_by %></dd>
+  <% unless @announcement.updated_by.nil? %>
+    <dt><%= t 'activerecord.attributes.announcement.updated_by' %>:</dt>
+    <dd><%= @announcement.updated_by %></dd>
+  <% end %>
+
+</dl>
