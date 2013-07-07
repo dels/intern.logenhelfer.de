@@ -18,6 +18,8 @@
   <% unless @announcement.updated_by.nil? %>
     <dt><%= t 'activerecord.attributes.announcement.updated_by' %>:</dt>
     <dd><%= @announcement.updated_by %></dd>
+    <dt><%= t 'activerecord.attributes.announcement.updated_at' %>:</dt>
+    <dd><%= l @announcement.updated_at %></dd>
   <% end %>
 
 </dl>

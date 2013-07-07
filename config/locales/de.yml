@@ -179,7 +179,7 @@ de:
         title: Überschrift
         message_body: Nachricht
         created_by: Erstellt von
-        updated_by: Aktualisiert von
+        updated_by: Zuletzt aktualisiert von
         created_at: Erstellt am
         updated_at: Zuletzt aktualisiert am
       attached_file:
@@ -363,8 +363,8 @@ de:
       academic_titles: Akad. Titel
       address: Address
       addresses: Adressen
-      announcement: Nachricht
-      announcements: Nachrichten
+      announcement: Meldung
+      announcements: Aktuelles
       attached_file: Datei
       attached_files: Dateien
       categories: Kategorien
