@@ -11,6 +11,8 @@
   <dd><%= @announcement.title %></dd>
   <dt><%= t 'activerecord.attributes.announcement.message_body' %>:</dt>
   <dd><%= simple_format(@announcement.message_body) %></dd>
+  <dt><%= t 'activerecord.attributes.announcement.created_at' %>:</dt>
+  <dd><%= l @announcement.created_at %></dd>
   <dt><%= t 'activerecord.attributes.announcement.created_by' %>:</dt>
   <dd><%= @announcement.created_by %></dd>
   <% unless @announcement.updated_by.nil? %>

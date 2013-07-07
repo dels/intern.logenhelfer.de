@@ -5,7 +5,7 @@ class Announcement < ActiveRecord::Base
   before_create :generate_uuid
 
   extend FriendlyId
-  friendly_id :title
+  friendly_id :uuid
 
   default_scope where(deleted: false).order('created_at DESC')
 
@@ -15,6 +15,10 @@ class Announcement < ActiveRecord::Base
 
   validates_presence_of :title, :message_body, :created_by_id
 
+  after_save :notify_subscribers
 
+  def notify_subscribers
+    Rails.logger.warn "sending email to all subscribers"
+  end
 
 end
