@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gem 'rails',                    '3.2.13'
 gem 'thin'
 gem 'pg'
-gem 'exception_notification',  :git => "git://github.com/smartinez87/exception_notification"
+gem 'exception_notification', "3.0.1"#, :git => "git://github.com/smartinez87/exception_notification"
 
 gem 'bcrypt-ruby',              require: 'bcrypt'
 gem 'devise'
