@@ -1,0 +1,19 @@
+<% title AppConfig[:lodge] %>
+<% if user_signed_in? %>
+
+<h2>Willkommen Br. <%= h current_user.fullname %></h2>
+
+Hier findest Du die neusten Meldungen Deiner Loge. 
+  <%= paginate @announcements if @announcements.present? %>
+<% @announcements.each do |announcement| %>
+
+<h3><%= announcement.title %></h3>
+<%= simple_format(announcement.message_body) %>
+  <%= paginate @announcements if @announcements.present? %>
+<% end %>
+
+<% else %>
+  <p>Bitte loggen Sie sich ein:</p>
+  <%= render 'devise/sessions/form' %>
+  <%= render 'devise/shared/links' %>
+<% end %>

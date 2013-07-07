@@ -4,10 +4,7 @@ class StaticsController < ApplicationController
   respond_to :html, :text
 
   def index
-  end
-
-  def welcome
-    @announcements = Announcement.limit(10)
+    @announcements = Announcement.page(params[:page])
   end
 
   def impressum

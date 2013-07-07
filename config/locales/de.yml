@@ -456,18 +456,18 @@ de:
     confirmations:
       confirmed: Ihr Account wurde erfolgreich bestätigt. Sie können sich nun anmelden.
       send_instructions: Sie werden in Kürze eine E-Mail mit einer Bestätigungsanweisung erhalten.
-      send_paranoid_instructions: 'If your email address exists in our database, you will receive an email with instructions about how to confirm your account in a few minutes.'
+      send_paranoid_instructions: 'Sie werden in Kürze eine E-Mail mit allen weiteren Anweisungen bekommen, wenn ihre E-Mail Adresse in der Datenbank gefunden worden ist. Falls nicht, so werden sie darüber nicht informiert werden.'
     error:
       access_denied: Zugriff verweigert!
     failure:
       already_authenticated: Sie sind bereits angemeldet.
-      inactive: Your account was not activated yet.
+      inactive: Ihr Account ist noch nicht aktiviert.
       invalid: Ungültige Logindaten.
       invalid_token: Invalid authentication token.
       locked: Ihr Benutzerkonto ist zur Zeit gesperrt.
       timeout: Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
       unauthenticated: Sie müssen sich anmelden um diese Seite einsehen zu können.
-      unconfirmed: You have to confirm your account before continuing.
+      unconfirmed: Sie müssen ihre Benutzerkonto bestätigen.
       user:
         invalid: Ungültige E-Mail oder Passwort.
         not_found_in_database: Ungültige E-Mail oder Passwort.
@@ -503,7 +503,7 @@ de:
         If you do come from a password reset email, please make sure you used the
         full URL provided.
       send_instructions: 'Sie werden in Kürze eine E-Mail mit weiteren Anweisungen erhalten.'
-      send_paranoid_instructions: 'If your email address exists in our database, you will receive a password recovery link at your email address in a few minutes.'
+      send_paranoid_instructions: 'Wenn die von Ihnen angegebene E-Mail Adresse in unserer Datenbank existiert, so werden Sie innerhalb weniger Minuten eine E-Mail bekommen. Falls nicht, so passiert nichts.'
       updated: Ihr Passwort wurde erfolgreich geändert. Sie sind jetzt angemeldet.
       updated_not_active: Das Passwort wurde erfolgreich aktualisiert.
       user:
