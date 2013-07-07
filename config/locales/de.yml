@@ -714,8 +714,8 @@ de:
       subject: Änderungsbenachrichtigung für Benutzer
   views:
     pagination:
-      first: ! '&laquo; First'
-      last: Last &raquo;
-      next: Next &rsaquo;
-      previous: ! '&lsaquo; Prev'
+      first: ! '&laquo; Erste'
+      last: Letzte &raquo;
+      next: Weiter &rsaquo;
+      previous: ! '&lsaquo; Zurück'
       truncate: ! '...'
