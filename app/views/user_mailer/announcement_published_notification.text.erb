@@ -1,0 +1,10 @@
+Lieber Br. <%= @user.firstname%>
+
+Es wurde eine neue Nachricht mit dem Titel <%= @announcement.title %> von <%= @announcement.created_by.fullname %> veröffentlicht.
+
+Herzliche brdrl. Grüße
+
+--
+Dies ist eine automatisch generierte E-Mail. Du bekommst diese E-Mail, weil Du die Nachrichten von <%= AppConfig[:domain]%> abboniert hast.
+Du kannst diese Einstellung jederzeit ändern unter <%= AppConfig[:domain] %>.
+Bei Fragen wenden Sie sich bitte an <%= AppConfig[:technical_contact_email] %>

@@ -713,6 +713,10 @@ de:
   user_mailer:
     change_notification:
       subject: Änderungsbenachrichtigung für Benutzer
+    new_announcement_notification:
+      subject: 'Neue Meldung auf %{domain} veröffentlicht'
+    updated_announcement_notification:
+      subject: 'Eine Meldung auf %{domain} wurde aktualisiert'
   views:
     pagination:
       first: ! '&laquo; Erste'

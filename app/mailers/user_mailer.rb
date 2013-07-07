@@ -1,6 +1,17 @@
 class UserMailer < ActionMailer::Base
   default from: AppConfig[:default_from_email]
 
+  def announcement_published_notification(announcement, user)
+    @announcement = announcement
+    @user = user
+    mail to: user.email, subject: I18n.t('user_mailer.new_announcement_notification.subject', title: announcement.title, domain: AppConfig[:domain])
+  end
+
+  def announcement_updated_notification(announcement, user)
+    @announcement = announcement
+    @user = user
+    mail to: user.email, subject: I18n.t('user_mailer.updated_announcement_notification.subject', title: announcement.title, domain: AppConfig[:domain])
+  end
 
   def change_notification(changed_user, deleted_addresses, changing_user)
     @user = changed_user
