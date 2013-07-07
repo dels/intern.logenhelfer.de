@@ -11,7 +11,7 @@ class Ability
       method = :"#{role.name.underscore}_#{archive}abilities"
       self.send(method) if self.respond_to?(method)
     end
-    can [:show, :edit, :update], User, id: @user.id unless AppConfig[:archive]
+    can [:show, :edit, :update, :update_announcement_subscription], User, id: @user.id unless AppConfig[:archive]
     can [:index, :show], Announcement
     can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|

@@ -604,6 +604,7 @@ de:
       destroy_confirmation: Sind sie sich sicher?
       restore: Wiederherstellen
       restore_confirmation: Sind sie sich sicher?
+      subscribe_to_news: 'Nachrichten abbonieren:'
     page_entries_info:
       more_pages:
         display_entries: 'Displaying %{entry_name} <b>%{first}&nbsp;-&nbsp;%{last}</b> of <b>%{total}</b> in total'

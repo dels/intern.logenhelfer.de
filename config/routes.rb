@@ -53,6 +53,7 @@ FwzeIntern::Application.routes.draw do
       get 'birthday_list_pdf'
       get 'members_of_council'
       post 'members_list'
+      post '/users/(:id)/update_announcement_subscription', to: 'users#update_announcement_subscription'
     end
     member do
       put 'substitute'

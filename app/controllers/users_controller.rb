@@ -201,6 +201,29 @@ class UsersController < AuthorizedController
     redirect_to root_url
   end
 
+  def update_announcement_subscription
+    unless params[:user_id]
+      render :nothing => true, :status => 400 
+      return
+    end
+    
+    users_subscription = AnnouncementSubscription.where(:user_id => params[:user_id])
+    if users_subscription.empty? && params[:subscribe_to_news]
+      AnnouncementSubscription.create(:user_id => params[:user_id]) 
+      render :nothing => true, :status => 200
+      return
+    else
+      if users_subscription.first.destroy
+        render :nothing => true, :status => 200 
+        return
+      else
+        render :nothing => true, :status => 406
+        return
+      end
+    end
+    render :nothing => true, :status => 406
+  end
+
 private
 
   def sort_column

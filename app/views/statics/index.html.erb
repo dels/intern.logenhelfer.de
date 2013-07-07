@@ -1,9 +1,17 @@
+
 <% title AppConfig[:lodge] %>
 <% if user_signed_in? %>
 
 <h2>Willkommen Br. <%= h current_user.fullname %></h2>
 
-Hier findest Du die neusten Meldungen Deiner Loge. 
+Hier findest Du die neusten Meldungen Deiner Loge. Wenn Du bei Neuigkeiten eine E-Mail bekommen möchtest, dann markiere diese Checkbox:
+
+<p>
+
+<%= label_tag t('helpers.link.subscribe_to_news') %>
+<%= check_box_tag 'subscribe_to_news', current_user.subscribed_to_news, current_user.subscribed_to_news, :data => {:remote => true, :url =>url_for(:controller => :users, :action => :update_announcement_subscription, :user_id => current_user.id), :method => :post}, :class => 'subscribe_to_news_class' %>
+
+</p>
   <%= paginate @announcements if @announcements.present? %>
 <% @announcements.each do |announcement| %>
 

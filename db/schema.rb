@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130707071403) do
+ActiveRecord::Schema.define(:version => 20130707171022) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -43,6 +43,14 @@ ActiveRecord::Schema.define(:version => 20130707071403) do
     t.integer  "type_of_address"
     t.string   "mobile"
   end
+
+  create_table "announcement_subscriptions", :force => true do |t|
+    t.integer  "user_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  add_index "announcement_subscriptions", ["user_id"], :name => "index_announcement_subscriptions_on_user_id"
 
   create_table "announcements", :force => true do |t|
     t.string   "uuid"

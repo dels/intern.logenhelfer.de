@@ -26,6 +26,7 @@ class User < ActiveRecord::Base
   has_many :user_roles
   has_many :roles, through: :user_roles, :uniq => true
   has_many :attached_files
+  has_many :announcement_subscription
   belongs_to :academic_title
 
   default_scope includes(:academic_title)
@@ -241,6 +242,14 @@ class User < ActiveRecord::Base
   def age
     now = Time.now.utc.to_date
     now.year - date_of_birth.year - ((now.month > date_of_birth.month || (now.month == date_of_birth.month && now.day >= date_of_birth.day)) ? 0 : 1)
+  end
+
+  def subscribed_to_news
+    (false == AnnouncementSubscription.where(:user_id => self.id).empty?)
+  end
+
+  def subscribe_to_news
+    AnnouncementSubscription.create(:user_id => self.id) unless subscribed_to_news
   end
 
   def active_for_authentication?
