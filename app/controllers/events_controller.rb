@@ -49,7 +49,7 @@ class EventsController < AuthorizedController
       end
       format.ics do
         @from   = Date.today
-        @to     = 3.months.from_now
+        @to     = 12.months.from_now
         render layout: false
       end
       format.pdf do
