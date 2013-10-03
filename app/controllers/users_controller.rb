@@ -14,6 +14,9 @@ class UsersController < AuthorizedController
       format.vcf do
         @users = view_context.get_authorized(users.order('lastname ASC, firstname ASC, matriculation_number ASC').all)
       end
+      format.csv do
+        @users = view_context.get_authorized(users.order('lastname ASC, firstname ASC, matriculation_number ASC').all)
+      end
     end
   end
 

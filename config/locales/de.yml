@@ -147,6 +147,7 @@ de:
       edit: Bearbeiten
       download_all: alle herunterladen
       download_vcards: Mitglieder als Kontaktliste exportieren
+      download_csv: Mitglieder als CSV exportieren
     address:
       business: Geschäftlich
       other: Andere

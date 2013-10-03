@@ -7,6 +7,11 @@
   <p><%= link_to t('activerecord.actions.download_vcards'), users_path(format: :vcf), class: 'disk icon' %></p>
 <%- end -%>
 
+<%- if can? :csv_export, User -%>
+  <p><%= link_to t('activerecord.actions.download_csv'), users_path(format: :csv), class: 'excel icon' %></p>
+<%- end -%>
+
+
 <%= form_tag users_path, method: :get, class: 'search icon' do %>
   <p>
     <%= text_field_tag :search, params[:search], class: jqueryui_input_classes, placeholder: t('helpers.label.user.search_placeholder') %>

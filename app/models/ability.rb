@@ -132,6 +132,7 @@ class Ability
   # Mitglied des Beamtenrates
   def member_of_council_abilities
     can [:index, :file_stats, :user_stats, :user_file_stats, :space_stats], Statistic
+    can [:csv_export], User
   end
 
   def member_of_council_archive_abilities
