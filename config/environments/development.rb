@@ -8,12 +8,13 @@ FwzeIntern::Application.configure do
   config.action_dispatch.best_standards_support = :builtin
   config.active_record.mass_assignment_sanitizer = :strict
 
-  config.active_record.auto_explain_threshold_in_seconds = 0.5
+  config.active_record.auto_explain_threshold_in_seconds = 0.1
 
   config.assets.compress = false
   config.assets.debug = true
 
   config.action_mailer.raise_delivery_errors = true
+
   config.action_mailer.default_url_options = { host: 'localhost:3000' }
   config.action_mailer.delivery_method = :letter_opener
 
