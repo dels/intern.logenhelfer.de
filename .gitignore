@@ -19,3 +19,4 @@ cur_dump.sql
 pg_dump*
 .DS_Store
 *pg_dump.tar.gz
+.ruby-*
