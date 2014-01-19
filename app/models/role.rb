@@ -12,7 +12,13 @@ class Role < ActiveRecord::Base
   def self.positions
     # XXX: Role.where('name NOT IN (*)', ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
     # XXX: scope :positions, where(...)
-    Role.all - Role.where(name: ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
+    Role.where(:administrational_role => false) - Role.where(name: ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
+  end
+
+  def self.administrational_roles
+    # XXX: Role.where('name NOT IN (*)', ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
+    # XXX: scope :positions, where(...)
+    Role.where(:administrational_role => true) - Role.where(name: ['EnteredApprentice', 'FellowCraft', 'MasterMason'])
   end
 
   def self.degrees

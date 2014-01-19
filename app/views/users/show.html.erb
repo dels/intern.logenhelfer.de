@@ -61,6 +61,15 @@
     <% end %>
   </ul></dd>
 
+  <% if can?(:edit, @user) %>
+  <dt><%= User.human_attribute_name :administrational_rights %>:</dt>
+  <dd><ul>
+    <% @user.roles.administrational_roles.sort_by(&:display_name).each do |role| %>
+      <li><%= role %></li>
+    <% end %>
+  </ul></dd>
+  <% end %>
+
   <% unless @user.addresses.empty? %>
     <h2><%= t 'activerecord.models.addresses' %></h2>
     <%= render 'addresses/address_fields', address: @user.business_address if @user.business_address %>
