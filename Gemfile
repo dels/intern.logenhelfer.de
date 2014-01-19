@@ -16,11 +16,10 @@ gem 'best_in_place'
 gem 'friendly_id',              '~> 4.0.0'
 gem 'cancan',                   '1.6.7'
 gem 'rails-i18n'
-#gem 'copycopter_client',        '~> 2.0.0'
 gem 'prawn',                    '~> 1.0.0.rc1'
 gem 'later_dude',               '>= 0.3.1'
-gem 'icalendar'
-gem 'kaminari'
+gem 'icalendar'                 
+gem 'kaminari'                  
 
 group :development, :archive_dev do
   gem 'quiet_assets'
