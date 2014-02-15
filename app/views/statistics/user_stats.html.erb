@@ -2,6 +2,10 @@
 
 <% if @users.count > 0 %>
 
+<p>
+  Average age: <%= @avg_age %>
+</p>
+
 <%= paginate @users if @users.present? %>
 
   <table class='autolink'>

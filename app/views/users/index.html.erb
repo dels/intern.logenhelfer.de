@@ -14,7 +14,9 @@
 
 <%= form_tag users_path, method: :get, class: 'search icon' do %>
   <p>
-    <%= text_field_tag :search, params[:search], class: jqueryui_input_classes, placeholder: t('helpers.label.user.search_placeholder') %>
+    <%#= text_field_tag :search, nil, :class => 'search-query ui-autocomplete-input', :placeholder => t('helpers.label.user.search_placeholder'), data: {autocomplete_source: search_users_path} %>
+
+    <%= text_field_tag :search, params[:search], class: 'jqueryui_input_classes', placeholder: t('helpers.label.user.search_placeholder') , data: {autocomplete_source: search_users_path}  %>
     <%= submit_tag 'Suchen', name: nil %>
   </p>
 <% end %>

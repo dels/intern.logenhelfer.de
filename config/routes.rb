@@ -52,6 +52,7 @@ FwzeIntern::Application.routes.draw do
       get 'birthday_list'
       get 'birthday_list_pdf'
       get 'members_of_council'
+      get 'search'
       post 'members_list'
       post '/users/(:id)/update_announcement_subscription', to: 'users#update_announcement_subscription'
     end

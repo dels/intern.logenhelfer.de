@@ -6,6 +6,9 @@ class StatisticsController < AuthorizedController
 
   # show last users activity and last login
   def user_stats
+    age_all = 0
+    User.all.each { |usr| age_all += usr.age }
+    @avg_age = age_all / User.count
     @users = view_context.get_authorized_paginated(User.where("current_sign_in_at IS NOT NULL").order(sort_column(User.column_names, "current_sign_in_at DESC, sign_in_count") + " " + sort_direction)).page(params[:page])
   end
 
