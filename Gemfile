@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails',                    '3.2.16'
+gem 'rails',                    '3.2.18'
 gem 'thin'
 gem 'pg'
 gem 'exception_notification', "3.0.1"#, :git => "git://github.com/smartinez87/exception_notification"
@@ -18,7 +18,7 @@ gem 'cancan',                   '1.6.7'
 gem 'rails-i18n'
 gem 'prawn',                    '~> 1.0.0.rc1'
 gem 'later_dude',               '>= 0.3.1'
-gem 'icalendar'                 
+gem 'icalendar',                '~> 1.5.4'
 gem 'kaminari'                  
 
 group :development, :archive_dev do
