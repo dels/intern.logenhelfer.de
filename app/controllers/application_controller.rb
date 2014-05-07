@@ -76,7 +76,7 @@ protected
   end
 
   def add_pdf_html(html, pdf)
-    pdf.formatted_text(Prawn::Text::Formatted::Parser.to_array(html))
+    pdf.text(html, :inline_format => true)
   end
 
   def get_pdf_list(headings, values, options = {}, cell_style = {}, pdf = nil)
