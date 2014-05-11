@@ -18,7 +18,7 @@ gem 'cancan',                   '1.6.7'
 gem 'rails-i18n'
 gem 'prawn',                    '~> 1.0.0.rc1'
 gem 'later_dude',               '>= 0.3.1'
-gem 'icalendar',                '~> 1.5.4'
+gem 'icalendar',                               '~> 1.5.4'
 gem 'kaminari'                  
 
 group :development, :archive_dev do
