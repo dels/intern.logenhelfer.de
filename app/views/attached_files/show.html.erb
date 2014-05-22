@@ -16,7 +16,11 @@
   <dd><%= @attached_file.directory.name %></dd>
   <dt><%= t 'activerecord.attributes.attached_file.uploader' %>:</dt>
   <dd><%= @attached_file.uploader.email %></dd>
-  
+  <dt><%= t 'activerecord.attributes.attached_file.created_at' %>:</dt>
+  <dd><%= l @attached_file.created_at %></dd>
+  <dt><%= t 'activerecord.attributes.attached_file.updated_at' %>:</dt>
+  <dd><%= l @attached_file.updated_at %></dd>
+
   <dt><%= t 'activerecord.attributes.attached_file.roles' %>:</dt>
   <dd><ul>
     <% @attached_file.roles.each do |role| %>

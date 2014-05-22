@@ -195,6 +195,8 @@ de:
         size: Dateigröße
         uploader: Hochgeladen von
         uploader_id: Hochgeladen von
+        created_at: Erstellt am
+        updated_at: Zuletzt aktualisiert am
       category:
         description: Beschreibung
         name: Name
