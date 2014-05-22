@@ -24,9 +24,10 @@ class Announcement < ActiveRecord::Base
   end
 
   def notify_subscribers_announcement_updated
-    AnnouncementSubscription.all.each do |subscription|
-      UserMailer.announcement_updated_notification(self, subscription.user).deliver
-    end
+# XXX: do we really want this? 
+#    AnnouncementSubscription.all.each do |subscription|
+#      UserMailer.announcement_updated_notification(self, subscription.user).deliver
+#    end
   end
 
 
