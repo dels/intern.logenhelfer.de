@@ -10,6 +10,7 @@
   <tr>
     <th><%= t 'activerecord.attributes.external_event.title' %></th>
     <th><%= t 'activerecord.attributes.external_event.host' %></th>
+    <th><%= t 'activerecord.attributes.external_event.location' %></th>
     <th><%= t 'activerecord.attributes.external_event.visiting_brothers' %></th>
     <th><%= t 'activerecord.attributes.external_event.time' %></th>
     <th><%= t 'activerecord.attributes.external_event.date' %></th>
@@ -19,6 +20,7 @@
     <tr>
       <td><%= external_event.title %></td>
       <td><%= external_event.host %></td>
+      <td><%= external_event.location %></td>
       <td><%= external_event.participants.count %></td>
       <td><%= l external_event.time, format: :time  %></td>
       <td><%= l external_event.date %></td>
@@ -30,37 +32,3 @@
     </tr>
   <% end %>
 </table>
-
-<%- if current_user == User.secretary &&  @users -%>
-
-  <% if @users.count > 0 %>
-    <table class='autolink'>
-      <tr>
-        <th><%= User.human_attribute_name(:matriculation_number) %></th>
-        <th><%= User.human_attribute_name(:lastname) %></th>
-        <th><%= User.human_attribute_name(:firstname) %></th>
-        <th><%= User.human_attribute_name(:address) %></th>
-        <th><%= User.human_attribute_name(:phone) %></th>
-        <th><%= User.human_attribute_name(:mobile) %></th>
-        <th><%= User.human_attribute_name(:date_of_birth) %></th>
-        <th></th>
-      </tr>
-      <% @users.each do |user| %>
-        <tr>
-          <td><%= user.matriculation_number %></td>
-          <td><%= dash(user.lastname) %></td>
-          <td><%= dash(user.firstname) %></td>
-          <td><%= dash(user.private_address.try :to_s) %></td>
-          <td><%= dash(user.private_address.try :phone) %></td>
-          <td><%= dash(user.private_address.try :mobile) %></td>
-          <td><%= dash(user.date_of_birth ? l(user.date_of_birth) : nil) %></td>
-          <td>
-            <%= image_link_tag_helper 'add',      user_path(user)            if can?(:show, user) %>
-          </td>
-          </tr>
-      <% end %>
-    </table>
-  <%- else -%>
-    <p>Keine Mitglieder gefunden.</p>
-  <%- end -%>
-<%- end -%>
