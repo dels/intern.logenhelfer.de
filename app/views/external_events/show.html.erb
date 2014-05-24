@@ -45,16 +45,19 @@
 
 
 <h3>Teilnehmende Brüder</h3>
+
+
 <table>
 <tr>
     <th>Name</th>
-    <th>Angemeldet?</th>
+    <th>Status</th>
     <th></th>
   </tr>
 <% @external_event.participants.each do |participant| %>
     <tr>
       <td><%= participant %></td>
-      <td><%= @external_event.subscription_sent?(participant) %></td>
+      <td><%= participant.subscription_status(@external_event) %></td>
+      </td>
       <td>
         <%= link_to '<i class="add icon"></i>'.html_safe, external_event_confirm_subscription_path(@external_event, :user => participant) unless @external_event.subscription_sent?(participant) if can?(:confirm_subscription, ExternalEventParticipant.where(:external_event_id => @external_event.id).where(:user_id => participant.id).first) %>
         

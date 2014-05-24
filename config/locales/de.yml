@@ -1,4 +1,9 @@
 de:
+  text:
+    external_event_subscription:
+      subscription_sent: 'Beim Sekretär der Loge angemeldet'
+      subscribed: 'Anmeldung ausstehend'
+
   pdf:
     members_list:
       header:

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 class User < ActiveRecord::Base
   include ActsAsAddressable
   include UuidHelper
@@ -262,4 +263,13 @@ class User < ActiveRecord::Base
     User.undeleted.count
   end
 
+  def subscription_status(ext_event)
+    if ext_event.subscription_sent?(self)
+      return I18n.t("text.external_event_subscription.subscription_sent")
+    end
+    if ext_event.subscribed?(self)
+      return I18n.t("text.external_event_subscription.subscribed")
+    end
+    raise "why do we reach this point in code?!?!?! subscription status for external event with uuid #{ext_event.uuid} and user with uuid #{self.uuid}"
+  end
 end
