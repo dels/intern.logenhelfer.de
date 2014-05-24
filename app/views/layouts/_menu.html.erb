@@ -71,10 +71,8 @@
             <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/internal_workingplan/ ? 'active' : nil) do -%>
               <%= link_to t("helpers.pdf.internal_workingplan"), internal_workingplan_path -%>
             <%- end -%>
-            <%- if Rails.env.eql? "development" %>
-              <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/external_events/ ? 'active' : nil) do -%>
-                <%= link_to t("activerecord.models.external_events"), external_events_path -%>
-              <%- end -%>
+            <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/external_events/ ? 'active' : nil) do -%>
+              <%= link_to t("activerecord.models.external_events"), external_events_path -%>
             <%- end -%>
           <%- end -%>
         <%- end -%>
