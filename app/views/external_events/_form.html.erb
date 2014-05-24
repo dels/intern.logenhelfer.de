@@ -1,0 +1,14 @@
+<%= form_for @external_event, builder: DefiniteFormBuilder do |f| %>
+  <%= f.error_messages %>
+  <dl>
+    <%= f.text_field :title %>
+    <%= f.time_select :time, { minute_step: 5 }, jui: :tiny %>
+    <%= f.date_select :date %>
+    <%= f.text_field :host %>
+    <%= f.text_field :location %>
+    <%= f.text_area :description %>
+
+
+    <%= f.submit %>
+  </dl>
+<% end %>

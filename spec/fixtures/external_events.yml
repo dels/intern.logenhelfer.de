@@ -1,0 +1,23 @@
+one:
+  uuid: MyString
+  title: MyString
+  description: MyString
+  location: MyString
+  time: 2014-05-24 15:05:37
+  date: 2014-05-24
+  created_by_id: 1
+  updated_by_id: 1
+  deleted: false
+  deleted: false
+
+two:
+  uuid: MyString
+  title: MyString
+  description: MyString
+  location: MyString
+  time: 2014-05-24 15:05:37
+  date: 2014-05-24
+  created_by_id: 1
+  updated_by_id: 1
+  deleted: false
+  deleted: true

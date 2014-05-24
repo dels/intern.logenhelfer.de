@@ -1,0 +1,36 @@
+<% title t("activerecord.models.external_event") + ": " + @external_event.title %>
+
+<div class="event">
+  <div class="date">
+    <span class="month"><%= l(@external_event.date, format: '%b').upcase %></span>
+    <span class="day"><%= l @external_event.date, format: '%d' %></span>
+    <span class="dow"><%= l(@external_event.date, format: '%a').upcase %></span>
+    <span class="year"><%= l @external_event.date, format: '%Y' %></span>
+  </div>
+
+  <h3>
+    <span class="time"><%= l @external_event.time, format: :time %> Uhr:</span>
+    <%= @external_event.title %>
+  </h3>
+
+  <p class="host icon"><%= dash(@external_event.host) %></p>
+  <p class="map icon"><%= dash(@external_event.location) %> </p>
+  <p class="public icon label"><%= ExternalEvent.human_attribute_name :description %>:</p>
+  <%= simple_format dash(@external_event.description), class: 'description' %>
+
+  <%- if can?(:edit, @external_event) -%>
+    <p class="description"><%= edit_link_to(@external_event, true) %></p>
+  <%- end -%>
+  <%- if can?(:edit, @external_event) -%>
+    <p class="description"><%= destroy_link_to(@external_event, true) %></p>
+  <%- end -%>
+
+  <p class="meta">
+    <%= Event.human_attribute_name :created_by %>
+    <%= @external_event.created_by %>, <%= l @external_event.created_at -%>
+    <%- if @external_event.created_at != @external_event.updated_at -%>
+      <br><%= Event.human_attribute_name :updated_by %>
+      <%= @external_event.updated_by %>, <%= l @external_event.updated_at -%>
+    <%- end -%>
+  </p>
+</div>

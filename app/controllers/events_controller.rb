@@ -107,6 +107,9 @@ class EventsController < AuthorizedController
 
         render layout: false
       end
+      format.json do
+        render text: "to be implemented"
+      end
     end
 
   end
@@ -144,6 +147,7 @@ class EventsController < AuthorizedController
     @event.save
     redirect_to events_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.event"))
   end
+
 
 private
 

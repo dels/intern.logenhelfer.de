@@ -13,6 +13,7 @@ class Ability
     end
     can [:show, :edit, :update, :update_announcement_subscription], User, id: @user.id unless AppConfig[:archive]
     can [:index, :show], Announcement
+    can [:index, :show], ExternalEvent
     can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
       [] != (c.roles & @user.roles)
@@ -34,6 +35,7 @@ class Ability
 
   def working_plan_admin_abilities
     can :manage, Event
+    can :manage, ExternalEvent
   end
 
   def user_admin_abilities
@@ -60,7 +62,7 @@ class Ability
 
   # Deft
   def admin_abilities
-    can :manage, Event
+    working_plan_admin_abilities
     can :manage, Category
     can :manage, Directory
     can :manage, AttachedFile

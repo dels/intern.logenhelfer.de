@@ -207,7 +207,6 @@ de:
         name: Name
         roles: Roles
       event:
-        created_by: erstellt von
         date: Datum
         duration: Dauer (in Minuten)
         location: Ort
@@ -218,7 +217,23 @@ de:
         time: Zeit
         title: Bezeichnung
         type/birthday: 'Geburtstag'
-        updated_by: geändert von
+        created_by: erstellt von
+        updated_by: zuletzt geändert von
+        whole_day: ganztägig?
+
+      external_event:
+        date: Datum
+        duration: Dauer (in Minuten)
+        host: Loge
+        location: Ort
+        only_date: Only date
+        only_time: Only time
+        description: Beschr.
+        time: Zeit
+        title: Bezeichnung
+        type/birthday: 'Geburtstag'
+        created_by: erstellt von
+        updated_by: zuletzt geändert von
         whole_day: ganztägig?
       file_download:
         attached_file_id: Datei
@@ -378,6 +393,8 @@ de:
       directory: Ordner
       event: Termin
       events: Kalender
+      external_event: Veranstaltung
+      external_events: Termine anderer Logen
       file_download: Download
       file_downloads: Downloads
       user: Mitglied

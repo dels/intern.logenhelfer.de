@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130707194225) do
+ActiveRecord::Schema.define(:version => 20140524135821) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -160,6 +160,21 @@ ActiveRecord::Schema.define(:version => 20130707194225) do
 
   add_index "events", ["created_by_id"], :name => "index_events_on_created_by_id"
   add_index "events", ["updated_by_id"], :name => "index_events_on_updated_by_id"
+
+  create_table "external_events", :force => true do |t|
+    t.string   "uuid"
+    t.string   "title",                            :null => false
+    t.string   "description"
+    t.string   "location",                         :null => false
+    t.time     "time",                             :null => false
+    t.date     "date",                             :null => false
+    t.integer  "created_by_id",                    :null => false
+    t.integer  "updated_by_id"
+    t.boolean  "deleted",       :default => false
+    t.datetime "created_at",                       :null => false
+    t.datetime "updated_at",                       :null => false
+    t.string   "host"
+  end
 
   create_table "file_downloads", :force => true do |t|
     t.integer  "attached_file_id"

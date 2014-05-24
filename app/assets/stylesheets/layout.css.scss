@@ -488,6 +488,7 @@ span.add {
   &.map { background-image: image-url('map.png'); }
   &.private { background-image: image-url('private.png'); }
   &.public { background-image: image-url('public.png'); }
+  &.host { background-image: image-url('event_youth_office.png'); }
 
   &.add { background-image: image-url('add.png'); }
   &.edit { background-image: image-url('edit.png'); }

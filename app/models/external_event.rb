@@ -1,0 +1,22 @@
+class ExternalEvent < ActiveRecord::Base
+  include UuidHelper
+  before_create :generate_uuid
+
+  extend FriendlyId
+  friendly_id :uuid
+
+  attr_accessible :title, :description, :host, :location, :time, :date
+
+  validates_presence_of :title, :host, :time, :date
+
+  belongs_to :created_by, foreign_key: :created_by_id, class_name: 'User'
+  belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User'
+
+  default_scope where(:deleted => false)
+
+  def to_s
+    title
+  end
+
+
+end
