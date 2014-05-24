@@ -43,34 +43,7 @@
   </p>
 </div>
 
-<% if @external_event.participants.count > 0 %>
-
-<h3>Teilnehmende Brüder</h3>
-
-<table>
-<tr>
-    <th>Name</th>
-    <th>Status</th>
-    <th></th>
-  </tr>
-<% @external_event.participants.each do |participant| %>
-    <tr>
-      <td><%= participant %></td>
-      <td><%= participant.subscription_status(@external_event) %></td>
-      </td>
-      <td>
-        <%= link_to '<i class="success icon"></i>'.html_safe, external_event_confirm_subscription_path(@external_event, :user => participant) unless @external_event.subscription_sent?(participant) if can?(:confirm_subscription, ExternalEventParticipant.where(:external_event_id => @external_event.id).where(:user_id => participant.id).first) %>
-        
-        <%=destroy_link_to(external_event_remove_me_path(@external_event, :user => participant))  if can?(:destroy, ExternalEventParticipant.where(:external_event_id => @external_event.id).where(:user_id => participant.id).first)|| (participant == current_user &&  false == @external_event.subscription_sent?(participant)) %>
-      </td>
-    </tr>
-  <% end %>
-</table>
-
 <%- if current_user == User.secretary -%>
-
-<p><br /></p>
-
   <%= form_tag external_event_path(@external_event), method: :get, class: 'search icon' do %>
     <p>
 
@@ -86,10 +59,8 @@
         <th><%= User.human_attribute_name(:matriculation_number) %></th>
         <th><%= User.human_attribute_name(:lastname) %></th>
         <th><%= User.human_attribute_name(:firstname) %></th>
-        <th><%= User.human_attribute_name(:address) %></th>
         <th><%= User.human_attribute_name(:phone) %></th>
         <th><%= User.human_attribute_name(:mobile) %></th>
-        <th><%= User.human_attribute_name(:date_of_birth) %></th>
         <th></th>
       </tr>
       <% @users.each do |user| %>
@@ -97,19 +68,42 @@
           <td><%= user.matriculation_number %></td>
           <td><%= dash(user.lastname) %></td>
           <td><%= dash(user.firstname) %></td>
-          <td><%= dash(user.private_address.try :to_s) %></td>
           <td><%= dash(user.private_address.try :phone) %></td>
           <td><%= dash(user.private_address.try :mobile) %></td>
-          <td><%= dash(user.date_of_birth ? l(user.date_of_birth) : nil) %></td>
           <td>
-            <%= image_link_tag_helper 'add',      external_event_add_me_path(@external_event, :user => user)            if can?(:show, user) %>
+            <%= image_link_tag_helper 'add',  external_event_add_me_path(@external_event, :user => user)            if can?(:show, user) %>
           </td>
           </tr>
       <% end %>
     </table>
-  <%- else -%>
+  <%- elsif @searched -%>
     <p>Keine Mitglieder gefunden.</p>
   <%- end -%>
 <%- end -%>
-<%- end -%>
 
+<% if @external_event.participants.count > 0 %>
+  <h3>Teilnehmende Brüder</h3>
+  <table>
+    <tr>
+      <th><%= User.human_attribute_name(:lastname) %></th>
+      <th><%= User.human_attribute_name(:firstname) %></th>
+      <th><%= User.human_attribute_name(:phone) %></th>
+      <th><%= User.human_attribute_name(:mobile) %></th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+    <% @external_event.participants.each do |participant| %>
+      <tr>
+        <td><%= dash(participant.lastname) %></td>
+        <td><%= dash(participant.firstname) %></td>
+        <td><%= dash(participant.private_address.try :phone) %></td>
+        <td><%= dash(participant.private_address.try :mobile) %></td>
+        <td><%= participant.subscription_status(@external_event) %></td>
+        <td>
+          <%= link_to '<i class="success icon"></i>'.html_safe, external_event_confirm_subscription_path(@external_event, :user => participant) unless @external_event.subscription_sent?(participant) if can?(:confirm_subscription, ExternalEventParticipant.where(:external_event_id => @external_event.id).where(:user_id => participant.id).first) %>    
+          <%=destroy_link_to(external_event_remove_me_path(@external_event, :user => participant))  if can?(:destroy, ExternalEventParticipant.where(:external_event_id => @external_event.id).where(:user_id => participant.id).first)|| (participant == current_user &&  false == @external_event.subscription_sent?(participant)) %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+<%- end -%>

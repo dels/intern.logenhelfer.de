@@ -6,20 +6,22 @@ class ExternalEventsController < AuthorizedController
   end
 
   def show
-    @users = User.search(params[:search]) if params[:search].present?
+    if params[:search].present?
+      @users = User.search(params[:search]) 
+      @searched = true
+    end
   end
 
   def add_me
     cur_event = ExternalEvent.find_by_uuid(params[:external_event_id])
     cur_user = User.find_by_uuid(params[:user])
     cur_user ||= current_user
-    logger.fatal "adding user #{cur_user.fullname}"
     ExternalEventParticipant.new do |eep|
       eep.user = cur_user
       eep.external_event = cur_event
       eep.save!
     end
-    
+    UserMailer.new_subscription_notification(cur_event, cur_user).deliver unless User.secretary == current_user
     redirect_to cur_event, notice: t("activerecord.subscription_successful")
   end
 
@@ -35,7 +37,6 @@ class ExternalEventsController < AuthorizedController
   def confirm_subscription
     cur_event = ExternalEvent.find_by_uuid(params[:external_event_id])
     cur_user = User.find_by_uuid(params[:user])
-    logger.fatal "ee: #{cur_event}, usr: #{cur_user}"
     unless (eep = ExternalEventParticipant.where(:external_event_id => cur_event.id).where(:user_id => cur_user.id)).empty?
       eep = eep.first
       eep.subscription_sent = true
@@ -65,7 +66,6 @@ class ExternalEventsController < AuthorizedController
     @external_event.assign_attributes(params[:external_event])
     @external_event.updated_by_id = current_user.id
     if @external_event.save
-#    if @external_event.update_attributes(params[:external_event])
       redirect_to @external_event, notice: t("activerecord.update_success", model: t("activerecord.models.external_event"))
     else
       render :edit
