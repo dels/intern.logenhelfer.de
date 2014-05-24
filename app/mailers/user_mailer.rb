@@ -2,7 +2,7 @@ class UserMailer < ActionMailer::Base
   default from: AppConfig[:default_from_email]
 
   def new_subscription_notification(external_event, user)
-    @secretary  = UserRole.where(role_id: Role.where(name: 'Secretary').first).first.user
+    @secretary  = User.secretary
     return unless @secretary
     @user = user
     @external_event = external_event

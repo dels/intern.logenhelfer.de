@@ -3,7 +3,7 @@ de:
     external_event_subscription:
       subscription_sent: 'Beim Sekretär der Loge angemeldet'
       subscribed: 'Anmeldung ausstehend'
-
+      not_subscribed: 'Nicht angemeldet'
   pdf:
     members_list:
       header:

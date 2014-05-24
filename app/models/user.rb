@@ -147,7 +147,7 @@ class User < ActiveRecord::Base
     }.compact.join("\n")
   end
 
-  def self.get_secretary
+  def self.secretary
     secretary_user_role = Role.find_by_name("Secretary").user_roles.first
     secretary_user_role.user if secretary_user_role
   end
@@ -264,12 +264,11 @@ class User < ActiveRecord::Base
   end
 
   def subscription_status(ext_event)
-    if ext_event.subscription_sent?(self)
-      return I18n.t("text.external_event_subscription.subscription_sent")
-    end
-    if ext_event.subscribed?(self)
-      return I18n.t("text.external_event_subscription.subscribed")
-    end
-    raise "why do we reach this point in code?!?!?! subscription status for external event with uuid #{ext_event.uuid} and user with uuid #{self.uuid}"
+    return I18n.t("text.external_event_subscription.subscription_sent") if ext_event.subscription_sent?(self)
+    return I18n.t("text.external_event_subscription.subscribed") if ext_event.subscribed?(self)
+    return I18n.t("text.external_event_subscription.not_subscribed")
   end
 end
+
+
+

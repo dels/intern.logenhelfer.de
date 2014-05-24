@@ -10,6 +10,7 @@ class ExternalEventParticipant < ActiveRecord::Base
   validates_uniqueness_of :user_id, :scope => :external_event_id
 
   def announce_new_subscription
+    return if self.user == User.secretary
     UserMailer.new_subscription_notification(self.external_event, self.user).deliver
   end
 
