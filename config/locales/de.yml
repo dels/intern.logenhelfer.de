@@ -737,6 +737,8 @@ de:
       subject: 'Neue Meldung auf %{domain} veröffentlicht'
     updated_announcement_notification:
       subject: 'Eine Meldung auf %{domain} wurde aktualisiert'
+    new_subscription_notification:
+      subject: 'Br. %{user} hat sich zu einer Veranstaltung angemeldet'
   views:
     pagination:
       first: ! '&laquo; Erste'

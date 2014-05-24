@@ -21,7 +21,8 @@ class ExternalEventsController < AuthorizedController
 
   def remove_me
     cur_event = ExternalEvent.find_by_uuid(params[:external_event_id])
-    unless (eep = ExternalEventParticipant.where(:user_id => current_user.id).where(:external_event_id => cur_event.id)).empty?
+    cur_user = User.find_by_uuid(params[:user])
+    unless (eep = ExternalEventParticipant.where(:user_id => cur_user.id).where(:external_event_id => cur_event.id)).empty?
       eep.first.destroy
     end
     redirect_to cur_event, notice: t("activerecord.unsubscribing_successful")

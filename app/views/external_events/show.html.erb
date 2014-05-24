@@ -56,8 +56,9 @@
       <td><%= participant %></td>
       <td><%= @external_event.subscription_sent?(participant) %></td>
       <td>
-        <%= link_to '<i class="add icon"></i>'.html_safe, external_event_confirm_subscription_path(@external_event, :user => participant) unless @external_event.subscription_sent?(participant) %>
-        <%=destroy_link_to(external_event_remove_me_path(@external_event))  if can?(:destroy, ExternalEventParticipant.where(:external_event_id => @external_event.id).where(:user_id => participant.id)) || (participant == current_user &&  false == @external_event.subscription_sent?(participant)) %>
+        <%= link_to '<i class="add icon"></i>'.html_safe, external_event_confirm_subscription_path(@external_event, :user => participant) unless @external_event.subscription_sent?(participant) if can?(:confirm_subscription, ExternalEventParticipant.where(:external_event_id => @external_event.id).where(:user_id => participant.id).first) %>
+        
+        <%=destroy_link_to(external_event_remove_me_path(@external_event, :user => participant))  if can?(:destroy, ExternalEventParticipant.where(:external_event_id => @external_event.id).where(:user_id => participant.id).first)|| (participant == current_user &&  false == @external_event.subscription_sent?(participant)) %>
       </td>
     </tr>
   <% end %>
