@@ -8,7 +8,11 @@ FwzeIntern::Application.routes.draw do
     post  'public_workingplan',                 to: 'events#public_workingplan'
     get   'internal_workingplan',               to: 'events#internal_workingplan'
     post  'internal_workingplan',               to: 'events#internal_workingplan'
-    resources :external_events
+    resources :external_events do
+      get  'add_me',                            to: 'external_events#add_me'
+      delete 'remove_me',                       to: 'external_events#remove_me'
+      get  'confirm_subscription',              to: 'external_events#confirm_subscription'
+    end
     match '(:year(/:month(/:day)))(.:format)',  to: 'events#date',          as: :calendar
   end
   resources :events

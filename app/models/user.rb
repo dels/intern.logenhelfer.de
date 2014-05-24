@@ -27,6 +27,8 @@ class User < ActiveRecord::Base
   has_many :roles, through: :user_roles, :uniq => true
   has_many :attached_files
   has_many :announcement_subscription
+  has_many :external_event_participants
+  has_many :external_events, :through => :external_event_participants
   belongs_to :academic_title
 
   default_scope includes(:academic_title)

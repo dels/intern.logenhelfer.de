@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140524135821) do
+ActiveRecord::Schema.define(:version => 20140524151650) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -160,6 +160,14 @@ ActiveRecord::Schema.define(:version => 20140524135821) do
 
   add_index "events", ["created_by_id"], :name => "index_events_on_created_by_id"
   add_index "events", ["updated_by_id"], :name => "index_events_on_updated_by_id"
+
+  create_table "external_event_participants", :force => true do |t|
+    t.integer  "user_id"
+    t.integer  "external_event_id"
+    t.boolean  "subscription_sent", :default => false
+    t.datetime "created_at",                           :null => false
+    t.datetime "updated_at",                           :null => false
+  end
 
   create_table "external_events", :force => true do |t|
     t.string   "uuid"

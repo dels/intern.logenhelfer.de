@@ -9,8 +9,8 @@
 <table class='autolink'>
   <tr>
     <th><%= t 'activerecord.attributes.external_event.title' %></th>
-    <th><%= t 'activerecord.attributes.external_event.description' %></th>
     <th><%= t 'activerecord.attributes.external_event.host' %></th>
+    <th><%= t 'activerecord.attributes.external_event.visiting_brothers' %></th>
     <th><%= t 'activerecord.attributes.external_event.time' %></th>
     <th><%= t 'activerecord.attributes.external_event.date' %></th>
     <th></th>
@@ -18,8 +18,8 @@
   <% @external_events.each do |external_event| %>
     <tr>
       <td><%= external_event.title %></td>
-      <td><%= external_event.description %></td>
       <td><%= external_event.host %></td>
+      <td><%= external_event.participants.count %></td>
       <td><%= l external_event.time, format: :time  %></td>
       <td><%= l external_event.date %></td>
       <td>

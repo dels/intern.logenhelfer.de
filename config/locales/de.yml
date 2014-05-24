@@ -223,15 +223,12 @@ de:
 
       external_event:
         date: Datum
-        duration: Dauer (in Minuten)
         host: Loge
         location: Ort
-        only_date: Only date
-        only_time: Only time
         description: Beschr.
         time: Zeit
         title: Bezeichnung
-        type/birthday: 'Geburtstag'
+        visiting_brothers: Besuchende Brr.
         created_by: erstellt von
         updated_by: zuletzt geändert von
         whole_day: ganztägig?
@@ -302,6 +299,8 @@ de:
     create_success: '%{model} erfolgreich erstellt.'
     destroy_failure: '%{model} konnte nicht gelöscht werden.'
     destroy_success: '%{model} wurde erfolgreich gelöscht.'
+    subscription_successful: 'Anmeldung erfolgreich übermittel.'
+    unsubscribing_successful: 'Abmeldung erfolgreich übermittel.'
     errors:
       format: '%{attribute} %{message}'
       header: Invalid Fields

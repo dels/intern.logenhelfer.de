@@ -12,8 +12,9 @@ class Ability
       self.send(method) if self.respond_to?(method)
     end
     can [:show, :edit, :update, :update_announcement_subscription], User, id: @user.id unless AppConfig[:archive]
+#    can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
     can [:index, :show], Announcement
-    can [:index, :show], ExternalEvent
+    can [:index, :show, :add_me, :remove_me], ExternalEvent
     can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
       [] != (c.roles & @user.roles)
@@ -53,6 +54,7 @@ class Ability
 
   # korrespondierender Schriftfuehrer
   def secretary_abilities
+    can :manage, ExternalEventParticipant
   end
 
   def secretary_archive_abilities
