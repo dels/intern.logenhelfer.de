@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 class ExternalEventsController < AuthorizedController
-  helper_method :sort_column, :sort_direction
 
   def index
+    @external_events = ExternalEvent.where('date >= ?', Date.today - 1.day).order('date ASC, time ASC')
   end
 
   def show
