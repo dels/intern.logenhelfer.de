@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-
 class ExternalEventsController < AuthorizedController
+  helper_method :sort_column, :sort_direction
 
   def index
   end
 
   def show
+    @users = User.search(params[:search]) if params[:search].present?
   end
 
   def add_me
     cur_event = ExternalEvent.find_by_uuid(params[:external_event_id])
+    cur_user = User.find_by_uuid(params[:user])
+    cur_user ||= current_user
+    logger.fatal "adding user #{cur_user.fullname}"
     ExternalEventParticipant.new do |eep|
-      eep.user = current_user
+      eep.user = cur_user
       eep.external_event = cur_event
       eep.save!
     end
@@ -58,7 +62,10 @@ class ExternalEventsController < AuthorizedController
   end
 
   def update
-    if @external_event.update_attributes(params[:external_event])
+    @external_event.assign_attributes(params[:external_event])
+    @external_event.updated_by_id = current_user.id
+    if @external_event.save
+#    if @external_event.update_attributes(params[:external_event])
       redirect_to @external_event, notice: t("activerecord.update_success", model: t("activerecord.models.external_event"))
     else
       render :edit
@@ -70,4 +77,5 @@ class ExternalEventsController < AuthorizedController
     @external_event.save
     redirect_to external_events_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.external_event"))
   end
+
 end

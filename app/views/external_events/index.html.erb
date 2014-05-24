@@ -30,3 +30,37 @@
     </tr>
   <% end %>
 </table>
+
+<%- if current_user == User.secretary &&  @users -%>
+
+  <% if @users.count > 0 %>
+    <table class='autolink'>
+      <tr>
+        <th><%= User.human_attribute_name(:matriculation_number) %></th>
+        <th><%= User.human_attribute_name(:lastname) %></th>
+        <th><%= User.human_attribute_name(:firstname) %></th>
+        <th><%= User.human_attribute_name(:address) %></th>
+        <th><%= User.human_attribute_name(:phone) %></th>
+        <th><%= User.human_attribute_name(:mobile) %></th>
+        <th><%= User.human_attribute_name(:date_of_birth) %></th>
+        <th></th>
+      </tr>
+      <% @users.each do |user| %>
+        <tr>
+          <td><%= user.matriculation_number %></td>
+          <td><%= dash(user.lastname) %></td>
+          <td><%= dash(user.firstname) %></td>
+          <td><%= dash(user.private_address.try :to_s) %></td>
+          <td><%= dash(user.private_address.try :phone) %></td>
+          <td><%= dash(user.private_address.try :mobile) %></td>
+          <td><%= dash(user.date_of_birth ? l(user.date_of_birth) : nil) %></td>
+          <td>
+            <%= image_link_tag_helper 'add',      user_path(user)            if can?(:show, user) %>
+          </td>
+          </tr>
+      <% end %>
+    </table>
+  <%- else -%>
+    <p>Keine Mitglieder gefunden.</p>
+  <%- end -%>
+<%- end -%>
