@@ -269,7 +269,7 @@ class User < ActiveRecord::Base
     eep = eep.first
     if eep.subscription_sent
       return I18n.t("text.external_event_subscription.subscription_to_work_sent") unless eep.festive_board
-      return I18n.t("text.external_event_subscription.subscribtion_to_work_and_festive_board_sent")
+      return I18n.t("text.external_event_subscription.subscription_to_work_and_festive_board_sent")
     end
     return I18n.t("text.external_event_subscription.to_be_subscribed_to_work") unless eep.festive_board
     return I18n.t("text.external_event_subscription.to_be_subscribed_to_work_and_festive_board") 
