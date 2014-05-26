@@ -38,7 +38,6 @@ class EventsController < AuthorizedController
         fd.filename = "Arbeitsplan (öffentlich)"
     fd.remote_ip = current_user ? current_user.current_sign_in_ip : request.remote_ip
 
-b
     respond_to do |format|
       format.html do
         @from   = Date.today
