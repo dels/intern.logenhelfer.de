@@ -1,9 +1,15 @@
 de:
   text:
     external_event_subscription:
-      subscription_sent: 'Beim Sekretär der Loge angemeldet'
-      subscribed: 'Anmeldung ausstehend'
+      subscription_to_work_sent: 'Für Arbeit (ohne Tafel)'
+      subscription_to_work_and_festive_board_sent: 'Für Arbeit und Tafel angemeldet'
+      to_be_subscribed_to_work: 'Anmeldung ausstehend (ohne Tafel)'
+      to_be_subscribed_to_work_and_festive_board: 'Anmeldung ausstehend (inkl. Tafel)'
+      awaiting_secretary_to_confirm_subscription: 'Sekretär benachrichtigt (Anmeldung ohne Tafel)'
+      awaiting_secretary_to_confirm_subscription_including_festive_board: 'Sekretär benachrichtigt (Anmeldung inkl. Tafel)'
       not_subscribed: 'Nicht angemeldet'
+      subscribe_to_work: 'Anmelden'
+      subscribe_to_work_and_festive_board: 'Anmelden (inkl. Tafel)'
   pdf:
     members_list:
       header:

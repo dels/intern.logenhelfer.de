@@ -264,9 +264,15 @@ class User < ActiveRecord::Base
   end
 
   def subscription_status(ext_event)
-    return I18n.t("text.external_event_subscription.subscription_sent") if ext_event.subscription_sent?(self)
-    return I18n.t("text.external_event_subscription.subscribed") if ext_event.subscribed?(self)
-    return I18n.t("text.external_event_subscription.not_subscribed")
+    eep = ExternalEventParticipant.where(:user_id => self.id).where(:external_event_id => ext_event.id)
+    return I18n.t("text.external_event_subscription.not_subscribed") if eep.empty?
+    eep = eep.first
+    if eep.subscription_sent
+      return I18n.t("text.external_event_subscription.subscription_to_work_sent") unless eep.festive_board
+      return I18n.t("text.external_event_subscription.subscribetion_to_work_and_festive_board_sent")
+    end
+    return I18n.t("text.external_event_subscription.to_be_subscribed_to_work") unless eep.festive_board
+    return I18n.t("text.external_event_subscription.to_be_subscribed_to_work_and_festive_board") 
   end
 end
 

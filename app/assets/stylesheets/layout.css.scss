@@ -498,6 +498,10 @@ span.add {
   &.destroy { background-image: image-url('destroy.png'); }
 
   &.top { background-position: left top; }
+
+  &.newspaper { background-image: image-url('news.png'); }
+  &.newspaper_add { background-image: image-url('newspaper_add.png'); }
+
 }
 
 .avoid-bijoux {

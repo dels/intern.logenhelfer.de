@@ -20,7 +20,7 @@
     <tr>
       <td><%= external_event.title %></td>
       <td><%= external_event.host %></td>
-      <td><%= external_event.location %></td>
+      <td><%= dash(external_event.location) %></td>
       <td><%= external_event.participants.count %></td>
       <td><%= l external_event.time, format: :time  %></td>
       <td><%= l external_event.date %></td>

@@ -19,6 +19,7 @@ class ExternalEventsController < AuthorizedController
     ExternalEventParticipant.new do |eep|
       eep.user = cur_user
       eep.external_event = cur_event
+      eep.festive_board = params[:festive_board]
       eep.save!
     end
     UserMailer.new_subscription_notification(cur_event, cur_user).deliver unless User.secretary == current_user

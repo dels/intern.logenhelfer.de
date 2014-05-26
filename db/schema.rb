@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140524151650) do
+ActiveRecord::Schema.define(:version => 20140526192425) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -167,6 +167,7 @@ ActiveRecord::Schema.define(:version => 20140524151650) do
     t.boolean  "subscription_sent", :default => false
     t.datetime "created_at",                           :null => false
     t.datetime "updated_at",                           :null => false
+    t.boolean  "festive_board",     :default => false
   end
 
   create_table "external_events", :force => true do |t|

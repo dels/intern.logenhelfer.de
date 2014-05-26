@@ -18,6 +18,10 @@ class ExternalEvent < ActiveRecord::Base
 
   default_scope where(:deleted => false)
 
+  def subscription(usr)
+    ExternalEventParticipant.where(:user_id => usr.id).first
+  end
+
   def subscribed?(usr)
     false == ExternalEventParticipant.where(:user_id => usr.id).empty?
   end

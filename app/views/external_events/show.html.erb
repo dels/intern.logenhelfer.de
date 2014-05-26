@@ -19,11 +19,14 @@
   <%= simple_format dash(@external_event.description), class: 'description' %>
 
   <%- if @external_event.subscription_sent?(current_user)  -%>
-    <p class="description , success icon">Angemeldet</p>
+    <p class="description , success icon"><%= t('text.external_event_subscription.subscribed')%></p>
   <%- elsif (false == @external_event.subscription_sent?(current_user) && @external_event.subscribed?(current_user)) -%>
-     <p class="description , spinner icon">Sekretär benachrichtigt</p>
+     <p class="description , spinner icon">
+       <%= @external_event.subscription(current_user).festive_board ? t('text.external_event_subscription.awaiting_secretary_to_confirm_subscription_including_festive_board') : t('text.external_event_subscription.awaiting_secretary_to_confirm_subscription') %>
+     </p>
   <%- else -%>
-    <p class="description , add icon"><%= link_to "Teilnehmen", external_event_add_me_path(@external_event)%></p>
+    <p class="description , newspaper icon"><%= link_to t('text.external_event_subscription.subscribe_to_work'), external_event_add_me_path(@external_event, :festive_board => false)%></p>
+    <p class="description , newspaper_add icon"><%= link_to t('text.external_event_subscription.subscribe_to_work_and_festive_board'), external_event_add_me_path(@external_event, :festive_board => true)%></p>
   <%- end -%>
 
   <%- if can?(:edit, @external_event) -%>
