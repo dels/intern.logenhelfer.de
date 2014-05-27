@@ -23,7 +23,7 @@ class ExternalEvent < ActiveRecord::Base
   end
 
   def subscribed?(usr)
-    false == ExternalEventParticipant.where(:user_id => usr.id).empty?
+    false == ExternalEventParticipant.where(:user_id => usr.id).where(:external_event_id => self.id).empty?
   end
 
   def subscription_sent?(usr)
