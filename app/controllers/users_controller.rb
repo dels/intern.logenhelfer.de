@@ -98,8 +98,8 @@ class UsersController < AuthorizedController
           usr.lastname,
           usr.firstname,
           I18n.l(usr.date_of_birth),
-          I18n.l(usr.entered_apprentice_since + 25.years),
-          I18n.l(usr.entered_apprentice_since + 50.years) ]
+          I18n.l(usr.twentyfifth_jubilee),
+          I18n.l(usr.fortieth_jubilee) ]
       }).render, type: "application/pdf", filename: "#{Date.today}-Geburtstagsliste.pdf"
   end
 

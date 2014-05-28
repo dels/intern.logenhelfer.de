@@ -247,6 +247,14 @@ class User < ActiveRecord::Base
     now.year - date_of_birth.year - ((now.month > date_of_birth.month || (now.month == date_of_birth.month && now.day >= date_of_birth.day)) ? 0 : 1)
   end
 
+  def twentyfifth_jubilee
+    entered_apprentice_since + 25.years
+  end
+
+  def fortieth_jubilee
+    entered_apprentice_since + 40.years
+  end
+
   def subscribed_to_news
     (false == AnnouncementSubscription.where(:user_id => self.id).empty?)
   end

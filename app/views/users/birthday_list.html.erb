@@ -12,7 +12,7 @@
     <th><%= sortable :date_of_birth,User.human_attribute_name(:date_of_birth) %></th>
     <th><%= User.human_attribute_name(:age) %></th>
     <th><%= User.human_attribute_name(:twentyfifth_jubilee) %></th>
-    <th><%= User.human_attribute_name(:fiftieth_jubilee) %></th>
+    <th><%= User.human_attribute_name(:fortieth_jubilee) %></th>
   </tr>
   <% @users.each do |user| %>
     <tr>
@@ -20,8 +20,8 @@
       <td><%= dash(user.firstname) %></td>
       <td><%= dash(user.date_of_birth ? l(user.date_of_birth) : nil) %></td>
       <td><%= user.age %></td>
-      <td><%= dash(user.entered_apprentice_since ? l(user.entered_apprentice_since+25.years) : nil) %></td>
-      <td><%= dash(user.entered_apprentice_since ? l(user.entered_apprentice_since+40.years) : nil) %></td>
+      <td><%= dash(user.entered_apprentice_since ? l(user.twentyfifth_jubilee) : nil) %></td>
+      <td><%= dash(user.entered_apprentice_since ? l(user.fortieth_jubilee) : nil) %></td>
     </tr>
   <% end %>
 </table>
