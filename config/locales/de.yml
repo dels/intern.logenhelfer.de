@@ -263,6 +263,7 @@ de:
         entered_apprentice_since: Aufgenommen am
         fax: Fax
         fellow_craft_since: Geselle seit
+        twentyfifth_jubilee: 25. Jubiläum
         fortieth_jubilee: 40. Jubiläum
         firstname: Vorname
         lastname: Nachname
@@ -279,7 +280,7 @@ de:
         positions: Ämter
         roles: Roles
         academic_title_id: Titel
-        twentyfifth_jubilee: 25. Jubiläum
+        fullname: Name
       user/addresses:
         city: Ort
         email: E-Mail
