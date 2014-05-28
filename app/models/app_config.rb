@@ -4,9 +4,10 @@
 # their string representation) are stored as strings in the database, the
 # getter returns a converted value (see implementation in AppConfig::Adapter).
 module AppConfig
+  @@default_refresh_time = 60.seconds
   # cached records
   @@records = {}
-  @@access_times = Hash.new {|h,k| h[k] = 20.seconds.ago }
+  @@access_times = Hash.new {|h,k| h[k] = @@default_refresh_time.ago }
 
   class << self
     # ActiveRecord specific.
@@ -22,12 +23,12 @@ module AppConfig
     def [](key, uncached=false)
       key = key.to_sym
       q = AppConfig::Adapter.where(key: "#{Rails.env}_#{key}")
-      if uncached || @@access_times[key] < 20.seconds.ago
+      if uncached || @@access_times[key] < @@default_refresh_time.ago
         @@records[key] = q.first
-        @@access_times[key] = Time.zone.now
+        @@access_times[key] = Time.now
       else
         @@records[key] ||= begin
-          @@access_times[key] = Time.zone.now
+          @@access_times[key] = Time.now
           q.first
         end
       end
@@ -53,8 +54,8 @@ module AppConfig
     # Force reload the next time `key` is accessed.
     def dirty!(key)
       key = key.to_sym
-      # perhaps 100.years to be safe in future?
-      @@access_times[key] = 1.hour.ago
+      # really invalidate stuff
+      @@access_times[key] = 100.years.ago
       @@records[key] = nil
     end
 

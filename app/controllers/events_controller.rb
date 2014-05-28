@@ -64,13 +64,13 @@ class EventsController < AuthorizedController
 
   def internal_workingplan
     return if request.method == 'POST' && render_workingplan(true)
-    @from_date = Date.today.beginning_of_week
+    @from_date = Date.today.beginning_of_month
     @to_date   = (@from_date + AppConfig[:default_workingplan_timespan].days).end_of_week
   end
 
   def public_workingplan
     return if request.method == 'POST' && render_workingplan(false)
-    @from_date = Date.today.beginning_of_week
+    @from_date = Date.today.beginning_of_month
     @to_date   = (@from_date + AppConfig[:default_workingplan_timespan].days).end_of_week
   end
 
