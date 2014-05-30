@@ -77,7 +77,7 @@ de:
           description: Das Feld "Ort" im Formular für neue Termine wird mit diesem Wert vorausgefüllt.
         user_change_notification_email:
           name: E-Mail-Adresse für Benachrichtungen
-          description: 'E-Mail Adresse, an die der Bericht über die Datenänderung gesendet wird, wenn die Daten eines Br. verändert worden sind.'
+          description: 'E-Mail Adresse, an die der Bericht über die Datenänderung gesendet wird, wenn die Daten eines Br. verändert worden sind. Mehrere E-Mail Adressen sind durch Semikolon zu trennen.'
         default_from_email:
           name: Default-Absender-Adresse für System-Mails
           description: Absender aller E-Mails die die Anwendung versendet.
