@@ -29,7 +29,11 @@
     </section>
 
     <footer>
-      Running in <%= Rails.env %> mode. Version <%= APP_VERSION_STRING %>, deployed at <%= APP_VERSION[:deployed_at] %>
+    <% if Rails.env.development? || Rails.env.test? %>
+      Running in <%= Rails.env %> mode. Version <%= APP_VERSION_STRING %>, zuletzt aktualisiert am <%= APP_VERSION[:last_commit_at] %>
+    <% else %>
+      Version <%= APP_VERSION_STRING %>, zuletzt aktualisiert am <%= APP_VERSION[:last_commit_at] %>
+    <% end %>
     </footer>
 
     <% if current_user && Rails.env.development? %>
@@ -39,7 +43,7 @@
         <h5>params:</h5> <%= debug params %>
         <h5>URIs</h5> <%= debug 'fullpath' => request.fullpath, 'path' => request.path, 'domain' => request.url %>
       </footer>
-    <% end%>
+    <% end %>
 
     <div id="throbble-container">
       <p id="throbble-notice">
