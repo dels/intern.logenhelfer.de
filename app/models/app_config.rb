@@ -4,7 +4,7 @@
 # their string representation) are stored as strings in the database, the
 # getter returns a converted value (see implementation in AppConfig::Adapter).
 module AppConfig
-  @@default_refresh_time = 60.seconds
+  Rails.env.development? ? @@default_refresh_time = 1.seconds : @@default_refresh_time = 5.minutes
   # cached records
   @@records = {}
   @@access_times = Hash.new {|h,k| h[k] = @@default_refresh_time.ago }
@@ -32,7 +32,6 @@ module AppConfig
           q.first
         end
       end
-
       @@records[key].try :value
     end
 
@@ -46,7 +45,7 @@ module AppConfig
       end
       @@records[key].value = value.to_s
       @@records[key].save!
-      @@access_times[key] = Time.zone.now
+      dirty!(key)
 
       @@records[key].value
     end
@@ -55,7 +54,7 @@ module AppConfig
     def dirty!(key)
       key = key.to_sym
       # really invalidate stuff
-      @@access_times[key] = 100.years.ago
+      @@access_times[key] = 1000.years.ago
       @@records[key] = nil
     end
 
