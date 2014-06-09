@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gem 'rails',                    '3.2.18'
 gem 'thin'
 gem 'pg'
-gem 'exception_notification', "3.0.1"#, :git => "git://github.com/smartinez87/exception_notification"
+gem 'exception_notification'#, "3.0.1"#, :git => "git://github.com/smartinez87/exception_notification"
 
 gem 'bcrypt-ruby',              require: 'bcrypt'
 gem 'devise'
@@ -14,7 +14,7 @@ gem 'jquery-ui-rails'
 gem 'best_in_place'
 
 gem 'friendly_id',              '~> 4.0.0'
-gem 'cancan',                   '1.6.7'
+gem 'cancan'#,                   '1.6.7'
 gem 'rails-i18n'
 gem 'prawn',                    '~> 1.0.0.rc1'
 gem 'later_dude',               '>= 0.3.1'
@@ -34,11 +34,10 @@ group :development, :archive_dev do
 end
 
 group :assets do
-  gem 'sass-rails',             '~> 3.2.3'
+  gem 'sass-rails'#,             '~> 3.2.3'
   gem 'coffee-rails',           '~> 3.2.1'
   gem 'libv8', '~> 3.11.8'
   gem "therubyracer", '>= 0.11.0beta1', :require => 'v8', platform: :ruby
-#  gem 'therubyracer',           platform: :ruby
   gem 'uglifier',               '>= 1.0.3'
   gem 'compass-rails'
 end

@@ -1,13 +1,15 @@
+ 
 
 
+- choose environment name (should not be production)
+- create environment file
+- update thin according to name
+- update update-script according to name
+- create database.yml
+- add database user to postgres
+psql  -Upostgres -d template1 -c "create role NEW_USER with createdb login password 'NEW_PASS'"
 
-choose environment name (should not be production)
-create environment file
-update thin according to name
-update update-script according to name
-create database.yml
-add database user to postgres
-add rvm environment
+- add rvm environment
 
 
 
