@@ -76,8 +76,4 @@ FwzeIntern::Application.configure do
     openssl_verify_mode:  'none'
   }
 
-  config.middleware.use ExceptionNotifier,
-    email_prefix:         "[Exception] ",
-    sender_address:       %{"Exception Notifier" <technik@fwze.de>},
-    exception_recipients: %w{error@deftwork.com}
 end

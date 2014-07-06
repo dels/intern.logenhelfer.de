@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 
-gem 'rails',                    '3.2.18'
+gem 'rails',                    '3.2.19'
 gem 'thin'
 gem 'pg'
-gem 'exception_notification'#, "3.0.1"#, :git => "git://github.com/smartinez87/exception_notification"
+gem 'exception_notification'
 
 gem 'bcrypt-ruby',              require: 'bcrypt'
 gem 'devise'
@@ -35,7 +35,7 @@ end
 
 group :assets do
   gem 'sass-rails'#,             '~> 3.2.3'
-  gem 'coffee-rails',           '~> 3.2.1'
+  gem 'coffee-rails'#,           '~> 3.2.1'
   gem 'libv8', '~> 3.11.8'
   gem "therubyracer", '>= 0.11.0beta1', :require => 'v8', platform: :ruby
   gem 'uglifier',               '>= 1.0.3'
@@ -45,11 +45,11 @@ end
 group :test do
   gem 'turn',                   require: false
   gem 'mocha',                  require: false
-  gem "rspec-rails",        :git => "git://github.com/rspec/rspec-rails.git"
-  gem "rspec",              :git => "git://github.com/rspec/rspec.git"
-  gem "rspec-core",         :git => "git://github.com/rspec/rspec-core.git"
-  gem "rspec-expectations", :git => "git://github.com/rspec/rspec-expectations.git"
-  gem "rspec-mocks",        :git => "git://github.com/rspec/rspec-mocks.git"
+  gem "rspec-rails"#,        :git => "git://github.com/rspec/rspec-rails.git"
+  gem "rspec"#,              :git => "git://github.com/rspec/rspec.git"
+  gem "rspec-core"#,         :git => "git://github.com/rspec/rspec-core.git"
+  gem "rspec-expectations"#, :git => "git://github.com/rspec/rspec-expectations.git"
+  gem "rspec-mocks"#,        :git => "git://github.com/rspec/rspec-mocks.git"
   gem 'factory_girl_rails'
   gem 'shoulda-matchers'
   gem 'rspec-given'

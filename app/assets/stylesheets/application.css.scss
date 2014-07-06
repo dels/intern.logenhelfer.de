@@ -59,7 +59,10 @@ $nav-width:       200px;
   background-image: linear-gradient($a-color, $b-color);
 }
 
-@import 'jquery.ui.all';
+/*
+*= require jquery-ui
+*/
+
 @import 'select2';
 
 label {

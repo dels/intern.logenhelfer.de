@@ -1,6 +1,6 @@
 //= require jquery
 //= require jquery_ujs
-//= require jquery.ui.all
+//= require jquery-ui
 //= require dynamic_nested_fields
 //= require jquery.contextMenu
 //= require autolink_table_rows
