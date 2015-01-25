@@ -71,7 +71,7 @@ protected
 
   def add_pdf_section(title, pdf)
     pdf.move_down 10
-    pdf.text title, style: :bold, size: 12
+    pdf.text title, style: :bold, size: 14
     pdf.outline.section title, destination: pdf.page_number
   end
 
@@ -86,10 +86,10 @@ protected
     arr << headings
     # adding table
     arr.concat values.map{|row| row.map{|col| col.to_s.strip}}
-    pdf.table(arr, { header: true, row_colors: [ 'FFFFFF', 'DDDDDD' ], cell_style: { size: 7 }.merge(cell_style) }.merge(options)) do
+    pdf.table(arr, { header: true, row_colors: [ 'FFFFFF', 'DDDDDD' ], cell_style: { size: 12 }.merge(cell_style) }.merge(options)) do
       row(0).border_width = 2
       row(0).font_style = :bold
-      row(0).size = 8
+      row(0).size = 12
       yield if block_given?
     end
 

@@ -54,7 +54,7 @@ class EventsController < AuthorizedController
       end
       format.pdf do
         date_from = Date.today.beginning_of_week
-        date_to   = (date_from + AppConfig[:default_workingplan_timespan].days).end_of_week
+        date_to   = (date_from + default_workingplan_timespan).end_of_week
         fd.filename = "Arbeitsplan (Abruf der öffentlichen PDF)"
         fd.save!
         render_workingplan(false, date_from, date_to)
@@ -65,13 +65,13 @@ class EventsController < AuthorizedController
   def internal_workingplan
     return if request.method == 'POST' && render_workingplan(true)
     @from_date = Date.today.beginning_of_month
-    @to_date   = (@from_date + AppConfig[:default_workingplan_timespan].days).end_of_week
+    @to_date   = (@from_date + default_workingplan_timespan).end_of_week
   end
 
   def public_workingplan
     return if request.method == 'POST' && render_workingplan(false)
     @from_date = Date.today.beginning_of_month
-    @to_date   = (@from_date + AppConfig[:default_workingplan_timespan].days).end_of_week
+    @to_date   = (@from_date + default_workingplan_timespan).end_of_week
   end
 
   def upcoming
@@ -151,6 +151,11 @@ class EventsController < AuthorizedController
 
 private
 
+  def default_workingplan_timespan
+    return AppConfig[:default_workingplan_timespan].days unless AppConfig[:default_workingplan_timespan].nil? || AppConfig[:default_workingplan_timespan].to_s.empty?
+    120.days
+  end
+
   def day
     @date = Date.parse("#{@year}/#{@month}/#{@day}")
 
@@ -229,6 +234,7 @@ private
     @events.where('date >= ? AND date <= ?', from, to).order('date ASC, time ASC').group_by { |event|
       event.date.month
     }.each do |month_number,events|
+      pdf.move_down(20)
       add_pdf_section(I18n.t("date.month_names")[month_number], pdf)
       day_names = I18n.t('date.day_names')
 
@@ -251,7 +257,7 @@ private
         ]
       end
 
-      get_pdf_list(%w[Wochentag Datum Uhrzeit Beschreibung], event_list, { width: pdf.bounds.width, column_widths: { 3 => 370 } }, {}, pdf)
+      get_pdf_list(%w[Wochentag Datum Uhrzeit Beschreibung], event_list, { width: pdf.bounds.width, column_widths: { 3 => 330 } }, {}, pdf)
     end
 
     pdf.start_new_page
@@ -260,7 +266,7 @@ private
     if AppConfig[:lodge_short].nil? || AppConfig[:lodge_short].blank?
       filename = "Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]
     else
-      filename = "#{AppConfig[:lodge_short]}_Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]
+      filename = "#{AppConfig[:lodge_short]}_Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'öffentlich', I18n.l(from), I18n.l(to)]
     end
     send_data pdf.render, type: "application/pdf", filename: filename
   end

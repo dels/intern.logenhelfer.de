@@ -46,7 +46,7 @@ module AppConfig
       @@records[key].value = value.to_s
       @@records[key].save!
       dirty!(key)
-
+      return if @@records[key].nil?
       @@records[key].value
     end
 
