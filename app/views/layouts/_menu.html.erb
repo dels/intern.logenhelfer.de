@@ -18,6 +18,10 @@
         <%- end -%>
         <%- end -%>
 
+        <%- if Rails.env.development? && (request.fullpath =~ /^\/lodges/)  -%>
+        <%#= authorized_menu_item District, districts_path do -%>
+        <%- end -%>
+
         <%- if (request.fullpath =~ /^\/statistics/) || current_user.roles.include?(Role.find_by_name('Admin')) -%>
           <%= authorized_menu_item Statistic, statistics_path do -%>
             <%- if request.fullpath =~ /^\/statistics/ -%>

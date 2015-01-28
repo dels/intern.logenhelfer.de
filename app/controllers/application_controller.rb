@@ -92,7 +92,6 @@ protected
       row(0).size = 12
       yield if block_given?
     end
-
     pdf
   end
 
