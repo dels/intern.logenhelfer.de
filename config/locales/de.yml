@@ -36,8 +36,8 @@ de:
         - Titel
         - Name
         - Telefon
-        - Mobil
         - Fax
+        - Mobil
   addresses:
     form_fields:
       number_format: 'Rufnummern müssen der Form <em>„+Landeskennzahl (Ortskennzahl) Rufnummer“</em> bzw. <em>„+Landeskennzahl (Ortskennzahl) Rufnummer-Durchwahl“</em> folgen. Die Ortskennzahl ist ohne führende 0 anzugeben, die Durchwahl von der Rufnummer durch ein „-“ abzutrennen und der Landeskennzahl (49 für Deutschland) ein „+“ voranzustellen.'
