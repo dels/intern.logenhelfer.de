@@ -19,7 +19,7 @@ class User < ActiveRecord::Base
   validates_uniqueness_of :matriculation_number
   validate :validate_addresses
   validate :validate_degrees
-  validate :validate_roles
+  validate :validate_roles, :on => :update
   validate :validate_mother_lodge_accepted_at_combi
 
   has_many_addresses
@@ -177,9 +177,9 @@ class User < ActiveRecord::Base
 
   def validate_roles
     # check if user is at least entered apprentice
-#    if entered_apprentice_since.nil? || entered_apprentice_since.blank?
-#      errors.add(:base, I18n.t("activerecord.errors.must_be_entered_apprentice"))
-#    end
+    if entered_apprentice_since.nil? || entered_apprentice_since.blank?
+      errors.add(:base, I18n.t("activerecord.errors.must_be_entered_apprentice"))
+    end
     # TODO: only a master mason can have additional roles, such as whorshipful master or secretary
   end
 
