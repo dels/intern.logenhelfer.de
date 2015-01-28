@@ -27,7 +27,8 @@ group :development, :archive_dev do
   gem 'rails-erd'
   gem 'letter_opener'
   gem 'sextant'
-
+  gem 'brakeman'
+#  gem 'i18n-debug'
   # disable for now
   # gem 'debugger'
   # gem 'debugger-ruby_core_source'
