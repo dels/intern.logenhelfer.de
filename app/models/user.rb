@@ -43,6 +43,8 @@ class User < ActiveRecord::Base
     ].join(' OR '), param: "%#{param}%" )
   }
 
+  alias to_s fullname
+
   def approved?
     true
   end
@@ -155,8 +157,6 @@ class User < ActiveRecord::Base
     secretary_user_role = Role.find_by_name("Secretary").user_roles.first
     secretary_user_role.user if secretary_user_role
   end
-
-  alias to_s fullname
 
   def validate_degrees
     if master_mason_since && fellow_craft_since.nil?

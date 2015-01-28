@@ -235,8 +235,9 @@ private
   end
 
   def set_user_degree_dates params
-    # since roles and degrees can only be changed by an admin we can return if the current user is no admin
-    return unless current_user.roles.include?(Role.find_by_name('Admin'))
+    # since roles and degrees can only be changed by an admin we can return if the current user is no admin 
+    # TODO or secretary
+    return unless current_user.roles.include?(Role.find_by_name('Admin')) 
 
     @user.entered_apprentice_since = params[:user][:entered_apprentice_since]
     @user.fellow_craft_since = params[:user][:fellow_craft_since]
