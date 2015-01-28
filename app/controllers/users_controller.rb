@@ -97,9 +97,9 @@ class UsersController < AuthorizedController
         [ usr.academic_title.to_s,
           usr.lastname,
           usr.firstname,
-          I18n.l(usr.date_of_birth),
-          I18n.l(usr.twentyfifth_jubilee),
-          I18n.l(usr.fortieth_jubilee) ]
+          (I18n.l(usr.date_of_birth) rescue ''),
+          (I18n.l(usr.twentyfifth_jubilee) rescue ''),
+          (I18n.l(usr.fortieth_jubilee) rescue '') ]
       }).render, type: "application/pdf", filename: "#{Date.today}-Geburtstagsliste.pdf"
   end
 
