@@ -315,12 +315,13 @@ de:
     unsubscribing_successful: 'Abmeldung erfolgreich übermittel.'
     errors:
       format: '%{attribute} %{message}'
-      header: Invalid Fields
+      header: Fehlerhafte oder fehlende Einträge
       must_be_fellow_craft_to_become_master: Um Meister zu werden muss der Benutzer erst Geselle sein. 
       maximum_business_addresses_exceeded: Es darf nur eine geschäftliche Adresse geben.
       maximum_private_addresses_exceeded: Es darf nur eine private Adresse geben.
       mother_lodge_and_accepted_at: Mutterloge und angenommen an müssen beide leer oder ausgefüllt.
       user_cant_have_one_role_two_times: Ein oder mehrere Rollen sind dem Benutzer bereits zugeordnet und koennen einem Benutzer nicht mehrfach zugeordnet werden.
+      must_be_entered_apprentice: Bitte geben Sie das Datum an, an dem der Br. aufgenommen worden ist. 
       messages:
         accepted: muss akzeptiert werden
         blank: muss ausgefüllt werden

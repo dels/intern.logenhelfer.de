@@ -19,7 +19,7 @@ class User < ActiveRecord::Base
   validates_uniqueness_of :matriculation_number
   validate :validate_addresses
   validate :validate_degrees
-  validate :validate_roles   
+  validate :validate_roles
   validate :validate_mother_lodge_accepted_at_combi
 
   has_many_addresses
@@ -42,8 +42,6 @@ class User < ActiveRecord::Base
         'matriculation_number::text ILIKE :param'
     ].join(' OR '), param: "%#{param}%" )
   }
-
-  alias to_s fullname
 
   def approved?
     true
@@ -100,8 +98,10 @@ class User < ActiveRecord::Base
 
   def entered_apprentice_since=(date)
     return if date.blank?
+    return unless self.id
     ur = self.user_roles.where(role_id: Role.find_by_name('EnteredApprentice')).first
     unless ur
+      self.role_ids << Role.find_by_name('EnteredApprentice')
       ur = UserRole.new 
       ur.role = Role.find_by_name('EnteredApprentice')
       ur.user = self
@@ -112,6 +112,7 @@ class User < ActiveRecord::Base
 
   def fellow_craft_since=(date)
     return if date.blank?
+    return unless entered_apprentice_since
     ur = self.user_roles.where(role_id: Role.find_by_name('FellowCraft')).first
     ur = UserRole.new unless ur
     ur.role = Role.find_by_name('FellowCraft')
@@ -122,6 +123,7 @@ class User < ActiveRecord::Base
 
   def master_mason_since=(date)
     return if date.blank?
+    return unless fellow_craft_since
     ur = self.user_roles.where(role_id: Role.find_by_name('MasterMason')).first
     ur = UserRole.new unless ur
     ur.role = Role.find_by_name('MasterMason')
@@ -174,6 +176,10 @@ class User < ActiveRecord::Base
   end
 
   def validate_roles
+    # check if user is at least entered apprentice
+#    if entered_apprentice_since.nil? || entered_apprentice_since.blank?
+#      errors.add(:base, I18n.t("activerecord.errors.must_be_entered_apprentice"))
+#    end
     # TODO: only a master mason can have additional roles, such as whorshipful master or secretary
   end
 
@@ -252,10 +258,12 @@ class User < ActiveRecord::Base
   end
 
   def twentyfifth_jubilee
+    return nil unless entered_apprentice_since
     entered_apprentice_since + 25.years
   end
 
   def fortieth_jubilee
+    return nil unless entered_apprentice_since
     entered_apprentice_since + 40.years
   end
 
@@ -286,6 +294,9 @@ class User < ActiveRecord::Base
     return I18n.t("text.external_event_subscription.to_be_subscribed_to_work") unless eep.festive_board
     return I18n.t("text.external_event_subscription.to_be_subscribed_to_work_and_festive_board") 
   end
+
+  alias to_s fullname
+
 end
 
 
