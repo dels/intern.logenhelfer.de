@@ -118,7 +118,8 @@ class UsersController < AuthorizedController
     send_data get_pdf_list(I18n.t('pdf.phone_list.header'),
       @users.undeleted.order('lastname ASC, firstname ASC').includes(:academic_title).map {|usr|
         [ usr.academic_title.to_s,
-          usr.fullname.gsub!(/\s/, "\n"),
+#          usr.fullname.gsub!(/\s/, "\n"),
+          usr.reverse_fullname,
           usr.phone_numbers_printable,
           usr.fax_numbers_printable,
           usr.mobile_numbers_printable ]

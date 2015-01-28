@@ -47,6 +47,10 @@ class User < ActiveRecord::Base
     true
   end
 
+  def reverse_fullname
+    "#{lastname}, #{firstname}"
+  end
+
   def fullname
     [ firstname, lastname ].compact.join(' ')
   end
@@ -216,7 +220,7 @@ class User < ActiveRecord::Base
     strs = []
     addresses.each do |addr|
       if addr.phone.present?
-        strs << "#{addr.purpose}: #{addr.phone}"
+        strs << "#{addr.purpose}:\n#{addr.phone}"
       end
     end
     strs.join("\n")
@@ -226,7 +230,7 @@ class User < ActiveRecord::Base
     strs = []
     addresses.each do |addr|
       if addr.fax.present?
-        strs << "#{addr.purpose}: #{addr.fax}"
+        strs << "#{addr.purpose}:\n#{addr.fax}"
       end
     end
     strs.join("\n")
@@ -236,7 +240,7 @@ class User < ActiveRecord::Base
     strs = []
     addresses.each do |addr|
       if addr.mobile.present?
-        strs << "#{addr.purpose}: #{addr.mobile}"
+        strs << "#{addr.purpose}:\n#{addr.mobile}"
       end
     end
     strs.join("\n")
