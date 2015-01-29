@@ -172,8 +172,13 @@ de:
         mail: Post
         see_remarks: Siehe Anmerkungen
       status:
-        contacted: Erster Kontakt zur Loge
-        visiting: Aktiv besuchend
+        contacted: Neu
+        visiting: Besuchend
+        application_expected: Aufnahmeantrag erwartet
+        application_received: Aufnahmeantrag vorliegend
+        ballotage_scheduled: Kugelung terminiert
+        ready_for_admission: Bereit für die Aufnahme
+        admission_scheduled: Aufnahme terminiert
         accepted: Aufgenommen
         declined: Zurückgestellt/Abgelehnt
     attributes:

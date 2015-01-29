@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 class Seeker < ActiveRecord::Base
   include ActsAsAddressable
   include UuidHelper
@@ -52,10 +53,15 @@ class Seeker < ActiveRecord::Base
   end
 
   STATUS = {
-    contacted:      0,
-    visiting:      50,
-    accepted:     100,
-    declined:    1000
+    contacted:                0,
+    visiting:                10,
+    application_expected:    20,
+    application_received:    30,
+    ballotage_scheduled:     40,
+    ready_for_admission:     50,
+    admission_scheduled:     60,
+    accepted:               100,
+    declined:              1000
   }
 
   STATUS.each_pair{|type,id|
