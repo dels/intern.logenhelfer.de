@@ -1,7 +1,8 @@
 class SeekersController < AuthorizedController
-#  helper_method :sort_column, :sort_direction
+  helper_method :sort_column, :sort_direction
 
   def index
+    @seekers = view_context.get_authorized_paginated(@seekers.order(sort_column + " " + sort_direction)).page(params[:page])
   end
 
   def show

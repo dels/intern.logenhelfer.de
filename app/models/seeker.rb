@@ -54,8 +54,8 @@ class Seeker < ActiveRecord::Base
   STATUS = {
     contacted:      0,
     visiting:      50,
-    declined:     100,
-    accepted:    1000
+    accepted:     100,
+    declined:    1000
   }
 
   STATUS.each_pair{|type,id|

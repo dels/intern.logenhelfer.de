@@ -1,5 +1,7 @@
 <% title t("activerecord.models.seeker") %>
 
+<%= paginate @seekers if @seekers.present? %>
+
 <table>
   <tr>
     <th><%= t 'activerecord.attributes.seeker.firstname' %></th>
@@ -22,3 +24,6 @@
     </tr>
   <% end %>
 </table>
+
+<%= paginate @seekers if @seekers.present? %>
+

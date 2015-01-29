@@ -4,6 +4,7 @@
 <p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.seeker")), new_seeker_path %></p>
 <% end %>
 
+  <%= paginate @seekers if @seekers.present? %>
 <table>
   <tr>
     <th><%= t 'activerecord.attributes.seeker.firstname' %></th>
@@ -30,3 +31,4 @@
     </tr>
   <% end %>
 </table>
+<%= paginate @seekers if @seekers.present? %>
