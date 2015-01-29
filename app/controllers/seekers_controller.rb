@@ -9,6 +9,7 @@ class SeekersController < AuthorizedController
   end
 
   def new
+    @seeker.invite = true
   end
 
   def create

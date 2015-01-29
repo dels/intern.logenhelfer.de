@@ -80,5 +80,4 @@ class Seeker < ActiveRecord::Base
     end
     nil
   end
-
 end

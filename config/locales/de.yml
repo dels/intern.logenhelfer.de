@@ -273,6 +273,7 @@ de:
         preferred_way_of_contact: Kontaktieren über
         invite: Aktuell eingeladen
         status: Status
+        updated_at: Zuletzt aktualisiert
       role:
         display_name: Bezeichnung
         email: E-Mail
@@ -774,6 +775,7 @@ de:
       long: ! '%A, %d. %B %Y, %H:%M Uhr'
       short: ! '%d. %B, %H:%M Uhr'
       time: ! '%H:%M'
+      date_only: ! '%d.%m.%Y'
     pm: nachmittags
   unauthorized:
     default: You are not authorized to access this page.

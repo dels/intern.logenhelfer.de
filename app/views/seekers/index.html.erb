@@ -11,8 +11,8 @@
     <th><%= t 'activerecord.attributes.seeker.lastname' %></th>
     <th><%= t 'activerecord.attributes.seeker.source' %></th>
     <th><%= t 'activerecord.attributes.seeker.preferred_way_of_contact' %></th>
-    <th><%= t 'activerecord.attributes.seeker.invite' %></th>
     <th><%= t 'activerecord.attributes.seeker.status' %></th>
+    <th><%= t 'activerecord.attributes.seeker.updated_at' %></th>
     <th></th>
   </tr>
   <% @seekers.each do |seeker| %>
@@ -21,8 +21,8 @@
       <td><%= seeker.lastname %></td>
       <td><%= seeker.source %></td>
       <td><%= dash(seeker.contact_data) %></td>
-      <td><%= boolean_to_yes_no(seeker.invite) %></td>
       <td><%= dash(seeker.current_status) %></td>
+      <td><%= l(seeker.updated_at, format: :date_only) %></td>
       <td>
         <%= show_link_to seeker if can?(:show, seeker) %>
         <%= edit_link_to seeker if can?(:edit, seeker) %>
