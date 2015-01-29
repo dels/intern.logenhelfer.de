@@ -71,13 +71,13 @@ class Ability
   def admin_abilities
     working_plan_admin_abilities
     file_admin_abilities
-    can :manage, User
-    can :manage, Statistic
-    can :manage, AppConfig
+    announcement_admin_abilities
     can :manage, AcademicTitle
+    can :manage, AppConfig
     can :manage, Role
-    can :manage, Announcement
     can :manage, Seeker
+    can :manage, Statistic
+    can :manage, User
   end
   
   def admin_archive_abilities
@@ -142,7 +142,7 @@ class Ability
   def member_of_council_abilities
     can [:index, :file_stats, :user_stats, :user_file_stats, :space_stats], Statistic
     can [:csv_export], User
-    can [:index, :show], Seeker
+    can [:index, :show, :accepted, :inactive, :declined], Seeker
   end
   
   def member_of_council_archive_abilities

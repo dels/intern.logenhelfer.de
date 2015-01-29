@@ -52,5 +52,5 @@ module ActsAsAddressable
     end
   end # module InstanceMethods
 
-end # module ActsAsEmployable
+end # module ActsAsAddressable
 
