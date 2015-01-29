@@ -77,6 +77,7 @@ class Ability
     can :manage, AcademicTitle
     can :manage, Role
     can :manage, Announcement
+    can :manage, Seeker
   end
   
   def admin_archive_abilities
@@ -131,6 +132,7 @@ class Ability
   
   # Meister vom Stuhl
   def worshipful_master_abilities
+    can :manage, Seeker
   end
   
   def worshipful_master_archive_abilities
@@ -140,6 +142,7 @@ class Ability
   def member_of_council_abilities
     can [:index, :file_stats, :user_stats, :user_file_stats, :space_stats], Statistic
     can [:csv_export], User
+    can [:index, :show], Seeker
   end
   
   def member_of_council_archive_abilities

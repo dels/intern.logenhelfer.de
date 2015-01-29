@@ -132,6 +132,14 @@ module LayoutHelper
     '&mdash;'.html_safe
   end
 
+  def boolean_to_yes_no(expr)
+    I18n.translate("helpers.yes_no.boolean_#{(!!expr).to_s}")
+  end
+
+  def boolean_to_true_false(expr)
+    I18n.translate("helpers.true_false.boolean_#{!!expr}")
+  end
+
   def datepicker_field f, field
     obj = f.object.try(field)
     if obj.present?

@@ -1,0 +1,53 @@
+class Seeker < ActiveRecord::Base
+  include ActsAsAddressable
+  include UuidHelper
+  before_create :generate_uuid
+
+  extend FriendlyId
+  friendly_id :uuid
+
+  has_one_address
+
+  attr_accessible :firstname, :lastname, :source, :preferred_way_of_contact, :invite
+
+  validates_presence_of :firstname, :lastname, :source
+
+  default_scope where(:deleted => false)
+
+  WAY_OF_CONTACT = {
+    email: 10,
+    phone: 20,
+    fax: 30,
+    mobile: 40,
+    mail: 50,
+    see_remarks: 100
+  }
+
+  WAY_OF_CONTACT.each_pair{|type,id|
+    self.class_eval %{
+      def #{type}?
+        preferred_way_of_contact == #{id}
+      end
+    }
+  }
+
+  def contact_data
+    case preferred_way_of_contact
+    when 10
+        return address.email
+    when 20
+        return address.phone
+    when 30
+        return address.fax
+    when 40
+        return address.mobile
+    when 50
+        return address.to_s
+    when 100
+        return address.remarks
+    else
+      nil
+    end
+  end
+
+end

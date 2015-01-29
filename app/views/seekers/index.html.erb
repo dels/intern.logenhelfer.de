@@ -1,0 +1,30 @@
+<% title t("activerecord.models.seeker") %>
+
+<% if can? :create, Seeker %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.seeker")), new_seeker_path %></p>
+<% end %>
+
+<table>
+  <tr>
+    <th><%= t 'activerecord.attributes.seeker.firstname' %></th>
+    <th><%= t 'activerecord.attributes.seeker.lastname' %></th>
+    <th><%= t 'activerecord.attributes.seeker.source' %></th>
+    <th><%= t 'activerecord.attributes.seeker.preferred_way_of_contact' %></th>
+    <th><%= t 'activerecord.attributes.seeker.invite' %></th>
+    <th></th>
+  </tr>
+  <% @seekers.each do |seeker| %>
+    <tr>
+      <td><%= seeker.firstname %></td>
+      <td><%= seeker.lastname %></td>
+      <td><%= seeker.source %></td>
+      <td><%= dash(seeker.contact_data) %></td>
+      <td><%= boolean_to_yes_no(seeker.invite) %></td>
+      <td>
+        <%= show_link_to seeker if can?(:show, seeker) %>
+        <%= edit_link_to seeker if can?(:edit, seeker) %>
+        <%= destroy_link_to seeker if can?(:destroy, seeker) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

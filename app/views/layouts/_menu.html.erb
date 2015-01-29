@@ -18,10 +18,6 @@
         <%- end -%>
         <%- end -%>
 
-        <%- if Rails.env.development? && (request.fullpath =~ /^\/lodges/)  -%>
-        <%#= authorized_menu_item District, districts_path do -%>
-        <%- end -%>
-
         <%- if (request.fullpath =~ /^\/statistics/) || current_user.roles.include?(Role.find_by_name('Admin')) -%>
           <%= authorized_menu_item Statistic, statistics_path do -%>
             <%- if request.fullpath =~ /^\/statistics/ -%>
@@ -95,6 +91,11 @@
               <%= link_to(t("helpers.pdf.birthdaylist"), birthday_list_users_path) -%>
             <%- end -%>
           <%- end -%>
+        <%- end -%>
+        <%= authorized_menu_item Seeker, seekers_path do -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/seekers/ ? 'active' : nil) do -%>
+              <%#= link_to t("helpers.pages.seekers"), seekers_path -%>
+            <%- end -%>
         <%- end -%>
       </ul>
 

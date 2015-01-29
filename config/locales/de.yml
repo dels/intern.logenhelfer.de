@@ -163,6 +163,13 @@ de:
       business: Geschäftlich
       other: Andere
       private: Privat
+    seeker:
+      email: E-Mail
+      phone: Telefon
+      fax: Fax
+      mobile: Handy/SMS
+      mail: Post
+      see_remarks: Siehe Anmerkungen
     attributes:
       academic_title:
         add_fields: Titel hinzufügen
@@ -248,6 +255,12 @@ de:
         created_at: Heruntergeladen am
         remote_ip: Heruntergeladen von
         user_id: Mitglied
+      seeker:
+        firstname: Vorname
+        lastname: Nachname
+        source: Quelle
+        preferred_way_of_contact: Kontaktieren über
+        invite: Aktuell eingeladen
       role:
         display_name: Bezeichnung
         email: E-Mail
@@ -414,6 +427,8 @@ de:
       user_role: Benutzerrolle
       role: Rolle
       roles: Rollen
+      seeker: Suchender
+      seekers: Suchende
       statistics: Statistiken
       app_config: Konfiguration
       app_configs: Konfiguration
@@ -597,6 +612,12 @@ de:
         one: 'Konnte %{model} nicht speichern: ein Fehler.'
         other: 'Konnte %{model} nicht speichern: %{count} Fehler.'
   helpers:
+    true_false:
+      boolean_false: nein
+      boolean_true: ja      
+    yes_no:
+      boolean_false: nein
+      boolean_true: ja
     button:
       create: '%{model} erstellen'
       submit: '%{model} speichern'

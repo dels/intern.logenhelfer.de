@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20140526192425) do
+ActiveRecord::Schema.define(:version => 20150129132713) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -208,6 +208,18 @@ ActiveRecord::Schema.define(:version => 20140526192425) do
     t.boolean  "administrational_role", :default => true
     t.string   "email"
     t.integer  "ordering_number"
+  end
+
+  create_table "seekers", :force => true do |t|
+    t.string   "firstname"
+    t.string   "lastname"
+    t.string   "source"
+    t.boolean  "invite"
+    t.boolean  "deleted",                                :default => false
+    t.datetime "created_at",                                                :null => false
+    t.datetime "updated_at",                                                :null => false
+    t.string   "uuid",                     :limit => 36
+    t.integer  "preferred_way_of_contact"
   end
 
   create_table "user_roles", :force => true do |t|

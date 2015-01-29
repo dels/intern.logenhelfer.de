@@ -1,0 +1,21 @@
+<% title t("activerecord.models.seeker") %>
+
+<p class="horizontal-menu">
+  <%= edit_link_to @seeker if can?(:edit, @seeker) %>
+  <%= destroy_link_to @seeker if can?(:destroy, @seeker) %>
+  <%= show_link_to_all Seeker if can?(:index, Seeker) %>
+</p>
+
+<dl>
+  <dt><%= t 'activerecord.attributes.seeker.firstname' %>:</dt>
+  <dd><%= @seeker.firstname %></dd>
+  <dt><%= t 'activerecord.attributes.seeker.lastname' %>:</dt>
+  <dd><%= @seeker.lastname %></dd>
+  <dt><%= t 'activerecord.attributes.seeker.source' %>:</dt>
+  <dd><%= @seeker.source %></dd>
+  <dt><%= t 'activerecord.attributes.seeker.preferred_way_of_contact' %>:</dt>
+  <dd><%= dash(@seeker.contact_data) %></dd>
+  <dt><%= t 'activerecord.attributes.seeker.invite' %>:</dt>
+  <dd><%= boolean_to_yes_no(@seeker.invite) %></dd>
+
+</dl>

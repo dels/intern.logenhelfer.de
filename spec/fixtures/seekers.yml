@@ -1,0 +1,15 @@
+one:
+  firstname: MyString
+  lastname: MyString
+  source: MyString
+  preferred_way_of_contact: MyString
+  invite: false
+  deleted: false
+
+two:
+  firstname: MyString
+  lastname: MyString
+  source: MyString
+  preferred_way_of_contact: MyString
+  invite: false
+  deleted: true

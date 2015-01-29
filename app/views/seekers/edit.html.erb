@@ -1,0 +1,9 @@
+<% title t("activerecord.actions.edit", :model => t("activerecord.models.seeker")) %>
+
+<p class="horizontal-menu">
+  <%= show_link_to @seeker if can?(:show, @seeker) %>
+  <%= show_link_to_all seekers_path if can?(:index, Seeker) %>
+</p>
+
+<%= render 'form' %>
+
