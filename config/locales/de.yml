@@ -662,7 +662,8 @@ de:
       mem_stats: Speicher Verbrauch
       members_of_council: Beamtenrat
       accepted_seekers: Aufgenommen
-      declined_seekers: Abgelehnt/Zurückgestellt
+      inactive_seekers: Zurückgestellt
+      declined_seekers: Abgelehnt
     link:
       new: Neu
       show: Anzeigen

@@ -4,6 +4,7 @@ FwzeIntern::Application.routes.draw do
   resources :seekers do
     collection do
       get 'accepted'
+      get 'inactive'
       get 'declined'
     end
   end

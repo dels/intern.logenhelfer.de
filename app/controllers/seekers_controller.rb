@@ -2,7 +2,7 @@ class SeekersController < AuthorizedController
   helper_method :sort_column, :sort_direction
 
   def index
-    @seekers = view_context.get_authorized_paginated(@seekers.where("status <> ? AND status <> ?", Seeker::STATUS[:declined], Seeker::STATUS[:accepted]).order(sort_column + " " + sort_direction)).page(params[:page])
+    @seekers = view_context.get_authorized_paginated(@seekers.where("status <> ? AND status <> ?", Seeker::STATUS[:declined], Seeker::STATUS[:accepted]).where(invite: true).order(sort_column + " " + sort_direction)).page(params[:page])
   end
 
   def show
@@ -38,6 +38,10 @@ class SeekersController < AuthorizedController
 
   def accepted
     @seekers = view_context.get_authorized_paginated(@seekers.where(status: Seeker::STATUS[:accepted]).order(sort_column + " " + sort_direction)).page(params[:page])
+  end
+
+  def inactive
+    @seekers = view_context.get_authorized_paginated(@seekers.where(invite: false).where("status <> ? AND status <> ?", Seeker::STATUS[:declined], Seeker::STATUS[:accepted]).order(sort_column + " " + sort_direction)).page(params[:page])
   end
 
   def declined

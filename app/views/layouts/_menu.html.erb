@@ -97,6 +97,9 @@
             <%= content_tag :li, class: (request.fullpath =~ /^\/seekers\/accepted/ ? 'active' : nil) do -%>
               <%= link_to t("helpers.pages.accepted_seekers"), accepted_seekers_path -%>
             <%- end -%>
+            <%= content_tag :li, class: (request.fullpath =~ /^\/seekers\/inactive/ ? 'active' : nil) do -%>
+              <%= link_to t("helpers.pages.inactive_seekers"), inactive_seekers_path -%>
+            <%- end -%>
             <%= content_tag :li, class: (request.fullpath =~ /^\/seekers\/declined/ ? 'active' : nil) do -%>
               <%= link_to t("helpers.pages.declined_seekers"), declined_seekers_path -%>
             <%- end -%>

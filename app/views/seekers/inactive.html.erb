@@ -1,0 +1,29 @@
+<% title t("activerecord.models.seeker") %>
+
+<%= paginate @seekers if @seekers.present? %>
+
+<table>
+  <tr>
+    <th><%= t 'activerecord.attributes.seeker.firstname' %></th>
+    <th><%= t 'activerecord.attributes.seeker.lastname' %></th>
+    <th><%= t 'activerecord.attributes.seeker.source' %></th>
+    <th><%= t 'activerecord.attributes.seeker.preferred_way_of_contact' %></th>
+    <th></th>
+  </tr>
+  <% @seekers.each do |seeker| %>
+    <tr>
+      <td><%= seeker.firstname %></td>
+      <td><%= seeker.lastname %></td>
+      <td><%= seeker.source %></td>
+      <td><%= dash(seeker.contact_data) %></td>
+      <td>
+        <%= show_link_to seeker if can?(:show, seeker) %>
+        <%= edit_link_to seeker if can?(:edit, seeker) %>
+        <%= destroy_link_to seeker if can?(:destroy, seeker) %>
+      </td>
+    </tr>
+  <% end %>
+</table>
+
+<%= paginate @seekers if @seekers.present? %>
+
