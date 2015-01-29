@@ -1,5 +1,5 @@
-class SeekersController < ApplicationController
-  load_and_authorize_resource
+class SeekersController < AuthorizedController
+#  helper_method :sort_column, :sort_direction
 
   def index
   end
@@ -34,4 +34,20 @@ class SeekersController < ApplicationController
     @seeker.save
     redirect_to seekers_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.seeker"))
   end
+
+  def accepted
+    @seekers = view_context.get_authorized_paginated(Seeker.where(:status => Seeker::STATUS[:accepted]).order(sort_column + " " + sort_direction)).page(params[:page])
+  end
+
+  def declined
+    @seekers = view_context.get_authorized_paginated(Seeker.where(:status => Seeker::STATUS[:declined]).order(sort_column + " " + sort_direction)).page(params[:page])
+
+  end
+
+  private
+
+  def sort_column
+    (Seeker.column_names).include?(params[:sort_by]) ? params[:sort_by] : "lastname ASC, firstname"
+  end
+
 end

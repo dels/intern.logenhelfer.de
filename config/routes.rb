@@ -1,7 +1,12 @@
 FwzeIntern::Application.routes.draw do
 
 
-  resources :seekers
+  resources :seekers do
+    collection do
+      get 'accepted'
+      get 'declined'
+    end
+  end
 
   get 'arbeitsplan(.:format)',                  to: 'events#workingplan',   as: :calendar_export
   scope 'calendar' do

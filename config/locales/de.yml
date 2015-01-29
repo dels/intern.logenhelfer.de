@@ -164,12 +164,18 @@ de:
       other: Andere
       private: Privat
     seeker:
-      email: E-Mail
-      phone: Telefon
-      fax: Fax
-      mobile: Handy/SMS
-      mail: Post
-      see_remarks: Siehe Anmerkungen
+      preferred_way_of_contact:
+        email: E-Mail
+        phone: Telefon
+        fax: Fax
+        mobile: Handy/SMS
+        mail: Post
+        see_remarks: Siehe Anmerkungen
+      status:
+        contacted: Erster Kontakt zur Loge
+        visiting: Aktiv besuchend
+        accepted: Aufgenommen
+        declined: Zurückgestellt/Abgelehnt
     attributes:
       academic_title:
         add_fields: Titel hinzufügen
@@ -261,6 +267,7 @@ de:
         source: Quelle
         preferred_way_of_contact: Kontaktieren über
         invite: Aktuell eingeladen
+        status: Status
       role:
         display_name: Bezeichnung
         email: E-Mail
@@ -649,6 +656,8 @@ de:
       downloads: Downloads
       mem_stats: Speicher Verbrauch
       members_of_council: Beamtenrat
+      accepted_seekers: Aufgenommen
+      declined_seekers: Abgelehnt/Zurückgestellt
     link:
       new: Neu
       show: Anzeigen

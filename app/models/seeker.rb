@@ -8,9 +8,9 @@ class Seeker < ActiveRecord::Base
 
   has_one_address
 
-  attr_accessible :firstname, :lastname, :source, :preferred_way_of_contact, :invite
+  attr_accessible :firstname, :lastname, :source, :preferred_way_of_contact, :invite, :status
 
-  validates_presence_of :firstname, :lastname, :source
+  validates_presence_of :firstname, :lastname, :source, :status
 
   default_scope where(:deleted => false)
 
@@ -31,6 +31,7 @@ class Seeker < ActiveRecord::Base
     }
   }
 
+
   def contact_data
     case preferred_way_of_contact
     when 10
@@ -48,6 +49,30 @@ class Seeker < ActiveRecord::Base
     else
       nil
     end
+  end
+
+  STATUS = {
+    contacted:      0,
+    visiting:      50,
+    declined:     100,
+    accepted:    1000
+  }
+
+  STATUS.each_pair{|type,id|
+    self.class_eval %{
+      def #{type}?
+        status == #{id}
+      end
+    }
+  }
+
+  def current_status
+    Seeker::STATUS.each_pair do |k,v|
+      if status == v 
+        return I18n.t("activerecord.seeker.status.#{k}")
+      end
+    end
+    nil
   end
 
 end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150129132713) do
+ActiveRecord::Schema.define(:version => 20150129141750) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -220,6 +220,7 @@ ActiveRecord::Schema.define(:version => 20150129132713) do
     t.datetime "updated_at",                                                :null => false
     t.string   "uuid",                     :limit => 36
     t.integer  "preferred_way_of_contact"
+    t.integer  "status"
   end
 
   create_table "user_roles", :force => true do |t|

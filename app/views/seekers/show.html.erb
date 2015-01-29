@@ -17,5 +17,7 @@
   <dd><%= dash(@seeker.contact_data) %></dd>
   <dt><%= t 'activerecord.attributes.seeker.invite' %>:</dt>
   <dd><%= boolean_to_yes_no(@seeker.invite) %></dd>
+  <dt><%= t 'activerecord.attributes.seeker.status' %>:</dt>
+  <dd><%= dash(@seeker.current_status) %></dd>
 
 </dl>

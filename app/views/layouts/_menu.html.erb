@@ -93,9 +93,12 @@
           <%- end -%>
         <%- end -%>
         <%= authorized_menu_item Seeker, seekers_path do -%>
-          <%= content_tag :li, class: (request.fullpath =~ /^\/seekers/ ? 'active' : nil) do -%>
-              <%#= link_to t("helpers.pages.seekers"), seekers_path -%>
-            <%- end -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/seekers\/accepted/ ? 'active' : nil) do -%>
+            <%= link_to t("helpers.pages.accepted_seekers"), accepted_seekers_path -%>
+          <%- end -%>
+          <%= content_tag :li, class: (request.fullpath =~ /^\/seekers\/declined/ ? 'active' : nil) do -%>
+            <%= link_to t("helpers.pages.declined_seekers"), declined_seekers_path -%>
+          <%- end -%>
         <%- end -%>
       </ul>
 
