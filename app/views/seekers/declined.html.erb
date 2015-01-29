@@ -3,10 +3,11 @@
 <%= paginate @seekers if @seekers.present? %>
 <table>
   <tr>
-    <th><%= t 'activerecord.attributes.seeker.firstname' %></th>
-    <th><%= t 'activerecord.attributes.seeker.lastname' %></th>
-    <th><%= t 'activerecord.attributes.seeker.source' %></th>
-    <th><%= t 'activerecord.attributes.seeker.preferred_way_of_contact' %></th>
+    <th><%= sortable :firstname, Seeker.human_attribute_name(:firstname) %></th>
+    <th><%= sortable :lastname, Seeker.human_attribute_name(:lastname) %></th>
+    <th><%= sortable :source, Seeker.human_attribute_name(:source) %></th>
+    <th><%= sortable :preferred_way_of_contact, Seeker.human_attribute_name(:preferred_way_of_contact) %></th>
+    <th><%= sortable :updated_at, Seeker.human_attribute_name(:updated_at) %></th>
     <th></th>
   </tr>
   <% @seekers.each do |seeker| %>
@@ -15,6 +16,7 @@
       <td><%= seeker.lastname %></td>
       <td><%= seeker.source %></td>
       <td><%= dash(seeker.contact_data) %></td>
+      <td><%= l(seeker.updated_at, format: :date_only) %></td>
       <td>
         <%= show_link_to seeker if can?(:show, seeker) %>
         <%= edit_link_to seeker if can?(:edit, seeker) %>

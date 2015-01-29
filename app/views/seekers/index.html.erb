@@ -7,12 +7,12 @@
   <%= paginate @seekers if @seekers.present? %>
 <table>
   <tr>
-    <th><%= t 'activerecord.attributes.seeker.firstname' %></th>
-    <th><%= t 'activerecord.attributes.seeker.lastname' %></th>
-    <th><%= t 'activerecord.attributes.seeker.source' %></th>
-    <th><%= t 'activerecord.attributes.seeker.preferred_way_of_contact' %></th>
-    <th><%= t 'activerecord.attributes.seeker.status' %></th>
-    <th><%= t 'activerecord.attributes.seeker.updated_at' %></th>
+    <th><%= sortable :firstname, Seeker.human_attribute_name(:firstname) %></th>
+    <th><%= sortable :lastname, Seeker.human_attribute_name(:lastname) %></th>
+    <th><%= sortable :source, Seeker.human_attribute_name(:source) %></th>
+    <th><%= sortable :preferred_way_of_contact, Seeker.human_attribute_name(:preferred_way_of_contact) %></th>
+    <th><%= sortable :status, Seeker.human_attribute_name(:status) %></th>
+    <th><%= sortable :updated_at, Seeker.human_attribute_name(:updated_at) %></th>
     <th></th>
   </tr>
   <% @seekers.each do |seeker| %>
