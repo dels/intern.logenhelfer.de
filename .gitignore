@@ -14,7 +14,7 @@ public/assets/
 config/app_config.yml
 2012_09_29_FWzE_MitgliederVerzeichnis/
 memberlist.csv
-cur_dump.sql
+*.sql
 *.tar.gz.gpg
 pg_dump*
 .DS_Store

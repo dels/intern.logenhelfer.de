@@ -112,7 +112,9 @@ class User < ActiveRecord::Base
 
   def fellow_craft_since=(date)
     return if date.blank?
-    return unless entered_apprentice_since
+    unless entered_apprentice_since
+      return
+    end
     ur = self.user_roles.where(role_id: Role.find_by_name('FellowCraft')).first
     ur = UserRole.new unless ur
     ur.role = Role.find_by_name('FellowCraft')
@@ -123,7 +125,10 @@ class User < ActiveRecord::Base
 
   def master_mason_since=(date)
     return if date.blank?
-    return unless fellow_craft_since
+    unless fellow_craft_since
+      errors.add(:base, I18n.t("activerecord.errors.must_be_fellow_craft_to_become_master"))
+      return
+    end
     ur = self.user_roles.where(role_id: Role.find_by_name('MasterMason')).first
     ur = UserRole.new unless ur
     ur.role = Role.find_by_name('MasterMason')
@@ -161,6 +166,9 @@ class User < ActiveRecord::Base
   end
 
   def validate_degrees
+    if fellow_craft_since && entered_apprentice_since.nil?
+      errors.add(:base, I18n.t("activerecord.errors.must_be_entered_apprentice_to_become_fellow_craft"))
+    end
     if master_mason_since && fellow_craft_since.nil?
       errors.add(:base, I18n.t("activerecord.errors.must_be_fellow_craft_to_become_master"))
     end
