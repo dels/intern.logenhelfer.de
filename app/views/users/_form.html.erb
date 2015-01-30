@@ -20,7 +20,7 @@
     <%= f.date_select :fellow_craft_since,        readonly: limited_user_editing? %>
     <%= f.date_select :master_mason_since,        readonly: limited_user_editing? %>
 
-    <% if current_user.roles.include?(Role.find_by_name('Admin')) %>
+    <% if current_user.admin? || current_user.secretary? %>
       <%= f.collection_select :roles, Role.position_ids, :id, :to_s, { selected: @user.role_ids }, style: 'width:300px', multiple: true, name: 'user[role_ids][]' %>
     <% else %>
       <ul>

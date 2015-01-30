@@ -169,6 +169,18 @@ class User < ActiveRecord::Base
     whorshipful_master_user_role.user if whorshipful_master_user_role
   end
 
+  def admin?
+    roles.include?(Role.find_by_name("Admin"))
+  end
+
+  def secretary?
+    roles.include?(Role.find_by_name("Secretary"))
+  end
+
+  def worshipful_master?
+    roles.include?(Role.find_by_name("WorshipfulMaster"))
+  end
+  
 
   def validate_degrees
     if fellow_craft_since && entered_apprentice_since.nil?
