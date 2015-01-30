@@ -32,26 +32,6 @@ class Seeker < ActiveRecord::Base
     }
   }
 
-
-  def contact_data
-    case preferred_way_of_contact
-    when 10
-        return address.email
-    when 20
-        return address.phone
-    when 30
-        return address.fax
-    when 40
-        return address.mobile
-    when 50
-        return address.to_s
-    when 100
-        return address.remarks
-    else
-      nil
-    end
-  end
-
   STATUS = {
     contacted:                0,
     visiting:                10,
@@ -79,5 +59,9 @@ class Seeker < ActiveRecord::Base
       end
     end
     nil
+  end
+
+  def fullname
+    [ firstname, lastname].join(' ')
   end
 end

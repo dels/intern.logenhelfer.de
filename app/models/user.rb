@@ -164,6 +164,12 @@ class User < ActiveRecord::Base
     secretary_user_role.user if secretary_user_role
   end
 
+  def self.worshipful_master
+    whorshipful_master_user_role = Role.find_by_name("WorshipfulMaster").user_roles.first
+    whorshipful_master_user_role.user if whorshipful_master_user_role
+  end
+
+
   def validate_degrees
     if fellow_craft_since && entered_apprentice_since.nil?
       errors.add(:base, I18n.t("activerecord.errors.must_be_entered_apprentice_to_become_fellow_craft"))

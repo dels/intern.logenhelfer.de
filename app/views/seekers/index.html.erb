@@ -20,7 +20,7 @@
       <td><%= seeker.firstname %></td>
       <td><%= seeker.lastname %></td>
       <td><%= seeker.source %></td>
-      <td><%= dash(seeker.contact_data) %></td>
+      <td><%= dash(seekers_contact_data(seeker)) %></td>
       <td><%= dash(seeker.current_status) %></td>
       <td><%= l(seeker.updated_at, format: :date_only) %></td>
       <td>
