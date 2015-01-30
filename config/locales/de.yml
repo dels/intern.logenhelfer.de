@@ -13,7 +13,7 @@ de:
   mail:
     seeker:
       subject: Einladung zum kommenden Gästeabend
-      body: "Sehr geehrter Herr %{seeker}\n\n\nHerzliche Grüße\n%{whorshipful_master}"
+      body: "Sehr geehrter Herr %{seeker},\n\n\nHerzliche Grüße\n%{whorshipful_master}"
   pdf:
     members_list:
       header:
