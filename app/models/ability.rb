@@ -69,15 +69,12 @@ class Ability
   
   # Deft
   def admin_abilities
-    working_plan_admin_abilities
-    file_admin_abilities
-    announcement_admin_abilities
-    can :manage, AcademicTitle
-    can :manage, AppConfig
-    can :manage, Role
-    can :manage, Seeker
-    can :manage, Statistic
-    can :manage, User
+    worshipful_master_abilities
+    secretary_abilities
+    member_of_council_abilities
+    net_delegate_abilities
+    user_admin_abilities
+    application_admin_abilities
   end
   
   def admin_archive_abilities
