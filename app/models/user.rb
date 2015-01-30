@@ -180,7 +180,10 @@ class User < ActiveRecord::Base
   def worshipful_master?
     roles.include?(Role.find_by_name("WorshipfulMaster"))
   end
-  
+
+  def net_delegate?
+    roles.include?(Role.find_by_name("NetDelegate"))
+  end  
 
   def validate_degrees
     if fellow_craft_since && entered_apprentice_since.nil?
