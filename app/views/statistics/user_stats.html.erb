@@ -14,7 +14,7 @@
       <th><%= User.human_attribute_name(:matriculation_number) %></th>
       <th><%= User.human_attribute_name(:lastname) %></th>
       <th><%= User.human_attribute_name(:firstname) %></th>
-      <% if current_user.roles.include?(Role.where(:name => 'Admin').first) %>
+      <% if current_user.admin? %>
         <th><%= User.human_attribute_name(:current_sign_in_ip) %></th>
       <% end %>
       <th><%= sortable :sign_in_count, User.human_attribute_name(:sign_in_count) %></th>
@@ -26,7 +26,7 @@
         <td><%= user.matriculation_number %></td>
         <td><%= dash(user.lastname) %></td>
         <td><%= dash(user.firstname) %></td>
-        <% if current_user.roles.include?(Role.where(:name => 'Admin').first) %>
+        <% if current_user.admin? %>
           <td><%= dash(user.current_sign_in_ip) %></td>
         <% end %>
         <td><%= dash(user.sign_in_count) %></td>
