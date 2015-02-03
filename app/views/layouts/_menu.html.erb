@@ -11,11 +11,11 @@
         <%- end -%>
 
         <%= authorized_menu_item AppConfig, app_config_path do -%>
-        <%- if request.fullpath =~ /^\/app_config/ -%>
-        <%= content_tag :li, class: (request.fullpath =~ /^\/app_config\/roles/ ? 'active' : nil) do -%>
-        <%= link_to t("activerecord.models.roles"), roles_path -%>
-        <%- end -%>
-        <%- end -%>
+          <%- if request.fullpath =~ /^\/app_config/ -%>
+            <%= content_tag :li, class: (request.fullpath =~ /^\/app_config\/roles/ ? 'active' : nil) do -%>
+              <%= link_to t("activerecord.models.roles"), roles_path -%>
+            <%- end -%>
+          <%- end -%>
         <%- end -%>
 
         <%- if (request.fullpath =~ /^\/statistics/) || current_user.admin? || current_user.worshipful_master? || current_user.secretary? || current_user.net_delegate? -%>

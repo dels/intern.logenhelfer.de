@@ -14,10 +14,15 @@
   <dt><%= t 'activerecord.attributes.seeker.source' %>:</dt>
   <dd><%= @seeker.source %></dd>
   <dt><%= t 'activerecord.attributes.seeker.preferred_way_of_contact' %>:</dt>
-  <dd><%= dash(@seeker.contact_data) %></dd>
+  <dd><%= dash(seekers_contact_data(@seeker)) %></dd>
   <dt><%= t 'activerecord.attributes.seeker.invite' %>:</dt>
   <dd><%= boolean_to_yes_no(@seeker.invite) %></dd>
   <dt><%= t 'activerecord.attributes.seeker.status' %>:</dt>
   <dd><%= dash(@seeker.current_status) %></dd>
+
+  <%- if current_user.worshipful_master? || current_user.admin?  -%>
+    <dt><%= t 'activerecord.attributes.seeker.notes' %>:</dt>
+    <dd><%= dash(@seeker.notes) %></dd>
+  <%- end -%>
 
 </dl>

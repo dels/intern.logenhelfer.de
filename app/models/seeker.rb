@@ -9,7 +9,7 @@ class Seeker < ActiveRecord::Base
 
   has_one_address
 
-  attr_accessible :firstname, :lastname, :source, :preferred_way_of_contact, :invite, :status
+  attr_accessible :firstname, :lastname, :source, :preferred_way_of_contact, :invite, :status, :notes
 
   validates_presence_of :firstname, :lastname, :source, :status
 

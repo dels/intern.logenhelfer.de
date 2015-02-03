@@ -11,7 +11,10 @@
     <%= f.text_field :source %>
     <%= f.select :preferred_way_of_contact, Seeker::WAY_OF_CONTACT.to_a.map{|k,v| [I18n.t("activerecord.seeker.preferred_way_of_contact.#{k}"), v]}, { include_blank: true }, data: { placeholder: I18n.t('helpers.select.prompt') }, class: "type_of_address" %>
     <%= f.select :status, Seeker::STATUS.to_a.map{|k,v| [I18n.t("activerecord.seeker.status.#{k}"), v]}, { include_blank: true }, data: { placeholder: I18n.t('helpers.select.prompt') }, class: "type_of_address" %>
-
+    
+    <%- if current_user.worshipful_master? || current_user.admin?  -%>
+      <%= f.text_area :notes %>
+    <%- end -%>
     <%= f.submit %>
   </dl>
 
