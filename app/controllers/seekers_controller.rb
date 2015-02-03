@@ -10,6 +10,8 @@ class SeekersController < AuthorizedController
 
   def new
     @seeker.invite = true
+    @seeker.address.type_of_address = Address::TYPES[:private]
+    @seeker.address.purpose = t("activerecord.address.private")
   end
 
   def create
