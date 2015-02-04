@@ -5,7 +5,7 @@
 <% end %>
 
   <%= paginate @seekers if @seekers.present? %>
-<table>
+<table  class='autolink'>
   <tr>
     <th><%= sortable :firstname, Seeker.human_attribute_name(:firstname) %></th>
     <th><%= sortable :lastname, Seeker.human_attribute_name(:lastname) %></th>

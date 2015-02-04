@@ -38,7 +38,6 @@ class DirectoriesController < AuthorizedController
   private
   
   def sort_column
-    #FIXME: this might need to be AttachedFile.column_names instead of Directory...
-    (Directory.column_names).include?(params[:sort_by]) ? params[:sort_by] : "filename"
+    (AttachedFile.column_names).include?(params[:sort_by]) ? params[:sort_by] : "filename"
   end
 end

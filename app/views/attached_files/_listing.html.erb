@@ -7,7 +7,7 @@
 <table class='autolink'>
   <tr>
     <th><%= sortable :filename, AttachedFile.human_attribute_name(:filename) %></th>
-    <th><%= AttachedFile.human_attribute_name(:size) %></th>
+    <th><%= sortable :size, AttachedFile.human_attribute_name(:size) %></th>
     <th></th>
   </tr>
   <% @attached_files.each do |attached_file| %>
