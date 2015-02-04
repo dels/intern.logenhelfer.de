@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150202172945) do
+ActiveRecord::Schema.define(:version => 20150204170621) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -141,6 +141,14 @@ ActiveRecord::Schema.define(:version => 20150202172945) do
 
   add_index "directory_roles", ["directory_id"], :name => "index_directory_roles_on_directory_id"
   add_index "directory_roles", ["role_id"], :name => "index_directory_roles_on_role_id"
+
+  create_table "districts", :force => true do |t|
+    t.string   "slug"
+    t.string   "name"
+    t.boolean  "deleted",    :default => false
+    t.datetime "created_at",                    :null => false
+    t.datetime "updated_at",                    :null => false
+  end
 
   create_table "events", :force => true do |t|
     t.string   "title"

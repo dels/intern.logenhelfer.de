@@ -1,0 +1,24 @@
+<% title t("activerecord.models.district") %>
+
+<% if can? :create, District %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.district")), new_district_path %></p>
+<% end %>
+
+<table>
+  <tr>
+    <th><%= t 'activerecord.attributes.district.slug' %></th>
+    <th><%= t 'activerecord.attributes.district.name' %></th>
+    <th></th>
+  </tr>
+  <% @districts.each do |district| %>
+    <tr>
+      <td><%= district.slug %></td>
+      <td><%= district.name %></td>
+      <td>
+        <%= show_link_to district if can?(:show, district) %>
+        <%= edit_link_to district if can?(:edit, district) %>
+        <%= destroy_link_to district if can?(:destroy, district) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

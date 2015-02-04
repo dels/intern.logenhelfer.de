@@ -236,6 +236,36 @@
 <%- end -%>
 
 
+<h2><%= t '.header.districts' %></h2>
+
+
+<dl>
+  <dt><%= t '.header.districts' %></dt>
+  <dd>
+    <table class="narrow">
+      <%- @districts.each do |d| -%>
+        <tr>
+          <td class="wide-25em"><%= best_in_place d, :name %></td>
+          <td><%#= d.lodges.count 
+                   %> <%#= t 'activerecord.models.lodges' 
+                                          %></td>
+          <td><%= destroy_link_to d # if d.lodges.count.zero?
+                  %></td>
+        </tr>
+      <%- end -%>
+    </table>
+  </dd>
+
+  <dt><%= t 'activerecord.attributes.district.add_fields' %></dt>
+  <dd>
+    <%= form_for District.new do |f| -%>
+      <%= f.text_field :name %>
+      <%= f.submit %>
+    <%- end -%>
+  </dd>
+</dl>
+
+
 <h2><%= t '.header.academic_titles' %></h2>
 
 

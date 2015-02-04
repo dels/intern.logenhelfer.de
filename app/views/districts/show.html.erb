@@ -1,0 +1,15 @@
+<% title t("activerecord.models.district") %>
+
+<p class="horizontal-menu">
+  <%= edit_link_to @district if can?(:edit, @district) %>
+  <%= destroy_link_to @district if can?(:destroy, @district) %>
+  <%= show_link_to_all District if can?(:index, District) %>
+</p>
+
+<dl>
+  <dt><%= t 'activerecord.attributes.district.slug' %>:</dt>
+  <dd><%= @district.slug %></dd>
+  <dt><%= t 'activerecord.attributes.district.name' %>:</dt>
+  <dd><%= @district.name %></dd>
+
+</dl>

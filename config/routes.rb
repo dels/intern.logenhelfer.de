@@ -1,6 +1,8 @@
 FwzeIntern::Application.routes.draw do
 
 
+  resources :districts
+
   resources :seekers do
     collection do
       get 'accepted'

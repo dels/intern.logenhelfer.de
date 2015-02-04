@@ -1,0 +1,9 @@
+<%= form_for @district, builder: DefiniteFormBuilder do |f| %>
+  <%= f.error_messages %>
+  <dl>
+    <%= f.text_field :slug %>
+    <%= f.text_field :name %>
+
+    <%= f.submit %>
+  </dl>
+<% end %>

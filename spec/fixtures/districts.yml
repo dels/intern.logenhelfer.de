@@ -1,0 +1,9 @@
+one:
+  slug: MyString
+  name: MyString
+  deleted: false
+
+two:
+  slug: MyString
+  name: MyString
+  deleted: true

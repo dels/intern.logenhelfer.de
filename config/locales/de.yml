@@ -51,6 +51,7 @@ de:
         configuration: Anwendungs-Konfiguration
         general_configuration: Allgemeine Einstellungen
         academic_titles: Akademische Titel
+        districts: Distrikte
       intro: 'Die hier dargestellten Optionen beziehen sich ausschließlich auf die <tt>%{env}</tt>-Umgebung. Das Eintragen ungültiger Werte geschieht auf eigene Gefahr, eine Überprüfung findet nicht statt.'
       options:
         public_wp_available_to_anon_users:
@@ -253,7 +254,6 @@ de:
         created_by: erstellt von
         updated_by: zuletzt geändert von
         whole_day: ganztägig?
-
       external_event:
         date: Datum
         host: Loge
@@ -270,6 +270,10 @@ de:
         created_at: Heruntergeladen am
         remote_ip: Heruntergeladen von
         user_id: Mitglied
+      district:
+        add_fields: Distrikt hinzufügen
+        title: Langform
+        short: Kurzform
       seeker:
         firstname: Vorname
         lastname: Nachname
@@ -440,6 +444,8 @@ de:
       external_events: Termine anderer Logen
       file_download: Download
       file_downloads: Downloads
+      district: Distrikt
+      districtss: Distrikte
       user: Mitglied
       users: Mitglieder
       user_role: Benutzerrolle

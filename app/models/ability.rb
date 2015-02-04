@@ -50,6 +50,7 @@ class Ability
   def application_admin_abilities
     can :manage, AppConfig
     can :manage, AcademicTitle
+    can :manage, District
     can :manage, Role
   end
   

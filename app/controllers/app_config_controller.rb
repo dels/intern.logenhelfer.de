@@ -4,6 +4,7 @@ class AppConfigController < ApplicationController
   def index
     @config_keys = AppConfig.keys
     @academic_titles = AcademicTitle.undeleted.all
+    @districts = District.all
   end
 
   def update
