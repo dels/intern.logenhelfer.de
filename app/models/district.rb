@@ -1,5 +1,12 @@
 class District < ActiveRecord::Base
-  attr_accessible :slug, :name
+  extend FriendlyId
+  friendly_id :name, use: :slugged
+
+  attr_accessible :name
+
+  validates_presence_of :name
+  
+  has_many :lodges
 
   default_scope where(:deleted => false)
   default_scope order('name ASC')

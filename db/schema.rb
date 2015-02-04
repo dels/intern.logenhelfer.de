@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150204170621) do
+ActiveRecord::Schema.define(:version => 20150204182729) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -205,6 +205,28 @@ ActiveRecord::Schema.define(:version => 20150204170621) do
 
   add_index "file_downloads", ["deleted"], :name => "index_file_downloads_on_deleted"
   add_index "file_downloads", ["user_id"], :name => "index_file_downloads_on_user_id"
+
+  create_table "lodges", :force => true do |t|
+    t.string   "slug"
+    t.string   "name"
+    t.text     "description"
+    t.integer  "district_id"
+    t.boolean  "deleted",     :default => false
+    t.datetime "created_at",                     :null => false
+    t.datetime "updated_at",                     :null => false
+  end
+
+  create_table "officers", :force => true do |t|
+    t.string   "uuid"
+    t.integer  "lodge_id"
+    t.string   "firstname"
+    t.string   "lastname"
+    t.integer  "role_id"
+    t.string   "role_email"
+    t.boolean  "deleted",    :default => false
+    t.datetime "created_at",                    :null => false
+    t.datetime "updated_at",                    :null => false
+  end
 
   create_table "roles", :force => true do |t|
     t.string   "name"

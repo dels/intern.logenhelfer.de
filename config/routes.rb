@@ -1,8 +1,5 @@
 FwzeIntern::Application.routes.draw do
 
-
-  resources :districts
-
   resources :seekers do
     collection do
       get 'accepted'
@@ -26,6 +23,12 @@ FwzeIntern::Application.routes.draw do
     match '(:year(/:month(/:day)))(.:format)',  to: 'events#date',          as: :calendar
   end
   resources :events
+
+  resources :lodges do
+    resources :officers
+  end
+
+  resources :districts
 
   resources :file_downloads
   resources :categories do

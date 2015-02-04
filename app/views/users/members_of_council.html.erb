@@ -6,8 +6,6 @@
 -->
 <% #end %>
 
-
-<%#= paginate @users if @users.present? %>
 <table class='autolink'>
   <tr>
     <th><%= Role.human_attribute_name(:display_name) %></th>
@@ -17,10 +15,8 @@
     <th><%= User.human_attribute_name(:mobile) %></th>
     <th></th>
   </tr>
-  <%# @users.each do |user| %>
   <% @roles.each do |role| %>
     <tr>
-      
       <td><%= dash(role.display_name) %></td>
       <td><%= dash(role.email) %></td>
       <td><%= dash(role.users.first.fullname) %></td>
@@ -33,4 +29,3 @@
   <% end %>
 </table>
 
-<%#= paginate @users if @users.present? %>

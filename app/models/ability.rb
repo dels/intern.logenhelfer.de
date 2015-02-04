@@ -40,10 +40,14 @@ class Ability
     can :manage, ExternalEvent
   end
   
+  def lodges_admin_abilites
+    can :manage, Lodge
+    can :manage, Officer
+  end
+
   def user_admin_abilities
-    admin_role = Role.find_by_name("Admin")
     can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update, :destroy], User, ["users.deleted = false"] do |u|
-      AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+      AppConfig[:show_admins] || @user.admin? || !u.admin?
     end
   end
   
@@ -57,9 +61,10 @@ class Ability
   # korrespondierender Schriftfuehrer
   def secretary_abilities
     working_plan_admin_abilities
-    can :manage, Announcement
-    can :manage, User
+    announcement_admin_abilities
+    lodges_admin_abilites
     can :manage, Statistic
+    can :manage, User
   end
   
   def secretary_archive_abilities
@@ -130,6 +135,9 @@ class Ability
   
   # Meister vom Stuhl
   def worshipful_master_abilities
+    working_plan_admin_abilities
+    announcement_admin_abilities
+    lodges_admin_abilites
     can :manage, Seeker
   end
   
@@ -149,7 +157,7 @@ class Ability
   # Internet-Beauftragter
   def net_delegate_abilities
     file_admin_abilities
-    can :manage, User
+    user_admin_abilities
     can :manage, Statistic
   end
   

@@ -166,6 +166,21 @@ module LayoutHelper
     end
   end
 
+  def lodges_menu
+    res = "".html_safe
+    res << content_tag(:ul, class: 'space-bottom' ) do
+      blockres = "".html_safe
+      (get_authorized Lodge.order(:name)).each do |lodge|
+        active = request.fullpath =~ /^\/lodges\/#{lodge.slug}/
+        blockres << content_tag(:li, class: active ? 'active' : nil) do
+          link_to(lodge.name, lodge_path(lodge))
+        end
+      end
+      blockres
+    end
+    res
+  end
+
   def categories_menu
     res = "".html_safe
     get_authorized(Category.order('name ASC')).each do |cat|
@@ -200,4 +215,5 @@ module LayoutHelper
     end
     res
   end
+
 end

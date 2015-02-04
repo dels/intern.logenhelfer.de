@@ -240,6 +240,8 @@ de:
         description: Beschreibung
         name: Name
         roles: Roles
+      district:
+        add_fields: Distrikt hinzufügen
       event:
         date: Datum
         duration: Dauer (in Minuten)
@@ -270,10 +272,20 @@ de:
         created_at: Heruntergeladen am
         remote_ip: Heruntergeladen von
         user_id: Mitglied
-      district:
-        add_fields: Distrikt hinzufügen
-        title: Langform
-        short: Kurzform
+      lodge:
+        name: Name
+        description: Beschreibung
+        district: Distrikt
+        district_id: Distrikt
+      officer:
+        lodge_id: Loge
+        firstname: Vorname
+        lastname: Nachname
+        role_id: Amt
+        role_email: amtl. E-Mail Adresse
+      role:
+        display_name: Bezeichnung
+        email: E-Mail
       seeker:
         firstname: Vorname
         lastname: Nachname
@@ -283,9 +295,6 @@ de:
         status: Status
         notes: Notizen
         updated_at: Zuletzt aktualisiert
-      role:
-        display_name: Bezeichnung
-        email: E-Mail
       user:
         accepted_at: Angenommen am
         address: Address
@@ -431,6 +440,8 @@ de:
       addresses: Adressen
       announcement: Meldung
       announcements: Aktuelles
+      app_config: Konfiguration
+      app_configs: Konfiguration
       attached_file: Datei
       attached_files: Dateien
       categories: Kategorien
@@ -438,24 +449,25 @@ de:
       cateories: Kategorien
       directories: Ordner
       directory: Ordner
+      district: Distrikt
+      districts: Distrikte
       event: Termin
       events: Kalender
       external_event: Veranstaltung
       external_events: Termine anderer Logen
       file_download: Download
       file_downloads: Downloads
-      district: Distrikt
-      districtss: Distrikte
-      user: Mitglied
-      users: Mitglieder
-      user_role: Benutzerrolle
+      lodge: Loge
+      lodges: Logen
+      officer: Beamter
+      officers: Beamte
       role: Rolle
       roles: Rollen
       seeker: Suchender
       seekers: Suchende
       statistics: Statistiken
-      app_config: Konfiguration
-      app_configs: Konfiguration
+      user: Mitglied
+      users: Mitglieder
     upload_failure: Bitte wählen Sie eine Datei zum Hochladen aus.
     update_success: Aktualisierung erfolgreich
   attributes:

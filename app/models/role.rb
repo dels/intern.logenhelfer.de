@@ -8,6 +8,8 @@ class Role < ActiveRecord::Base
 
   has_many :category_roles
   has_many :categories, through: :category_roles, dependent: :destroy
+  
+  has_many :officers
 
   def self.positions
     # XXX: Role.where('name NOT IN (*)', ['EnteredApprentice', 'FellowCraft', 'MasterMason'])

@@ -62,6 +62,15 @@
       </ul>
 
       <ul class="space-top">
+        <%= authorized_menu_item Lodge, lodges_path do -%>
+          <%- if request.fullpath =~ /^\/lodges/ -%>
+             <%= lodges_menu %>
+           <%- end -%>
+        <%- end -%>
+      </ul>
+
+
+      <ul class="space-top">
         <%= authorized_menu_item Event, upcoming_calendar_path do -%>
           <%- if request.fullpath =~ /^\/(events|calendar)/ -%>
             <%= content_tag :li, class: (request.fullpath =~ /^\/(events|calendar)\/public_workingplan/ ? 'active' : nil) do -%>
