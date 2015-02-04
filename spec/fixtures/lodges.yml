@@ -1,0 +1,13 @@
+one:
+  slug: MyString
+  name: MyString
+  description: MyText
+  disrict: 
+  deleted: false
+
+two:
+  slug: MyString
+  name: MyString
+  description: MyText
+  disrict: 
+  deleted: true

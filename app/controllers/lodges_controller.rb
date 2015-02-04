@@ -1,0 +1,44 @@
+class LodgesController < AuthorizedController
+  helper_method :sort_column, :sort_direction
+
+  def index
+  end
+
+  def show
+    @officers = view_context.get_authorized_paginated(@lodge.officers.order(sort_column + " " + sort_direction)).page(params[:page])
+  end
+
+  def new
+  end
+
+  def create
+    if @lodge.save
+      redirect_to @lodge, notice: t("activerecord.create_success", model: t("activerecord.models.lodge"))
+    else
+      render :new
+    end
+  end
+
+  def edit
+  end
+
+  def update
+    if @lodge.update_attributes(params[:lodge])
+      redirect_to @lodge, notice: t("activerecord.update_success", model: t("activerecord.models.lodge"))
+    else
+      render :edit
+    end
+  end
+
+  def destroy
+    @lodge.deleted = true
+    @lodge.save
+    redirect_to lodges_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.lodge"))
+  end
+
+  private
+  
+  def sort_column
+    (Officer.column_names).include?(params[:sort_by]) ? params[:sort_by] : "lastname"
+  end
+end

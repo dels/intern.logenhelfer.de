@@ -1,0 +1,22 @@
+<% title t("activerecord.models.lodge") %>
+
+<p class="horizontal-menu">
+  <%= edit_link_to @lodge if can?(:edit, @lodge) %>
+  <%= destroy_link_to @lodge if can?(:destroy, @lodge) %>
+  <%= show_link_to_all Lodge if can?(:index, Lodge) %>
+</p>
+
+<dl>
+  <dt><%= t 'activerecord.attributes.lodge.district' %>:</dt>
+  <dd><%= @lodge.district.name %></dd>
+  <dt><%= t 'activerecord.attributes.lodge.name' %>:</dt>
+  <dd><%= @lodge.name %></dd>
+  <dt><%= t 'activerecord.attributes.lodge.description' %>:</dt>
+  <dd><%= dash(@lodge.description) %></dd>
+
+</dl>
+
+
+<h2><%= t("activerecord.models.officers") %></h2>
+
+<%= render "officers/listing" %>

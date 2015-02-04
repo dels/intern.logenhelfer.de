@@ -1,0 +1,27 @@
+
+<% if can? :create, Officer %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.officer")), new_lodge_officer_path(@lodge), class: 'add icon'  %></p>
+<% end %>
+
+<table class='autolink'>
+  <tr>
+    <th><%= t 'activerecord.attributes.officer.firstname' %></th>
+    <th><%= t 'activerecord.attributes.officer.lastname' %></th>
+    <th><%= t 'activerecord.attributes.officer.role_id' %></th>
+    <th><%= t 'activerecord.attributes.officer.role_email' %></th>
+    <th></th>
+  </tr>
+  <% @officers.each do |officer| %>
+    <tr>
+      <td><%= officer.firstname %></td>
+      <td><%= officer.lastname %></td>
+      <td><%= officer.role.display_name %></td>
+      <td><%= mail_to(officer.role_email, officer.role_email) %></td>
+      <td>
+        <%= show_link_to officer if can?(:show, officer) %>
+        <%= edit_link_to officer if can?(:edit, officer) %>
+        <%= destroy_link_to officer if can?(:destroy, officer) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

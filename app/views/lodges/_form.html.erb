@@ -1,0 +1,10 @@
+<%= form_for @lodge, builder: DefiniteFormBuilder do |f| %>
+  <%= f.error_messages %>
+  <dl>
+    <%= f.collection_select :district_id, District.all, :id, :name, include_blank: :true, readonly: limited_user_editing? %>
+    <%= f.text_field :name %>
+    <%= f.text_area :description %>
+
+    <%= f.submit %>
+  </dl>
+<% end %>

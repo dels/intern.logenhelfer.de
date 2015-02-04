@@ -1,0 +1,9 @@
+<% title t("activerecord.actions.edit", :model => t("activerecord.models.lodge")) %>
+
+<p class="horizontal-menu">
+  <%= show_link_to @lodge if can?(:show, @lodge) %>
+  <%= show_link_to_all lodges_path if can?(:index, Lodge) %>
+</p>
+
+<%= render 'form' %>
+

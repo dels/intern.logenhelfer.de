@@ -1,0 +1,24 @@
+<% title t("activerecord.models.lodge") %>
+
+<% if can? :create, Lodge %>
+<p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.lodge")), new_lodge_path %></p>
+<% end %>
+
+<table class='autolink'>
+  <tr>
+    <th><%= t 'activerecord.attributes.lodge.district' %></th>
+    <th><%= t 'activerecord.attributes.lodge.name' %></th>
+    <th></th>
+  </tr>
+  <% @lodges.each do |lodge| %>
+    <tr>
+      <td><%= lodge.district.name %></td>
+      <td><%= lodge.name %></td>
+      <td>
+        <%= show_link_to lodge if can?(:show, lodge) %>
+        <%= edit_link_to lodge if can?(:edit, lodge) %>
+        <%= destroy_link_to lodge if can?(:destroy, lodge) %>
+      </td>
+    </tr>
+  <% end %>
+</table>

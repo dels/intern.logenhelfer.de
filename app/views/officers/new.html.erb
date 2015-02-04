@@ -1,0 +1,8 @@
+<% title t("activerecord.actions.create_new", :model => t("activerecord.models.officer")) %>
+
+<% if can? :index, Officer %>
+<p class="horizontal-menu"><%= show_link_to_all lodge_officers_path(@officer.lodge) %></p>
+<% end %>
+
+<%= render 'form' %>
+

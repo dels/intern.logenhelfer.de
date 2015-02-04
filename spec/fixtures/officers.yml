@@ -1,0 +1,17 @@
+one:
+  uuid: MyString
+  lodge_id: 1
+  firstname: MyString
+  lastname: MyString
+  role_id: 1
+  role_email: MyString
+  deleted: false
+
+two:
+  uuid: MyString
+  lodge_id: 1
+  firstname: MyString
+  lastname: MyString
+  role_id: 1
+  role_email: MyString
+  deleted: true

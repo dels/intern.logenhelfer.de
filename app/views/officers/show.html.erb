@@ -1,0 +1,23 @@
+<% title t("activerecord.models.officer") %>
+
+<p class="horizontal-menu">
+  <%= edit_link_to @officer if can?(:edit, @officer) %>
+  <%= destroy_link_to @officer if can?(:destroy, @officer) %>
+  <%= show_link_to_all Officer if can?(:index, Officer) %>
+</p>
+
+<dl>
+  <dt><%= t 'activerecord.attributes.officer.uuid' %>:</dt>
+  <dd><%= @officer.uuid %></dd>
+  <dt><%= t 'activerecord.attributes.officer.lodge_id' %>:</dt>
+  <dd><%= @officer.lodge_id %></dd>
+  <dt><%= t 'activerecord.attributes.officer.firstname' %>:</dt>
+  <dd><%= @officer.firstname %></dd>
+  <dt><%= t 'activerecord.attributes.officer.lastname' %>:</dt>
+  <dd><%= @officer.lastname %></dd>
+  <dt><%= t 'activerecord.attributes.officer.role_id' %>:</dt>
+  <dd><%= @officer.role_id %></dd>
+  <dt><%= t 'activerecord.attributes.officer.role_email' %>:</dt>
+  <dd><%= @officer.role_email %></dd>
+
+</dl>

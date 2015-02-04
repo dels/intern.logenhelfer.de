@@ -1,0 +1,13 @@
+
+
+<%= form_for [@officer.lodge, @officer], builder: DefiniteFormBuilder do |f| %>
+  <%= f.error_messages %>
+  <dl>
+    <%= f.text_field :firstname %>
+    <%= f.text_field :lastname %>
+    <%= f.collection_select :role_id, Role.positions, :id, :display_name, include_blank: :true, readonly: limited_user_editing? %>
+    <%= f.text_field :role_email %>
+
+    <%= f.submit %>
+  </dl>
+<% end %>
