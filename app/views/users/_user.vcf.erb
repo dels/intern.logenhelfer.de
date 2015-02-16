@@ -6,6 +6,9 @@ FN:<%= user.fullname %>
 ORG:<%= AppConfig[:organisation] %>
 URL:http://<%= AppConfig[:domain] %>/
 EMAIL;TYPE=INTERNET:<%= user.email %>
+<%- if user.date_of_birth.present? -%>
+BDAY:<%= user.date_of_birth.strftime('%F') %>
+<%- end -%>
 <%- user.addresses.each do |addr| -%>
 <%- if addr.phone.present? -%>
 TEL;TYPE=voice,<%= addr.vcf_type %>:<%= addr.phone %>
