@@ -56,6 +56,12 @@ class Ability
     can :manage, AcademicTitle
     can :manage, District
     can :manage, Role
+    can :manage, User
+    can :manage, Category
+    can :manage, Lodge
+    can :manage, Officer
+    can :manage, Event
+    can :manage, ExternalEvent
   end
   
   # korrespondierender Schriftfuehrer
