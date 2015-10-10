@@ -69,6 +69,7 @@ class Ability
     working_plan_admin_abilities
     announcement_admin_abilities
     lodges_admin_abilites
+    file_admin_abilities
     can :manage, Statistic
     can :manage, User
   end
