@@ -65,13 +65,13 @@ class EventsController < AuthorizedController
   def internal_workingplan
     return if request.method == 'POST' && render_workingplan(true)
     @from_date = Date.today.beginning_of_month
-    @to_date   = (@from_date + default_workingplan_timespan).end_of_week
+    @to_date   = (@from_date + default_workingplan_timespan).end_of_month
   end
 
   def public_workingplan
     return if request.method == 'POST' && render_workingplan(false)
     @from_date = Date.today.beginning_of_month
-    @to_date   = (@from_date + default_workingplan_timespan).end_of_week
+    @to_date   = (@from_date + default_workingplan_timespan).end_of_month
   end
 
   def upcoming
@@ -218,9 +218,14 @@ private
   end
 
   def render_workingplan(internal=false, date_from=nil, date_to=nil)
-    from = date_from || Date.parse(params[:date_from])
-    to   = date_to   || Date.parse(params[:date_to])
-
+    begin 
+      from = date_from || Date.parse(params[:date_from])
+      to   = date_to   || Date.parse(params[:date_to])
+    rescue 
+      if internal
+        
+      end
+    end
     fd = FileDownload.new
     fd.user = current_user
     fd.attached_file = nil
