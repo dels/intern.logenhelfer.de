@@ -82,6 +82,6 @@ FwzeIntern::Application.configure do
     :email => {
            :email_prefix =>         "[Exception] ",
            :sender_address =>       %{"Exception Notifier" <technik@fwze.de>},
-           :exception_recipients => %w{de@deftwork.com}
+           :exception_recipients => %w{de@elsbroek.com}
     }
 end
