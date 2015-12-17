@@ -121,6 +121,8 @@ de:
     event:
       ical_export: 'Diesen Termin in den lokalen Kalender <a href="%{url}">importieren</a>.'
       actions: weitere Aktionen
+      invalid_from_date: "Das Datum für das Feld \"Von\" ist ungültig und wurde korrigiert."
+      invalid_to_date: "Das Datum für das Feld \"Bis\" ist ungültig und wurde korrigiert."
     day:
       ical_export: 'Öffentlich einsehbare Termine dieses Tages in den lokalen Kalender <a href="%{url}">importieren</a>.'
     month:

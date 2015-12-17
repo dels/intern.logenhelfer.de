@@ -218,13 +218,17 @@ private
   end
 
   def render_workingplan(internal=false, date_from=nil, date_to=nil)
-    begin 
+    begin
       from = date_from || Date.parse(params[:date_from])
+    rescue
+      flash.now[:error] = t('events.event.invalid_from_date')
+      return
+    end
+    begin
       to   = date_to   || Date.parse(params[:date_to])
-    rescue 
-      if internal
-        
-      end
+    rescue
+      flash.now[:error] = t('events.event.invalid_to_date')
+      return
     end
     fd = FileDownload.new
     fd.user = current_user
