@@ -14,7 +14,7 @@ class Announcement < ActiveRecord::Base
 
   validates_presence_of :title, :message_body, :created_by_id
 
-  after_save :notify_subscribers_new_announcement
+  after_create :notify_subscribers_new_announcement
   after_update :notify_subscribers_announcement_updated
 
   def notify_subscribers_new_announcement
