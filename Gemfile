@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails',                    '3.2.21'
+gem 'rails',                    '~>3.2'
 gem 'thin'
 gem 'pg'
 gem 'exception_notification'
@@ -37,7 +37,7 @@ end
 group :assets do
   gem 'sass-rails'#,             '~> 3.2.3'
   gem 'coffee-rails'#,           '~> 3.2.1'
-  gem 'libv8', '~> 3.11.8'
+  gem 'libv8' #, '~> 3.11.8'
   gem "therubyracer", '>= 0.11.0beta1', :require => 'v8', platform: :ruby
   gem 'uglifier',               '>= 1.0.3'
   gem 'compass-rails'
