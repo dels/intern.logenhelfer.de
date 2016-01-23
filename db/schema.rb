@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20150204182729) do
+ActiveRecord::Schema.define(:version => 20160123094635) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -181,7 +181,7 @@ ActiveRecord::Schema.define(:version => 20150204182729) do
   create_table "external_events", :force => true do |t|
     t.string   "uuid"
     t.string   "title",                            :null => false
-    t.string   "description"
+    t.text     "description"
     t.string   "location",                         :null => false
     t.time     "time",                             :null => false
     t.date     "date",                             :null => false
