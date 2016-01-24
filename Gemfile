@@ -28,6 +28,7 @@ group :development, :archive_dev do
   gem 'letter_opener'
   gem 'sextant'
   gem 'brakeman'
+  gem 'test-unit'
 #  gem 'i18n-debug'
   # disable for now
   # gem 'debugger'
