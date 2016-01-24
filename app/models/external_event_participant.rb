@@ -7,6 +7,4 @@ class ExternalEventParticipant < ActiveRecord::Base
   validates_presence_of :external_event
   validates_uniqueness_of :user_id, :scope => :external_event_id
 
-  
-
 end
