@@ -49,6 +49,7 @@ class Ability
     can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update, :destroy], User, ["users.deleted = false"] do |u|
       AppConfig[:show_admins] || @user.admin? || !u.admin?
     end
+    can :manage, UserRole
   end
   
   def application_admin_abilities
