@@ -70,8 +70,8 @@ class Ability
     announcement_admin_abilities
     lodges_admin_abilites
     file_admin_abilities
+    user_admin_abilities
     can :manage, Statistic
-    can :manage, User
   end
   
   def secretary_archive_abilities
@@ -88,6 +88,7 @@ class Ability
     net_delegate_abilities
     user_admin_abilities
     application_admin_abilities
+    can :manage, Statistic
   end
   
   def admin_archive_abilities
