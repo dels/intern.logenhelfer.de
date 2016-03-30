@@ -45,7 +45,7 @@ module ApplicationHelper
   end
 
   def limited_user_editing?
-    roles = ['UserAdmin', 'Admin']
+    roles = ['UserAdmin', 'Admin', 'Secretary']
     @le ||= current_user.role_ids & Role.where(name: roles).pluck(:id)
     @le.blank?
   end
