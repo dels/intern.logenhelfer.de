@@ -1,5 +1,5 @@
 class Role < ActiveRecord::Base
-  attr_accessible :email, :ordering_number, :name, :display_name, :group
+  attr_accessible :email, :ordering_number, :name, :display_name, :group, :administrational_role
 
   validates_presence_of :name, :display_name
 

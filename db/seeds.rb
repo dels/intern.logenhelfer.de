@@ -33,43 +33,43 @@ mocr = nil
 Role.where(:name => ['WorshipfulMaster', 'InternalSecretary', 'Secretary', 'SeniorWarden', 'JuniorWarden', 'HonoryMember', 'Deakan', 'Speaker', 'Musician', 'MasterOfCeremony', 'PreparingBrother', 'PastMaster', 'DedicatedMaster', 'Treasurer', 'JuniorDeacon', 'SeniorDeacon', 'NetDelegate'])
 
 block 'create roles' do
-  log ar    = Role.create!(order_number: 0, name: 'Admin',            display_name: 'Administrator',                group: true)
-  log ur    = Role.create!(order_number: 0,name: 'FileAdmin',         display_name: 'Kann Dateien verwalten',       group: true)
-  log er    = Role.create!(order_number: 0,name: 'EnteredApprentice', display_name: 'Lehrling',                     group: true)
-  log fr    = Role.create!(order_number: 0,name: 'FellowCraft',       display_name: 'Geselle',                      group: true)
-  log mr    = Role.create!(order_number: 0,name: 'MasterMason',       display_name: 'Meister',                      group: true)
-  log wmr   = Role.create!(order_number: 1,name: 'WorshipfulMaster',  display_name: 'MvSt', administrational_role: false)
-  log         Role.create!(order_number: 2, name: 'DedicatedMaster',  display_name: 'zug. Meister',                 group: true, administrational_role: false)
-  log ser   = Role.create!(order_number: 3,name: 'SeniorWarden',      display_name: '1. Aufseher', administrational_role: false)
-  log jwr   = Role.create!(order_number: 4,name: 'JuniorWarden',      display_name: '2. Aufseher', administrational_role: false)
-  log         Role.create!(order_number: 5, name: 'Treasurer',        display_name: 'Schatzmeister', administrational_role: false)
-  log sr    = Role.create!(order_number: 6,name: 'InternalSecretary', display_name: 'Protokolliernder Schriftführer', administrational_role: false)
-  log sr    = Role.create!(order_number: 7,name: 'Secretary',         display_name: 'Korrespondierender Schriftführer', administrational_role: false)
-  log         Role.create!(order_number: 8, name: 'Speaker',          display_name: 'Redner', administrational_role: false)
-  log         Role.create!(order_number: 9, name: 'MasterOfCeremony', display_name: 'Zeremonienmeister', administrational_role: false)
-  log         Role.create!(order_number: 10, name: 'SeniorDeacon',    display_name: '1. Schaffer', administrational_role: false)
-  log         Role.create!(order_number: 11, name: 'JuniorDeacon',    display_name: '2. Schaffer', administrational_role: false)
-  log         Role.create!(order_number: 12, name: 'PreparingBrother',display_name: 'Vorbereitender Bruder', administrational_role: false)
-  log         Role.create!(order_number: 13, name: 'Librarian',       display_name: 'Bibliothekar', administrational_role: false)
-  log         Role.create!(order_number: 14, name: 'Archivist',       display_name: 'Archivar', administrational_role: false)
-  log         Role.create!(order_number: 15, name: 'PreparingBrother',display_name: 'Vorbereitender Bruder', administrational_role: false)
-  log         Role.create!(order_number: 16, name: 'Musician',        display_name: 'Musikmeister',  administrational_role: false)
-  log         Role.create!(order_number: 17, name: 'Deakan',          display_name: 'Wachhabender',  administrational_role: false)
-  log         Role.create!(order_number: 18, name: 'NetDelegate',     display_name: 'Internet-Beauftragter',        group: true, administrational_role: false)
+  log ar    = Role.create!(ordering_number: 0, name: 'Admin',            display_name: 'Administrator',                group: true)
+  log ur    = Role.create!(ordering_number: 0,name: 'FileAdmin',         display_name: 'Kann Dateien verwalten',       group: true)
+  log er    = Role.create!(ordering_number: 0,name: 'EnteredApprentice', display_name: 'Lehrling',                     group: true)
+  log fr    = Role.create!(ordering_number: 0,name: 'FellowCraft',       display_name: 'Geselle',                      group: true)
+  log mr    = Role.create!(ordering_number: 0,name: 'MasterMason',       display_name: 'Meister',                      group: true)
+  log wmr   = Role.create!(ordering_number: 1,name: 'WorshipfulMaster',  display_name: 'MvSt', administrational_role: false)
+  log         Role.create!(ordering_number: 2, name: 'DedicatedMaster',  display_name: 'zug. Meister',                 group: true, administrational_role: false)
+  log ser   = Role.create!(ordering_number: 3,name: 'SeniorWarden',      display_name: '1. Aufseher', administrational_role: false)
+  log jwr   = Role.create!(ordering_number: 4,name: 'JuniorWarden',      display_name: '2. Aufseher', administrational_role: false)
+  log         Role.create!(ordering_number: 5, name: 'Treasurer',        display_name: 'Schatzmeister', administrational_role: false)
+  log sr    = Role.create!(ordering_number: 6,name: 'InternalSecretary', display_name: 'Protokolliernder Schriftführer', administrational_role: false)
+  log sr    = Role.create!(ordering_number: 7,name: 'Secretary',         display_name: 'Korrespondierender Schriftführer', administrational_role: false)
+  log         Role.create!(ordering_number: 8, name: 'Speaker',          display_name: 'Redner', administrational_role: false)
+  log         Role.create!(ordering_number: 9, name: 'MasterOfCeremony', display_name: 'Zeremonienmeister', administrational_role: false)
+  log         Role.create!(ordering_number: 10, name: 'SeniorDeacon',    display_name: '1. Schaffer', administrational_role: false)
+  log         Role.create!(ordering_number: 11, name: 'JuniorDeacon',    display_name: '2. Schaffer', administrational_role: false)
+  log         Role.create!(ordering_number: 12, name: 'PreparingBrother',display_name: 'Vorbereitender Bruder', administrational_role: false)
+  log         Role.create!(ordering_number: 13, name: 'Librarian',       display_name: 'Bibliothekar', administrational_role: false)
+  log         Role.create!(ordering_number: 14, name: 'Archivist',       display_name: 'Archivar', administrational_role: false)
+  log         Role.create!(ordering_number: 15, name: 'PreparingBrother',display_name: 'Vorbereitender Bruder', administrational_role: false)
+  log         Role.create!(ordering_number: 16, name: 'Musician',        display_name: 'Musikmeister',  administrational_role: false)
+  log         Role.create!(ordering_number: 17, name: 'Deakan',          display_name: 'Wachhabender',  administrational_role: false)
+  log         Role.create!(ordering_number: 18, name: 'NetDelegate',     display_name: 'Internet-Beauftragter',        group: true, administrational_role: false)
 
-  log mocr  = Role.create!(order_number: 0, name: 'MemberOfCouncil',   display_name: 'Mitglieder des Beamtenrates',  group: true)
-  log         Role.create!(order_number: 0, name: 'HonoryMember',      display_name: 'Ehrenmitglied',                group: true, administrational_role: false)
-  log         Role.create!(order_number: 0, name: 'PastMaster',        display_name: 'Altstuhlmeister',              group: true, administrational_role: false)
-  log         Role.create!(order_number: 0, name: 'WorkingPlanAdmin',  display_name: 'Kann Arbeitsplan bearbeiten',  group: true)
-  log         Role.create!(order_number: 0, name: 'UserAdmin',         display_name: 'Kann Benutzer verwalten',      group: true)
-  log         Role.create!(order_number: 0, name: 'ApplicationAdmin',  display_name: 'Kann Anwendung konfigurieren', group: true)
+  log mocr  = Role.create!(ordering_number: 0, name: 'MemberOfCouncil',   display_name: 'Mitglieder des Beamtenrates',  group: true)
+  log         Role.create!(ordering_number: 0, name: 'HonoryMember',      display_name: 'Ehrenmitglied',                group: true, administrational_role: false)
+  log         Role.create!(ordering_number: 0, name: 'PastMaster',        display_name: 'Altstuhlmeister',              group: true, administrational_role: false)
+  log         Role.create!(ordering_number: 0, name: 'WorkingPlanAdmin',  display_name: 'Kann Arbeitsplan bearbeiten',  group: true)
+  log         Role.create!(ordering_number: 0, name: 'UserAdmin',         display_name: 'Kann Benutzer verwalten',      group: true)
+  log         Role.create!(ordering_number: 0, name: 'ApplicationAdmin',  display_name: 'Kann Anwendung konfigurieren', group: true)
 end
 
-=begin
+
 block 'create users' do
   log u = User.create!(
                        matriculation_number: 890,
-                       email: 'deft@deftwork.com',
+                       email: 'admin@fwze.de',
                        password: 'keks4096',
                        firstname: "El",
                        lastname: "Chefe",
@@ -99,6 +99,7 @@ block 'create users' do
   u.user_roles << UserRole.create!(role: mr, user: u, role_added_at: Date.today - 1.year)
   u.roles << ur
   u.save!
+
   log u = User.create!(
                        matriculation_number: 892,
                        email: 'sekretaer@fwze.de',
@@ -150,7 +151,7 @@ block 'create users' do
   u.user_roles << UserRole.create!(role: er, user: u, role_added_at: Date.today - 1.years)
   u.save!
 end
-=end
+
 rite_cat = nil
 lit_cat = nil
 paint_cat = nil
@@ -282,4 +283,21 @@ block 'create directories' do
                         name: "Gästeliste",
                         roles: [mocr]
                         )
+end
+
+
+block 'configuring app' do
+  {
+    :default_from_email => "web@fwze.de",
+    :user_change_notification_email => "report@elsbroek.com",
+    :default_event_location => "Bremen",
+    :technical_contact_email => "report@elsbroek.com"
+  }.each_pair do |key,val|
+    log AppConfig[key] = val
+  end
+
+#  AppConfig[:default_from_email] = "web@fwze.de"
+#  AppConfig[:user_change_notification_email] = "report@elsbroek.com"
+#  AppConfig[:default_event_location] = "Bremen"
+#  AppConfig[:technical_contact_email] = "report@elsbroek.com"
 end
