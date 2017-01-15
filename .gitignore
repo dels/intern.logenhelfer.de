@@ -19,6 +19,5 @@ memberlist.csv
 pg_dump*
 .DS_Store
 *pg_dump.tar.gz
-.ruby-*
 TODO
 
