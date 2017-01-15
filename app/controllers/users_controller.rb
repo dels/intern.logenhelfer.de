@@ -168,7 +168,7 @@ class UsersController < AuthorizedController
       end
     end
 
-    #FIXME: there must be a much more elegant way to solve this issue
+    # FIXME: there must be a much more elegant way to solve this issue
     begin
       if @user.update_attributes(params[:user])
         deleted_addresses = []
@@ -239,7 +239,7 @@ private
     return unless (current_user.roles.include?(Role.find_by_name('Admin')) || 
                    current_user.roles.include?(Role.find_by_name('Secretary')) || 
                    current_user.roles.include?(Role.find_by_name('UserAdmin')))
-
+    
     @user.entered_apprentice_since = params[:user][:entered_apprentice_since]
     @user.fellow_craft_since = params[:user][:fellow_craft_since]
     @user.master_mason_since = params[:user][:master_mason_since]
