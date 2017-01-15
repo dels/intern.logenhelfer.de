@@ -146,6 +146,7 @@ class Ability
   def worshipful_master_abilities
     working_plan_admin_abilities
     announcement_admin_abilities
+    file_admin_abilities
     lodges_admin_abilites
     can :manage, Seeker
   end
