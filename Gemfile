@@ -21,6 +21,12 @@ gem 'later_dude',               '>= 0.3.1'
 gem 'icalendar',                               '~> 1.5.4'
 gem 'kaminari'                  
 
+# google sync
+gem 'omniauth-google-oauth2'
+gem 'google-api-client'
+gem 'rest-client'
+
+
 group :development, :archive_dev do
   gem 'quiet_assets'
   gem 'rails_best_practices',   require: false
@@ -33,10 +39,6 @@ group :development, :archive_dev do
   # disable for now
   # gem 'debugger'
   # gem 'debugger-ruby_core_source'
-
-  gem 'omniauth-google-oauth2'
-  gem 'google-api-client'
-  gem 'rest-client'
 end
 
 group :assets do
