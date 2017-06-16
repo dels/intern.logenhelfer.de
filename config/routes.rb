@@ -1,5 +1,11 @@
 FwzeIntern::Application.routes.draw do
 
+  get 'auth/:provider/callback', to: 'google_sessions#create'
+  get 'auth/failure', to: redirect('/')
+  get 'signout', to: 'google_sessions#destroy', as: 'signout'
+  
+  resources :google_sessions, only: [:create, :destroy]
+
   resources :seekers do
     collection do
       get 'accepted'
@@ -72,8 +78,11 @@ FwzeIntern::Application.routes.draw do
       get 'birthday_list_pdf'
       get 'members_of_council'
       get 'search'
+      get 'google_sync'
       post 'members_list'
       post '/users/(:id)/update_announcement_subscription', to: 'users#update_announcement_subscription'
+      get '/users/(:id)/update_google_contact', to: 'users#update_google_contact', as: 'update_google_contact'
+#      post '/users/(:id)/update_google_contact', to: 'users#update_google_contact'
     end
     member do
       put 'substitute'

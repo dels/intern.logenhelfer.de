@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   layout :simplistic
   protect_from_forgery
   helper :layout
+  helper_method :current_google_user
 
   #helper_method :get_safe_date, :get_safe_start_end_date
 
@@ -14,6 +15,14 @@ class ApplicationController < ActionController::Base
     end
     redirect_to login_url, alert: t("devise.error.access_denied")
   end
+  
+  def current_google_user
+    @current_google_user ||= User.find(session[:google_user_id]) if session[:google_user_id]
+    return nil unless @current_google_user
+    return nil if @current_google_user.oauth_expires_at <= Time.now
+    @current_google_user
+  end
+  
 
 protected
 
@@ -30,7 +39,7 @@ protected
   end
 
   def filter_empty_passwords_and_user_type
-    return if ['sessions', 'confirmations', 'passwords', 'app_config'].include?(controller_name)
+    return if ['google_sessions', 'sessions', 'confirmations', 'passwords', 'app_config'].include?(controller_name)
     res = self.class.name.gsub(/Controller$/, '').singularize.constantize
     sym = controller_name.singularize.to_sym
     return unless params[sym].present?

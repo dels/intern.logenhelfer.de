@@ -18,6 +18,14 @@
           <%- end -%>
         <%- end -%>
 
+        <%= authorized_menu_item AppConfig, app_config_path do -%>
+          <%- if request.fullpath =~ /^\/asdfasdfsadf/ -%>
+            <%= content_tag :li, class: (request.fullpath =~ /^\/app_config\/roles/ ? 'active' : nil) do -%>
+            
+             <%- end -%>
+          <%- end -%>
+        <%- end -%>
+        
         <%- if (request.fullpath =~ /^\/statistics/) || current_user.admin? || current_user.worshipful_master? || current_user.secretary? || current_user.net_delegate? -%>
           <%= authorized_menu_item Statistic, statistics_path do -%>
             <%- if request.fullpath =~ /^\/statistics/ -%>

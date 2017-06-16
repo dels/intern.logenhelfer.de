@@ -33,6 +33,10 @@ group :development, :archive_dev do
   # disable for now
   # gem 'debugger'
   # gem 'debugger-ruby_core_source'
+
+  gem 'omniauth-google-oauth2'
+  gem 'google-api-client'
+  gem 'rest-client'
 end
 
 group :assets do

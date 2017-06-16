@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20160123094635) do
+ActiveRecord::Schema.define(:version => 20170615113407) do
 
   create_table "academic_titles", :force => true do |t|
     t.string   "title"
@@ -27,7 +27,7 @@ ActiveRecord::Schema.define(:version => 20160123094635) do
   create_table "addresses", :force => true do |t|
     t.integer  "addressable_id"
     t.string   "addressable_type"
-    t.string   "purpose"
+    t.string   "purpose",          :default => "geschäftlich"
     t.string   "street1"
     t.string   "street2"
     t.string   "street3"
@@ -38,8 +38,8 @@ ActiveRecord::Schema.define(:version => 20160123094635) do
     t.string   "email"
     t.text     "remarks"
     t.boolean  "deleted",          :default => false
-    t.datetime "created_at",                          :null => false
-    t.datetime "updated_at",                          :null => false
+    t.datetime "created_at",                                   :null => false
+    t.datetime "updated_at",                                   :null => false
     t.integer  "type_of_address"
     t.string   "mobile"
   end
@@ -90,7 +90,7 @@ ActiveRecord::Schema.define(:version => 20160123094635) do
     t.boolean  "deleted",                      :default => false
     t.datetime "created_at",                                      :null => false
     t.datetime "updated_at",                                      :null => false
-    t.integer  "content_length",               :default => -1
+    t.integer  "content_length"
   end
 
   add_index "attached_files", ["deleted"], :name => "index_attached_files_on_deleted"
@@ -286,6 +286,12 @@ ActiveRecord::Schema.define(:version => 20160123094635) do
     t.integer  "title"
     t.integer  "academic_title_id"
     t.string   "mother_lodge"
+    t.string   "provider"
+    t.string   "g_uid"
+    t.string   "g_name"
+    t.string   "g_mail"
+    t.string   "oauth_token"
+    t.datetime "oauth_expires_at"
   end
 
   add_index "users", ["email"], :name => "index_users_on_email", :unique => true

@@ -43,6 +43,17 @@ class User < ActiveRecord::Base
     ].join(' OR '), param: "%#{param}%" )
   }
 
+  def self.from_omniauth(user, auth)
+    user.provider = auth.provider
+    user.g_uid = auth.uid
+    user.g_name = auth.info.name
+    user.g_mail = auth.info.email
+    user.oauth_token = auth.credentials.token
+    user.oauth_expires_at = Time.at(auth.credentials.expires_at)
+    user.save!
+    user
+  end
+
   def approved?
     true
   end

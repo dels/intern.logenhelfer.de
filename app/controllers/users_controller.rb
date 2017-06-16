@@ -20,6 +20,69 @@ class UsersController < AuthorizedController
     end
   end
 
+  def google_sync
+    if current_google_user
+      google_contacts = []
+      @res = []
+      response = RestClient.get('https://www.google.com/m8/feeds/contacts/default/full',
+                                {params:
+                                   {
+                                     'max-results': 200000,
+                                    'access_token': current_google_user.oauth_token,
+                                    'alt' => 'json'
+                                   }
+                                })
+      json_resp = JSON::parse(response)
+      json_resp["feed"]["entry"].each do |contact|
+        google_contacts << GoogleContact.new(contact)
+      end
+
+      @users_to_be_synced = User.where(deleted: false).delete_if { |usr|
+        false == google_contacts.select {|c|
+          (c.name && c.name.include?("#{usr.lastname}") && c.name.include?("#{usr.firstname}"))
+        }.empty?
+      }      
+      
+      User.all.each do |usr|
+        google_contacts.select{ |c|
+          (c.name && c.name.include?("#{usr.lastname}") && c.name.include?("#{usr.firstname}")) || (c.primary_email_addr && c.primary_email_addr.eql?(usr.email)) 
+        }.each do |c|
+          c.assoc_usr = usr
+          @res << c
+          Rails.logger.warn(JSON::pretty_generate(c.my_json))
+        end
+      end
+      Rails.logger.debug("found and not found users in db are #{@res.count + @users_to_be_synced.count}")
+      Rails.logger.debug("database has #{User.where(deleted: false).count} active users")
+      @res = @users_to_be_synced
+    end
+  end
+
+  def update_google_contact
+    @google_contact = GoogleContact::parse_user(@user)
+    Rails.logger.debug("atom would look like this: #{@google_contact.to_atom}")
+                                  
+    RestClient.log = 'stdout'
+    begin
+      response = RestClient.post('https://www.google.com/m8/feeds/contacts/default/full', @google_contact.to_atom,
+                                 {
+                                   'Content-Type': 'application/atom+xml',
+                                  'GData-Version': '3.0',
+                                  'Authorization': "Bearer #{current_google_user.oauth_token}"
+                                 })
+      if response.code == 201
+        Rails.logger.info("successfully created #{@user.fullname} as google contact")
+        @update_res = "success"
+      else
+        @update_res = "failed without exception"
+        Rails.logger.fatal("response code was #{response.code}")
+      end
+    rescue Exception => e
+      puts e.message
+      @update_res = "failed with exception"
+    end
+  end
+  
   def members_list
     if params[:password].blank? || 5 > params[:password].length
       flash[:error] = t("helpers.pdf.password_needed") if params[:hidden_field]
