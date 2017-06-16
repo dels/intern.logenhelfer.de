@@ -1,4 +1,6 @@
 
+<% title t("activerecord.models.users") %>
+
 <% if current_google_user %>
 Signed in as <strong><%= current_google_user.g_name %></strong>!
 <%= link_to "Sign out", signout_path, id: "sign_out" %>
@@ -7,10 +9,8 @@ Signed in as <strong><%= current_google_user.g_name %></strong>!
 <p>
 Name: <%= contact.fullname %><br />
 Mail: <%= contact.email %> <br />
-Mobile: <%#= contact.mobile_phone %> <br />
-Home: <%#= contact.home_phone %> <br />
-Work: <%#= contact.business_phone %> <br />
-<%= link_to "Sync to Google Contacts", update_google_contact_users_path(contact) %><br />
+Primary Phone: <%= contact.phone %> <br />
+<%= link_to "Sync to Google Contacts", create_google_contact_users_path(contact) %><br />
 <br />
 </p>
 <% end %>

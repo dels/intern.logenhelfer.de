@@ -81,8 +81,7 @@ FwzeIntern::Application.routes.draw do
       get 'google_sync'
       post 'members_list'
       post '/users/(:id)/update_announcement_subscription', to: 'users#update_announcement_subscription'
-      get '/users/(:id)/update_google_contact', to: 'users#update_google_contact', as: 'update_google_contact'
-#      post '/users/(:id)/update_google_contact', to: 'users#update_google_contact'
+      get '/users/(:id)/create_google_contact', to: 'users#create_google_contact', as: 'create_google_contact'
     end
     member do
       put 'substitute'

@@ -77,6 +77,14 @@ class User < ActiveRecord::Base
     degree
   end
 
+  def phone
+    return private_address.mobile unless private_address.mobile.empty?
+    return private_address.phone unless private_address.phone.empty?
+    return business_address.mobile unless business_address.mobile.empty?
+    return business_address.phone unless business_address.phone.empty?
+    ""
+  end
+  
   def business_address
     addresses.where(type_of_address: Address::TYPES[:business]).first
   end

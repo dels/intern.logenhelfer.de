@@ -58,21 +58,23 @@ class UsersController < AuthorizedController
     end
   end
 
-  def update_google_contact
+  def create_google_contact
     @google_contact = GoogleContact::parse_user(@user)
-    Rails.logger.debug("atom would look like this: #{@google_contact.to_atom}")
-                                  
     RestClient.log = 'stdout'
     begin
-      response = RestClient.post('https://www.google.com/m8/feeds/contacts/default/full', @google_contact.to_atom,
+      atom = @google_contact.to_atom
+      Rails.logger.info("sending \n#{atom}")
+      response = RestClient.post("https://www.google.com/m8/feeds/contacts/default/full", atom ,
                                  {
                                    'Content-Type': 'application/atom+xml',
-                                  'GData-Version': '3.0',
+                                  'GData-version': '3.0',
                                   'Authorization': "Bearer #{current_google_user.oauth_token}"
                                  })
       if response.code == 201
         Rails.logger.info("successfully created #{@user.fullname} as google contact")
         @update_res = "success"
+        Rails.logger.debug("resp body: \n#{response.body}")
+        # redirect_to google_sync_users_path
       else
         @update_res = "failed without exception"
         Rails.logger.fatal("response code was #{response.code}")

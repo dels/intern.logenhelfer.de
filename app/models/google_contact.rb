@@ -32,43 +32,32 @@ class GoogleContact
     Rails.logger.fatal("neither name nor email set from json: #{@my_json}")
     nil
   end
-
-  def to_json
-    res = ""
-    
-  end
   
   def to_atom
     return nil unless @assoc_usr
     res = ""
-    res << "<atom:entry xmlns=\"http://www.w3.org/2005/Atom\" xmlns:gd=\"http://schemas.google.com/g/2005\">"
-    res << "<gd:name>"
-    res << " <gd:givenName>#{@assoc_usr.firstname}</gd:givenName>"
-    res << "  <gd:familyName>#{@assoc_usr.lastname}</gd:familyName>"
-    res << "  <gd:fullName>#{@assoc_usr.firstname} #{@assoc_usr.lastname}</gd:fullName>"
-    res << "</gd:name>"
-    res << "<atom:content type=\"text\">Notes</atom:content>"
-    res << "<gd:email>"
-    res << "  rel=\"http://schemas.google.com/g/2005#home\""
-    res << "  primary=\"true\""
-    res << "  address="#{@assoc_usr.email}" displayName="E. Bennet"/>"
-    res << "</gd:email>"
-    if @work_phone
-      res << "<gd:phoneNumber rel=\"http://schemas.google.com/g/2005#work\">"
-      res << @work_phone
-      res << "</gd:phoneNumber>"
-    end
-    if @home_phone
-      res << "<gd:phoneNumber rel=\"http://schemas.google.com/g/2005#home\">"
-      res << @home_phone
-      res << "</gd:phoneNumber>"
-   end
-    if @mobile_phone
-      res << "<gd:phoneNumber rel=\"http://schemas.google.com/g/2005#mobile primary='true'\">"
-      res << @mobile_phone
-      res << "</gd:phoneNumber>"
-    end
-    
+    res << "    <atom:entry xmlns:atom='http://www.w3.org/2005/Atom'\n"
+    res << "        xmlns:gd='http://schemas.google.com/g/2005'\n"
+    res << "        xmlns:gContact='http://schemas.google.com/contact/2008'>\n"
+    res << "      <atom:category scheme='http://schemas.google.com/g/2005#kind'\n"
+    res << "        term='http://schemas.google.com/contact/2008#contact'/>\n"
+    res << "      <gd:name>\n"
+    res << "         <gd:givenName>#{@assoc_usr.firstname}</gd:givenName>\n"
+    res << "         <gd:familyName>#{@assoc_usr.lastname}</gd:familyName>\n"
+    res << "         <gd:fullName>#{@assoc_usr.firstname} #{@assoc_usr.lastname}</gd:fullName>\n"
+    res << "      </gd:name>"
+    res << "      <atom:content type=\"text\">Notes</atom:content>\n"
+    # walk through all mails 
+    res << "      <gd:email rel='http://schemas.google.com/g/2005#mobile' primary='true' address='#{@assoc_usr.email}' displayName='E. Bennet'/>\n"
+    #      <gd:email rel='http://schemas.google.com/g/2005#home'
+    #        address='liz@example.org'/>
+
+    # walk through all phone numbers
+    res << "      <gd:phoneNumber rel='http://schemas.google.com/g/2005#work' primary='true'>"
+    res << "        #{@assoc_usr.phone}"
+    res << "      </gd:phoneNumber>"
+    res << "      <gContact:birthday when='#{@assoc_usr.date_of_birth}'/>"
+    # walk through all addresses
 =begin
     <gd:structuredPostalAddress
       rel="http://schemas.google.com/g/2005#work"
