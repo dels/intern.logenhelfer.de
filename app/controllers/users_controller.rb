@@ -34,44 +34,49 @@ class UsersController < AuthorizedController
                                'GData-Version': "3.0",
                                'Content-Type': 'application/atom+xml'
                               })
-    Rails.logger.debug("received header: #{xml_resp.headers}")
+    #Rails.logger.debug("received header: #{xml_resp.headers}")
     xml = Nokogiri::XML(xml_resp)
     Rails.logger.debug(xml)
     puts "received: #{xml}"
     gc_xml = GoogleContact::parse_xml(xml)
     gc_usr = GoogleContact::parse_user(@user)
-    
     # check phone numbers
     unless gc_xml.work_phone.eql?(gc_usr.work_phone)
-      @changes << "changed work phone"
+      @changes << "changed work phone. #{change_message(gc_xml.work_phone, gc_usr.work_phone)}"
       gc_xml.work_phone = gc_usr.work_phone
     end
     unless gc_xml.home_phone.eql?(gc_usr.home_phone)
-      @changes << "changed home phone"
+      @changes << "changed home phone. #{change_message(gc_xml.home_phone, gc_usr.home_phone)}"
       gc_xml.home_phone = gc_usr.home_phone
     end
     unless gc_xml.mobile_phone.eql?(gc_usr.mobile_phone)
-      @changes << "changed mobile phone"
+      @changes << "changed mobile phone. #{change_message(gc_xml.mobile_phone, gc_usr.mobile_phone)}"
       gc_xml.mobile_phone = gc_usr.mobile_phone
     end
     # check emails
     unless gc_xml.home_email.eql?(gc_usr.home_email)
-      @changes << "changed home email addr (is: #{gc_usr.home_email}. was: #{gc_xml.home_email})"
+      @changes << "changed home email addr. #{change_message(gc_xml.home_email, gc_usr.home_email)}"
       gc_xml.home_email = gc_usr.home_email
     end
     unless gc_xml.work_email.eql?(gc_usr.work_email)
-      @changes << "changed work email addr"
+      @changes << "changed work email addr. #{change_message(gc_xml.work_email, gc_usr.work_email)}"
       gc_xml.work_email = gc_usr.work_email
     end
     # check birthdate
-    unless gc_xml.date_of_birth.eql?(gc_usr.date_of_birth)
-      @changes << "changed date of birth"
+    unless gc_xml.date_of_birth.to_s.eql?(gc_usr.date_of_birth.to_s)
+      @changes << "changed date of birth. #{change_message(gc_xml.date_of_birth, gc_usr.date_of_birth)}"
       gc_xml.date_of_birth = gc_usr.date_of_birth
     end
-
-
+    # FIXME just adding the addresses without comparison
+    gc_xml.home_address[:street] = gc_usr.home_address[:street]
+    gc_xml.home_address[:postcode] = gc_usr.home_address[:postcode]
+    gc_xml.home_address[:city] = gc_usr.home_address[:city]
+    gc_xml.work_address[:street] = gc_usr.work_address[:street]
+    gc_xml.work_address[:postcode] = gc_usr.work_address[:postcode]
+    gc_xml.work_address[:city] = gc_usr.work_address[:city]
+    
     #RestClient.log = 'stdout'
-    puts "sending: #{gc_xml.to_atom}}"
+    puts "sending: #{gc_xml.to_atom}"
     xml_resp = RestClient.put(params[:self_url], gc_xml.to_atom,
                               params: {
                                   'access_token': current_google_user.oauth_token
@@ -80,10 +85,11 @@ class UsersController < AuthorizedController
                               'If-Match': '*',
                               'Content-Type': "application/atom+xml",
                               )
-    Rails.logger.debug("received http code #{xml_resp.code} after put")
-    
-    Rails.logger.debug(@changes.join("\n"))
-    
+  end
+
+  def change_message(prev, succ)
+    return "old: #{prev}. new: #{prev}" if prev.is_a?(String) && succ .is_a?(String)
+    # TODO deal with email arrays
   end
 
   def google_sync
@@ -119,68 +125,6 @@ class UsersController < AuthorizedController
     end
     @res
   end
-
-  
-=begin
-  def google_sync
-    if current_google_user
-      google_contacts = []
-      @res = []
-      
-
-      xml_resp = RestClient.get('https://www.google.com/m8/feeds/contacts/default/full',
-                                {params:
-                                   {
-                                     'max-results': 200000,
-                                    'access_token': current_google_user.oauth_token
-                                   }
-                                })
-      xml = Nokogiri::XML(xml_resp)
-      File.write("/Users/dels/git/dev/intern.logenhelfer.de/contact.xml", xml.to_xml)
-      
-#      xml['feed']['entry'].each do |entry|
-      #  puts "found entry: #{entry}"
-      #end
-      return
-
-      response = RestClient.get('https://www.google.com/m8/feeds/contacts/default/full',
-                                {params:
-                                   {
-                                     'max-results': 200000,
-                                    'access_token': current_google_user.oauth_token,
-                                    'alt' => 'json'
-                                   }
-                                })
-      json_resp = JSON::parse(response)
-      # TODO delete next line when done
-      File.write("/Users/dels/git/dev/intern.logenhelfer.de/contact.json", json_resp) if Rails.env.development?
-      json_resp["feed"]["entry"].each do |contact|
-        google_contacts << GoogleContact.new(contact)
-      end
-
-      @users_to_be_created = []
-      
-      User.where(deleted: false).each { |usr|
-        found_contacts = google_contacts.select{ |c|
-          (c.name && c.name.include?("#{usr.lastname}") && c.name.include?("#{usr.firstname}")) || (c.primary_email_addr && c.primary_email_addr.eql?(usr.email)) 
-        }
-        # if we didn't find an entry in google contacts then we will need to create it
-        next if found_contacts.empty?
-        if found_contacts.count > 1
-          Rails.logger.fatal("more than one contact is matching for user #{usr.fullname}")
-          next
-        end
-        # if we exactly know which contact matched the user extract the edit link and save it with the model
-        
-      }
-
-
-      Rails.logger.debug("found and not found users in db are #{@res.count + @users_to_be_created.count}")
-      Rails.logger.debug("database has #{User.where(deleted: false).count} active users")
-      @res = @users_to_be_created
-    end
-  end
-=end
   
   def create_google_contact
     @google_contact = GoogleContact::parse_user(@user)
