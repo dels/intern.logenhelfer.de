@@ -25,50 +25,50 @@ class UsersController < AuthorizedController
       # TODO redirect for re-login or refresh token
       return
     end
-    
-    @diff = {}
-    @diff['google'] = {}
-    @diff['db'] = {}
-    @diff['messages'] = []
+    @changes = []
     xml_resp = RestClient.get(params[:self_url],
                               {params:
-                                 {
-                                   'GData-Version': "3.0",
-                                  'Content-Type': 'application/atom+xml',
+                                 {                                  
                                   'access_token': current_google_user.oauth_token
-                                 }
+                                 },
+                               'GData-Version': "3.0",
+                               'Content-Type': 'application/atom+xml'
                               })
     Rails.logger.debug("received header: #{xml_resp.headers}")
     xml = Nokogiri::XML(xml_resp)
     Rails.logger.debug(xml)
     puts "received: #{xml}"
     gc_xml = GoogleContact::parse_xml(xml)
-    gc_xml.assoc_usr = @user
     gc_usr = GoogleContact::parse_user(@user)
+    
     # check phone numbers
-    unless gc_xml.work_phone.eql?(gc_xml.work_phone)
-      @diff['messages'] << "changed workphone"
+    unless gc_xml.work_phone.eql?(gc_usr.work_phone)
+      @changes << "changed work phone"
       gc_xml.work_phone = gc_usr.work_phone
     end
-    unless gc_xml.home_phone.eql?(gc_xml.home_phone)
-      @diff['messages'] << "changed homephone"
+    unless gc_xml.home_phone.eql?(gc_usr.home_phone)
+      @changes << "changed home phone"
       gc_xml.home_phone = gc_usr.home_phone
     end
-    unless gc_xml.mobile_phone.eql?(gc_xml.mobile_phone)
-      @diff['messages'] << "changed mobile phone"
+    unless gc_xml.mobile_phone.eql?(gc_usr.mobile_phone)
+      @changes << "changed mobile phone"
       gc_xml.mobile_phone = gc_usr.mobile_phone
     end
     # check emails
-    unless gc_xml.primary_email_addr.eql?(gc_xml.primary_email_addr)
-      @diff['messages'] << "changed primary email addr"
-      gc_xml.primary_email_addr = gc_usr.primary_email_addr
+    unless gc_xml.home_email.eql?(gc_usr.home_email)
+      @changes << "changed home email addr (is: #{gc_usr.home_email}. was: #{gc_xml.home_email})"
+      gc_xml.home_email = gc_usr.home_email
     end
-
+    unless gc_xml.work_email.eql?(gc_usr.work_email)
+      @changes << "changed work email addr"
+      gc_xml.work_email = gc_usr.work_email
+    end
     # check birthdate
-    unless gc_xml.date_of_birth.eql?(gc_xml.date_of_birth)
-      @diff['messages'] << "changed date of birth"
+    unless gc_xml.date_of_birth.eql?(gc_usr.date_of_birth)
+      @changes << "changed date of birth"
       gc_xml.date_of_birth = gc_usr.date_of_birth
     end
+
 
     #RestClient.log = 'stdout'
     puts "sending: #{gc_xml.to_atom}}"
@@ -82,7 +82,7 @@ class UsersController < AuthorizedController
                               )
     Rails.logger.debug("received http code #{xml_resp.code} after put")
     
-    Rails.logger.debug(@diff['messages'].join("\n"))
+    Rails.logger.debug(@changes.join("\n"))
     
   end
 
@@ -111,7 +111,7 @@ class UsersController < AuthorizedController
     @res = view_context.get_authorized_paginated(users.order(sort_column + " " + sort_direction)).page(params[:page])
     @res.each do |usr|
       found_contacts.each do |contact|
-        if usr.fullname.eql?(contact.name) || usr.email.eql?(contact.primary_email_addr)
+        if usr.fullname.eql?(contact.name) || usr.email.eql?(contact.home_email) || usr.email.eql?(contact.work_email)
           usr.google_edit_url = contact.edit_url
           usr.google_self_url = contact.self_url
         end

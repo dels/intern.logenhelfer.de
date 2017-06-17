@@ -1,6 +1,6 @@
 class GoogleContact
 
-  attr_accessor :assoc_usr, :name, :primary_email_addr, :email_addrs, :phone, :priv_addr, :business_addr, :edit_href, :home_phone, :mobile_phone, :work_phone, :date_of_birth, :my_json, :my_xml, :edit_url, :self_url
+  attr_accessor :firstname, :lastname, :name, :home_email, :work_email, :mobile_phone, :home_phone, :work_phone, :date_of_birth, :priv_addr, :business_addr, :edit_href, :my_json, :my_xml, :edit_url, :self_url
   
   def initialize(json=nil)
     @email_addrs = []
@@ -11,20 +11,17 @@ class GoogleContact
     parse_phones()
   end
 
-  def valid?
-    @edit_href
-  end
-
   def self.parse_user(usr)
     gc = GoogleContact.new()
-    gc.assoc_usr = usr
     gc.name = usr.fullname
-    gc.primary_email_addr = usr.email
+    gc.firstname = usr.firstname
+    gc.lastname = usr.lastname
+    gc.home_email = usr.email
+    gc.work_email = usr.private_address.email
     gc.home_phone = usr.private_address.try(:phone)
     gc.mobile_phone = usr.private_address.try(:mobile)
     gc.work_phone = usr.business_address.try(:phone)
     gc.date_of_birth = usr.date_of_birth
-    Rails.logger.info("returning #{gc.to_s}")
     gc
   end
 
@@ -33,6 +30,14 @@ class GoogleContact
     gc.my_xml = usr
     # TODO check format of firstname/lastname if there is a comma and names are confused
     gc.name = gc.my_xml.at('title').content
+    if gc.name.index(',')
+      gc.firstname, gc.lastname = gc.name.split(',')
+    else
+      gc.firstname, gc.lastname = gc.name.split(' ')
+    end
+    gc.firstname.strip!
+    gc.lastname.strip!
+    Rails.logger.debug("firstname lastname: #{gc.firstname} #{gc.lastname}")
     gc.parse_phones_xml
     gc.parse_emails_xml
     gc.edit_url = usr.search("link[rel=\"edit\"]").first['href']
@@ -47,10 +52,15 @@ class GoogleContact
     end
     @my_xml.css("gd|email").each do |mail|
       next unless mail['rel']
-      if mail['primary']
-        @primary_email_addr = mail['address']
+      ident = mail['rel'].match(/http\:\/\/schemas\.google\.com\/g\/2005#(.*)/)
+      case ident.captures[0]
+      when 'work'
+        @work_email = mail['address']
+      when 'home'        
+        @home_email = mail['address']
+      else
+        Rails.logger.warn("can't deal with mail type #{ident.captures[0]}")
       end
-      @email_addrs << mail['address']
     end
   end
   
@@ -83,26 +93,36 @@ class GoogleContact
   end
   
   def to_atom
-    unless @assoc_usr
-      Rails.logger.fatal("no assiciated user found")
-      return nil
-    end
     res = ""
     # xmlns:batch='http://schemas.google.com/gdata/batch'
     res << "<atom:entry xmlns:atom='http://www.w3.org/2005/Atom' xmlns:gd='http://schemas.google.com/g/2005' xmlns:gContact='http://schemas.google.com/contact/2008'>\n"
     res << "  <atom:category scheme='http://schemas.google.com/g/2005#kind' term='http://schemas.google.com/contact/2008#contact'/>\n"
     res << "  <gd:name>\n"
-    res << "     <gd:givenName>#{@assoc_usr.firstname}</gd:givenName>\n"
-    res << "      <gd:familyName>#{@assoc_usr.lastname}</gd:familyName>\n"
-    res << "      <gd:fullName>#{@assoc_usr.firstname} #{@assoc_usr.lastname}</gd:fullName>\n"
+    res << "     <gd:givenName>#{@firstname}</gd:givenName>\n"
+    res << "      <gd:familyName>#{@lastname}</gd:familyName>\n"
+    res << "      <gd:fullName>#{@firstname} #{@lastname}</gd:fullName>\n"
     res << "  </gd:name>\n"
     res << "  <atom:content type=\"text\">Notes</atom:content>\n"
     # walk through all mails
-    res << "  <gd:email rel='http://schemas.google.com/g/2005#home' primary='true' address='#{@assoc_usr.email}'/>\n"
+    if @home_email
+      res << "  <gd:email rel='http://schemas.google.com/g/2005#home' primary='true' address='#{@home_email}'/>\n"
+    end
+    if @work_email
+      res << "  <gd:email rel='http://schemas.google.com/g/2005#work' address='#{@work_email}'/>\n"
+    end
     
     # walk through all phone numbers
-    res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#home' primary='true'>#{@assoc_usr.phone}</gd:phoneNumber>\n"
-    res << "  <gContact:birthday when='#{@assoc_usr.date_of_birth}'/>\n"
+
+    if @mobile_phone
+      res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#mobile'  primary='true'>#{@mobile_phone}</gd:phoneNumber>\n"
+    end
+    if @home_phone
+      res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#home'>#{@home_phone}</gd:phoneNumber>\n"
+    end
+    if @work_phone
+      res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#work'>#{@work_phone}</gd:phoneNumber>\n"
+    end
+    res << "  <gContact:birthday when='#{@date_of_birth}'/>\n"
     # walk through all addresses
 =begin
     <gd:structuredPostalAddress
