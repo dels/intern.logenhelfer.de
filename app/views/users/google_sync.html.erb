@@ -1,9 +1,44 @@
 
-<% title t("activerecord.models.users") %>
+<% title "Google Kontakte synchronisieren" %>
 
 <% if current_google_user %>
 Signed in as <strong><%= current_google_user.g_name %></strong>!
 <%= link_to "Sign out", signout_path, id: "sign_out" %>
+
+
+<% if @res.count > 0 %>
+  <%= paginate @res if @res.present? %>
+  <table class='autolink'>
+    <tr>
+      <th><%= sortable :lastname, User.human_attribute_name(:lastname) %></th>
+      <th><%= sortable :firstname, User.human_attribute_name(:firstname) %></th>
+      <th>Google Status</th>
+      <th></th>
+    </tr>
+    <% @res.each do |user| %>
+      <tr>
+        <td><%= dash(user.lastname) %></td>
+        <td><%= dash(user.firstname) %></td>
+        <td>
+          <% if user.google_edit_url %>
+          <%= link_to "update", update_google_contact_users_path(user, :edit_url => user.google_edit_url, :self_url => user.google_self_url) %>
+          <% else %>
+          <%= link_to "create", create_google_contact_users_path(user) %>
+          <% end %>
+        </td>
+        <td>
+          <%= show_link_to user if can?(:show, user) %>
+          <%= image_link_tag_helper 'vcard',      user_path(user, format: :vcf)            if can?(:show, user) %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+  <%= paginate @res if @res.present? %>
+<%- else -%>
+  <p>Keine Mitglieder gefunden.</p>
+<%- end -%>
+
+<!--
 
 <% @res.each do |contact|  %>
 <p>
@@ -19,5 +54,4 @@ Primary Phone: <%= contact.phone %> <br />
 <%= link_to "Sign in with Google", "/auth/google_oauth2", id: "sign_in" %>
 <% end %>
 
-
-
+-->

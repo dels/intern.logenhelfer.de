@@ -1,3 +1,4 @@
+<% t("Google Kontakt erstellen") %>
 
 
 <% if current_google_user %>
@@ -5,16 +6,17 @@ Signed in as <strong><%= current_google_user.g_name %></strong>!
 <%= link_to "Sign out", signout_path, id: "sign_out" %>
 
 
-<p><%= @update_res %></p>
+<p><%= @create_res %></p>
 <p>
-Sync Google Contact of <%=@user.fullname %> to Google
+Created new Google Contact <%=@user.fullname %> 
 </p>
 
-<% @diff['messages'].each do |msg| %>
-   <p>
-     <%= msg %>
-   </p>
-<% end %>
+<p>Mobile Phone: <%= @user.phone%></p>
+
 <% else %>
 <%= link_to "Sign in with Google", "/auth/google_oauth2", id: "sign_in" %>
 <% end %>
+
+
+
+

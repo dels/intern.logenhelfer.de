@@ -15,6 +15,8 @@ class User < ActiveRecord::Base
       :accepted_at, :mother_lodge, :role_id, :role_ids, :matriculation_number, :job_title,
       :entered_apprentice_since, :fellow_craft_since, :master_mason_since
 
+  attr_accessor :google_edit_url, :google_self_url
+  
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
   validates_uniqueness_of :matriculation_number
   validate :validate_addresses
@@ -82,6 +84,7 @@ class User < ActiveRecord::Base
     return private_address.phone unless private_address.phone.empty?
     return business_address.mobile unless business_address.mobile.empty?
     return business_address.phone unless business_address.phone.empty?
+    Rails.logger.warn("did not find any phone number for #{fullname}")
     ""
   end
   

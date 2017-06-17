@@ -21,10 +21,11 @@ gem 'later_dude',               '>= 0.3.1'
 gem 'icalendar',                               '~> 1.5.4'
 gem 'kaminari'                  
 
-# google sync
+# gems for google sync 
 gem 'omniauth-google-oauth2'
 gem 'google-api-client'
 gem 'rest-client'
+gem 'nokogiri'
 
 
 group :development, :archive_dev do

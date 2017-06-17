@@ -20,10 +20,129 @@ class UsersController < AuthorizedController
     end
   end
 
+  def update_google_contact
+    unless current_google_user
+      # TODO redirect for re-login or refresh token
+      return
+    end
+    
+    @diff = {}
+    @diff['google'] = {}
+    @diff['db'] = {}
+    @diff['messages'] = []
+    xml_resp = RestClient.get(params[:self_url],
+                              {params:
+                                 {
+                                   'GData-Version': "3.0",
+                                  'Content-Type': 'application/atom+xml',
+                                  'access_token': current_google_user.oauth_token
+                                 }
+                              })
+    Rails.logger.debug("received header: #{xml_resp.headers}")
+    xml = Nokogiri::XML(xml_resp)
+    Rails.logger.debug(xml)
+    puts "received: #{xml}"
+    gc_xml = GoogleContact::parse_xml(xml)
+    gc_xml.assoc_usr = @user
+    gc_usr = GoogleContact::parse_user(@user)
+    # check phone numbers
+    unless gc_xml.work_phone.eql?(gc_xml.work_phone)
+      @diff['messages'] << "changed workphone"
+      gc_xml.work_phone = gc_usr.work_phone
+    end
+    unless gc_xml.home_phone.eql?(gc_xml.home_phone)
+      @diff['messages'] << "changed homephone"
+      gc_xml.home_phone = gc_usr.home_phone
+    end
+    unless gc_xml.mobile_phone.eql?(gc_xml.mobile_phone)
+      @diff['messages'] << "changed mobile phone"
+      gc_xml.mobile_phone = gc_usr.mobile_phone
+    end
+    # check emails
+    unless gc_xml.primary_email_addr.eql?(gc_xml.primary_email_addr)
+      @diff['messages'] << "changed primary email addr"
+      gc_xml.primary_email_addr = gc_usr.primary_email_addr
+    end
+
+    # check birthdate
+    unless gc_xml.date_of_birth.eql?(gc_xml.date_of_birth)
+      @diff['messages'] << "changed date of birth"
+      gc_xml.date_of_birth = gc_usr.date_of_birth
+    end
+
+    #RestClient.log = 'stdout'
+    puts "sending: #{gc_xml.to_atom}}"
+    xml_resp = RestClient.put(params[:self_url], gc_xml.to_atom,
+                              params: {
+                                  'access_token': current_google_user.oauth_token
+                              },
+                              'GData-Version': "3.0",
+                              'If-Match': '*',
+                              'Content-Type': "application/atom+xml",
+                              )
+    Rails.logger.debug("received http code #{xml_resp.code} after put")
+    
+    Rails.logger.debug(@diff['messages'].join("\n"))
+    
+  end
+
+  def google_sync
+    unless current_google_user
+      # TODO redirect for re-login or refresh token
+      return
+    end
+    found_contacts = []
+    xml_resp = RestClient.get('https://www.google.com/m8/feeds/contacts/default/full',
+                              {params:
+                                 {
+                                   'max-results': 200000,
+                                  'Content-Type': 'application/atom+xml',
+                                  'access_token': current_google_user.oauth_token
+                                 }
+                              })
+    xml = Nokogiri::XML(xml_resp)
+    xml.at("feed").search("entry").each do |entry|
+      next unless entry
+      next if entry.blank?
+      next unless entry.at("id")
+      found_contacts << GoogleContact::parse_xml(entry)
+    end
+    users = User.undeleted
+    @res = view_context.get_authorized_paginated(users.order(sort_column + " " + sort_direction)).page(params[:page])
+    @res.each do |usr|
+      found_contacts.each do |contact|
+        if usr.fullname.eql?(contact.name) || usr.email.eql?(contact.primary_email_addr)
+          usr.google_edit_url = contact.edit_url
+          usr.google_self_url = contact.self_url
+        end
+      end
+    end
+    @res
+  end
+
+  
+=begin
   def google_sync
     if current_google_user
       google_contacts = []
       @res = []
+      
+
+      xml_resp = RestClient.get('https://www.google.com/m8/feeds/contacts/default/full',
+                                {params:
+                                   {
+                                     'max-results': 200000,
+                                    'access_token': current_google_user.oauth_token
+                                   }
+                                })
+      xml = Nokogiri::XML(xml_resp)
+      File.write("/Users/dels/git/dev/intern.logenhelfer.de/contact.xml", xml.to_xml)
+      
+#      xml['feed']['entry'].each do |entry|
+      #  puts "found entry: #{entry}"
+      #end
+      return
+
       response = RestClient.get('https://www.google.com/m8/feeds/contacts/default/full',
                                 {params:
                                    {
@@ -33,38 +152,43 @@ class UsersController < AuthorizedController
                                    }
                                 })
       json_resp = JSON::parse(response)
+      # TODO delete next line when done
+      File.write("/Users/dels/git/dev/intern.logenhelfer.de/contact.json", json_resp) if Rails.env.development?
       json_resp["feed"]["entry"].each do |contact|
         google_contacts << GoogleContact.new(contact)
       end
 
-      @users_to_be_synced = User.where(deleted: false).delete_if { |usr|
-        false == google_contacts.select {|c|
-          (c.name && c.name.include?("#{usr.lastname}") && c.name.include?("#{usr.firstname}"))
-        }.empty?
-      }      
+      @users_to_be_created = []
       
-      User.all.each do |usr|
-        google_contacts.select{ |c|
+      User.where(deleted: false).each { |usr|
+        found_contacts = google_contacts.select{ |c|
           (c.name && c.name.include?("#{usr.lastname}") && c.name.include?("#{usr.firstname}")) || (c.primary_email_addr && c.primary_email_addr.eql?(usr.email)) 
-        }.each do |c|
-          c.assoc_usr = usr
-          @res << c
-          Rails.logger.warn(JSON::pretty_generate(c.my_json))
+        }
+        # if we didn't find an entry in google contacts then we will need to create it
+        next if found_contacts.empty?
+        if found_contacts.count > 1
+          Rails.logger.fatal("more than one contact is matching for user #{usr.fullname}")
+          next
         end
-      end
-      Rails.logger.debug("found and not found users in db are #{@res.count + @users_to_be_synced.count}")
+        # if we exactly know which contact matched the user extract the edit link and save it with the model
+        
+      }
+
+
+      Rails.logger.debug("found and not found users in db are #{@res.count + @users_to_be_created.count}")
       Rails.logger.debug("database has #{User.where(deleted: false).count} active users")
-      @res = @users_to_be_synced
+      @res = @users_to_be_created
     end
   end
-
+=end
+  
   def create_google_contact
     @google_contact = GoogleContact::parse_user(@user)
     RestClient.log = 'stdout'
     begin
       atom = @google_contact.to_atom
       Rails.logger.info("sending \n#{atom}")
-      response = RestClient.post("https://www.google.com/m8/feeds/contacts/default/full", atom ,
+      response = RestClient.post("https://www.google.com/m8/feeds/contacts/#{current_google_user.g_mail}/full", atom,
                                  {
                                    'Content-Type': 'application/atom+xml',
                                   'GData-version': '3.0',
@@ -72,16 +196,16 @@ class UsersController < AuthorizedController
                                  })
       if response.code == 201
         Rails.logger.info("successfully created #{@user.fullname} as google contact")
-        @update_res = "success"
+        @create_res = "success"
         Rails.logger.debug("resp body: \n#{response.body}")
         # redirect_to google_sync_users_path
       else
-        @update_res = "failed without exception"
+        @create_res = "failed without exception"
         Rails.logger.fatal("response code was #{response.code}")
       end
     rescue Exception => e
       puts e.message
-      @update_res = "failed with exception"
+      @create_res = "failed with exception"
     end
   end
   
