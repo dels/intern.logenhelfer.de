@@ -31,7 +31,7 @@ class GoogleContact
     # xmlns:batch='http://schemas.google.com/gdata/batch'
     res << "<atom:entry xmlns:atom='http://www.w3.org/2005/Atom' xmlns:gd='http://schemas.google.com/g/2005' xmlns:gContact='http://schemas.google.com/contact/2008'>\n"
     res << "  <atom:category scheme='http://schemas.google.com/g/2005#kind' term='http://schemas.google.com/contact/2008#contact'/>\n"
-#    res << "  <title>#{@firstname} #{@lastname}</title>"
+    res << "  <title>#{@firstname} #{@lastname}</title>"
     res << "  <gd:name>\n"
     res << "    <gd:givenName>#{firstname}</gd:givenName>\n"
     res << "    <gd:familyName>#{@lastname}</gd:familyName>\n"
@@ -140,7 +140,6 @@ class GoogleContact
     # other addresses
     usr.other_addresses.each do  |addr|
       o_addr = {}
-      Rails.logger.fatal("purpose of other address: #{addr.purpose}")
       o_addr[:label] = addr.purpose
       gc.parse_address(addr, o_addr)
       gc.other_address << o_addr
@@ -174,13 +173,13 @@ class GoogleContact
   end
 
   def self.parse_groups xml
-    Rails.logger.fatal("parsing groups...")
+    Rails.logger.warn("parsing groups...")
     groups = []
     xml.css("gContact|groupMembershipInfo").each do |grp|
       Rails.logger.debug("found group #{grp['href']}")
       groups << grp['href']
     end
-    Rails.logger.debug("found #{groups.count} groups.")
+    Rails.logger.warn("found #{groups.count} groups.")
     groups
   end
 
@@ -218,13 +217,6 @@ class GoogleContact
     end
   end
   
-  def to_s
-    return @name if @name
-    return @primary_email_addr if @primary_email_addr
-    Rails.logger.fatal("neither name nor email set from json: #{@my_json}")
-    nil
-  end
-
   def clean_up
     # deleting empty values from arrays
     @home_address.delete_if {|key,val| val.nil? || val.strip.empty?} if @home_address
@@ -248,20 +240,3 @@ class GoogleContact
   end
   
 end
-
-=begin
-  <gd:structuredPostalAddress
-      rel="http://schemas.google.com/g/2005#work"
-      primary="true">
-    <gd:city>Mountain View</gd:city>
-    <gd:street>1600 Amphitheatre Pkwy</gd:street>
-    <gd:region>CA</gd:region>
-    <gd:postcode>94043</gd:postcode>
-    <gd:country>United States</gd:country>
-    <gd:formattedAddress>
-      1600 Amphitheatre Pkwy Mountain View
-    </gd:formattedAddress>
-  </gd:structuredPostalAddress>
-</atom:entry>
-
-=end

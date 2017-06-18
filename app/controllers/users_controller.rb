@@ -104,12 +104,14 @@ class UsersController < AuthorizedController
   def google_sync
     unless current_google_user
       # TODO redirect for re-login or refresh token
+      Rails.logger.warn("google user is invalid")
       return
     end
     found_contacts = []
-    xml_resp = GoogleContactManager.new(current_google_user).all_contacts
+    xml_resp = GoogleContactManager::all_contacts(current_google_user.oauth_token)
     unless xml_resp
       flash[:error] = "Fehler beim Laden der Kontakte."
+      Rails.logger.error("unable to fetch all contacts")
       redirect_to users_path
       return
     end
@@ -133,7 +135,7 @@ class UsersController < AuthorizedController
       end
     end
 
-    xml_resp = GoogleContactManager.new(current_google_user).all_groups
+    xml_resp = GoogleContactManager::all_groups(current_google_user.oauth_token)
     unless xml_resp
       flash[:error] = "Fehler beim Laden der Kontakte."
       redirect_to users_path
@@ -146,7 +148,7 @@ class UsersController < AuthorizedController
   
   def create_google_contact
     @google_contact = GoogleContact::parse_user(@user)
-    @create_res = GoogleContactManager.new(current_google_user).create_contact(@google_contact)
+    @create_res = GoogleContactManager::create(current_google_user.oauth_token, @google_contact)
   end
   
   def members_list
