@@ -1,7 +1,14 @@
+# TODO - add other addresses
+#      - parse_xml
+
+# TODO - deal with fax for home, work, and other
+# TODO - parse addresses from xml
+# TODO - ensure group membership
+# TODO - addresses should also be valid if they have a filled postAddress field not only if they have street, postcode, and city
 class GoogleContact
 
   attr_accessor :firstname, :lastname, :name, :home_email, :work_email, :mobile_phone, :home_phone,
-                :work_phone, :home_address, :business_address, :date_of_birth, :priv_addr, :business_addr,
+                :work_phone, :home_fax, :work_fax, :home_address, :business_address, :date_of_birth, :priv_addr, :business_addr,
                 :street, :postcode, :city, :home_address, :work_address, :other_address,
                 :edit_href, :my_json, :my_xml, :edit_url, :self_url
   
@@ -39,6 +46,7 @@ class GoogleContact
       next if p.strip.empty?
       res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#home'>#{p}</gd:phoneNumber>\n"
     end
+    
     # walk through work
     @work_email.each do |m|
       next if m.strip.empty?
@@ -78,12 +86,14 @@ class GoogleContact
       res << "    <gd:formattedAddress>#{@work_address[:street]}\n#{@work_address[:postcode]} #{@work_address[:city]}</gd:formattedAddress>\n"
       res << "  </gd:structuredPostalAddress>\n"
     end
+    Rails.logger.fatal("count of other addresses: #{@other_address.count}")
     @other_address.each do |other|
-      res << "  <gd:structuredPostalAddress rel=\"http://schemas.google.com/g/2005#other\">\n"
+      next if other.empty?
+      res << "  <gd:structuredPostalAddress label=\"#{other[:label]}\">\n"
       res << "    <gd:street>#{other[:street]}</gd:street>\n"
-      res << "    <gd:postcode>#{other_address[:postcode]}</gd:postcode>\n"
-      res << "    <gd:city>#{other_address[:city]}</gd:city>\n"
-      res << "    <gd:formattedAddress>#{other_address[:street]}\n#{other_address[:postcode]} #{other_address[:city]}</gd:formattedAddress>\n"
+      res << "    <gd:postcode>#{other[:postcode]}</gd:postcode>\n"
+      res << "    <gd:city>#{other[:city]}</gd:city>\n"
+      res << "    <gd:formattedAddress>#{other[:street]}\n#{other[:postcode]} #{other[:city]}</gd:formattedAddress>\n"
       res << "  </gd:structuredPostalAddress>\n"
     end
     res << "</atom:entry>"
@@ -119,19 +129,19 @@ class GoogleContact
       gc.work_address[:postcode] = usr.business_address.try(:zip)
       gc.work_address[:city] = usr.business_address.try(:city)
     end
-    # TODO other addresses
-    
+    # other addresses
+    usr.other_addresses.each do  |addr|
+      o_addr = {}
+      # TODO: if other addr has communication attributes, we should include them accordingly
+      Rails.logger.fatal("purpose of other address: #{addr.purpose}")
+      o_addr[:label] = addr.purpose
+      o_addr[:street] = addr.street
+      o_addr[:postcode] = addr.zip
+      o_addr[:city] = addr.city
+      gc.other_address << o_addr
+    end
     gc.date_of_birth = usr.date_of_birth
-    # clean up
-    gc.home_address.delete_if {|key,val| val.nil? || val.strip.empty?} if gc.home_address
-    gc.work_address.delete_if {|key,val| val.nil? || val.strip.empty?} if gc.work_address
-    gc.other_address.delete_if {|key,val| val.nil? || val.strip.empty?} if gc.other_address
-    gc.mobile_phone.delete_if {|k| k.nil? || k.strip.empty?} if gc.mobile_phone
-    gc.home_phone.delete_if {|k| k.nil? || k.strip.empty?} if gc.home_phone
-    gc.work_phone.delete_if {|k| k.nil? || k.strip.empty?} if gc.work_phone
-    gc.home_email.delete_if {|k| k.nil? || k.strip.empty?} if gc.home_email
-    gc.work_email.delete_if {|k| k.nil? || k.strip.empty?} if gc.work_email
-
+    gc.clean_up
     gc
   end
 
@@ -147,7 +157,7 @@ class GoogleContact
     end
     gc.firstname.strip!
     gc.lastname.strip!
-    Rails.logger.debug("firstname lastname: #{gc.firstname} #{gc.lastname}")
+    # Rails.logger.debug("firstname lastname: #{gc.firstname} #{gc.lastname}")
     gc.parse_phones_xml
     gc.parse_emails_xml
     gc.edit_url = usr.search("link[rel=\"edit\"]").first['href']
@@ -197,6 +207,26 @@ class GoogleContact
     nil
   end
 
+  def clean_up
+    # deleting empty values from arrays
+    @home_address.delete_if {|key,val| val.nil? || val.strip.empty?} if @home_address
+    @work_address.delete_if {|key,val| val.nil? || val.strip.empty?} if @work_address
+    if @other_address
+      @other_address.each do |addr|
+        addr.delete_if {|key,val| val.nil? || val.strip.empty?} 
+      end
+    end
+    @mobile_phone.delete_if {|k| k.nil? || k.strip.empty?} if @mobile_phone
+    @home_phone.delete_if {|k| k.nil? || k.strip.empty?} if @home_phone
+    @work_phone.delete_if {|k| k.nil? || k.strip.empty?} if @work_phone
+    @home_email.delete_if {|k| k.nil? || k.strip.empty?} if @home_email
+    @work_email.delete_if {|k| k.nil? || k.strip.empty?} if @work_email
+    # removing duplicates
+    @mobile_phone.uniq!
+    @home_phone.uniq!
+    @work_phone.uniq!
+  end
+  
 end
 
 =begin

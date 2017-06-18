@@ -10,6 +10,9 @@ Signed in as <strong><%= current_google_user.g_name %></strong>!
 Sync Google Contact of <%=@user.fullname %> to Google
 </p>
 
+<%- if can? :google_sync, User -%>
+  <p><%= link_to t('activerecord.actions.google_sync'), google_sync_users_path, class: 'disk icon' %></p>
+<%- end -%>
 
 <% if @changes.empty? %>
 <b>Keine &Auml;nderungen</b>

@@ -36,8 +36,7 @@ class UsersController < AuthorizedController
                               })
     #Rails.logger.debug("received header: #{xml_resp.headers}")
     xml = Nokogiri::XML(xml_resp)
-    Rails.logger.debug(xml)
-    puts "received: #{xml}"
+    puts "received: #{xml}" if Rails.env.development?
     gc_xml = GoogleContact::parse_xml(xml)
     gc_usr = GoogleContact::parse_user(@user)
     # check phone numbers
@@ -74,9 +73,13 @@ class UsersController < AuthorizedController
     gc_xml.work_address[:street] = gc_usr.work_address[:street]
     gc_xml.work_address[:postcode] = gc_usr.work_address[:postcode]
     gc_xml.work_address[:city] = gc_usr.work_address[:city]
+
+    gc_usr.other_address.each do |addr|
+      gc_xml.other_address << addr
+    end
     
     #RestClient.log = 'stdout'
-    puts "sending: #{gc_xml.to_atom}"
+    puts "sending: #{gc_xml.to_atom}" if Rails.env.development?
     xml_resp = RestClient.put(params[:self_url], gc_xml.to_atom,
                               params: {
                                   'access_token': current_google_user.oauth_token
@@ -107,6 +110,8 @@ class UsersController < AuthorizedController
                                  }
                               })
     xml = Nokogiri::XML(xml_resp)
+    # for debugging purposes 
+    File.write("/Users/dels/git/dev/intern.logenhelfer.de/contact.xml", xml_resp) if Rails.env.development?
     xml.at("feed").search("entry").each do |entry|
       next unless entry
       next if entry.blank?
