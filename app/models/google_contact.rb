@@ -9,7 +9,7 @@ class GoogleContact
 
   attr_accessor :firstname, :lastname, :name, :home_email, :work_email, :mobile_phone, :home_phone,
                 :work_phone, :home_fax, :work_fax, :home_address, :business_address, :date_of_birth, :priv_addr, :business_addr,
-                :street, :postcode, :city, :home_address, :work_address, :other_address, :contact_groups,
+                :street, :postcode, :city, :home_address, :work_address, :other_address, :groups,
                 :edit_href, :my_json, :my_xml, :edit_url, :self_url
   
   def initialize()
@@ -21,7 +21,7 @@ class GoogleContact
     @home_address = {}
     @work_address = {}
     @other_address = []
-    @contact_groups = []
+    @groups = []
   end
 
   
@@ -97,7 +97,7 @@ class GoogleContact
       res << "  </gd:structuredPostalAddress>\n"
     end
     # add contact groups
-    @contact_groups.each do |grp|
+    @groups.each do |grp|
       res << "  <gContact:groupMembershipInfo deleted=\"false\" href=\"#{grp}\"/>"
     end
     
@@ -162,22 +162,22 @@ class GoogleContact
     gc.parse_phones_xml
     gc.parse_emails_xml
     #gc.parse_addresses_xml
-    gc.parse_groups
+    gc.groups = GoogleContact::parse_groups(gc.my_xml)
     gc.edit_url = usr.search("link[rel=\"edit\"]").first['href']
     gc.self_url = usr.search("link[rel=\"self\"]").first['href']
     gc.date_of_birth = (usr.css("gContact|birthday").first ? usr.css("gContact|birthday").first['when'] : nil)
     gc
   end
 
-  def parse_groups
-    raise ("called parse_emails_xml but my_xml is undefined") unless @my_xml
-    # gContact:groupMembershipInfo
+  def self.parse_groups xml
     Rails.logger.fatal("parsing groups...")
-    @my_xml.css("gContact|groupMembershipInfo").each do |group|
-      Rails.logger.debug("found group #{group['href']}")
-      @contact_groups << group['href']
+    groups = []
+    xml.css("gContact|groupMembershipInfo").each do |grp|
+      Rails.logger.debug("found group #{grp['href']}")
+      groups << grp['href']
     end
-    Rails.logger.debug("found #{@contact_groups} groups.")
+    Rails.logger.debug("found #{groups.count} groups.")
+    groups
   end
 
   def parse_emails_xml

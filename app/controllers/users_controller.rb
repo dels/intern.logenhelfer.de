@@ -31,7 +31,7 @@ class UsersController < AuthorizedController
                                  {                                  
                                   'access_token': current_google_user.oauth_token
                                  },
-                               'GData-Version': "3.0",
+                               'v': "3",
                                'Content-Type': 'application/atom+xml'
                               })
     xml = Nokogiri::XML(xml_resp)
@@ -79,8 +79,8 @@ class UsersController < AuthorizedController
     end
 
     # copying groups
-    gc_usr.contact_groups.each do |grp|
-      gc_xml.contact_groups << grp
+    gc_usr.groups.each do |grp|
+      gc_xml.groups << grp
     end
         
     #RestClient.log = 'stdout'
@@ -88,7 +88,7 @@ class UsersController < AuthorizedController
                               params: {
                                   'access_token': current_google_user.oauth_token
                               },
-                              'GData-Version': "3.0",
+                              'v': "3",
                               'If-Match': '*',
                               'Content-Type': "application/atom+xml",
                              )
@@ -107,20 +107,9 @@ class UsersController < AuthorizedController
       return
     end
     found_contacts = []
-    begin 
-      xml_resp = RestClient.get("https://www.google.com/m8/feeds/contacts/default/full",
-                              {params:
-                                 {
-                                   'max-results': 1000000,
-                                  'type': 'entry',
-                                  'Content-Type': 'application/atom+xml',
-                                  'access_token': current_google_user.oauth_token
-                                 }
-                              })
-    rescue Exception => e
-      Rails.logger.fatal("exception while requesting contacts feed: #{e.inspect}")
-      # check for return code
-      flash[:error] = "Fehler beim Laden der Daten."
+    xml_resp = GoogleContactManager.new(current_google_user).all_contacts
+    unless xml_resp
+      flash[:error] = "Fehler beim Laden der Kontakte."
       redirect_to users_path
       return
     end
@@ -143,34 +132,22 @@ class UsersController < AuthorizedController
         end
       end
     end
+
+    xml_resp = GoogleContactManager.new(current_google_user).all_groups
+    unless xml_resp
+      flash[:error] = "Fehler beim Laden der Kontakte."
+      redirect_to users_path
+      return
+    end
+    puts "all groups:"
+    puts xml_resp
     @res
   end
   
   def create_google_contact
     @google_contact = GoogleContact::parse_user(@user)
-    RestClient.log = 'stdout'
-    begin
-      atom = @google_contact.to_atom
-      Rails.logger.info("sending \n#{atom}")
-      response = RestClient.post("https://www.google.com/m8/feeds/contacts/#{current_google_user.g_mail}/full", atom,
-                                 {
-                                   'Content-Type': 'application/atom+xml',
-                                  'GData-version': '3.0',
-                                  'Authorization': "Bearer #{current_google_user.oauth_token}"
-                                 })
-      if response.code == 201
-        Rails.logger.info("successfully created #{@user.fullname} as google contact")
-        @create_res = "success"
-        Rails.logger.debug("resp body: \n#{response.body}")
-        # redirect_to google_sync_users_path
-      else
-        @create_res = "failed without exception"
-        Rails.logger.fatal("response code was #{response.code}")
-      end
-    rescue Exception => e
-      puts e.message
-      @create_res = "failed with exception"
-    end
+    # FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!
+    raise "exception: IMPLEMENT ME. method content moved to google contact manager class"
   end
   
   def members_list
