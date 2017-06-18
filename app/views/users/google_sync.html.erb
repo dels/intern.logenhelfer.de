@@ -2,8 +2,8 @@
 <% title "Google Kontakte synchronisieren" %>
 
 <% if current_google_user %>
-Signed in as <strong><%= current_google_user.g_name %></strong>!
-<%= link_to "Sign out", signout_path, id: "sign_out" %>
+Angemeldet bei Google als <strong><%= current_google_user.g_name %></strong>!
+<p><%= link_to "Abmelden bei Google", signout_path, id: "sign_out" %></p>
 
 
 <% if @res.count > 0 %>
@@ -38,20 +38,8 @@ Signed in as <strong><%= current_google_user.g_name %></strong>!
   <p>Keine Mitglieder gefunden.</p>
 <%- end -%>
 
-<!--
-
-<% @res.each do |contact|  %>
-<p>
-Name: <%= contact.fullname %><br />
-Mail: <%= contact.email %> <br />
-Primary Phone: <%= contact.phone %> <br />
-<%= link_to "Sync to Google Contacts", create_google_contact_users_path(contact) %><br />
-<br />
-</p>
-<% end %>
-
 <% else %>
-<%= link_to "Sign in with Google", "/auth/google_oauth2", id: "sign_in" %>
+<%= link_to "Anmelden mit Google", "/auth/google_oauth2", id: "sign_in" %>
 <% end %>
 
--->
+

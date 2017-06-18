@@ -9,7 +9,7 @@ class GoogleContact
 
   attr_accessor :firstname, :lastname, :name, :home_email, :work_email, :mobile_phone, :home_phone,
                 :work_phone, :home_fax, :work_fax, :home_address, :business_address, :date_of_birth, :priv_addr, :business_addr,
-                :street, :postcode, :city, :home_address, :work_address, :other_address,
+                :street, :postcode, :city, :home_address, :work_address, :other_address, :contact_groups,
                 :edit_href, :my_json, :my_xml, :edit_url, :self_url
   
   def initialize()
@@ -21,6 +21,7 @@ class GoogleContact
     @home_address = {}
     @work_address = {}
     @other_address = []
+    @contact_groups = []
   end
 
   
@@ -86,7 +87,6 @@ class GoogleContact
       res << "    <gd:formattedAddress>#{@work_address[:street]}\n#{@work_address[:postcode]} #{@work_address[:city]}</gd:formattedAddress>\n"
       res << "  </gd:structuredPostalAddress>\n"
     end
-    Rails.logger.fatal("count of other addresses: #{@other_address.count}")
     @other_address.each do |other|
       next if other.empty?
       res << "  <gd:structuredPostalAddress label=\"#{other[:label]}\">\n"
@@ -96,8 +96,19 @@ class GoogleContact
       res << "    <gd:formattedAddress>#{other[:street]}\n#{other[:postcode]} #{other[:city]}</gd:formattedAddress>\n"
       res << "  </gd:structuredPostalAddress>\n"
     end
+    # add contact groups
+    @contact_groups.each do |grp|
+      res << "  <gContact:groupMembershipInfo deleted=\"false\" href=\"#{grp}\"/>"
+    end
+    
     res << "</atom:entry>"
     res.strip
+  end
+
+  def parse_address(from, to)
+    to[:street] = from.try(:street)
+    to[:postcode] = from.try(:zip)
+    to[:city] = from.try(:city)
   end
 
   def self.parse_user(usr)
@@ -113,31 +124,21 @@ class GoogleContact
     if usr.private_address.try(:email)
       gc.home_email << usr.private_address.try(:email)
     end
-    if usr.private_address && usr.private_address.full_address?
-      gc.home_address[:street] = usr.private_address.try(:street)
-      gc.home_address[:postcode] = usr.private_address.try(:zip)
-      gc.home_address[:city] = usr.private_address.try(:city)
-    end
+    gc.parse_address(usr.private_address, gc.home_address) if usr.private_address && usr.private_address.full_address?
     # work data
     gc.mobile_phone << usr.business_address.try(:mobile)
     gc.work_phone << usr.business_address.try(:phone)
     if usr.business_address.try(:email)
       gc.work_email << usr.business_address.try(:email)
     end
-    if usr.business_address && usr.business_address.full_address?
-      gc.work_address[:street] = usr.business_address.try(:street)
-      gc.work_address[:postcode] = usr.business_address.try(:zip)
-      gc.work_address[:city] = usr.business_address.try(:city)
-    end
+    gc.parse_address(usr.business_address, gc.work_address) if usr.business_address && usr.business_address.full_address?
+
     # other addresses
     usr.other_addresses.each do  |addr|
       o_addr = {}
-      # TODO: if other addr has communication attributes, we should include them accordingly
       Rails.logger.fatal("purpose of other address: #{addr.purpose}")
       o_addr[:label] = addr.purpose
-      o_addr[:street] = addr.street
-      o_addr[:postcode] = addr.zip
-      o_addr[:city] = addr.city
+      gc.parse_address(addr, o_addr)
       gc.other_address << o_addr
     end
     gc.date_of_birth = usr.date_of_birth
@@ -155,15 +156,28 @@ class GoogleContact
     else
       gc.firstname, gc.lastname = gc.name.split(' ')
     end
-    gc.firstname.strip!
-    gc.lastname.strip!
+    gc.firstname.strip! if gc.firstname
+    gc.lastname.strip! if gc.lastname
     # Rails.logger.debug("firstname lastname: #{gc.firstname} #{gc.lastname}")
     gc.parse_phones_xml
     gc.parse_emails_xml
+    #gc.parse_addresses_xml
+    gc.parse_groups
     gc.edit_url = usr.search("link[rel=\"edit\"]").first['href']
     gc.self_url = usr.search("link[rel=\"self\"]").first['href']
     gc.date_of_birth = (usr.css("gContact|birthday").first ? usr.css("gContact|birthday").first['when'] : nil)
     gc
+  end
+
+  def parse_groups
+    raise ("called parse_emails_xml but my_xml is undefined") unless @my_xml
+    # gContact:groupMembershipInfo
+    Rails.logger.fatal("parsing groups...")
+    @my_xml.css("gContact|groupMembershipInfo").each do |group|
+      Rails.logger.debug("found group #{group['href']}")
+      @contact_groups << group['href']
+    end
+    Rails.logger.debug("found #{@contact_groups} groups.")
   end
 
   def parse_emails_xml

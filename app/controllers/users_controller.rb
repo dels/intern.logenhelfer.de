@@ -34,8 +34,8 @@ class UsersController < AuthorizedController
                                'GData-Version': "3.0",
                                'Content-Type': 'application/atom+xml'
                               })
-    #Rails.logger.debug("received header: #{xml_resp.headers}")
     xml = Nokogiri::XML(xml_resp)
+    puts "received header: #{xml_resp.headers}" if Rails.env.development?
     puts "received: #{xml}" if Rails.env.development?
     gc_xml = GoogleContact::parse_xml(xml)
     gc_usr = GoogleContact::parse_user(@user)
@@ -77,9 +77,13 @@ class UsersController < AuthorizedController
     gc_usr.other_address.each do |addr|
       gc_xml.other_address << addr
     end
-    
+
+    # copying groups
+    gc_usr.contact_groups.each do |grp|
+      gc_xml.contact_groups << grp
+    end
+        
     #RestClient.log = 'stdout'
-    puts "sending: #{gc_xml.to_atom}" if Rails.env.development?
     xml_resp = RestClient.put(params[:self_url], gc_xml.to_atom,
                               params: {
                                   'access_token': current_google_user.oauth_token
@@ -87,7 +91,9 @@ class UsersController < AuthorizedController
                               'GData-Version': "3.0",
                               'If-Match': '*',
                               'Content-Type': "application/atom+xml",
-                              )
+                             )
+    puts "received header:\n#{xml_resp.headers}" if Rails.env.development?
+    puts "sent:\n#{gc_xml.to_atom}" if Rails.env.development?
   end
 
   def change_message(prev, succ)
@@ -101,14 +107,23 @@ class UsersController < AuthorizedController
       return
     end
     found_contacts = []
-    xml_resp = RestClient.get('https://www.google.com/m8/feeds/contacts/default/full',
+    begin 
+      xml_resp = RestClient.get("https://www.google.com/m8/feeds/contacts/default/full",
                               {params:
                                  {
-                                   'max-results': 200000,
+                                   'max-results': 1000000,
+                                  'type': 'entry',
                                   'Content-Type': 'application/atom+xml',
                                   'access_token': current_google_user.oauth_token
                                  }
                               })
+    rescue Exception => e
+      Rails.logger.fatal("exception while requesting contacts feed: #{e.inspect}")
+      # check for return code
+      flash[:error] = "Fehler beim Laden der Daten."
+      redirect_to users_path
+      return
+    end
     xml = Nokogiri::XML(xml_resp)
     # for debugging purposes 
     File.write("/Users/dels/git/dev/intern.logenhelfer.de/contact.xml", xml_resp) if Rails.env.development?
