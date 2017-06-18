@@ -31,9 +31,14 @@ class GoogleContact
     # xmlns:batch='http://schemas.google.com/gdata/batch'
     res << "<atom:entry xmlns:atom='http://www.w3.org/2005/Atom' xmlns:gd='http://schemas.google.com/g/2005' xmlns:gContact='http://schemas.google.com/contact/2008'>\n"
     res << "  <atom:category scheme='http://schemas.google.com/g/2005#kind' term='http://schemas.google.com/contact/2008#contact'/>\n"
-    res << "  <title>#{@firstname} #{@lastname}</title>"
-    res << "  <atom:content type=\"text\">Notes</atom:content>\n"
+#    res << "  <title>#{@firstname} #{@lastname}</title>"
+    res << "  <gd:name>\n"
+    res << "    <gd:givenName>#{firstname}</gd:givenName>\n"
+    res << "    <gd:familyName>#{@lastname}</gd:familyName>\n"
+    res << "    <gd:fullName>#{@firstname} #{@lastname}</gd:fullName>\n"
+    res << "  </gd:name>\n"
     
+    res << "  <atom:content type=\"text\">Notes</atom:content>\n"
     # walk through all home
     @home_email.each do |m|
       #  primary='true'
@@ -61,15 +66,11 @@ class GoogleContact
       next if p.strip.empty?
       res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#mobile'>#{p}</gd:phoneNumber>\n"
     end
-    # date of birth
-    if @date_of_birth
-      res << "  <gContact:birthday when='#{@date_of_birth}'/>\n"
-    end
     @home_address.delete_if {|key,val| val.nil? || val.strip.empty?}
     @work_address.delete_if {|key,val| val.nil? || val.strip.empty?}
     # TODO @other_address.delete_if {|elem| elem.nil? || elem.strip.empty?}
     unless @home_address.empty?
-      res << "  <gd:structuredPostalAddress rel=\"http://schemas.google.com/g/2005#home\" primary='true'>\n"
+      res << "  <gd:structuredPostalAddress rel=\"http://schemas.google.com/g/2005#home\">\n"
       res << "    <gd:street>#{@home_address[:street]}</gd:street>\n"
       res << "    <gd:postcode>#{@home_address[:postcode]}</gd:postcode>\n"
       res << "    <gd:city>#{@home_address[:city]}</gd:city>\n"
@@ -86,12 +87,16 @@ class GoogleContact
     end
     @other_address.each do |other|
       next if other.empty?
-      res << "  <gd:structuredPostalAddress label=\"#{other[:label]}\">\n"
-      res << "    <gd:street>#{other[:street]}</gd:street>\n"
-      res << "    <gd:postcode>#{other[:postcode]}</gd:postcode>\n"
-      res << "    <gd:city>#{other[:city]}</gd:city>\n"
+     res << "  <gd:structuredPostalAddress label=\"#{other[:label]}\">\n"
+     res << "    <gd:street>#{other[:street]}</gd:street>\n"
+     res << "    <gd:postcode>#{other[:postcode]}</gd:postcode>\n"
+     res << "    <gd:city>#{other[:city]}</gd:city>\n"
       res << "    <gd:formattedAddress>#{other[:street]}\n#{other[:postcode]} #{other[:city]}</gd:formattedAddress>\n"
       res << "  </gd:structuredPostalAddress>\n"
+    end
+    # date of birth
+    if @date_of_birth
+      res << "  <gContact:birthday when=\"#{@date_of_birth}\" />\n"
     end
     # add contact groups
     @groups.each do |grp|

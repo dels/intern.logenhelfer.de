@@ -29,9 +29,9 @@ class UsersController < AuthorizedController
     xml_resp = RestClient.get(params[:self_url],
                               {params:
                                  {                                  
-                                  'access_token': current_google_user.oauth_token
+                                   'access_token': current_google_user.oauth_token
                                  },
-                               'v': "3",
+                               'GData-Version': '3.0',
                                'Content-Type': 'application/atom+xml'
                               })
     xml = Nokogiri::XML(xml_resp)
@@ -88,7 +88,7 @@ class UsersController < AuthorizedController
                               params: {
                                   'access_token': current_google_user.oauth_token
                               },
-                              'v': "3",
+                              'GData-Version': '3.0',
                               'If-Match': '*',
                               'Content-Type': "application/atom+xml",
                              )
@@ -147,7 +147,6 @@ class UsersController < AuthorizedController
   def create_google_contact
     @google_contact = GoogleContact::parse_user(@user)
     @create_res = GoogleContactManager.new(current_google_user).create_contact(@google_contact)
-    
   end
   
   def members_list

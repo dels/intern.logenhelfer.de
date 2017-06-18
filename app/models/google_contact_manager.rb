@@ -1,5 +1,9 @@
 class GoogleContactManager
 
+  def build_header(google_user)
+
+  end
+  
   def initialize(current_google_user)
     @current_google_user = current_google_user
   end
@@ -11,7 +15,7 @@ class GoogleContactManager
                                 {params:
                                    {
                                      'max-results': 1000000,
-                                    'v': '3',
+                                    'GData-Version': '3.0',
                                     'Content-Type': 'application/atom+xml',
                                     'access_token': @current_google_user.oauth_token
                                    }
@@ -26,7 +30,10 @@ class GoogleContactManager
   end
 
   def all_groups
-    return nil unless @current_google_user
+    unless @current_google_user
+      Rails.logger.fatal("current google user is not set.")
+      return nil
+    end
     begin
       xml_resp = RestClient.get("https://www.google.com/m8/feeds/groups/default/full",
                                 {params:
@@ -41,6 +48,7 @@ class GoogleContactManager
       Rails.logger.fatal("exception while requesting contacts feed: #{e.inspect}")
       return nil
     end
+    xml_resp
   end
 
   def my_contacts_group_link()
@@ -70,11 +78,15 @@ class GoogleContactManager
     url = "https://www.google.com/m8/feeds/contacts/default/full"
     puts "posting to #{url} \n#{atom}" if Rails.env.development?
     response = RestClient.post(url, atom,
-                               {
-                                 'Content-Type': 'application/atom+xml',
-                                'v': '3',
-                                'Authorization': "Bearer #{@current_google_user.oauth_token}"
-                               })
+                               params: {
+                                 #'Authorization': "Bearer #{@current_google_user.oauth_token}"
+                                 'access_token': @current_google_user.oauth_token
+                               },
+                               'GData-Version': '3.0',
+                               #'v': '3',
+                               'Content-Type': 'application/atom+xml'
+                              )
+
     if response.code == 201
       res = "Neuen Kontakt erstellt."
       Rails.logger.debug("resp body: \n#{response.body}")
