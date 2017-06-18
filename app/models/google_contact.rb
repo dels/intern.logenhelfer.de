@@ -9,7 +9,7 @@ class GoogleContact
 
   attr_accessor :firstname, :lastname, :name, :home_email, :work_email, :mobile_phone, :home_phone,
                 :work_phone, :home_fax, :work_fax, :home_address, :business_address, :date_of_birth, :priv_addr, :business_addr,
-                :street, :postcode, :city, :home_address, :work_address, :other_address, :groups,
+                :street, :postcode, :city, :home_address, :work_address, :other_address, :groups, :system_groups,
                 :edit_href, :my_json, :my_xml, :edit_url, :self_url
   
   def initialize()
@@ -22,6 +22,7 @@ class GoogleContact
     @work_address = {}
     @other_address = []
     @groups = []
+    @system_groups = []
   end
 
   
@@ -30,11 +31,7 @@ class GoogleContact
     # xmlns:batch='http://schemas.google.com/gdata/batch'
     res << "<atom:entry xmlns:atom='http://www.w3.org/2005/Atom' xmlns:gd='http://schemas.google.com/g/2005' xmlns:gContact='http://schemas.google.com/contact/2008'>\n"
     res << "  <atom:category scheme='http://schemas.google.com/g/2005#kind' term='http://schemas.google.com/contact/2008#contact'/>\n"
-    res << "  <gd:name>\n"
-    res << "     <gd:givenName>#{@firstname}</gd:givenName>\n"
-    res << "      <gd:familyName>#{@lastname}</gd:familyName>\n"
-    res << "      <gd:fullName>#{@firstname} #{@lastname}</gd:fullName>\n"
-    res << "  </gd:name>\n"
+    res << "  <title>#{@firstname} #{@lastname}</title>"
     res << "  <atom:content type=\"text\">Notes</atom:content>\n"
     
     # walk through all home
@@ -98,9 +95,11 @@ class GoogleContact
     end
     # add contact groups
     @groups.each do |grp|
-      res << "  <gContact:groupMembershipInfo deleted=\"false\" href=\"#{grp}\"/>"
+      res << "  <gContact:groupMembershipInfo deleted=\"false\" href=\"#{grp}\"/>\n"
     end
-    
+    @system_groups.each do |grp|
+      res << "  <gContact:systemGroupMembershipInfo deleted=\"false\" href=\"#{grp}\"/>\n"
+    end
     res << "</atom:entry>"
     res.strip
   end
@@ -239,6 +238,8 @@ class GoogleContact
     @mobile_phone.uniq!
     @home_phone.uniq!
     @work_phone.uniq!
+    @groups.uniq!
+    @system_groups.uniq!
   end
   
 end

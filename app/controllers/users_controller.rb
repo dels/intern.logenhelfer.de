@@ -82,7 +82,7 @@ class UsersController < AuthorizedController
     gc_usr.groups.each do |grp|
       gc_xml.groups << grp
     end
-        
+
     #RestClient.log = 'stdout'
     xml_resp = RestClient.put(params[:self_url], gc_xml.to_atom,
                               params: {
@@ -146,8 +146,8 @@ class UsersController < AuthorizedController
   
   def create_google_contact
     @google_contact = GoogleContact::parse_user(@user)
-    # FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!
-    raise "exception: IMPLEMENT ME. method content moved to google contact manager class"
+    @create_res = GoogleContactManager.new(current_google_user).create_contact(@google_contact)
+    
   end
   
   def members_list

@@ -43,23 +43,37 @@ class GoogleContactManager
     end
   end
 
-  def my_contacts_group_link
-    
-
+  def my_contacts_group_link()
+    xml = Nokogiri::XML(all_groups)
+    xml.at("feed").search("entry").each do |entry|
+      next unless entry
+      next if entry.blank?
+      next unless entry.at("id")
+      if entry.css("gContact|systemGroup") && entry.css("gContact|systemGroup").first['id'].eql?("Contacts")
+        if entry.css("link") && entry.css("link").first['rel'].eql?("self")
+          Rails.logger.fatal("system group contacts found at #{entry.css("link").first['href']}")
+          return entry.css("link").first['href']
+        end
+      end
+    end
+    nil
   end
   
   def create_contact(google_contact)
     RestClient.log = 'stdout' if Rails.env.development?
-    if google_contact.groups.empty?
-      all_groups
+    system_group_contacts = my_contacts_group_link()
+    raise ("could not find system group 'Contacts'") unless system_group_contacts
+    unless google_contact.groups.find_index(system_group_contacts)
+      google_contact.system_groups << system_group_contacts
     end
     atom = google_contact.to_atom
-    puts "sending \n#{atom}" if Rails.env.development?
-    response = RestClient.post("https://www.google.com/m8/feeds/contacts/default/full", atom,
+    url = "https://www.google.com/m8/feeds/contacts/default/full"
+    puts "posting to #{url} \n#{atom}" if Rails.env.development?
+    response = RestClient.post(url, atom,
                                {
                                  'Content-Type': 'application/atom+xml',
                                 'v': '3',
-                                'Authorization': "Bearer #{current_google_user.oauth_token}"
+                                'Authorization': "Bearer #{@current_google_user.oauth_token}"
                                })
     if response.code == 201
       res = "Neuen Kontakt erstellt."
