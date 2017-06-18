@@ -1,28 +1,30 @@
 
 
 <% if current_google_user %>
-Signed in as <strong><%= current_google_user.g_name %></strong>!
+Angemeldet als <strong><%= current_google_user.g_name %></strong>!
 <%= link_to "Sign out", signout_path, id: "sign_out" %>
-
-
-<p><%= @update_res %></p>
-<p>
-Sync Google Contact of <%=@user.fullname %> to Google
-</p>
 
 <%- if can? :google_sync, User -%>
   <p><%= link_to t('activerecord.actions.google_sync'), google_sync_users_path, class: 'disk icon' %></p>
 <%- end -%>
 
-<% if @changes.empty? %>
+<% if @update_res %>
+<p>
+<%=@user.fullname %> erfolgreich synchronisiert.
+</p>
+
+<% if @change_messages.empty? %>
 <b>Keine &Auml;nderungen</b>
 <% else %>
 <b>&Auml;nderungen:</b>
-<% @changes.each do |msg| %>
+<% @change_messages.each do |msg| %>
 <p>
   <%= msg %>
 </p>
 <% end %>
+<% end %>
+<% else %>
+<%=@user.fullname %> konnte nicht synchronisiert werden.
 <% end %>
 <% else %>
 <%= link_to "Sign in with Google", "/auth/google_oauth2", id: "sign_in" %>

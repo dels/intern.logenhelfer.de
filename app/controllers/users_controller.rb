@@ -25,80 +25,8 @@ class UsersController < AuthorizedController
       # TODO redirect for re-login or refresh token
       return
     end
-    @changes = []
-    xml_resp = RestClient.get(params[:self_url],
-                              {params:
-                                 {                                  
-                                   'access_token': current_google_user.oauth_token
-                                 },
-                               'GData-Version': '3.0',
-                               'Content-Type': 'application/atom+xml'
-                              })
-    xml = Nokogiri::XML(xml_resp)
-    puts "received header: #{xml_resp.headers}" if Rails.env.development?
-    puts "received: #{xml}" if Rails.env.development?
-    gc_xml = GoogleContact::parse_xml(xml)
-    gc_usr = GoogleContact::parse_user(@user)
-    # check phone numbers
-    unless gc_xml.work_phone.eql?(gc_usr.work_phone)
-      @changes << "changed work phone. #{change_message(gc_xml.work_phone, gc_usr.work_phone)}"
-      gc_xml.work_phone = gc_usr.work_phone
-    end
-    unless gc_xml.home_phone.eql?(gc_usr.home_phone)
-      @changes << "changed home phone. #{change_message(gc_xml.home_phone, gc_usr.home_phone)}"
-      gc_xml.home_phone = gc_usr.home_phone
-    end
-    unless gc_xml.mobile_phone.eql?(gc_usr.mobile_phone)
-      @changes << "changed mobile phone. #{change_message(gc_xml.mobile_phone, gc_usr.mobile_phone)}"
-      gc_xml.mobile_phone = gc_usr.mobile_phone
-    end
-    # check emails
-    unless gc_xml.home_email.eql?(gc_usr.home_email)
-      @changes << "changed home email addr. #{change_message(gc_xml.home_email, gc_usr.home_email)}"
-      gc_xml.home_email = gc_usr.home_email
-    end
-    unless gc_xml.work_email.eql?(gc_usr.work_email)
-      @changes << "changed work email addr. #{change_message(gc_xml.work_email, gc_usr.work_email)}"
-      gc_xml.work_email = gc_usr.work_email
-    end
-    # check birthdate
-    unless gc_xml.date_of_birth.to_s.eql?(gc_usr.date_of_birth.to_s)
-      @changes << "changed date of birth. #{change_message(gc_xml.date_of_birth, gc_usr.date_of_birth)}"
-      gc_xml.date_of_birth = gc_usr.date_of_birth
-    end
-    # FIXME just adding the addresses without comparison
-    gc_xml.home_address[:street] = gc_usr.home_address[:street]
-    gc_xml.home_address[:postcode] = gc_usr.home_address[:postcode]
-    gc_xml.home_address[:city] = gc_usr.home_address[:city]
-    gc_xml.work_address[:street] = gc_usr.work_address[:street]
-    gc_xml.work_address[:postcode] = gc_usr.work_address[:postcode]
-    gc_xml.work_address[:city] = gc_usr.work_address[:city]
-
-    gc_usr.other_address.each do |addr|
-      gc_xml.other_address << addr
-    end
-
-    # copying groups
-    gc_usr.groups.each do |grp|
-      gc_xml.groups << grp
-    end
-
-    #RestClient.log = 'stdout'
-    xml_resp = RestClient.put(params[:self_url], gc_xml.to_atom,
-                              params: {
-                                  'access_token': current_google_user.oauth_token
-                              },
-                              'GData-Version': '3.0',
-                              'If-Match': '*',
-                              'Content-Type': "application/atom+xml",
-                             )
-    puts "received header:\n#{xml_resp.headers}" if Rails.env.development?
-    puts "sent:\n#{gc_xml.to_atom}" if Rails.env.development?
-  end
-
-  def change_message(prev, succ)
-    return "old: #{prev}. new: #{prev}" if prev.is_a?(String) && succ .is_a?(String)
-    # TODO deal with email arrays
+    @change_messages = GoogleContactManager::merge(current_google_user.oauth_token, params[:self_url], @user)
+    @update_res = @change_messages ? true : false
   end
 
   def google_sync

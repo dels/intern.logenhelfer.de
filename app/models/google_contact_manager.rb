@@ -15,8 +15,7 @@ class GoogleContactManager
       Rails.logger.fatal("exception while requesting contacts feed: #{e.inspect}")
       return nil
     end
-    puts "recevied all contacts:" if Rails.env.development?
-    puts xml_resp if Rails.env.development?
+    debug_resp(xml_resp)
     xml_resp
   end
 
@@ -25,39 +24,54 @@ class GoogleContactManager
       xml_resp = RestClient.get("https://www.google.com/m8/feeds/groups/default/full",
                                 {params:
                                    {
-                                     'max-results': 1000000,
                                     'Content-Type': 'application/atom+xml',
+                                    #'GData-Version': '3.0',
                                     'v': '3',
                                     'access_token': auth_token
-                                   }
+                                   },
                                 })
     rescue Exception => e
       Rails.logger.fatal("exception while requesting contacts feed: #{e.inspect}")
       return nil
+    ensure
+      debug_resp(xml_resp)
     end
+
     xml_resp
   end
 
-  def self.my_contacts_group_link(auth_token)
+  def self.group_by_name(auth_token, search_str)
     xml = Nokogiri::XML(all_groups(auth_token))
     return nil unless xml.at("feed")
     xml.at("feed").search("entry").each do |entry|
       next unless entry
       next if entry.blank?
-      next unless entry.at("id")
-      if entry.css("gContact|systemGroup") && entry.css("gContact|systemGroup").first['id'].eql?("Contacts")
+      # next unless entry.at("id")
+      # searching in system groups
+      if entry.css("gContact|systemGroup") && entry.css("gContact|systemGroup").first && entry.css("gContact|systemGroup").first['id'].eql?(search_str)
         if entry.css("link") && entry.css("link").first['rel'].eql?("self")
           Rails.logger.fatal("system group contacts found at #{entry.css("link").first['href']}")
+          # return entry.css("link").first['href'][0..(entry.css("link").first['href'].length-5)]
+          return entry.css("link").first['href']
+        end
+      end
+
+      # searching in personal groups
+      if entry.css("title") && entry.css("title").first && entry.css("title").first.content.eql?(search_str)
+        if entry.css("link") && entry.css("link").first['rel'].eql?("self")
+          Rails.logger.fatal("group contacts found at #{entry.css("link").first['href']}")
+          # return entry.css("link").first['href'][0..(entry.css("link").first['href'].length-5)]
           return entry.css("link").first['href']
         end
       end
     end
+    Rails.logger.warn("did not find group \"#{search_str}\"")
     nil
   end
   
   def self.create(auth_token, google_contact)
     RestClient.log = 'stdout' if Rails.env.development?
-    system_group_contacts = my_contacts_group_link(auth_token)
+    system_group_contacts = group_by_name(auth_token, "Contacts")
     raise ("could not find system group 'Contacts'") unless system_group_contacts
     unless google_contact.groups.find_index(system_group_contacts)
       google_contact.system_groups << system_group_contacts
@@ -69,10 +83,8 @@ class GoogleContactManager
                                params: {
                                  #'Authorization': "Bearer #{auth_token}"
                                  'access_token': auth_token,
-                                        # 'v': '3'
                                },
                                'GData-Version': '3.0',
-                               #
                                'Content-Type': 'application/atom+xml'
                               )
 
@@ -84,6 +96,7 @@ class GoogleContactManager
       res = "Kontakt konnte nicht erstellt werden. Bitte versuche es spaeter erneut."
       Rails.logger.fatal("response code was #{response.code}")
     end
+    debug_resp(response)
     res
   end
 
@@ -94,20 +107,19 @@ class GoogleContactManager
                                    'access_token': auth_token
                                  },
                                'GData-Version': '3.0',
+                               #'v': '3',
                                'Content-Type': 'application/atom+xml'
                               })
     xml = Nokogiri::XML(xml_resp)
-    puts "received header: #{xml_resp.headers}" if Rails.env.development?
-    puts "received: #{xml}" if Rails.env.development?
-    
+    debug_resp(xml_resp)
     GoogleContact::parse_xml(xml)
   end
-    
   
-  def self.merge(auth_token, url, gc_usr)
+  
+  def self.merge(auth_token, url, usr_obj)
     change_msgs = []
     gc_res = contact(auth_token, url)
-    gc_usr = GoogleContact::parse_user(@user)
+    gc_usr = GoogleContact::parse_user(usr_obj)
     # check phone numbers
     unless gc_res.work_phone.eql?(gc_usr.work_phone)
       change_msgs << "changed work phone. #{change_message(gc_res.work_phone, gc_usr.work_phone)}"
@@ -152,20 +164,51 @@ class GoogleContactManager
       gc_res.groups << grp
     end
 
-    #RestClient.log = 'stdout'
-    xml_resp = RestClient.put(params[:self_url], gc_res.to_atom,
-                              params: {
-                                  'access_token': current_google_user.oauth_token
-                              },
-                              'GData-Version': '3.0',
-                              'If-Match': '*',
-                              'Content-Type': "application/atom+xml",
-                             )
-    puts "received header:\n#{xml_resp.headers}" if Rails.env.development?
-    puts "sent:\n#{gc_res.to_atom}" if Rails.env.development?
-    
+    return nil unless update(auth_token, url, gc_res)
     change_msgs
   end
 
+  def self.change_message(prev, succ)
+    return "old: #{prev}. new: #{succ}"# if prev.is_a?(String) && succ .is_a?(String)
+    # TODO deal with email arrays
+  end
+    
+  def self.update(auth_token, self_url, contact)
+    #RestClient.log = 'stdout'
+    if contact.groups.empty?
+      #contact.groups << group_by_name(auth_token, "Contacts")
+    end
+    if Rails.env.development?
+      puts "-"*60
+      puts "putting:"
+      puts contact.to_atom
+    end
+    begin
+      xml_resp = RestClient.put(self_url, contact.to_atom,
+                                params: {
+                                  'access_token': auth_token
+                                },
+                                'GData-Version': '3.0',
+                                # 'v': '3',
+                                'If-Match': '*',
+                                'Content-Type': "application/atom+xml"
+                               )
+    rescue Exception => e
+      Rails.logger.fatal("update failed: #{e.inspect}")
+    ensure 
+      debug_resp(xml_resp)
+    end
+    xml_resp
+  end
+
+
+  private
+
+  def self.debug_resp(resp)
+    return unless  Rails.env.development?
+    puts "-"*60
+    puts "received header:\n#{resp.headers}\n" if resp
+    puts "received body:\n#{resp.body}\n" if resp
+  end
   
 end
