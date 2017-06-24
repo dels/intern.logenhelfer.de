@@ -1,23 +1,15 @@
-<% t("Google Kontakt erstellen") %>
+<% title("Google Kontakt erstellt") %>
 
 <% if current_google_user %>
-Angemeldet als <strong><%= current_google_user.g_name %></strong>!
-<%= link_to "Sign out", signout_path, id: "sign_out" %>
-
 <%- if can? :google_sync, User -%>
-  <p><%= link_to t('activerecord.actions.google_sync'), google_sync_users_path, class: 'disk icon' %></p>
+  <p><%= link_to t('contact_sync.title'), google_sync_users_path, class: 'disk icon' %></p>
 <%- end -%>
 
+<%= render 'google_header' %>
 
+<p><h2>Neuer Kontakt erstellt</h2></p>
 <p><%= @create_res %></p>
-<p>
-<%=@user.fullname %> als Kontakt erstellt.
-</p>
 
-
-
-<% else %>
-<%= link_to "Sign in with Google", "/auth/google_oauth2", id: "sign_in" %>
 <% end %>
 
 

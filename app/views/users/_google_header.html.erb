@@ -1,0 +1,6 @@
+<% if current_google_user %>
+<p><%= link_to t('contact_sync.google.sign_out'), signout_path, id: "sign_out" %></p>
+<p>Bei Google angemeldet als <strong><%= current_google_user.g_name %></strong>!</p>
+<% else %>
+<p><%= link_to t('contact_sync.google.sign_in'), "/auth/google_oauth2", id: "sign_in" %></p>
+<% end %>

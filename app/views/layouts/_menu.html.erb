@@ -100,7 +100,7 @@
               <%= link_to(t("helpers.pdf.birthdaylist"), birthday_list_users_path) -%>
               <%- end -%>
               <%= content_tag(:li, class: (request.fullpath =~ /^\/users\/google_sync/ ? 'active space-bottom' : 'space-bottom')) do -%>
-              <%= link_to(t("google_sync"), google_sync_users_path) -%>
+              <%= link_to(t("contact_sync.title"), google_sync_users_path) -%>
             <%- end -%>
           <%- end -%>
           <%- end -%>

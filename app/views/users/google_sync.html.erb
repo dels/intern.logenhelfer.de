@@ -1,11 +1,9 @@
 
-<% title "Google Kontakte synchronisieren" %>
+<% title "Kontakte synchronisieren" %>
+
+<%= render 'google_header' %>
 
 <% if current_google_user %>
-Angemeldet bei Google als <strong><%= current_google_user.g_name %></strong>!
-<p><%= link_to "Abmelden bei Google", signout_path, id: "sign_out" %></p>
-
-
 <% if @res.count > 0 %>
   <%= paginate @res if @res.present? %>
   <table class='autolink'>
@@ -21,9 +19,9 @@ Angemeldet bei Google als <strong><%= current_google_user.g_name %></strong>!
         <td><%= dash(user.firstname) %></td>
         <td>
           <% if user.google_edit_url %>
-          <%= link_to "update", update_google_contact_users_path(user, :edit_url => user.google_edit_url, :self_url => user.google_self_url) %>
+          <%= link_to t('contact_sync.update'), update_google_contact_users_path(user, :edit_url => user.google_edit_url, :self_url => user.google_self_url) %>
           <% else %>
-          <%= link_to "create", create_google_contact_users_path(user) %>
+          <%= link_to t('contact_sync.create'), create_google_contact_users_path(user) %>
           <% end %>
         </td>
         <td>
@@ -39,7 +37,14 @@ Angemeldet bei Google als <strong><%= current_google_user.g_name %></strong>!
 <%- end -%>
 
 <% else %>
-<%= link_to "Anmelden mit Google", "/auth/google_oauth2", id: "sign_in" %>
+  <b>Achtung!</b>
+<p>
+  Diese neue Funktion befindet sich noch in der <b>Test-Phase</b>. Sie ist noch nicht ausreichend getestet und könnte zu Datenverlust in Deinem Google Addressbuch führen.
+</p>
+<p>
+  Falls Du dieses neue Feature dennoch ausprobieren möchtest, dann fahre gerne fort und melde Dich mit Deinem Google Konto an. 
+</p>
+<%= link_to t('contact_sync.google.sign_in'), "/auth/google_oauth2", id: "sign_in" %>
 <% end %>
 
 

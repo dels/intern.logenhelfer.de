@@ -1,4 +1,12 @@
 de:
+  contact_sync:
+    title: 'Kontakte Synchronisieren'
+    create: 'Als neuen Eintrag erstellen'
+    update: 'Vorhandenen Eintrag aktualisieren'
+    google:
+      signed_in_as: 'Angemeldet bei Google als'
+      sign_out: 'Bei Google abmelden'
+      sign_in: 'Anmelden mit Google Konto'      
   text:
     external_event_subscription:
       subscription_to_work_sent: 'Für Arbeit (ohne Tafel) angemeldet'

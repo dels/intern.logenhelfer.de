@@ -1,3 +1,4 @@
+# coding: utf-8
 class GoogleContactManager
 
   def self.all_contacts(auth_token)
@@ -89,11 +90,10 @@ class GoogleContactManager
                               )
 
     if response.code == 201
-      res = "Neuen Kontakt erstellt."
+      res = "Neuer Kontakt erstellt: #{google_contact.name}"
       Rails.logger.debug("resp body: \n#{response.body}")
     else
-      # FIXME change spaeter to spater with umlaut
-      res = "Kontakt konnte nicht erstellt werden. Bitte versuche es spaeter erneut."
+      res = "Kontakt konnte nicht erstellt werden. Bitte versuche es später erneut."
       Rails.logger.fatal("response code was #{response.code}")
     end
     debug_resp(response)

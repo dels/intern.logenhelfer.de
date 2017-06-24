@@ -1,11 +1,10 @@
-
+<% title "Kontakt aktualisiert" %>
 
 <% if current_google_user %>
-Angemeldet als <strong><%= current_google_user.g_name %></strong>!
-<%= link_to "Sign out", signout_path, id: "sign_out" %>
+<%= render 'google_header' %>
 
 <%- if can? :google_sync, User -%>
-  <p><%= link_to t('activerecord.actions.google_sync'), google_sync_users_path, class: 'disk icon' %></p>
+  <p><%= link_to t('contact_sync.title'), google_sync_users_path, class: 'disk icon' %></p>
 <%- end -%>
 
 <% if @update_res %>
