@@ -1,5 +1,6 @@
 Gemfile.lock
 .bundle
+start_db
 db/*.sqlite3
 log/*.log
 tmp/
