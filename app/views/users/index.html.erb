@@ -13,7 +13,7 @@
 <%- end -%>
 
 <%- if can? :google_sync, User -%>
-  <p><%= link_to t('contact_sync.title'), google_sync_users_path, class: 'addressbook icon' %></p>
+  <p><%= link_to t('contact_sync.title'), google_sync_users_path(), class: 'contacts icon' %></p>
 <%- end -%>
 
 

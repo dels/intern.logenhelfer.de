@@ -19,9 +19,9 @@
         <td><%= dash(user.firstname) %></td>
         <td>
           <% if user.google_edit_url %>
-          <%= link_to t('contact_sync.update'), update_google_contact_users_path(user, :edit_url => user.google_edit_url, :self_url => user.google_self_url) %>
+          <%= link_to t('contact_sync.update'), update_google_contact_users_path(user, :edit_url => user.google_edit_url, :self_url => user.google_self_url), class: 'contact_update icon' %>
           <% else %>
-          <%= link_to t('contact_sync.create'), create_google_contact_users_path(user) %>
+          <%= link_to t('contact_sync.create'), create_google_contact_users_path(user), class: 'contact_new icon' %>
           <% end %>
         </td>
         <td>
