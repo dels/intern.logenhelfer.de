@@ -24,7 +24,7 @@ class GoogleContactManager
     RestClient.log = 'stdout' if Rails.env.development?
     system_group_contacts = GoogleGroupManager.contacts_group_id(auth_token)
     raise ("could not find system group 'Contacts'") unless system_group_contacts
-    lodge_group = GoogleGroupManager.find_or_create(auth_token, AppConfig[:lodge_short], "Mitglieder der Loge #{AppConfig[:lodge]}", AppConfig[:lodge])
+    lodge_group = GoogleGroupManager.lodge_group_id(auth_token)
     raise ("could not create or find group #{AppConfig[:lodge_short]}") unless lodge_group
 
     unless google_contact.groups.find_index(lodge_group)
@@ -141,9 +141,11 @@ class GoogleContactManager
     
   def self.update(auth_token, self_url, contact)
     #RestClient.log = 'stdout'
-    if contact.groups.empty?
-      Rails.logger.warn("adding system group.")
-      contact.groups << GoogleGroupManager.contacts_group(auth_token)
+    unless contact.system_groups.index(GoogleGroupManager::contacts_group_id(auth_token))
+      contact.system_groups << GoogleGroupManager::contacts_group_id(auth_token)
+    end
+    unless contact.groups.index(GoogleGroupManager::lodge_group_id(auth_token))
+      contact.groups << GoogleGroupManager::lodge_group_id(auth_token)
     end
     if Rails.env.development?
       puts "-"*60
@@ -156,7 +158,6 @@ class GoogleContactManager
                                   'access_token': auth_token
                                 },
                                 'GData-Version': '3.0',
-                                # 'v': '3',
                                 'If-Match': '*',
                                 'Content-Type': "application/atom+xml"
                                )

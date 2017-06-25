@@ -21,26 +21,39 @@ class GoogleGroupManager
 
     xml_resp
   end
-
-  def self.find_or_create(auth_token, name, ext_info, desc)
-    grp = group_by_name(auth_token, name)
-    unless grp
-      Rails.logger.warn("group #{name} doesn't exist. creating...")
-      return nil unless (grp = create(auth_token, name, ext_info, desc))
-      Rails.logger.warn("group #{name} created")
+  
+  def self.contacts_group_id(auth_token)
+    xml = Nokogiri::XML(all_groups(auth_token))
+    return nil unless xml.at("feed")
+    xml.at("feed").search("entry").each do |entry|
+      next unless entry
+      next if entry.blank?
+      if entry.css("title").first && entry.css("title").first.content.eql?("System Group: My Contacts")
+        return entry.css("id").first.content
+      end
     end
-    grp
+    nil
   end
 
-  def self.create(auth_token, name, ext_info, desc)
+  def self.lodge_group_id(auth_token)
+    xml = Nokogiri::XML(all_groups(auth_token))
+    return nil unless xml.at("feed")
+    xml.at("feed").search("entry").each do |entry|
+      next unless entry
+      next if entry.blank?
+      if entry.css("title").first && entry.css("title").first.content.eql?(AppConfig[:lodge_short])
+        return entry.css("id").first.content
+      end
+    end
+    # if lodge group could not been found, we have to create it
     url = "https://www.google.com/m8/feeds/groups/default/full"
     group_atom = ""
     group_atom << "<atom:entry xmlns:atom=\"http://www.w3.org/2005/Atom\" xmlns:gd=\"http://schemas.google.com/g/2005\">\n"
     group_atom << "  <atom:category scheme=\"http://schemas.google.com/g/2005#kind\"\n"
     group_atom << "    term=\"http://schemas.google.com/contact/2008#group\"/>\n"
-    group_atom << "  <atom:title type=\"text\">#{name}</atom:title>\n"
-    group_atom << "  <gd:extendedProperty name=\"#{ext_info}\">\n" if ext_info
-    group_atom << "    <info>#{desc}</info>\n" if desc
+    group_atom << "  <atom:title type=\"text\">#{AppConfig[:lodge_short]}</atom:title>\n"
+    group_atom << "  <gd:extendedProperty name=\"#{AppConfig[:lodge]}\">\n"
+    group_atom << "    <info>Kontakte der Loge #{AppConfig[:lodge]}</info>\n"
     group_atom << "  </gd:extendedProperty>\n"
     group_atom << "</atom:entry>\n"
     
@@ -53,27 +66,14 @@ class GoogleGroupManager
                                'Content-Type': 'application/atom+xml'
                               )
     if xml_resp.code == 201
-      res = "Neue Gruppe erstellt: #{name}"
+      res = "Neue Gruppe erstellt: #{AppConfig[:lodge_short]}"
       Rails.logger.debug("resp body: \n#{xml_resp.body}")
     else
       res = "Gruppe konnte nicht erstellt werden. Bitte versuche es später erneut."
       Rails.logger.fatal("response code was #{xml_resp.code}")
     end
     debug_resp(xml_resp)
-    Nokogiri::XML(xml_resp.body).at(entry).css("id").first.content
-  end
-
-  def self.contacts_group_id(auth_token)
-    xml = Nokogiri::XML(all_groups(auth_token))
-    return nil unless xml.at("feed")
-    xml.at("feed").search("entry").each do |entry|
-      next unless entry
-      next if entry.blank?
-      if entry.css("title").first && entry.css("title").first.content.eql?("System Group: My Contacts")
-        return entry.css("id").first.content
-      end
-    end
-    nil
+    Nokogiri::XML(xml_resp.body).at("entry").css("id").first.content
   end
   
   def self.group_by_name(auth_token, search_str)
