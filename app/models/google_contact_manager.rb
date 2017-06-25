@@ -137,7 +137,7 @@ class GoogleContactManager
   end
 
   def self.change_message(prev, succ)
-    return "old: #{prev}. new: #{succ}"# if prev.is_a?(String) && succ .is_a?(String)
+    return "war: #{prev}. neu: #{succ}"# if prev.is_a?(String) && succ .is_a?(String)
     # TODO deal with email arrays
   end
     

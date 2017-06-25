@@ -7,17 +7,19 @@
 # TODO - addresses should also be valid if they have a filled postAddress field not only if they have street, postcode, and city
 class GoogleContact
 
-  attr_accessor :firstname, :lastname, :name, :home_email, :work_email, :mobile_phone, :home_phone,
-                :work_phone, :home_fax, :work_fax, :home_address, :business_address, :date_of_birth, :priv_addr, :business_addr,
-                :street, :postcode, :city, :home_address, :work_address, :other_address, :groups, :system_groups,
+  attr_accessor :firstname, :lastname, :name, :home_email, :work_email, :other_email, :mobile_phone, :home_phone,
+                :work_phone, :other_email, :home_fax, :work_fax, :home_address, :business_address, :priv_addr, :business_addr,
+                :date_of_birth, :street, :postcode, :city, :home_address, :work_address, :other_address, :groups, :system_groups,
                 :edit_href, :my_json, :my_xml, :edit_url, :self_url
   
   def initialize()
     @home_email = []
     @work_email = []
+    @other_email = []
     @mobile_phone = []
     @home_phone = []
     @work_phone = []
+    @other_phone = []
     @home_address = {}
     @work_address = {}
     @other_address = []
@@ -60,6 +62,18 @@ class GoogleContact
       next if p.strip.empty?
       res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#work'>#{p}</gd:phoneNumber>\n"
     end
+=begin
+    # walk through all other
+    @other_email.each do |m|
+      next if m.strip.empty?
+      #  primary='true'
+      res << "  <gd:email rel='http://schemas.google.com/g/2005#other' address='#{m}'/>\n"
+    end
+    @other_phone.each do |p|
+      next if p.strip.empty?
+      res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#other'>#{p}</gd:phoneNumber>\n"
+    end
+=end
     # mobile phone
     @mobile_phone.each do |p|
       # primary='true'
@@ -228,12 +242,16 @@ class GoogleContact
     @work_phone.delete_if {|k| k.nil? || k.strip.empty?} if @work_phone
     @home_email.delete_if {|k| k.nil? || k.strip.empty?} if @home_email
     @work_email.delete_if {|k| k.nil? || k.strip.empty?} if @work_email
+    @other_email.delete_if {|k| k.nil? || k.strip.empty?} if @other_email
     # removing duplicates
-    @mobile_phone.uniq!
-    @home_phone.uniq!
-    @work_phone.uniq!
-    @groups.uniq!
-    @system_groups.uniq!
+    @mobile_phone.uniq! {|elem| elem.upcase}
+    @home_phone.uniq!{|elem| elem.upcase}
+    @work_phone.uniq!{|elem| elem.upcase}
+    @home_email.uniq!{|elem| elem.upcase}
+    @work_email.uniq!{|elem| elem.upcase}
+    @other_email.uniq!{|elem| elem.upcase}
+    @groups.uniq!{|elem| elem.upcase}
+    @system_groups.uniq!{|elem| elem.upcase}
   end
   
 end

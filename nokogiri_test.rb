@@ -1,6 +1,5 @@
 require 'nokogiri'
 
-
 raw_xml = File.read('contacts.xml')
 
 def parse_xml(raw_xml)
@@ -22,5 +21,14 @@ def parse_xml(raw_xml)
   end
 end
 
+def test_uniq
+  arr = ["keks", "keks", "Keks", "KEKS", "asdf"]
+  arr.uniq! {|elem| elem.upcase}
 
-parse_xml(raw_xml)
+  puts arr
+
+
+end
+
+test_uniq
+#parse_xml(raw_xml)
