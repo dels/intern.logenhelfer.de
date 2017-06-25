@@ -103,7 +103,7 @@ class GoogleContact
       res << "  <gContact:groupMembershipInfo deleted=\"false\" href=\"#{grp}\" />\n"
     end
     @system_groups.each do |grp|
-      res << "  <gContact:systemGroupMembershipInfo deleted=\"false\" href=\"#{grp}\" />\n"
+      res << "  <gContact:groupMembershipInfo deleted=\"false\" href=\"#{grp}\" />\n"
     end
     res << "</atom:entry>"
     res.strip

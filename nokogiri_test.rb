@@ -1,28 +1,7 @@
 require 'nokogiri'
 
 
-raw_xml = File.read('luther.xml')
-
-
-def add_birthday(raw_xml)
-  xml = Nokogiri::XML(raw_xml)
-  puts xml
-  xml.root << Nokogiri::XML::Node.new("gContact:birthday when='1943-12-12'", xml)
-  puts "--"*30
-  puts xml
-end
-
-add_birthday(raw_xml)
-
-def extract_phone(child)
-  res =""
-  child.css("gd|phoneNumber").each do |phone|
-    next unless phone['rel']
-    ident = phone['rel'].match(/http\:\/\/schemas\.google\.com\/g\/2005#(.*)/)
-    res << "#{ident.captures[0]} phone: #{phone.content}\n"
-  end
-  res
-end
+raw_xml = File.read('contacts.xml')
 
 def parse_xml(raw_xml)
   xml = Nokogiri::XML(raw_xml)
@@ -31,28 +10,17 @@ def parse_xml(raw_xml)
     next unless child
     next if child.blank?
     next unless child.at("id")
-    #  puts "next child:"
-    #  puts child.element_children
-    found_mail = false
-    res = "\n\n"
-    res << "id: #{child.at('id').content}\n"
-    res << "title: #{child.at('title').content}\n"
-    #  next unless child.at('title').content.eql?("Frederik Elsbroek")
-    #  child.children.each {|c|
-    #    puts c
-    #  }
-    #  puts child.namespaces
-    child.css("gd|email").each do |mail|
-      if mail['primary']
-        res << "found primary email: #{mail['address']}\n"
-      else
-        res << "found email: #{mail['address']}\n"
-      end
+    puts "--"*60
+#    puts "next child:"
+#    puts child.element_children
+    if child.css("title").first.content.eql?("System Group: My Contacts")
+      puts "found Contacts id: #{child.css("id").first.content}"
     end
-    res << extract_phone(child)
-    child.search("link[rel=\"edit\"]").each do |link|
-    res << "found edit link: #{link['href']}\n"
+    if child.css("title").first.content.eql?("FWzE")
+      puts "found FWzE id: #{child.css("id").first.content}"
     end
-    puts res #if found_mail
   end
 end
+
+
+parse_xml(raw_xml)

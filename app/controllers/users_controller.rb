@@ -63,14 +63,16 @@ class UsersController < AuthorizedController
       end
     end
 
-    xml_resp = GoogleContactManager::all_groups(current_google_user.oauth_token)
+    xml_resp = GoogleGroupManager::all_groups(current_google_user.oauth_token)
     unless xml_resp
       flash[:error] = "Fehler beim Laden der Kontakte."
       redirect_to users_path
       return
     end
-    puts "all groups:"
-    puts xml_resp
+    if Rails.env.development?
+      puts "all groups:"
+      puts xml_resp
+    end
     @res
   end
   

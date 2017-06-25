@@ -19,83 +19,49 @@ class GoogleContactManager
     debug_resp(xml_resp)
     xml_resp
   end
-
-  def self.all_groups(auth_token)
-    begin
-      xml_resp = RestClient.get("https://www.google.com/m8/feeds/groups/default/full",
-                                {params:
-                                   {
-                                    'Content-Type': 'application/atom+xml',
-                                    #'GData-Version': '3.0',
-                                    'v': '3',
-                                    'access_token': auth_token
-                                   },
-                                })
-    rescue Exception => e
-      Rails.logger.fatal("exception while requesting contacts feed: #{e.inspect}")
-      return nil
-    ensure
-      debug_resp(xml_resp)
-    end
-
-    xml_resp
-  end
-
-  def self.group_by_name(auth_token, search_str)
-    xml = Nokogiri::XML(all_groups(auth_token))
-    return nil unless xml.at("feed")
-    xml.at("feed").search("entry").each do |entry|
-      next unless entry
-      next if entry.blank?
-      # next unless entry.at("id")
-      # searching in system groups
-      if entry.css("gContact|systemGroup") && entry.css("gContact|systemGroup").first && entry.css("gContact|systemGroup").first['id'].eql?(search_str)
-        if entry.css("link") && entry.css("link").first['rel'].eql?("self")
-          Rails.logger.fatal("system group contacts found at #{entry.css("link").first['href']}")
-          # return entry.css("link").first['href'][0..(entry.css("link").first['href'].length-5)]
-          return entry.css("link").first['href']
-        end
-      end
-
-      # searching in personal groups
-      if entry.css("title") && entry.css("title").first && entry.css("title").first.content.eql?(search_str)
-        if entry.css("link") && entry.css("link").first['rel'].eql?("self")
-          Rails.logger.fatal("group contacts found at #{entry.css("link").first['href']}")
-          # return entry.css("link").first['href'][0..(entry.css("link").first['href'].length-5)]
-          return entry.css("link").first['href']
-        end
-      end
-    end
-    Rails.logger.warn("did not find group \"#{search_str}\"")
-    nil
-  end
   
   def self.create(auth_token, google_contact)
     RestClient.log = 'stdout' if Rails.env.development?
-    system_group_contacts = group_by_name(auth_token, "Contacts")
+    system_group_contacts = GoogleGroupManager.contacts_group_id(auth_token)
     raise ("could not find system group 'Contacts'") unless system_group_contacts
+    lodge_group = GoogleGroupManager.find_or_create(auth_token, AppConfig[:lodge_short], "Mitglieder der Loge #{AppConfig[:lodge]}", AppConfig[:lodge])
+    raise ("could not create or find group #{AppConfig[:lodge_short]}") unless lodge_group
+
+    unless google_contact.groups.find_index(lodge_group)
+      google_contact.groups << lodge_group
+    end
     unless google_contact.groups.find_index(system_group_contacts)
       google_contact.system_groups << system_group_contacts
     end
+
     atom = google_contact.to_atom
     url = "https://www.google.com/m8/feeds/contacts/default/full"
     puts "posting to #{url} \n#{atom}" if Rails.env.development?
-    response = RestClient.post(url, atom,
-                               params: {
-                                 #'Authorization': "Bearer #{auth_token}"
-                                 'access_token': auth_token,
-                               },
-                               'GData-Version': '3.0',
-                               'Content-Type': 'application/atom+xml'
-                              )
-
-    if response.code == 201
-      res = "Neuer Kontakt erstellt: #{google_contact.name}"
-      Rails.logger.debug("resp body: \n#{response.body}")
-    else
-      res = "Kontakt konnte nicht erstellt werden. Bitte versuche es später erneut."
-      Rails.logger.fatal("response code was #{response.code}")
-    end
+    
+    RestClient.post(url, atom,
+                    params: {
+                      #'Authorization': "Bearer #{auth_token}"
+                      'access_token': auth_token,
+                    },
+                    'GData-Version': '3.0',
+                    'Content-Type': 'application/atom+xml'
+                   ) {|response, request, result|
+      case response.code
+      when 201
+        res = "Neuer Kontakt erstellt: #{google_contact.name}"
+        Rails.logger.debug("resp body: \n#{response.body}")
+        return res
+      when 400
+        res = "Server Fehler"
+        Rails.logger.fatal("result: \n#{result.methods.sort!}")
+        Rails.logger.fatal("result: \n#{result.body}")
+        return res
+      else
+        res = "Kontakt konnte nicht erstellt werden. Bitte versuche es später erneut."
+        Rails.logger.fatal("response code was #{response.code}")
+        return res
+      end
+    }
     debug_resp(response)
     res
   end
@@ -176,7 +142,8 @@ class GoogleContactManager
   def self.update(auth_token, self_url, contact)
     #RestClient.log = 'stdout'
     if contact.groups.empty?
-      #contact.groups << group_by_name(auth_token, "Contacts")
+      Rails.logger.warn("adding system group.")
+      contact.groups << GoogleGroupManager.contacts_group(auth_token)
     end
     if Rails.env.development?
       puts "-"*60
