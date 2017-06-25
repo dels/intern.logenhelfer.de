@@ -43,9 +43,9 @@ class Address < ActiveRecord::Base
   end
 
   def full_address?
-    false == ((street.strip && street.strip.empty?) &&
-          (zip.strip && zip.strip.empty?) &&
-          (city.strip && city.strip.empty?))
+    false == ((street && street.strip && street.strip.empty?) &&
+          (zip && zip.strip && zip.strip.empty?) &&
+          (city && city.strip && city.strip.empty?))
   end
   
   def to_s

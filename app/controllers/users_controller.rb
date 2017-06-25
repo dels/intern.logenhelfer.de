@@ -78,7 +78,13 @@ class UsersController < AuthorizedController
   
   def create_google_contact
     @google_contact = GoogleContact::parse_user(@user)
-    @create_res = GoogleContactManager::create(current_google_user.oauth_token, @google_contact)
+    if GoogleContactManager::create(current_google_user.oauth_token, @google_contact)
+      flash[:notice] = "#{@user.fullname} erfolgreich synchronisiert"
+      redirect_to google_sync_users_path
+    else
+      flash[:error] = "#{@user.fullname} konnte nicht synchronisiert werden"
+      redirect_to google_sync_users_path
+    end
   end
   
   def members_list

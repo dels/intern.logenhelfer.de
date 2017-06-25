@@ -91,8 +91,8 @@ class GoogleContact
      res << "    <gd:street>#{other[:street]}</gd:street>\n"
      res << "    <gd:postcode>#{other[:postcode]}</gd:postcode>\n"
      res << "    <gd:city>#{other[:city]}</gd:city>\n"
-      res << "    <gd:formattedAddress>#{other[:street]}\n#{other[:postcode]} #{other[:city]}</gd:formattedAddress>\n"
-      res << "  </gd:structuredPostalAddress>\n"
+     res << "    <gd:formattedAddress>#{other[:street]}\n#{other[:postcode]} #{other[:city]}</gd:formattedAddress>\n"
+     res << "  </gd:structuredPostalAddress>\n"
     end
     # date of birth
     if @date_of_birth
@@ -172,14 +172,11 @@ class GoogleContact
     gc
   end
 
-  def self.parse_groups xml
-    Rails.logger.warn("parsing groups...")
+  def self.parse_groups(xml)
     groups = []
     xml.css("gContact|groupMembershipInfo").each do |grp|
-      Rails.logger.debug("found group #{grp['href']}")
       groups << grp['href']
     end
-    Rails.logger.warn("found #{groups.count} groups.")
     groups
   end
 
