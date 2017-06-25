@@ -60,7 +60,7 @@ class GoogleGroupManager
       Rails.logger.fatal("response code was #{xml_resp.code}")
     end
     debug_resp(xml_resp)
-    res
+    Nokogiri::XML(xml_resp.body).at(entry).css("id").first.content
   end
 
   def self.contacts_group_id(auth_token)
@@ -90,7 +90,7 @@ class GoogleGroupManager
   end
 
   private
-  
+
   def self.debug_resp(resp)
     return unless  Rails.env.development?
     puts "-"*60
