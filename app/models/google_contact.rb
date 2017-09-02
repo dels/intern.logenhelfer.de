@@ -62,7 +62,7 @@ class GoogleContact
       next if p.strip.empty?
       res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#work'>#{p}</gd:phoneNumber>\n"
     end
-=begin
+
     # walk through all other
     @other_email.each do |m|
       next if m.strip.empty?
@@ -73,7 +73,7 @@ class GoogleContact
       next if p.strip.empty?
       res << "  <gd:phoneNumber rel='http://schemas.google.com/g/2005#other'>#{p}</gd:phoneNumber>\n"
     end
-=end
+
     # mobile phone
     @mobile_phone.each do |p|
       # primary='true'
@@ -101,12 +101,12 @@ class GoogleContact
     end
     @other_address.each do |other|
       next if other.empty?
-     res << "  <gd:structuredPostalAddress label=\"#{other[:label]}\">\n"
-     res << "    <gd:street>#{other[:street]}</gd:street>\n"
-     res << "    <gd:postcode>#{other[:postcode]}</gd:postcode>\n"
-     res << "    <gd:city>#{other[:city]}</gd:city>\n"
-     res << "    <gd:formattedAddress>#{other[:street]}\n#{other[:postcode]} #{other[:city]}</gd:formattedAddress>\n"
-     res << "  </gd:structuredPostalAddress>\n"
+      res << "  <gd:structuredPostalAddress label=\"#{other[:label]}\">\n"
+      res << "    <gd:street>#{other[:street]}</gd:street>\n"
+      res << "    <gd:postcode>#{other[:postcode]}</gd:postcode>\n"
+      res << "    <gd:city>#{other[:city]}</gd:city>\n"
+      res << "    <gd:formattedAddress>#{other[:street]}\n#{other[:postcode]} #{other[:city]}</gd:formattedAddress>\n"
+      res << "  </gd:structuredPostalAddress>\n"
     end
     # date of birth
     if @date_of_birth

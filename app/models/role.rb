@@ -37,6 +37,15 @@ class Role < ActiveRecord::Base
     nums
   end
 
+  def self.administrational_role_ids
+    nums = []
+    administrational_roles.each do |n|
+      nums << n
+    end
+    nums
+  end
+
+  
   def self.position_ids
     nums = []
     positions.each do |n|

@@ -170,6 +170,10 @@ class User < ActiveRecord::Base
     self.roles & Role.positions - (Role.where(:administrational_role => true))
   end
 
+  def administrational_roles
+    self.roles & Role.positions - (Role.where(:administrational_role => false))
+  end
+
   def self.members_of_council
     User.all(:joins => :roles, :conditions => "roles.name = 'MemberOfCouncil'", :order => 'roles.ordering_number ASC, roles.display_name ASC, users.lastname')
   end
