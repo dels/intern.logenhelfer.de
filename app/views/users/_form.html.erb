@@ -8,7 +8,11 @@
     <%#= f.password_field :password, autocomplete: :off %>
     <%#= f.password_field :password_confirmation, autocomplete: :off %>
 
-    <%= f.collection_select :academic_title_id, AcademicTitle.undeleted.all, :id, :short, include_blank: :true, readonly: limited_user_editing? %>
+    <% if limited_user_editing? %>
+    <%= f.text_field :academic_title,                   readonly: true %>
+    <% else %>
+    <%= f.collection_select :academic_title_id, AcademicTitle.undeleted.all, :id, :short, include_blank: :true %>
+    <% end %>
     <%= f.text_field :firstname,                  readonly: limited_user_editing? %>
     <%= f.text_field :lastname,                   readonly: limited_user_editing? %>
     <%= f.text_field :job_title %>

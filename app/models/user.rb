@@ -167,10 +167,12 @@ class User < ActiveRecord::Base
   end
 
   def positions
+    # FIXME: only self.roles & Role.positions should be required here
     self.roles & Role.positions - (Role.where(:administrational_role => true))
   end
 
   def administrational_roles
+    # FIXME: only self.roles & Role.administrational_roles should be required here
     self.roles & Role.positions - (Role.where(:administrational_role => false))
   end
 
