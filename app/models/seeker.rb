@@ -13,6 +13,8 @@ class Seeker < ActiveRecord::Base
 
   validates_presence_of :firstname, :lastname, :source, :status
 
+  before_validation :update_status
+
   default_scope where(:deleted => false)
 
   WAY_OF_CONTACT = {
@@ -52,6 +54,13 @@ class Seeker < ActiveRecord::Base
     }
   }
 
+  def update_status
+    if status == STATUS[:declined]
+      self.invite = false
+    end
+    true
+  end
+  
   def current_status
     Seeker::STATUS.each_pair do |k,v|
       if status == v 
