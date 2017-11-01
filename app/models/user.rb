@@ -193,7 +193,7 @@ class User < ActiveRecord::Base
   end
 
   def self.worshipful_master
-    # FIXME: should we return nil if we didn't find a whorshipful master?
+    # FIXME: should we return nil if we didn't find a worshipful master?
     whorshipful_master_user_role = Role.find_by_name("WorshipfulMaster").user_roles.first
     whorshipful_master_user_role.user if whorshipful_master_user_role
   end

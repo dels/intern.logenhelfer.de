@@ -28,7 +28,7 @@
     <%= f.collection_select :roles, Role.position_ids, :id, :to_s, { selected: @user.role_ids }, style: 'width:300px', multiple: true, name: 'user[role_ids][]' %>
     <%= f.collection_select :administrational_roles, Role.administrational_role_ids, :id, :to_s, { selected: @user.role_ids }, style: 'width:300px', multiple: true, name: 'user[role_ids][]' %>
     <% else %>
-      <ul>
+      <ul id="list_of_degrees">
         <% (@user.roles & Role.degrees).each do |role| %>
           <li><%= role %></li>
         <% end %>
