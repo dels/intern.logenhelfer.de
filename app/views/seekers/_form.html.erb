@@ -12,6 +12,7 @@
     <div id="seeker_preferred_way_of_contact_selector">
     <%= f.select :preferred_way_of_contact, Seeker::WAY_OF_CONTACT.to_a.map{|k,v| [I18n.t("activerecord.seeker.preferred_way_of_contact.#{k}"), v]}, { include_blank: true }, data: { placeholder: I18n.t('helpers.select.prompt') }, class: "type_of_address" %>
     </div>
+    
     <div id="seeker_status_selector">
     <%= f.select :status, Seeker::STATUS.to_a.map{|k,v| [I18n.t("activerecord.seeker.status.#{k}"), v]}, { include_blank: true }, data: { placeholder: I18n.t('helpers.select.prompt') }, class: "type_of_address" %>
     </div>

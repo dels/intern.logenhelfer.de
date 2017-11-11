@@ -38,12 +38,13 @@
   <dt><%= User.human_attribute_name :date_of_birth %>:</dt>
   <dd><%= dash(@user.date_of_birth ? l(@user.date_of_birth) : nil) %></dd>
 
+  <% 
+      roles = @user.user_roles.where(role_id: Role.degrees) 
+      if roles.count > 0 
+    %>
+
   <dt><%= User.human_attribute_name :degrees %>:</dt>
   <dd>
-    <%
-      roles = @user.user_roles.where(role_id: Role.degrees)
-      if roles.count > 0
-    %>
       <ul>
         <% roles.each do |role| %>
           <li><%= role %></li>
@@ -54,13 +55,18 @@
     <% end %>
   </dd>
 
+  <%
+    positions = @user.roles.positions
+    if positions.count > 0 
+    %>
   <dt><%= User.human_attribute_name :positions %>:</dt>
   <dd><ul>
     <% @user.roles.positions.sort_by(&:display_name).each do |role| %>
       <li><%= role %></li>
     <% end %>
   </ul></dd>
-
+  <% end %>
+  
   <% if can?(:edit, @user) %>
   <dt><%= User.human_attribute_name :administrational_rights %>:</dt>
   <dd><ul>
