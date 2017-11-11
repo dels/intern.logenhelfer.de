@@ -39,7 +39,7 @@
   <dd><%= dash(@user.date_of_birth ? l(@user.date_of_birth) : nil) %></dd>
 
   <% 
-      roles = @user.user_roles.where(role_id: Role.degrees) 
+      roles = @user.user_roles.where(role_id: Role.degrees)
       if roles.count > 0 
     %>
 

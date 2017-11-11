@@ -211,8 +211,11 @@ class UsersController < AuthorizedController
     @user.password_confirmation = @user.password
     if @user.save
       set_user_degree_dates(params)
-      @user.save
-      redirect_to @user, notice: t("activerecord.create_success", model: t("activerecord.models.user"))
+      if @user.save
+        redirect_to @user, notice: t("activerecord.create_success", model: t("activerecord.models.user"))
+      else
+        render :new
+      end
     else
       render :new
     end

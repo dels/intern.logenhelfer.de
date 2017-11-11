@@ -383,7 +383,7 @@ de:
       maximum_private_addresses_exceeded: Es darf nur eine private Adresse geben.
       mother_lodge_and_accepted_at: Mutterloge und angenommen an müssen beide leer oder ausgefüllt.
       user_cant_have_one_role_two_times: Ein oder mehrere Rollen sind dem Benutzer bereits zugeordnet und koennen einem Benutzer nicht mehrfach zugeordnet werden.
-      must_be_entered_apprentice: Bitte geben Sie das Datum an, an dem der Br. aufgenommen worden ist. 
+      must_be_entered_apprentice: Du musst das Datum der Aufnahme des Bruders angeben.
       messages:
         accepted: muss akzeptiert werden
         blank: muss ausgefüllt werden
@@ -447,7 +447,7 @@ de:
             role_id:
               taken: ist bereits vergeben
       template:
-        body: 'Bitte überprüfen Sie die folgenden Felder:'
+        body: 'Bitte überprüfe die folgenden Felder:'
         header:
           one: 'Konnte %{model} nicht speichern: ein Fehler.'
           other: 'Konnte %{model} nicht speichern: %{count} Fehler.'
@@ -486,7 +486,7 @@ de:
       statistics: Statistiken
       user: Mitglied
       users: Mitglieder
-    upload_failure: Bitte wählen Sie eine Datei zum Hochladen aus.
+    upload_failure: Bitte wähle eine Datei zum Hochladen aus.
     update_success: Aktualisierung erfolgreich
   attributes:
     attached_file: Datei
@@ -556,25 +556,25 @@ de:
     imprint: Impressum
   devise:
     confirmations:
-      confirmed: Ihr Account wurde erfolgreich bestätigt. Sie können sich nun anmelden.
-      send_instructions: Sie werden in Kürze eine E-Mail mit einer Bestätigungsanweisung erhalten.
-      send_paranoid_instructions: 'Sie werden in Kürze eine E-Mail mit allen weiteren Anweisungen bekommen, wenn ihre E-Mail Adresse in der Datenbank gefunden worden ist. Falls nicht, so werden sie darüber nicht informiert werden.'
+      confirmed: Ihr Account wurde erfolgreich bestätigt. Du kannst Dich nun anmelden.
+      send_instructions: Du wirst in Kürze eine E-Mail mit einer Bestätigungsanweisung erhalten.
+      send_paranoid_instructions: 'Du wirst in Kürze eine E-Mail mit allen weiteren Anweisungen bekommen, wenn ihre E-Mail Adresse in der Datenbank gefunden worden ist. Falls nicht, so wirst Du darüber nicht informiert werden.'
     error:
       access_denied: Zugriff verweigert!
     failure:
-      already_authenticated: Sie sind bereits angemeldet.
-      inactive: Ihr Account ist noch nicht aktiviert.
+      already_authenticated: Du bist bereits angemeldet.
+      inactive: Dein Account ist noch nicht aktiviert.
       invalid: Ungültige Logindaten.
       invalid_token: Invalid authentication token.
-      locked: Ihr Benutzerkonto ist zur Zeit gesperrt.
-      timeout: Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
-      unauthenticated: Sie müssen sich anmelden um diese Seite einsehen zu können.
-      unconfirmed: Sie müssen ihre Benutzerkonto bestätigen.
+      locked: Dein Benutzerkonto ist zur Zeit gesperrt.
+      timeout: Deine Sitzung ist abgelaufen. Bitte melde Dich erneut an.
+      unauthenticated: Du musst dich anmelden um diese Seite einsehen zu können.
+      unconfirmed: Du musst Dein Benutzerkonto bestätigen.
       user:
         invalid: Ungültige E-Mail oder Passwort.
         not_found_in_database: Ungültige E-Mail oder Passwort.
-        timeout: Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
-        unauthenticated: 'Sie sind nicht angemeldet. Sie müssen sich anmelden, um diese Seite aufrufen zu können.'
+        timeout: Deine Sitzung ist abgelaufen. Bitte melde Dich erneut an.
+        unauthenticated: 'Du bist nicht angemeldet. Du musst Dich anmelden, um diese Seite aufrufen zu können.'
     information:
       signed_in_as: 'Eingeloggt als %{user}'
     links:
@@ -605,12 +605,12 @@ de:
         If you do come from a password reset email, please make sure you used the
         full URL provided.
       send_instructions: 'Sie werden in Kürze eine E-Mail mit weiteren Anweisungen erhalten.'
-      send_paranoid_instructions: 'Wenn die von Ihnen angegebene E-Mail Adresse in unserer Datenbank existiert, so werden Sie innerhalb weniger Minuten eine E-Mail bekommen. Falls nicht, so passiert nichts.'
-      updated: Ihr Passwort wurde erfolgreich geändert. Sie sind jetzt angemeldet.
+      send_paranoid_instructions: 'Wenn die von Dir angegebene E-Mail Adresse in unserer Datenbank existiert, so wirst Du innerhalb weniger Minuten eine E-Mail bekommen. Falls nicht, so passiert nichts.'
+      updated: Dein Passwort wurde erfolgreich geändert. Du bist jetzt angemeldet.
       updated_not_active: Das Passwort wurde erfolgreich aktualisiert.
       user:
-        send_instructions: Sie werden in Kürze eine E-Mail erhalten. Die E-Mail enthält die notwendigen Informationen über das weitere Vorgehen.
-        updated: Ihr Passwort wurde erfolgreich geändert. Sie sind jetzt angemeldet.
+        send_instructions: Du wirst in Kürze eine E-Mail erhalten. Die E-Mail enthält die notwendigen Informationen über das weitere Vorgehen.
+        updated: Ihr Passwort wurde erfolgreich geändert. Du bist jetzt angemeldet.
     registrations:
       destroyed: Bye! Your account was successfully cancelled. We hope to see you again soon.
       signed_up: Sie haben sich erfolgreich registriert!
