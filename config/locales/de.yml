@@ -196,6 +196,13 @@ de:
         admission_scheduled: Aufnahme terminiert
         accepted: Aufgenommen
         declined: Zurückgestellt/Abgelehnt
+      error:
+          contact_via_mail_but_no_mail: E-Mail angegeben, aber E-Mail nicht eingetragen.
+          contact_via_phone_but_no_phone: Telefon, aber kein Telefon angegeben.
+          contact_via_mobile_but_no_mobile: Mobiltelefon, aber kein Mobiltelefon angegeben.
+          contact_via_fax_but_no_fax: Fax, aber kein Fax angegeben.
+          contact_via_address_but_no_address: Post, aber keine Adresse angegeben.
+          contact_via_remarks_but_no_remarks: Notizen angegeben aber keine Notizen vorhanden.
     attributes:
       academic_title:
         add_fields: Titel hinzufügen

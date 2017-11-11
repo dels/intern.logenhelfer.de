@@ -15,6 +15,8 @@ class Seeker < ActiveRecord::Base
 
   before_validation :update_status
 
+  validate :way_of_contact_validation
+
   default_scope where(:deleted => false)
 
   WAY_OF_CONTACT = {
@@ -53,7 +55,24 @@ class Seeker < ActiveRecord::Base
       end
     }
   }
-
+  
+  def way_of_contact_validation
+    case preferred_way_of_contact
+    when 10
+      errors.add(:preferred_way_of_contact, I18n.t("activerecord.seeker.error.contact_via_mail_but_no_mail")) if address.email.empty?
+    when 20
+      errors.add(:preferred_way_of_contact, I18n.t("activerecord.seeker.error.contact_via_phone_but_no_phone")) if address.phone.empty?
+    when 30
+      errors.add(:preferred_way_of_contact, I18n.t("activerecord.seeker.error.contact_via_fax_but_no_fax")) if address.fax.empty?
+    when 40
+      errors.add(:preferred_way_of_contact, I18n.t("activerecord.seeker.error.contact_via_mobile_but_no_mobile")) if address.mobile.empty?
+    when 50
+      errors.add(:preferred_way_of_contact, I18n.t("activerecord.seeker.error.contact_via_address_but_no_address")) if address.to_s.empty?
+    when 100
+      errors.add(:preferred_way_of_contact, I18n.t("activerecord.seeker.error.contact_via_remarks_but_no_remarks")) if address.remarks.empty?
+    end
+  end
+  
   def update_status
     if status == STATUS[:declined]
       self.invite = false
