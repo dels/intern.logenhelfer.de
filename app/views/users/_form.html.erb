@@ -30,13 +30,11 @@
     <%= f.collection_select :administrational_roles, Role.administrational_role_ids, :id, :to_s, { selected: @user.role_ids }, style: 'width:300px', multiple: true, name: 'user[role_ids][]' %>
 
     <% else %>
-    
-      <ul id="list_of_degrees">
-        <% (@user.positions).each do |pos| %>
-          <li><%= pos %></li>
-        <% end %>
-      </ul>
-      <% end %>
+  <dt><%= User.human_attribute_name :positions %>:</dt>
+  <dd>
+    <%= @user.roles.positions.sort_by(&:ordering_number).join(", ") %>
+  </dd>
+  <% end %>
     <%= f.submit %>
   </dl>
 

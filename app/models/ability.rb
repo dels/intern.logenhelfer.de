@@ -11,7 +11,7 @@ class Ability
       method = :"#{role.name.underscore}_#{archive}abilities"
       self.send(method) if self.respond_to?(method)
     end
-    can [:show, :edit, :update, :update_announcement_subscription], User, id: @user.id unless AppConfig[:archive]
+    can [:show, :edit, :update, :update_announcement_subscription, :google_sync], User, id: @user.id unless AppConfig[:archive]
     #    can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
     can [:index, :show], Announcement
     can [:index, :show], ExternalEvent
