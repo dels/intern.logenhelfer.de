@@ -24,15 +24,17 @@
     <%= f.date_select :fellow_craft_since,        readonly: limited_user_editing? %>
     <%= f.date_select :master_mason_since,        readonly: limited_user_editing? %>
 
-    <% if current_user.admin? || current_user.secretary? %>
+    
+    <% if current_user.user_admin? %>
     <%= f.collection_select :roles, Role.position_ids, :id, :to_s, { selected: @user.role_ids }, style: 'width:300px', multiple: true, name: 'user[role_ids][]' %>
     <%= f.collection_select :administrational_roles, Role.administrational_role_ids, :id, :to_s, { selected: @user.role_ids }, style: 'width:300px', multiple: true, name: 'user[role_ids][]' %>
-    <% else #unless (@user.roles & Role.degrees).empty %>
+
+    <% else %>
+    
       <ul id="list_of_degrees">
-        <% (@user.roles & Role.degrees).each do |role| %>
-          <li><%= role %></li>
-          <% #end %>
-          <% end %>
+        <% (@user.positions).each do |pos| %>
+          <li><%= pos %></li>
+        <% end %>
       </ul>
       <% end %>
     <%= f.submit %>

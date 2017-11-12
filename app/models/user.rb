@@ -126,7 +126,6 @@ class User < ActiveRecord::Base
     ur.role_id = Role.find_by_name(role).id
     ur.user_id = self.id
     ur.role_added_at = date
-    puts "added #{ur.role.name} with date #{ur.role_added_at} to #{self.fullname} with (#{ur.errors.count} errors)"
     ur.save!
   end
   
@@ -204,7 +203,13 @@ class User < ActiveRecord::Base
 
   def net_delegate?
     roles.include?(Role.find_by_name("NetDelegate"))
-  end  
+  end
+
+  def user_admin?
+    return true if secretary? || admin?
+    return true if roles.include?(Role.find_by_name("UserAdmin"))
+    false
+  end
 
   def validate_degrees
     if fellow_craft_since && entered_apprentice_since.nil?

@@ -38,21 +38,13 @@
   <dt><%= User.human_attribute_name :date_of_birth %>:</dt>
   <dd><%= dash(@user.date_of_birth ? l(@user.date_of_birth) : nil) %></dd>
 
-  <% 
-      roles = @user.user_roles.where(role_id: Role.degrees)
-      if roles.count > 0 
-    %>
-
-  <dt><%= User.human_attribute_name :degrees %>:</dt>
+  <dt><%= User.human_attribute_name :degree %>:</dt>
   <dd>
       <ul>
-        <% roles.each do |role| %>
-          <li><%= role %></li>
+        <% @user.degrees.each do |degree| %>
+          <li><%= degree %></li>
         <% end %>
       </ul>
-    <% else %>
-      <%= dash %>
-    <% end %>
   </dd>
 
   <%

@@ -37,7 +37,7 @@ block 'create roles' do
   log er    = Role.create!(ordering_number: 0,name: 'EnteredApprentice', display_name: 'Lehrling',                     group: true)
   log fr    = Role.create!(ordering_number: 0,name: 'FellowCraft',       display_name: 'Geselle',                      group: true)
   log mr    = Role.create!(ordering_number: 0,name: 'MasterMason',       display_name: 'Meister',                      group: true)
-  log wm   = Role.create!(ordering_number: 1,name: 'WorshipfulMaster',  display_name: 'MvSt', administrational_role: false)
+  log wm    = Role.create!(ordering_number: 1,name: 'WorshipfulMaster',  display_name: 'MvSt', administrational_role: false)
   log         Role.create!(ordering_number: 2, name: 'DedicatedMaster',  display_name: 'zug. Meister',                 group: true, administrational_role: false)
   log ser   = Role.create!(ordering_number: 3,name: 'SeniorWarden',      display_name: '1. Aufseher', administrational_role: false)
   log jwr   = Role.create!(ordering_number: 4,name: 'JuniorWarden',      display_name: '2. Aufseher', administrational_role: false)
