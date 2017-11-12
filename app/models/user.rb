@@ -102,6 +102,7 @@ class User < ActiveRecord::Base
 
   def entered_apprentice_since
     unless roles.find_by_name('EnteredApprentice')
+      puts "user is not entered apprentice"
       return nil
     end
     user_roles.find_by_role_id(roles.find_by_name('EnteredApprentice').id).role_added_at
@@ -117,45 +118,36 @@ class User < ActiveRecord::Base
     user_roles.find_by_role_id(roles.find_by_name('MasterMason').id).role_added_at
   end
 
-  def entered_apprentice_since=(date)
+  def set_degree_by_name(role, date)
     return if date.blank?
     return unless self.id
-    ur = self.user_roles.where(role_id: Role.find_by_name('EnteredApprentice')).first
-    unless ur
-      self.role_ids << Role.find_by_name('EnteredApprentice')
-      ur = UserRole.new 
-      ur.role = Role.find_by_name('EnteredApprentice')
-      ur.user = self
-    end
+    ur = self.user_roles.where(user_id: self.id).where(role_id: Role.find_by_name(role)).first
+    ur = UserRole.new unless ur
+    ur.role_id = Role.find_by_name(role).id
+    ur.user_id = self.id
     ur.role_added_at = date
+    puts "added #{ur.role.name} with date #{ur.role_added_at} to #{self.fullname} with (#{ur.errors.count} errors)"
     ur.save!
+  end
+  
+  def entered_apprentice_since=(date)
+    set_degree_by_name("EnteredApprentice", date)
   end
 
   def fellow_craft_since=(date)
-    return if date.blank?
     unless entered_apprentice_since
+      errors.add(:base, I18n.t("activerecord.errors.must_be_fellow_craft_to_become_master"))
       return
     end
-    ur = self.user_roles.where(role_id: Role.find_by_name('FellowCraft')).first
-    ur = UserRole.new unless ur
-    ur.role = Role.find_by_name('FellowCraft')
-    ur.user = self
-    ur.role_added_at = date
-    ur.save!
+    set_degree_by_name("FellowCraft", date)
   end
 
   def master_mason_since=(date)
-    return if date.blank?
     unless fellow_craft_since
       errors.add(:base, I18n.t("activerecord.errors.must_be_fellow_craft_to_become_master"))
       return
     end
-    ur = self.user_roles.where(role_id: Role.find_by_name('MasterMason')).first
-    ur = UserRole.new unless ur
-    ur.role = Role.find_by_name('MasterMason')
-    ur.user = self
-    ur.role_added_at = date
-    ur.save!
+    set_degree_by_name("MasterMason", date)
   end
 
   def rome_degree

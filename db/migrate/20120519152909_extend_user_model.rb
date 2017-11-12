@@ -1,6 +1,7 @@
 class ExtendUserModel < ActiveRecord::Migration
   def up
     add_column :users, :uuid, :string, :length => 36
+    
     add_column :users, :firstname, :string
     add_column :users, :lastname, :string 
     add_column :users, :date_of_birth, :date 

@@ -9,7 +9,8 @@ class UserRole < ActiveRecord::Base
 #  validates_uniqueness_of [:user_id, :role_id], :message => I18n.t("activerecord.errors.user_cant_have_one_role_two_times")
 
   after_save do |usr|
-    UserRole.where("id <> ?", usr.id).where(role_id: usr.role_id).first.delete
+    return if role.is_group?
+    UserRole.where("id <> ?", usr.id).where(role_id: usr.role_id).first.delete rescue nil
   end
   
   def to_s

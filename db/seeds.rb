@@ -1,5 +1,3 @@
-#encoding: utf-8
-
 # -*- coding: utf-8 -*-
 
 def log bool
@@ -19,6 +17,7 @@ def block msg, &b
   result
 end
 
+
 ar = nil
 ur = nil
 er = nil
@@ -27,7 +26,7 @@ mr = nil
 sr = nil
 ser = nil
 jwr = nil
-wmr = nil
+wm = nil
 mocr = nil
 
 Role.where(:name => ['WorshipfulMaster', 'InternalSecretary', 'Secretary', 'SeniorWarden', 'JuniorWarden', 'HonoryMember', 'Deakan', 'Speaker', 'Musician', 'MasterOfCeremony', 'PreparingBrother', 'PastMaster', 'DedicatedMaster', 'Treasurer', 'JuniorDeacon', 'SeniorDeacon', 'NetDelegate'])
@@ -38,7 +37,7 @@ block 'create roles' do
   log er    = Role.create!(ordering_number: 0,name: 'EnteredApprentice', display_name: 'Lehrling',                     group: true)
   log fr    = Role.create!(ordering_number: 0,name: 'FellowCraft',       display_name: 'Geselle',                      group: true)
   log mr    = Role.create!(ordering_number: 0,name: 'MasterMason',       display_name: 'Meister',                      group: true)
-  log wmr   = Role.create!(ordering_number: 1,name: 'WorshipfulMaster',  display_name: 'MvSt', administrational_role: false)
+  log wm   = Role.create!(ordering_number: 1,name: 'WorshipfulMaster',  display_name: 'MvSt', administrational_role: false)
   log         Role.create!(ordering_number: 2, name: 'DedicatedMaster',  display_name: 'zug. Meister',                 group: true, administrational_role: false)
   log ser   = Role.create!(ordering_number: 3,name: 'SeniorWarden',      display_name: '1. Aufseher', administrational_role: false)
   log jwr   = Role.create!(ordering_number: 4,name: 'JuniorWarden',      display_name: '2. Aufseher', administrational_role: false)
@@ -74,15 +73,13 @@ block 'create users' do
                        firstname: "El",
                        lastname: "Chefe",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years,
+                       date_of_birth: Date.today - 40.years
                        )
+  u.entered_apprentice_since = (Date.today - 2.year).to_s
+  u.fellow_craft_since = (Date.today - 1.year).to_s
+  u.master_mason_since = (Date.today - 1.year).to_s
+  u.roles << ur  
   u.roles << ar
-  u.roles << ur
-  u.user_roles << UserRole.create!(role: er, user: u, role_added_at: Date.today - 4.years)
-  u.user_roles << UserRole.create!(role: fr, user: u, role_added_at: Date.today - 2.years)
-  u.user_roles << UserRole.create!(role: mr, user: u, role_added_at: Date.today - 1.years)
-  u.roles << wmr
-  u.roles << mocr
   u.save!
   log u = User.create!(
                        matriculation_number: 891,
@@ -91,12 +88,11 @@ block 'create users' do
                        firstname: "Hoch",
                        lastname: "Lader",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years,
+                       date_of_birth: Date.today - 40.years
                        )
-
-  u.user_roles << UserRole.create!(role: er, user: u, role_added_at: Date.today - 4.years)
-  u.user_roles << UserRole.create!(role: fr, user: u, role_added_at: Date.today - 2.year)
-  u.user_roles << UserRole.create!(role: mr, user: u, role_added_at: Date.today - 1.year)
+  u.entered_apprentice_since = (Date.today - 3.years)
+  u.fellow_craft_since = Date.today - 2.years
+  u.master_mason_since = Date.today - 1.years
   u.roles << ur
   u.save!
 
@@ -107,12 +103,26 @@ block 'create users' do
                        firstname: "Korrespondierender",
                        lastname: "Schriftfuehrer",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years,
+                       date_of_birth: Date.today - 40.years
                        )
-  u.user_roles << UserRole.create!(role: er, user: u, role_added_at: Date.today - 3.years)
-  u.user_roles << UserRole.create!(role: fr, user: u, role_added_at: Date.today - 2.year)
-  u.user_roles << UserRole.create!(role: mr, user: u, role_added_at: Date.today - 1.year)
+  u.entered_apprentice_since = Date.today - 5.years
+  u.fellow_craft_since = Date.today - 3.years
+  u.master_mason_since = Date.today - 1.years
   u.roles << sr
+  u.save!
+  log u = User.create!(
+                       matriculation_number: 924,
+                       email: 'mvst@fwze.de',
+                       password: 'keks1024',
+                       firstname: "Meister",
+                       lastname: "vom Stuhl",
+                       job_title: "freemason",
+                       date_of_birth: Date.today - 40.years
+                       )
+  u.entered_apprentice_since = Date.today - 3.years
+  u.fellow_craft_since = Date.today - 2.years
+  u.master_mason_since = Date.today - 1.years
+  u.roles << wm
   u.save!
   log u = User.create!(
                        matriculation_number: 893,
@@ -121,11 +131,14 @@ block 'create users' do
                        firstname: "master",
                        lastname: "mason",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years,
+                       date_of_birth: Date.today - 40.years
                        )
-  u.user_roles << UserRole.create!(role: er, user: u, role_added_at: Date.today - 4.years)
-  u.user_roles << UserRole.create!(role: fr, user: u, role_added_at: Date.today - 2.year)
-  u.user_roles << UserRole.create!(role: mr, user: u, role_added_at: Date.today - 1.year)
+
+  u.entered_apprentice_since = Date.today - 3.years
+  u.save!
+  u.fellow_craft_since = Date.today - 2.years
+  u.save!
+  u.master_mason_since = Date.today - 1.years
   u.save!
   log u = User.create!(
                        matriculation_number: 894,
@@ -134,10 +147,12 @@ block 'create users' do
                        firstname: "fellow",
                        lastname: "craft",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years,
+                       date_of_birth: Date.today - 40.years
                        )
-  u.user_roles << UserRole.create!(role: er, user: u, role_added_at: Date.today - 1.years)
-  u.user_roles << UserRole.create!(role: fr, user: u, role_added_at: Date.today - 2.year)
+
+  u.entered_apprentice_since = Date.today - 2.year
+  u.save
+  u.fellow_craft_since = Date.today - 1.year
   u.save!
   log u = User.create!(
                        matriculation_number: 895,
@@ -146,9 +161,9 @@ block 'create users' do
                        firstname: "entered",
                        lastname: "apprentice",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years,
+                       date_of_birth: Date.today - 40.years
                        )
-  u.user_roles << UserRole.create!(role: er, user: u, role_added_at: Date.today - 1.years)
+  u.entered_apprentice_since = Date.today - 2.year
   u.save!
 end
 
