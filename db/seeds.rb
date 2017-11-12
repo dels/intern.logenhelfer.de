@@ -68,7 +68,7 @@ end
 block 'create users' do
   log u = User.create!(
                        matriculation_number: 890,
-                       email: 'admin@fwze.de',
+                       email: 'admin@logenhelfer.de',
                        password: 'keks4096',
                        firstname: "El",
                        lastname: "Chefe",
@@ -83,7 +83,7 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        matriculation_number: 891,
-                       email: 'uploader@fwze.de',
+                       email: 'uploader@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "Hoch",
                        lastname: "Lader",
@@ -98,7 +98,7 @@ block 'create users' do
 
   log u = User.create!(
                        matriculation_number: 892,
-                       email: 'sekretaer@fwze.de',
+                       email: 'sekretaer@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "Korrespondierender",
                        lastname: "Schriftfuehrer",
@@ -112,7 +112,7 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        matriculation_number: 924,
-                       email: 'mvst@fwze.de',
+                       email: 'mvst@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "Meister",
                        lastname: "vom Stuhl",
@@ -126,7 +126,7 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        matriculation_number: 893,
-                       email: 'meister@fwze.de',
+                       email: 'meister@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "master",
                        lastname: "mason",
@@ -142,7 +142,7 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        matriculation_number: 894,
-                       email: 'geselle@fwze.de',
+                       email: 'geselle@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "fellow",
                        lastname: "craft",
@@ -156,7 +156,7 @@ block 'create users' do
   u.save!
   log u = User.create!(
                        matriculation_number: 895,
-                       email: 'lehrling@fwze.de',
+                       email: 'lehrling@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "entered",
                        lastname: "apprentice",
@@ -303,7 +303,7 @@ end
 
 block 'configuring app' do
   {
-    :default_from_email => "web@fwze.de",
+    :default_from_email => "web@logenhelfer.de",
     :user_change_notification_email => "report@elsbroek.com",
     :default_event_location => "Bremen",
     :technical_contact_email => "report@elsbroek.com"
@@ -311,7 +311,7 @@ block 'configuring app' do
     log AppConfig[key] = val
   end
 
-#  AppConfig[:default_from_email] = "web@fwze.de"
+#  AppConfig[:default_from_email] = "web@logenhelfer.de"
 #  AppConfig[:user_change_notification_email] = "report@elsbroek.com"
 #  AppConfig[:default_event_location] = "Bremen"
 #  AppConfig[:technical_contact_email] = "report@elsbroek.com"
