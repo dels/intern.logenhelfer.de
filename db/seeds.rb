@@ -84,7 +84,7 @@ block 'create users' do
   log u = User.create!(
                        matriculation_number: 891,
                        email: 'uploader@fwze.de',
-                       password: 'keks1024',
+                       password: 'jakin1024',
                        firstname: "Hoch",
                        lastname: "Lader",
                        job_title: "freemason",
@@ -99,7 +99,7 @@ block 'create users' do
   log u = User.create!(
                        matriculation_number: 892,
                        email: 'sekretaer@fwze.de',
-                       password: 'keks1024',
+                       password: 'jakin1024',
                        firstname: "Korrespondierender",
                        lastname: "Schriftfuehrer",
                        job_title: "freemason",
@@ -113,7 +113,7 @@ block 'create users' do
   log u = User.create!(
                        matriculation_number: 924,
                        email: 'mvst@fwze.de',
-                       password: 'keks1024',
+                       password: 'jakin1024',
                        firstname: "Meister",
                        lastname: "vom Stuhl",
                        job_title: "freemason",
@@ -127,7 +127,7 @@ block 'create users' do
   log u = User.create!(
                        matriculation_number: 893,
                        email: 'meister@fwze.de',
-                       password: 'keks1024',
+                       password: 'jakin1024',
                        firstname: "master",
                        lastname: "mason",
                        job_title: "freemason",
@@ -143,7 +143,7 @@ block 'create users' do
   log u = User.create!(
                        matriculation_number: 894,
                        email: 'geselle@fwze.de',
-                       password: 'keks1024',
+                       password: 'jakin1024',
                        firstname: "fellow",
                        lastname: "craft",
                        job_title: "freemason",
@@ -157,7 +157,7 @@ block 'create users' do
   log u = User.create!(
                        matriculation_number: 895,
                        email: 'lehrling@fwze.de',
-                       password: 'keks1024',
+                       password: 'jakin1024',
                        firstname: "entered",
                        lastname: "apprentice",
                        job_title: "freemason",
