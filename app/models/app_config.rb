@@ -40,6 +40,10 @@ module AppConfig
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: false)
         when :lodge
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "Logenhelfer")
+        when :lodge_short
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "lgnhlfr")
+        when :show_admins
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: false)
         when :max_db_mem_size
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: (1024*1024*100).to_s)
         when :archive

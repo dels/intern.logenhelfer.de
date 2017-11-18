@@ -11,7 +11,7 @@ class Ability
       method = :"#{role.name.underscore}_#{archive}abilities"
       self.send(method) if self.respond_to?(method)
     end
-    can [:show, :edit, :update, :update_announcement_subscription, :google_sync], User, id: @user.id unless AppConfig[:archive]
+    can [:show, :edit, :update, :update_announcement_subscription, :google_sync, :create_google_contact], User, id: @user.id unless AppConfig[:archive]
     #    can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
     can [:index, :show], Announcement
     can [:index, :show], ExternalEvent
@@ -123,13 +123,16 @@ class Ability
   
   # Lehrling
   def entered_apprentice_abilities
+    can [:google_sync, :create_google_contact], User
   end
 
   def entered_apprentice_archive_abilities
+    
   end
   
   # Geselle
   def fellow_craft_abilities
+    entered_apprentice_abilities
   end
   
   def fellow_craft_archive_abilities
@@ -137,6 +140,7 @@ class Ability
   
   # Meister
   def master_mason_abilities
+    fellow_craft_abilities
   end
   
   def master_mason_archive_abilities
