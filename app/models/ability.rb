@@ -29,9 +29,9 @@ class Ability
     admin_role = Role.find_by_name("Admin")
     user_admin_role = Role.find_by_name("UserAdmin")
     
-#    can [:index, :show, :members_list, :phone_list, :birthday_list, :members_of_council], User, ["users.deleted = false"] do |u|
-#      AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
-#    end
+    can [:index, :show, :members_list, :phone_list, :birthday_list, :members_of_council], User, ["users.deleted = false"] do |u|
+      AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+    end
     can [:index, :file_stats, :mem_stats, :downloads], Statistic
   end
   
