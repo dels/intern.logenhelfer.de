@@ -123,7 +123,7 @@ class Ability
   
   # Lehrling
   def entered_apprentice_abilities
-    can [:google_sync, :create_google_contact], User
+    can [:google_sync, :create_google_contact, :update_google_contact], User
   end
 
   def entered_apprentice_archive_abilities

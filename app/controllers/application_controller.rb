@@ -9,6 +9,7 @@ class ApplicationController < ActionController::Base
   before_filter :filter_empty_passwords_and_user_type, only: [:create, :update]
 
   rescue_from CanCan::AccessDenied do |exception|
+    
     logger.debug "Access denied on #{exception.action} #{exception.subject.inspect}"
     exception.backtrace.each do |line|
       logger.debug "\t#{line}"
