@@ -325,28 +325,32 @@ block 'create files' do
                            filename: "MasterMasonRite.pdf", 
                            content: File.open(File.join(Rails.root, "/app/assets/seed/MasterMasonRite.pdf")),
                            content_type: "application/pdf",
-                           directory_id: master_mason_dir.id
+                           directory_id: master_mason_dir.id,
+                           roles: [mr]
                            )
   
   log AttachedFile.create!(
                            filename: "FellowCraftRite.pdf", 
                            content: File.open(File.join(Rails.root, "/app/assets/seed/FellowCraftRite.pdf")),
                            content_type: "application/pdf",
-                           directory_id: fellow_craft_dir.id
+                           directory_id: fellow_craft_dir.id,
+                           roles: [fr , mr]
                            )
   
   log AttachedFile.create!(
                            filename: "EnteredApprenticeRite.pdf", 
                            content: File.open(File.join(Rails.root, "/app/assets/seed/EnteredApprenticeRite.pdf")),
                            content_type: "application/pdf",
-                           directory_id: entered_apprentice_dir.id
+                           directory_id: entered_apprentice_dir.id,
+                           roles: [er, fr , mr]
                            )
   
   log AttachedFile.create!(
                            filename: "InitiationRite.pdf", 
                            content: File.open(File.join(Rails.root, "/app/assets/seed/InitiationRite.pdf")),
                            content_type: "application/pdf",
-                           directory_id: entered_apprentice_dir.id
+                           directory_id: entered_apprentice_dir.id,
+                           roles: [er, fr , mr]
                            )
   
 end

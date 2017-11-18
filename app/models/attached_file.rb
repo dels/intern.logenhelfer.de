@@ -12,7 +12,7 @@ class AttachedFile < ActiveRecord::Base
   has_many :attached_file_roles
   has_many :roles, :through => :attached_file_roles
 
-  attr_accessible :filename, :content, :content_type, :directory_id, :role_ids
+  attr_accessible :filename, :content, :content_type, :directory_id, :role_ids, :roles
 
   default_scope where(:deleted => (Rails.env.archive? || Rails.env.archive_dev?))
 

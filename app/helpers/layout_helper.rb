@@ -66,6 +66,11 @@ module LayoutHelper
     image_link_tag_helper 'edit', target, verbose, title: I18n.t('helpers.link.edit')
   end
 
+  def file_io_link_to target, verbose=false
+    target = polymorphic_path_helper(target)
+    image_link_tag_helper 'file_io_link', target, verbose, title: I18n.t('helpers.link.file_io_link'), class: 'file_io_link'
+  end
+
   def destroy_link_to(target, verbose=false, opts={})
     if Hash === verbose
       opts = verbose
