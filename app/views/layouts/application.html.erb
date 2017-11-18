@@ -10,10 +10,10 @@
     <%= yield(:head) %>
   </head>
   <body>
-  <% if Rails.env.development? %>
+  <% if Rails.env.development? or Rails.env.demo? %>
     <div id="banner">
       <div id="banner-content">
-        Speicher: <%= number_to_human_size AttachedFile::memory_used %>/<%= number_to_human_size AppConfig[:max_db_mem_size] %>
+        Achtung: Diese Instanz dient nur zur Veranschaulichung. Alle Daten werden in regelmäßigen Abständen gelöscht.
       </div>
     </div>
     <% end %>
