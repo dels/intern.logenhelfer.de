@@ -17,6 +17,9 @@ def block msg, &b
   result
 end
 
+def rndm_birthdate
+  Date.today - Random.rand(18...80).years - Random.rand(0...365).days
+end
 
 ar = nil
 ur = nil
@@ -74,7 +77,7 @@ block 'create users' do
                        firstname: "El",
                        lastname: "Chefe",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years
+                       date_of_birth: rndm_birthdate
                        )
   u.entered_apprentice_since = (Date.today - 2.year).to_s
   u.fellow_craft_since = (Date.today - 1.year).to_s
@@ -89,7 +92,7 @@ block 'create users' do
                        firstname: "Hoch",
                        lastname: "Lader",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years
+                       date_of_birth: rndm_birthdate
                        )
   u.entered_apprentice_since = (Date.today - 3.years)
   u.fellow_craft_since = Date.today - 2.years
@@ -104,7 +107,7 @@ block 'create users' do
                        firstname: "Korrespondierender",
                        lastname: "Schriftfuehrer",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years
+                       date_of_birth: rndm_birthdate
                        )
   u.entered_apprentice_since = Date.today - 5.years
   u.fellow_craft_since = Date.today - 3.years
@@ -118,7 +121,7 @@ block 'create users' do
                        firstname: "Erster",
                        lastname: "Schaffer",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years
+                       date_of_birth: rndm_birthdate
                        )
   u.entered_apprentice_since = Date.today - 5.years
   u.fellow_craft_since = Date.today - 3.years
@@ -132,7 +135,7 @@ block 'create users' do
                        firstname: "Meister",
                        lastname: "vom Stuhl",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years
+                       date_of_birth: rndm_birthdate
                        )
   u.entered_apprentice_since = Date.today - 3.years
   u.fellow_craft_since = Date.today - 2.years
@@ -146,7 +149,7 @@ block 'create users' do
                        firstname: "master",
                        lastname: "mason",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years
+                       date_of_birth: rndm_birthdate
                        )
 
   u.entered_apprentice_since = Date.today - 3.years
@@ -160,7 +163,7 @@ block 'create users' do
                        firstname: "fellow",
                        lastname: "craft",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years
+                       date_of_birth: rndm_birthdate
                        )
 
   u.entered_apprentice_since = Date.today - 2.year
@@ -173,7 +176,7 @@ block 'create users' do
                        firstname: "entered",
                        lastname: "apprentice",
                        job_title: "freemason",
-                       date_of_birth: Date.today - 40.years
+                       date_of_birth: rndm_birthdate
                        )
   u.entered_apprentice_since = Date.today - 2.year
   u.save!

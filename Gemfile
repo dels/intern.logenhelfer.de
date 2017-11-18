@@ -14,7 +14,7 @@ gem 'jquery-ui-rails'
 gem 'best_in_place'
 
 gem 'friendly_id',              '~> 4.0.0'
-gem 'cancan'#,                   '1.6.7'
+gem 'cancan'
 gem 'rails-i18n'
 gem 'prawn',                    '~> 1.0.0.rc1'
 gem 'later_dude',               '>= 0.3.1'
@@ -54,11 +54,11 @@ end
 group :test do
   gem 'turn',                   require: false
   gem 'mocha',                  require: false
-  gem "rspec-rails"#,        :git => "git://github.com/rspec/rspec-rails.git"
-  gem "rspec"#,              :git => "git://github.com/rspec/rspec.git"
-  gem "rspec-core"#,         :git => "git://github.com/rspec/rspec-core.git"
-  gem "rspec-expectations"#, :git => "git://github.com/rspec/rspec-expectations.git"
-  gem "rspec-mocks"#,        :git => "git://github.com/rspec/rspec-mocks.git"
+  gem "rspec-rails"
+  gem "rspec"
+  gem "rspec-core"
+  gem "rspec-expectations"
+  gem "rspec-mocks"
   gem 'factory_girl_rails'
   gem 'shoulda-matchers'
   gem 'rspec-given'
