@@ -37,6 +37,21 @@
       <td><tt>:public_wp_available_to_anon_users</tt></td>
     </tr>
 
+    <!-- working plan is start page -->
+    <tr>
+      <th><%= t '.options.working_plan_as_start_page.name' %></th>
+      <td>
+        <label><%= radio_button_tag 'app_config[working_plan_as_start_page]', '1', AppConfig[:working_plan_as_start_page] %> ja</label>
+        <label><%= radio_button_tag 'app_config[working_plan_as_start_page]', '0', "0".eql?(AppConfig[:working_plan_as_start_page]) %> nein</label>
+      </td>
+      <%- if t('.options.working_plan_as_start_page').key?(:description) -%>
+        <td><%= t '.options.working_plan_as_start_page.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:working_plan_as_start_page</tt></td>
+    </tr>
+    
     <!-- current instance acts as archive
     <tr>
       <th><%= t '.options.archive.name' %></th>
