@@ -355,7 +355,7 @@ block 'configuring app' do
     :user_change_notification_email => "report@elsbroek.com",
     :default_event_location => "Bremen",
     :technical_contact_email => "report@elsbroek.com",
-    :max_db_mem_size => (1024*1024*20).to_s
+#    :max_db_mem_size => (1024*1024*20).to_s
   }.each_pair do |key,val|
     log AppConfig[key] = val
   end

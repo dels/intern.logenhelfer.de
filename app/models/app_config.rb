@@ -32,6 +32,23 @@ module AppConfig
           q.first
         end
       end
+      unless @@records[key] || @@records[key].try(:value)
+        case key
+        when :public_wp_available_to_anon_users
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "1")
+        when :working_plan_as_start_page
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: true)
+        when :lodge
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "Logenhelfer")
+        when :max_db_mem_size
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: (1024*1024*100).to_s)
+        when :archive
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "0")
+        else          
+          Rails.logger.warn("#{key} has no default value")
+        end
+        @@access_times[key] = Time.now
+      end
       @@records[key].try :value
     end
 

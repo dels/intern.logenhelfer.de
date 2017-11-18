@@ -104,7 +104,11 @@ FwzeIntern::Application.routes.draw do
   get '/anmelden', to: 'statics#index', as: :login
   get '/hilfe', to: 'statics#help', as: :help
 
-  root to: 'statics#index'
+  if AppConfig[:working_plan_as_start_page]
+    root to: 'events#workingplan'    
+  else
+    root to: 'statics#index'
+  end
 
 # TODO: the redirection in case of successful login and logout is not correct and would need improvements
 #  root to: 'events#workingplan'

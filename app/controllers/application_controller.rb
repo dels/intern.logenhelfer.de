@@ -22,7 +22,10 @@ class ApplicationController < ActionController::Base
     return nil if @current_google_user.oauth_expires_at <= Time.now
     @current_google_user
   end
-  
+
+  def after_sign_in_path_for(resource)
+    login_path
+  end
 
 protected
 
