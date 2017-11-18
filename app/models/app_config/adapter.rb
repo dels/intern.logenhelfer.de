@@ -35,6 +35,17 @@ class AppConfig::Adapter < ActiveRecord::Base
     end
   end
 
+  def getter_max_db_mem_size
+    case @value.to_s
+    when /(\d+)K/i
+      $1.to_i * 1024
+    when /(\d+)M/i
+      $1.to_i * 1024 * 1024
+    when /(\d+)G/i
+      $1.to_i * 1024 * 1024 * 1024
+    end
+  end
+  
   def setter_bool
     [true, 1, 'true', '1', 't'].any? {|t| t == @value } ? '1' : '0'
   end

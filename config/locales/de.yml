@@ -100,6 +100,9 @@ de:
         mvst_email:
           name: Kontakt-Adresse des MvSt.
           description: 'Kann im Impressum ausgegeben werden.'
+        max_db_mem_size:
+          name: maximaler Datenbankspeicherplatz
+          description: maximaler Speicherverbrauch in bytes bevor Warnung angezeigt wird.
         impressum:
           name: Impressums-Text
           description: 'HTML-Formatierung. Es können die Variablen in der Form <tt>:varname</tt> genutzt werden (siehe rechte Spalte); E-Mail-Adressen werden dabei obfuskiert.'

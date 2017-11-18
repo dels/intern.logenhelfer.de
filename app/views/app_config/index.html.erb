@@ -213,7 +213,18 @@
       <td colspan="3"><%= text_area_tag 'app_config[impressum]', AppConfig[:impressum], class: jqueryui_input_classes, style: 'width:99%;height:14em' %></td>
     </tr>
 
-
+    <!-- max mem db size -->
+    <tr>
+      <th><%= t '.options.max_db_mem_size.name' %></th>
+      <td><%= text_field_tag 'app_config[max_db_mem_size]', AppConfig[:max_db_mem_size], class: jqueryui_input_classes %></td>
+      <%- if t('.options.max_db_mem_size').key?(:description) -%>
+        <td><%= t '.options.max_db_mem_size.description' %></td>
+      <%- else -%>
+        <td></td>
+      <%- end -%>
+      <td><tt>:max_db_mem_size</tt></td>
+    </tr>
+    
     <!-- robots.txt content -->
     <tr>
       <th rowspan="2"><%= t '.options.robots_txt.name' %></th>

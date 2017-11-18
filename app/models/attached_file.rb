@@ -16,7 +16,6 @@ class AttachedFile < ActiveRecord::Base
 
   default_scope where(:deleted => (Rails.env.archive? || Rails.env.archive_dev?))
 
-
   def size
     unless self.content_length and 0 <= self.content_length
       Rails.logger.warn("setting content length of #{self.filename}")
@@ -53,20 +52,14 @@ class AttachedFile < ActiveRecord::Base
   end
 
   def self.memory_used
-    sum = 0
-    AttachedFile.select('content_length').each {|file|
-      next unless file.content_length
-      sum += file.content_length
-    }
-    sum
+    AttachedFile.sum('content_length')
   end
 
   def self.memory_used_incl_archived
-    sum = 0
-    AttachedFile.unscoped.select('content_length').each {|file|
-      next unless file.content_length
-      sum += file.content_length
-    }
-    sum
+    AttachedFile.unscoped.sum('content_length')
+  end
+
+  def self.memory_exceeded?
+    AttachedFile::memory_used >= AppConfig[:max_db_mem_size].to_i
   end
 end

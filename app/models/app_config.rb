@@ -8,7 +8,7 @@ module AppConfig
   # cached records
   @@records = {}
   @@access_times = Hash.new {|h,k| h[k] = @@default_refresh_time.ago }
-
+  
   class << self
     # ActiveRecord specific.
     def table_name_prefix
@@ -53,7 +53,7 @@ module AppConfig
     # Force reload the next time `key` is accessed.
     def dirty!(key)
       key = key.to_sym
-      # really invalidate stuff
+      # ensure key is invalid
       @@access_times[key] = 1000.years.ago
       @@records[key] = nil
     end

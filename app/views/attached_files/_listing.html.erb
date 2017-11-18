@@ -1,5 +1,8 @@
-<% if can? :create, AttachedFile %>
+
+<% if (can?(:create, AttachedFile)) && false == AttachedFile::memory_exceeded? %>
+
 <p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.attached_file")), new_category_directory_attached_file_path(@directory.category, @directory), class: 'add icon' %></p>
+
 <% end %>
 
 <%= paginate @attached_files if @attached_files.present? %>

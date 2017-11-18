@@ -211,6 +211,11 @@ class User < ActiveRecord::Base
     false
   end
 
+  def app_responsible?
+    return true if admin? or secretary? or worshipful_master? or net_delegate?
+    false
+  end
+  
   def validate_degrees
     if fellow_craft_since && entered_apprentice_since.nil?
       errors.add(:base, I18n.t("activerecord.errors.must_be_entered_apprentice_to_become_fellow_craft"))

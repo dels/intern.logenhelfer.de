@@ -24,6 +24,7 @@ er = nil
 fr = nil
 mr = nil
 sr = nil
+sd = nil
 ser = nil
 jwr = nil
 wm = nil
@@ -42,11 +43,11 @@ block 'create roles' do
   log ser   = Role.create!(ordering_number: 3,name: 'SeniorWarden',      display_name: '1. Aufseher', administrational_role: false)
   log jwr   = Role.create!(ordering_number: 4,name: 'JuniorWarden',      display_name: '2. Aufseher', administrational_role: false)
   log         Role.create!(ordering_number: 5, name: 'Treasurer',        display_name: 'Schatzmeister', administrational_role: false)
-  log sr    = Role.create!(ordering_number: 6,name: 'InternalSecretary', display_name: 'Protokolliernder Schriftführer', administrational_role: false)
+  log sp    = Role.create!(ordering_number: 6,name: 'InternalSecretary', display_name: 'Protokolliernder Schriftführer', administrational_role: false)
   log sr    = Role.create!(ordering_number: 7,name: 'Secretary',         display_name: 'Korrespondierender Schriftführer', administrational_role: false)
   log         Role.create!(ordering_number: 8, name: 'Speaker',          display_name: 'Redner', administrational_role: false)
   log         Role.create!(ordering_number: 9, name: 'MasterOfCeremony', display_name: 'Zeremonienmeister', administrational_role: false)
-  log         Role.create!(ordering_number: 10, name: 'SeniorDeacon',    display_name: '1. Schaffer', administrational_role: false)
+  log sd    = Role.create!(ordering_number: 10, name: 'SeniorDeacon',    display_name: '1. Schaffer', administrational_role: false)
   log         Role.create!(ordering_number: 11, name: 'JuniorDeacon',    display_name: '2. Schaffer', administrational_role: false)
   log         Role.create!(ordering_number: 12, name: 'PreparingBrother',display_name: 'Vorbereitender Bruder', administrational_role: false)
   log         Role.create!(ordering_number: 13, name: 'Librarian',       display_name: 'Bibliothekar', administrational_role: false)
@@ -111,6 +112,20 @@ block 'create users' do
   u.roles << sr
   u.save!
   log u = User.create!(
+                       matriculation_number: 896,
+                       email: 'schaffer@logenhelfer.de',
+                       password: 'jakin1024',
+                       firstname: "Erster",
+                       lastname: "Schaffer",
+                       job_title: "freemason",
+                       date_of_birth: Date.today - 40.years
+                       )
+  u.entered_apprentice_since = Date.today - 5.years
+  u.fellow_craft_since = Date.today - 3.years
+  u.master_mason_since = Date.today - 1.years
+  u.roles << sd
+  u.save!
+  log u = User.create!(
                        matriculation_number: 924,
                        email: 'mvst@logenhelfer.de',
                        password: 'jakin1024',
@@ -135,9 +150,7 @@ block 'create users' do
                        )
 
   u.entered_apprentice_since = Date.today - 3.years
-  u.save!
   u.fellow_craft_since = Date.today - 2.years
-  u.save!
   u.master_mason_since = Date.today - 1.years
   u.save!
   log u = User.create!(
@@ -151,7 +164,6 @@ block 'create users' do
                        )
 
   u.entered_apprentice_since = Date.today - 2.year
-  u.save
   u.fellow_craft_since = Date.today - 1.year
   u.save!
   log u = User.create!(
@@ -342,7 +354,8 @@ block 'configuring app' do
     :default_from_email => "web@logenhelfer.de",
     :user_change_notification_email => "report@elsbroek.com",
     :default_event_location => "Bremen",
-    :technical_contact_email => "report@elsbroek.com"
+    :technical_contact_email => "report@elsbroek.com",
+    :max_db_mem_size => (1024*1024*20).to_s
   }.each_pair do |key,val|
     log AppConfig[key] = val
   end

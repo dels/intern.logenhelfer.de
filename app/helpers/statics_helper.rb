@@ -23,7 +23,7 @@ module StaticsHelper
 
   def impressum_from_config
     raw_text = AppConfig[:impressum]
-    return "" unless raw_text    
+    return "<h2>Impressum noch nicht konfiguriert</h2><br />Bitte in der Anwendungskonfiguration hinterlegen.".html_safe unless raw_text
     %w[user_change_notification_email default_from_email technical_contact_email mvst_email].each do |mail|
       raw_text = raw_text.gsub(/:(#{mail})/) { obfuscated_mail_to AppConfig[$1.to_sym] }
     end

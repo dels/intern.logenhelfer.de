@@ -10,13 +10,20 @@
     <%= yield(:head) %>
   </head>
   <body>
-<% if Rails.env.development? %>
-  <div id="banner">
-    <div id="banner-content">
-      Development 
+  <% if Rails.env.development? %>
+    <div id="banner">
+      <div id="banner-content">
+        Speicher: <%= number_to_human_size AttachedFile::memory_used %>/<%= number_to_human_size AppConfig[:max_db_mem_size] %>
+      </div>
     </div>
-  </div>
-<% end %>
+    <% end %>
+    <% if current_user.app_responsible? && AttachedFile::memory_exceeded? %>
+    <div id="mem_banner">
+      <div id="mem_banner-content">
+        Achtung! Kein Speicher mehr vorhanden: <%= number_to_human_size AttachedFile::memory_used %>/<%= number_to_human_size AppConfig[:max_db_mem_size] %>. Es können keine Dateien mehr hochgeladen werden.
+      </div>
+    </div>
+    <% end %>
 
     <nav id="left">
       <%= render 'layouts/menu' %>

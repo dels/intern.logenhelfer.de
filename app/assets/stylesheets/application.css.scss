@@ -152,11 +152,25 @@ dd div input.ui-autocomplete-input {
   visibility: hidden;
 }
 
-div#banner { 
-    position: absolute; 
+div#mem_banner { 
+    position: relativ; 
     top: 0; 
     left: 0; 
-    background-color: #BDB76B; 
+    background-color: red; 
+    width: 100%; 
+}
+div#mem_banner-content { 
+    width: 800px; 
+    margin: 0 auto; 
+    padding: 5px;
+    text-align: center;
+}
+
+div#banner { 
+    position: absolut; 
+    top: 0; 
+    left: 0; 
+    background-color: #B9B9AA;
     width: 100%; 
 }
 div#banner-content { 
