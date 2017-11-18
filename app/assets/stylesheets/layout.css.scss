@@ -494,10 +494,8 @@ span.add {
   &.success { background-image: image-url('success.png'); }
   
   &.add { background-image: image-url('add.png')}
-  &.show { background-image: image-url('show.png')}
   &.edit { background-image: image-url('edit.png'); }
   &.destroy { background-image: image-url('destroy.png'); }
-  &.file_io_link { background-image: image-url('group_link.png')}
 
   &.contacts { background-image: image-url('contacts.png'); }
   &.contact_new { background-image: image-url('contact_new.png'); }
