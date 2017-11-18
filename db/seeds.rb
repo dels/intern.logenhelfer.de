@@ -10,7 +10,7 @@ def block msg, &b
   begin
     result = yield
   rescue => ex
-    puts '*'*80, "#{ex.backtrace.join("\n\t")}: #{ex.message} (#{ex.class})", '*'*80
+    puts '*'*80, "#{ex.message} (#{ex.class}): #{ex.backtrace.join("\n\t")}", '*'*80
     raise
   end
   puts " done."
@@ -362,13 +362,8 @@ block 'configuring app' do
     :user_change_notification_email => "report@elsbroek.com",
     :default_event_location => "Bremen",
     :technical_contact_email => "report@elsbroek.com",
-#    :max_db_mem_size => (1024*1024*20).to_s
   }.each_pair do |key,val|
     log AppConfig[key] = val
   end
 
-#  AppConfig[:default_from_email] = "web@logenhelfer.de"
-#  AppConfig[:user_change_notification_email] = "report@elsbroek.com"
-#  AppConfig[:default_event_location] = "Bremen"
-#  AppConfig[:technical_contact_email] = "report@elsbroek.com"
 end

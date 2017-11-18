@@ -9,15 +9,13 @@ class Seeker < ActiveRecord::Base
 
   has_one_address
 
-  attr_accessible :firstname, :lastname, :source, :preferred_way_of_contact, :invite, :status, :notes
-
   validates_presence_of :firstname, :lastname, :source, :status
 
   before_validation :update_status
 
   validate :way_of_contact_validation
 
-  default_scope where(:deleted => false)
+  default_scope { where(:deleted => false) }
 
   WAY_OF_CONTACT = {
     email: 10,

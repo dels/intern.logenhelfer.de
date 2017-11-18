@@ -1,6 +1,5 @@
 # this is just a dumb key/value store
 class AppConfig::Adapter < ActiveRecord::Base
-  attr_accessible :key, :value
 
   # the nil key is actually allowed, but reserved for special cases
   # (which is to be defined)

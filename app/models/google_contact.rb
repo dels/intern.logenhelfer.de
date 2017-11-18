@@ -7,11 +7,6 @@
 # TODO - addresses should also be valid if they have a filled postAddress field not only if they have street, postcode, and city
 class GoogleContact
 
-  attr_accessor :firstname, :lastname, :name, :home_email, :work_email, :other_email, :mobile_phone, :home_phone,
-                :work_phone, :other_email, :home_fax, :work_fax, :home_address, :business_address, :priv_addr, :business_addr,
-                :date_of_birth, :street, :postcode, :city, :home_address, :work_address, :other_address, :groups, :system_groups,
-                :edit_href, :my_json, :my_xml, :edit_url, :self_url
-  
   def initialize()
     @home_email = []
     @work_email = []

@@ -10,11 +10,6 @@ class User < ActiveRecord::Base
   devise :database_authenticatable, :recoverable, :rememberable, :trackable,
       :validatable, :timeoutable#, timeout_in: 1.hour
 
-  attr_accessible :email, :password, :password_confirmation, :remember_me,
-      :firstname, :lastname, :date_of_birth, :academic_title_id, 
-      :accepted_at, :mother_lodge, :role_id, :role_ids, :matriculation_number, :job_title,
-      :entered_apprentice_since, :fellow_craft_since, :master_mason_since
-
   attr_accessor :google_edit_url, :google_self_url
   
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
@@ -27,15 +22,15 @@ class User < ActiveRecord::Base
   has_many_addresses
   has_many :file_downloads
   has_many :user_roles
-  has_many :roles, through: :user_roles, :uniq => true
+  has_many :roles, through: :user_roles#, :uniq => true
   has_many :attached_files
   has_many :announcement_subscription
   has_many :external_event_participants
   has_many :external_events, :through => :external_event_participants
   belongs_to :academic_title
 
-  default_scope includes(:academic_title)
-  scope :undeleted, where(deleted: false)
+  default_scope { includes(:academic_title) }
+  scope :undeleted, -> { where(deleted: false) }
   scope :search, ->(param) {
     where([
         'email ILIKE :param',

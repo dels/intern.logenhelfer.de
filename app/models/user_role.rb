@@ -1,5 +1,4 @@
 class UserRole < ActiveRecord::Base
-  attr_accessible :role_id, :user_id, :role, :user, :role_added_at
 
   belongs_to :user
   belongs_to :role
@@ -9,8 +8,7 @@ class UserRole < ActiveRecord::Base
 #  validates_uniqueness_of [:user_id, :role_id], :message => I18n.t("activerecord.errors.user_cant_have_one_role_two_times")
 
   after_save do |usr|
-    return if role.is_group?
-    UserRole.where("id <> ?", usr.id).where(role_id: usr.role_id).first.delete rescue nil
+    UserRole.where("id <> ?", usr.id).where(role_id: usr.role_id).first.delete rescue nil unless  role.is_group?
   end
   
   def to_s

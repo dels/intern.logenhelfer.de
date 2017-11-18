@@ -15,7 +15,7 @@
   <dt><%= t 'activerecord.attributes.attached_file.directory' %>:</dt>
   <dd><%= @attached_file.directory.name %></dd>
   <dt><%= t 'activerecord.attributes.attached_file.uploader' %>:</dt>
-  <dd><%= @attached_file.uploader.email %></dd>
+  <dd><%= @attached_file.uploader.email rescue dash %></dd>
   <dt><%= t 'activerecord.attributes.attached_file.created_at' %>:</dt>
   <dd><%= l @attached_file.created_at %></dd>
   <dt><%= t 'activerecord.attributes.attached_file.updated_at' %>:</dt>

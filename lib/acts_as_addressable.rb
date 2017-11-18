@@ -15,12 +15,10 @@ module ActsAsAddressable
       self._has_many_addresses = options[:has_many]
       if options[:has_many]
         has_many :addresses, :as => :addressable
-        attr_accessible :addresses_attributes
         accepts_nested_attributes_for :addresses, :reject_if => :all_blank, :allow_destroy => true
         alias_method_chain :addresses, :autobuild
       else
         has_one :address, :as => :addressable
-        attr_accessible :address_attributes
         accepts_nested_attributes_for :address, :reject_if => :all_blank, :allow_destroy => true
         alias_method_chain :address, :autobuild
       end

@@ -5,8 +5,6 @@ class ExternalEvent < ActiveRecord::Base
   extend FriendlyId
   friendly_id :uuid
 
-  attr_accessible :title, :description, :host, :location, :time, :date
-
   validates_presence_of :title, :host, :time, :date
 
   belongs_to :created_by, foreign_key: :created_by_id, class_name: 'User'
@@ -16,7 +14,7 @@ class ExternalEvent < ActiveRecord::Base
   has_many :external_event_participants
   has_many :participants, :through => :external_event_participants, :source => :user
 
-  default_scope where(:deleted => false)
+  default_scope { where(:deleted => false) } 
 
   def subscription(usr)
     ExternalEventParticipant.where(:user_id => usr.id).first

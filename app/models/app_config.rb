@@ -35,7 +35,7 @@ module AppConfig
       unless @@records[key] || @@records[key].try(:value)
         case key
         when :public_wp_available_to_anon_users
-          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "1")
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: true)
         when :working_plan_as_start_page
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: false)
         when :lodge
@@ -53,6 +53,7 @@ module AppConfig
         end
         @@access_times[key] = Time.now
       end
+      Rails.logger.warn("--> #{key} was requested returning: #{@@records[key].try(:value)}.")
       @@records[key].try :value
     end
 

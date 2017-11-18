@@ -1,6 +1,9 @@
 class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
-
+  
+  before_filter :authenticate_user!
+  load_and_authorize_resource :find_by => :uuid
+  
   def index
     users = User.undeleted
     if params[:search].present?

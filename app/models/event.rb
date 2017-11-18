@@ -1,6 +1,4 @@
 class Event < ActiveRecord::Base
-  attr_accessible :title, :public_description, :private_description,
-      :date, :time, :whole_day, :location
 
   include UuidHelper
   before_create :generate_uuid
@@ -8,7 +6,7 @@ class Event < ActiveRecord::Base
   extend FriendlyId
   friendly_id :uuid
 
-  default_scope where(deleted: false).order('date ASC')
+  default_scope { where(deleted: false).order('date ASC') }
 
   validates_presence_of :date, :title, :created_by_id
   validates_presence_of :time,                          unless: :whole_day?

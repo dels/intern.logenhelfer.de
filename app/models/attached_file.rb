@@ -12,9 +12,7 @@ class AttachedFile < ActiveRecord::Base
   has_many :attached_file_roles
   has_many :roles, :through => :attached_file_roles
 
-  attr_accessible :filename, :content, :content_type, :directory_id, :role_ids, :roles
-
-  default_scope where(:deleted => (Rails.env.archive? || Rails.env.archive_dev?))
+  default_scope { where(:deleted => (Rails.env.archive? || Rails.env.archive_dev?)) }
 
   def size
     unless self.content_length and 0 <= self.content_length

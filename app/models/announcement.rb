@@ -1,5 +1,4 @@
 class Announcement < ActiveRecord::Base
-  attr_accessible :uuid, :title, :message_body, :created_by, :updated_by_id
 
   include UuidHelper
   before_create :generate_uuid
@@ -7,7 +6,7 @@ class Announcement < ActiveRecord::Base
   extend FriendlyId
   friendly_id :uuid
 
-  default_scope where(deleted: false).order('created_at DESC')
+  default_scope { where(deleted: false).order('created_at DESC') }
 
   belongs_to :created_by, foreign_key: :created_by_id, class_name: 'User'
   belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User'

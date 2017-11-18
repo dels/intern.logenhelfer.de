@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails',                    '~>3.2'
+gem 'rails',                    '~>4.2'
 gem 'thin'
 gem 'pg'
 gem 'exception_notification'
@@ -13,9 +13,9 @@ gem 'jquery-rails'
 gem 'jquery-ui-rails'
 gem 'best_in_place'
 
-gem 'friendly_id',              '~> 4.0.0'
+gem 'friendly_id',              '~> 5.0.0'
 gem 'cancan'
-gem 'rails-i18n'
+#gem 'rails-i18n'
 gem 'prawn',                    '~> 1.0.0.rc1'
 gem 'later_dude',               '>= 0.3.1'
 gem 'icalendar',                               '~> 1.5.4'
@@ -33,7 +33,7 @@ group :development, :archive_dev do
   gem 'rails_best_practices',   require: false
   gem 'rails-erd'
   gem 'letter_opener'
-  gem 'sextant'
+#  gem 'sextant'
   gem 'brakeman'
   gem 'test-unit'
 #  gem 'i18n-debug'
@@ -42,14 +42,12 @@ group :development, :archive_dev do
   # gem 'debugger-ruby_core_source'
 end
 
-group :assets do
-  gem 'sass-rails'#,             '~> 3.2.3'
-  gem 'coffee-rails'#,           '~> 3.2.1'
-  gem 'libv8' #, '~> 3.11.8'
-  gem "therubyracer", '>= 0.11.0beta1', :require => 'v8', platform: :ruby
-  gem 'uglifier',               '>= 1.0.3'
-  gem 'compass-rails'
-end
+gem 'sass-rails'
+gem 'coffee-rails'
+gem 'libv8' 
+gem "therubyracer", '>= 0.11.0beta1', :require => 'v8', platform: :ruby
+gem 'uglifier'#,               '>= 1.0.3'
+gem 'compass-rails'
 
 group :test do
   gem 'turn',                   require: false

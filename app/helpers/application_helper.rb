@@ -39,7 +39,7 @@ module ApplicationHelper
   end
 
   def get_authorized objects
-    objects.delete_if do |obj|
+    objects.to_a.delete_if do |obj|
       cannot?(:show, obj)
     end
   end

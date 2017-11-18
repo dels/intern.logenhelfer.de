@@ -9,9 +9,7 @@ class Officer < ActiveRecord::Base
   belongs_to :role
   belongs_to :lodge
 
-  attr_accessible :lodge_id, :firstname, :lastname, :role_id, :role_email
-
   validates_presence_of :firstname, :lastname, :role_id, :role_email, :lodge_id
 
-  default_scope where(:deleted => false)
+  default_scope { where(:deleted => false) }
 end

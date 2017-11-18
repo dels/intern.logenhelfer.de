@@ -1,10 +1,7 @@
 class Address < ActiveRecord::Base
-  attr_accessible :purpose, :street1, :street2, :street3, :mobile,
-      :zip, :city, :phone, :fax, :email, :remarks, :type_of_address
-
   belongs_to :addressable, polymorphic: true
 
-  default_scope where(:deleted => false)
+  default_scope { where(:deleted => false) }
 
   RE_DIAL_NUMBER = /\A\+\d{1,4}\s\([^0]\d{1,5}\)\s[\d\s]*[-]?[\s]?[\d]+\z/
 

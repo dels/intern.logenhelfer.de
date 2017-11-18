@@ -1,6 +1,7 @@
 class SeekersController < AuthorizedController
   helper_method :sort_column, :sort_direction
-
+  load_and_authorize_resource :find_by => :uuid
+  
   def index
     @seekers = view_context.get_authorized_paginated(@seekers.where("status <> ? AND status <> ?", Seeker::STATUS[:declined], Seeker::STATUS[:accepted]).where(invite: true).order(sort_column + " " + sort_direction)).page(params[:page])
   end

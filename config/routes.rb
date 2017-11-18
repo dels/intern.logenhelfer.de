@@ -16,7 +16,7 @@ FwzeIntern::Application.routes.draw do
 
   get 'arbeitsplan(.:format)',                  to: 'events#workingplan',   as: :calendar_export
   scope 'calendar' do
-    match 'upcoming',                           to: 'events#upcoming',      as: :upcoming_calendar
+    get 'upcoming',                             to: 'events#upcoming',      as: :upcoming_calendar
     get   'public_workingplan',                 to: 'events#public_workingplan'
     post  'public_workingplan',                 to: 'events#public_workingplan'
     get   'internal_workingplan',               to: 'events#internal_workingplan'
@@ -26,7 +26,7 @@ FwzeIntern::Application.routes.draw do
       delete 'remove_me',                       to: 'external_events#remove_me'
       get  'confirm_subscription',              to: 'external_events#confirm_subscription'
     end
-    match '(:year(/:month(/:day)))(.:format)',  to: 'events#date',          as: :calendar
+    get '(:year(/:month(/:day)))(.:format)' => 'events#date',          as: :calendar
   end
   resources :events
 
@@ -107,15 +107,16 @@ FwzeIntern::Application.routes.draw do
 
   # in case we just create the database AppConfig will raise exception while seeking for setting.
   # the next lines will be called more seldom than catching this exception in AppConfig[] method.
-  begin 
-    if AppConfig[:working_plan_as_start_page] && AppConfig[:public_wp_available_to_anon_users]
-      root to: 'events#workingplan'    
-    else
+#  begin
+#    raise "#{AppConfig[:working_plan_as_start_page]}"
+#    if 
+#      root to: 'events#workingplan'    
+#    else
       root to: 'statics#index'
-    end
-  rescue
-    root to: 'statics#index'
-  end
+#    end
+#  rescue
+#    root to: 'statics#index'
+#  end
 
 # TODO: the redirection in case of successful login and logout is not correct and would need improvements
 #  root to: 'events#workingplan'
