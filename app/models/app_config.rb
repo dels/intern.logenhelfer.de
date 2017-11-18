@@ -37,7 +37,7 @@ module AppConfig
         when :public_wp_available_to_anon_users
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "1")
         when :working_plan_as_start_page
-          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: true)
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: false)
         when :lodge
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "Logenhelfer")
         when :max_db_mem_size
