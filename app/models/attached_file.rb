@@ -54,13 +54,19 @@ class AttachedFile < ActiveRecord::Base
 
   def self.memory_used
     sum = 0
-    AttachedFile.select('content_length').each {|file| sum += file.content_length }
+    AttachedFile.select('content_length').each {|file|
+      next unless file.content_length
+      sum += file.content_length
+    }
     sum
   end
 
   def self.memory_used_incl_archived
     sum = 0
-    AttachedFile.unscoped.select('content_length').each {|file| sum += file.content_length }
+    AttachedFile.unscoped.select('content_length').each {|file|
+      next unless file.content_length
+      sum += file.content_length
+    }
     sum
   end
 end
