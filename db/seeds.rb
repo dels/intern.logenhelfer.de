@@ -200,23 +200,27 @@ block 'create categories' do
                                  )
 end
 
+entered_apprentice_dir = nil
+fellow_craft_dir = nil
+master_mason_dir = nil
+
 block 'create directories' do
   # Rituale
-  log Directory.create!(
-                        category: rite_cat,
-                        name: "Lehrling",
-                        roles: [er, fr , mr]
-                        )
-  log Directory.create!(
-                        category: rite_cat,
-                        name: "Geselle",
-                        roles: [fr , mr]
-                        )
-  log Directory.create!(
-                        category: rite_cat,
-                        name: "Meister",
-                        roles: [mr]
-                        )
+  log entered_apprentice_dir = Directory.create!(
+                                                  category: rite_cat,
+                                                  name: "Lehrling",
+                                                  roles: [er, fr , mr]
+                                                  )
+  log fellow_craft_dir = Directory.create!(
+                                          category: rite_cat,
+                                          name: "Geselle",
+                                          roles: [fr , mr]
+                                          )
+  log master_mason_dir = Directory.create!(
+                                           category: rite_cat,
+                                           name: "Meister",
+                                           roles: [mr]
+                                           )
   # Literatur
   log Directory.create!(
                         category: lit_cat,
@@ -298,6 +302,38 @@ block 'create directories' do
                         name: "Gästeliste",
                         roles: [mocr]
                         )
+end
+
+block 'create files' do
+
+  log AttachedFile.create!(
+                           filename: "MasterMasonRite.pdf", 
+                           content: File.open(File.join(Rails.root, "/app/assets/seed/MasterMasonRite.pdf")),
+                           content_type: "application/pdf",
+                           directory_id: master_mason_dir.id
+                           )
+  
+  log AttachedFile.create!(
+                           filename: "FellowCraftRite.pdf", 
+                           content: File.open(File.join(Rails.root, "/app/assets/seed/FellowCraftRite.pdf")),
+                           content_type: "application/pdf",
+                           directory_id: fellow_craft_dir.id
+                           )
+  
+  log AttachedFile.create!(
+                           filename: "EnteredApprenticeRite.pdf", 
+                           content: File.open(File.join(Rails.root, "/app/assets/seed/EnteredApprenticeRite.pdf")),
+                           content_type: "application/pdf",
+                           directory_id: entered_apprentice_dir.id
+                           )
+  
+  log AttachedFile.create!(
+                           filename: "InitiationRite.pdf", 
+                           content: File.open(File.join(Rails.root, "/app/assets/seed/InitiationRite.pdf")),
+                           content_type: "application/pdf",
+                           directory_id: entered_apprentice_dir.id
+                           )
+  
 end
 
 

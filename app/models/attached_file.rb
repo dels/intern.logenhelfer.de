@@ -18,7 +18,8 @@ class AttachedFile < ActiveRecord::Base
 
 
   def size
-    if 0 > self.content_length
+    unless self.content_length and 0 <= self.content_length
+      Rails.logger.warn("setting content length of #{self.filename}")
       reload
       self.content_length = self.content.length
       self.save

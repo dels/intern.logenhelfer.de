@@ -10,6 +10,14 @@
     <%= yield(:head) %>
   </head>
   <body>
+<% if Rails.env.development? %>
+  <div id="banner">
+    <div id="banner-content">
+      Development 
+    </div>
+  </div>
+<% end %>
+
     <nav id="left">
       <%= render 'layouts/menu' %>
     </nav>
