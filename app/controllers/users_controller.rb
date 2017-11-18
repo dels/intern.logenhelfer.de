@@ -69,10 +69,6 @@ class UsersController < AuthorizedController
       redirect_to users_path
       return
     end
-    if Rails.env.development?
-      puts "all groups:"
-      puts xml_resp
-    end
     @res
   end
   

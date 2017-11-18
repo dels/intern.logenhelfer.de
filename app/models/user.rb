@@ -106,7 +106,6 @@ class User < ActiveRecord::Base
 
   def entered_apprentice_since
     unless roles.find_by_name('EnteredApprentice')
-      puts "user is not entered apprentice"
       return nil
     end
     user_roles.find_by_role_id(roles.find_by_name('EnteredApprentice').id).role_added_at

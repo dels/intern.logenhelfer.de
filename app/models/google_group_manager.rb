@@ -15,8 +15,6 @@ class GoogleGroupManager
     rescue Exception => e
       Rails.logger.fatal("exception while requesting contacts feed: #{e.inspect}")
       return nil
-    ensure
-      debug_resp(xml_resp)
     end
 
     xml_resp
@@ -57,7 +55,6 @@ class GoogleGroupManager
     group_atom << "  </gd:extendedProperty>\n"
     group_atom << "</atom:entry>\n"
     
-    puts "posting to #{url} \n#{group_atom}" if Rails.env.development?
     xml_resp = RestClient.post(url, group_atom,
                                params: {
                                  'access_token': auth_token,
@@ -67,17 +64,14 @@ class GoogleGroupManager
                               )
     if xml_resp.code == 201
       res = "Neue Gruppe erstellt: #{AppConfig[:lodge_short]}"
-      Rails.logger.debug("resp body: \n#{xml_resp.body}")
     else
       res = "Gruppe konnte nicht erstellt werden. Bitte versuche es später erneut."
       Rails.logger.fatal("response code was #{xml_resp.code}")
     end
-    debug_resp(xml_resp)
     Nokogiri::XML(xml_resp.body).at("entry").css("id").first.content
   end
   
   def self.group_by_name(auth_token, search_str)
-    Rails.logger.debug("SEARCH GROUP: #{search_str}")
     xml = Nokogiri::XML(all_groups(auth_token))
     return nil unless xml.at("feed")
     xml.at("feed").search("entry").each do |entry|
@@ -89,12 +83,4 @@ class GoogleGroupManager
     nil
   end
 
-  private
-
-  def self.debug_resp(resp)
-    return unless  Rails.env.development?
-    puts "-"*60
-    puts "received header:\n#{resp.headers}\n" if resp
-    puts "received body:\n#{resp.body}\n" if resp
-  end
 end

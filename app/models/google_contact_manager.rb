@@ -16,7 +16,6 @@ class GoogleContactManager
       Rails.logger.fatal("exception while requesting contacts feed: #{e.inspect}")
       return nil
     end
-    debug_resp(xml_resp)
     xml_resp
   end
   
@@ -36,7 +35,6 @@ class GoogleContactManager
 
     atom = google_contact.to_atom
     url = "https://www.google.com/m8/feeds/contacts/default/full"
-    puts "posting to #{url} \n#{atom}" if Rails.env.development?
     
     RestClient.post(url, atom,
                     params: {
@@ -48,7 +46,6 @@ class GoogleContactManager
                    ) {|response, request, result|
       case response.code
       when 201
-        Rails.logger.debug("resp body: \n#{response.body}")
         return true
       when 400
         Rails.logger.fatal("received 400 while creating google contact #{google_contact.name}")
@@ -58,7 +55,6 @@ class GoogleContactManager
         return false
       end
     }
-    debug_resp(response)
   end
 
   def self.contact(auth_token, self_url)
@@ -72,7 +68,6 @@ class GoogleContactManager
                                'Content-Type': 'application/atom+xml'
                               })
     xml = Nokogiri::XML(xml_resp)
-    debug_resp(xml_resp)
     GoogleContact::parse_xml(xml)
   end
   
@@ -149,11 +144,6 @@ class GoogleContactManager
     unless contact.groups.index(GoogleGroupManager::lodge_group_id(auth_token))
       contact.groups << GoogleGroupManager::lodge_group_id(auth_token)
     end
-    if Rails.env.development?
-      puts "-"*60
-      puts "putting:"
-      puts contact.to_atom
-    end
     begin
       xml_resp = RestClient.put(self_url, contact.to_atom,
                                 params: {
@@ -166,20 +156,10 @@ class GoogleContactManager
     rescue Exception => e
       Rails.logger.fatal("could not update #{contact.name}: #{e.inspect}")
       return nil
-    ensure 
-      debug_resp(xml_resp)
-    end
     xml_resp
   end
 
 
   private
 
-  def self.debug_resp(resp)
-    return unless  Rails.env.development?
-    puts "-"*60
-    puts "received header:\n#{resp.headers}\n" if resp
-    puts "received body:\n#{resp.body}\n" if resp
-  end
-  
 end
