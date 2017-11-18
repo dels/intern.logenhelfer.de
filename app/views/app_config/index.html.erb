@@ -216,7 +216,7 @@
     <!-- max mem db size -->
     <tr>
       <th><%= t '.options.max_db_mem_size.name' %></th>
-      <td><%= text_field_tag 'app_config[max_db_mem_size]', AppConfig[:max_db_mem_size], class: jqueryui_input_classes %></td>
+      <td><%= text_field_tag 'app_config[max_db_mem_size]', AppConfig[:max_db_mem_size], class: jqueryui_input_classes, readonly: !current_user.admin? %></td>
       <%- if t('.options.max_db_mem_size').key?(:description) -%>
         <td><%= t '.options.max_db_mem_size.description' %></td>
       <%- else -%>

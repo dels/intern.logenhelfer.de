@@ -9,7 +9,15 @@
 </p>
 
 <p>
-  Alle Dateien zusammen belegen zur Zeit einen Speicher von <%= number_to_human_size AttachedFile::memory_used %>.
+  Alle Dateien zusammen belegen zur Zeit einen Speicher von <%= number_to_human_size AttachedFile::memory_used %> in der Datenbank.
+</p>
+
+<p>
+  <% if 0 <= AppConfig[:max_db_mem_size].to_i - AttachedFile::memory_used %>
+     Es sind noch <%= number_to_human_size (AppConfig[:max_db_mem_size].to_i - AttachedFile::memory_used) %> Datenbankspeicher verfügbar.
+     <% else %>
+     Es ist kein Speicher mehr frei. 
+     <% end %>
 </p>
 
 <p>
