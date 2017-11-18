@@ -232,7 +232,7 @@ class UsersController < AuthorizedController
       [
         :matriculation_number, :email, :firstname, :lastname, :date_of_birth,
         :accepted_at, :entered_apprentice_since, :fellow_craft_since,
-        :master_mason_since, :title
+        :master_mason_since, :title, :academic_title
       ].each do |attribute|
         params[:user].delete(attribute)
       end

@@ -11,7 +11,7 @@ class User < ActiveRecord::Base
       :validatable, :timeoutable#, timeout_in: 1.hour
 
   attr_accessible :email, :password, :password_confirmation, :remember_me,
-      :firstname, :lastname, :date_of_birth, :academic_title_id,
+      :firstname, :lastname, :date_of_birth, :academic_title_id, 
       :accepted_at, :mother_lodge, :role_id, :role_ids, :matriculation_number, :job_title,
       :entered_apprentice_since, :fellow_craft_since, :master_mason_since
 
@@ -80,10 +80,14 @@ class User < ActiveRecord::Base
   end
 
   def phone
-    return private_address.mobile unless private_address.mobile.empty?
-    return private_address.phone unless private_address.phone.empty?
-    return business_address.mobile unless business_address.mobile.empty?
-    return business_address.phone unless business_address.phone.empty?
+    if private_address
+      return private_address.mobile unless private_address.mobile.empty?
+      return private_address.phone unless private_address.phone.empty?
+    end
+    if business_address
+      return business_address.mobile unless business_address.mobile.empty?
+      return business_address.phone unless business_address.phone.empty?
+    end
     Rails.logger.warn("did not find any phone number for #{fullname}")
     ""
   end

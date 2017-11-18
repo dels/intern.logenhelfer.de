@@ -837,6 +837,8 @@ de:
       subject: 'Eine Meldung auf %{domain} wurde aktualisiert'
     new_subscription_notification:
       subject: 'Br. %{user} hat sich zu einer Veranstaltung angemeldet'
+    access_denied_notification:
+      subject: 'Br. %{user} wurde der Zugriff verweigert'
   views:
     pagination:
       first: ! '&laquo; Erste'

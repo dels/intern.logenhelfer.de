@@ -1,0 +1,15 @@
+Guten Tag <%= @admin.fullname %>,
+
+Der Nutzer <%= @user.fullname%> hat versucht auf <%= @url %> zuzugreifen. Der Zugriff wurde verweigert:
+
+<%= @exception.action %> <%= @exception.subject.inspect %>
+
+Tel: <%= @user.phone %>
+Mail: <%= @user.email %>
+
+Mit freundlichen Grüßen
+
+--
+Dies ist eine automatisch generierte E-Mail.
+Bei Fragen wenden Sie sich bitte an <%= AppConfig[:technical_contact_email] %>
+

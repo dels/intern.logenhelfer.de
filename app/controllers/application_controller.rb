@@ -9,11 +9,8 @@ class ApplicationController < ActionController::Base
   before_filter :filter_empty_passwords_and_user_type, only: [:create, :update]
 
   rescue_from CanCan::AccessDenied do |exception|
-    
+    UserMailer.access_denied_notification(current_user, exception, request).deliver
     logger.debug "Access denied on #{exception.action} #{exception.subject.inspect}"
-    exception.backtrace.each do |line|
-      logger.debug "\t#{line}"
-    end
     redirect_to login_url, alert: t("devise.error.access_denied")
   end
   
