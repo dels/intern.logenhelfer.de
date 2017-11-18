@@ -104,9 +104,16 @@ FwzeIntern::Application.routes.draw do
   get '/anmelden', to: 'statics#index', as: :login
   get '/hilfe', to: 'statics#help', as: :help
 
-  if AppConfig[:working_plan_as_start_page]
-    root to: 'events#workingplan'    
-  else
+
+  # in case we just create the database AppConfig will raise exception while seeking for setting.
+  # the next lines will be called more seldom than catching this exception in AppConfig[] method.
+  begin 
+    if AppConfig[:working_plan_as_start_page] && AppConfig[:public_wp_available_to_anon_users]
+      root to: 'events#workingplan'    
+    else
+      root to: 'statics#index'
+    end
+  rescue
     root to: 'statics#index'
   end
 
