@@ -43,6 +43,8 @@ class AppConfig::Adapter < ActiveRecord::Base
       $1.to_i * 1024 * 1024
     when /(\d+)G/i
       $1.to_i * 1024 * 1024 * 1024
+    else
+      @value
     end
   end
   
