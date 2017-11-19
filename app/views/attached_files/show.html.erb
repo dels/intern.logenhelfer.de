@@ -17,7 +17,7 @@
   <dt><%= t 'activerecord.attributes.attached_file.uploader' %>:</dt>
   <dd><%= @attached_file.uploader.email rescue dash %></dd>
   <dt><%= t 'activerecord.attributes.attached_file.created_at' %>:</dt>
-  <dd><%= l @attached_file.created_at %></dd>
+  <dd><%= l (@attached_file.created_at) %></dd>
   <dt><%= t 'activerecord.attributes.attached_file.updated_at' %>:</dt>
   <dd><%= l @attached_file.updated_at %></dd>
 

@@ -2,7 +2,7 @@ class AttachedFilesController < ApplicationController
   before_filter :authenticate_user!
   check_authorization :except => :create
   helper_method :sort_column, :sort_direction
-  load_and_authorize_resource :find_by => :uuid
+  load_and_authorize_resource except: [:create], :find_by => :uuid
   
   def download
     fd = FileDownload.new
@@ -18,11 +18,12 @@ class AttachedFilesController < ApplicationController
   end
 
   def new
-    @attached_file.directory = Directory.find(params[:directory_id])
+    @attached_file.directory = Directory.find_by_slug(params[:directory_id])
     @attached_file.role_ids = @attached_file.directory.role_ids
   end
 
   def create
+    # important as we skip load_and_authorze_resource
     unless can?(:create, AttachedFile)
       redirect_to root_url, :alert => t("devise.error.access_denied")
     end
@@ -34,7 +35,7 @@ class AttachedFilesController < ApplicationController
         af.content      = file.tempfile.read
         file.tempfile.delete
         af.uploader_id  = current_user.id
-        af.directory_id = Directory.find(params[:directory_id]).id
+        af.directory_id = Directory.find_by_slug(params[:directory_id]).id
         af.role_ids     = params[:attached_file][:role_ids]
       end
       @attached_file.content_length = @attached_file.content.length
@@ -46,7 +47,7 @@ class AttachedFilesController < ApplicationController
       end
     else
       @attached_file = AttachedFile.new do |af|
-        af.directory = Directory.find(params[:directory_id])
+        af.directory = Directory.find_by_slug(params[:directory_id])
         af.role_ids = params[:attached_file][:role_ids]
       end
       flash.now[:error] = t('activerecord.upload_failure')
@@ -74,4 +75,17 @@ class AttachedFilesController < ApplicationController
     @attached_file.save
     redirect_to [@attached_file.directory.category, @attached_file.directory], notice: t("activerecord.destroy_success", model: t("activerecord.models.attached_file"))
   end
+
+  private
+
+  def attached_file_params
+    params.require(:attached_file).permit(:file,
+                                          :filename,
+                                          :content,
+                                          :content_type,
+                                          :directory_id,
+                                          {role_ids: [] }
+                                         )
+  end
+  
 end

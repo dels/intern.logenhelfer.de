@@ -3,17 +3,16 @@ class DirectoriesController < AuthorizedController
   load_and_authorize_resource :find_by => :slug
   
   def show
-    
     @attached_files = view_context.get_authorized_paginated(@directory.attached_files.order(sort_column + " " + sort_direction).select('id, filename, directory_id, uuid, content_length')).page(params[:page])
   end
 
   def new
-    @directory.category = Category.find(params[:category_id])
+    @directory.category = Category.find_by_slug(params[:category_id])
     @directory.role_ids = @directory.category.role_ids
   end
 
   def create
-    @directory.category = Category.find(params[:category_id])
+    @directory.category = Category.find_by_slug(params[:category_id])
     if @directory.save
       redirect_to [@directory.category, @directory], notice: t("activerecord.create_success", model: t("activerecord.models.directory"))
     else
@@ -41,5 +40,12 @@ class DirectoriesController < AuthorizedController
   
   def sort_column
     (AttachedFile.column_names).include?(params[:sort_by]) ? params[:sort_by] : "filename"
+  end
+
+  def directory_params
+    params.require(:directory).permit(:name,
+                                      :description,
+                                      { role_ids: []}
+                                     )
   end
 end
