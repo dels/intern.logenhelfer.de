@@ -915,12 +915,12 @@ de:
       two_words_connector: ! ' und '
       words_connector: ! ', '
   time:
-  time:
     am: vormittags
     formats:
       default: "%A, %d. %B %Y, %H:%M Uhr"
       long: "%A, %d. %B %Y, %H:%M Uhr"
       short: "%d. %B, %H:%M Uhr"
+      date_only: "%A, %d. %B %Y" 
     pm: nachmittags
   unauthorized:
     default: You are not authorized to access this page.

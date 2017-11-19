@@ -1,5 +1,6 @@
 class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
+  
   load_and_authorize_resource :find_by => :uuid
   
   def index
@@ -324,6 +325,7 @@ private
                                    :fellow_craft_since,
                                    :master_mason_since,
                                    :academic_title_id,
+                                   :job_title,
                                    :firstname,
                                    :lastname,
                                    :date_of_birth,
@@ -347,6 +349,9 @@ private
                                                          ]}
                                   )
     else
+      [:matriculation_number, :email, :firstname, :lastname, :date_of_birth, :accepted_at, :mother_lodge, :entered_apprentice_since, :fellow_craft_since, :master_mason_since].each do |attr|
+        params[:user].delete(attr)
+      end
       params.require(:user).permit(:password,
                                    :password_confirmation,
                                    :job_title,
