@@ -8,6 +8,12 @@ class ApplicationController < ActionController::Base
 
   before_filter :filter_empty_passwords_and_user_type, only: [:create, :update]
 
+  before_filter do
+    resource = controller_name.singularize.to_sym
+    method = "#{resource}_params"
+    params[resource] &&= send(method) if respond_to?(method, true)
+  end
+  
   rescue_from CanCan::AccessDenied do |exception|
     UserMailer.access_denied_notification(current_user, exception, request).deliver
     logger.debug "Access denied on #{exception.action} #{exception.subject.inspect}"

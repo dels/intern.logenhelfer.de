@@ -69,6 +69,28 @@ block 'create roles' do
 end
 
 
+
+block 'create academic titles' do
+  log AcademicTitle.create!(
+        title: "Doktor",
+        short: "Dr."
+      )
+    log AcademicTitle.create!(
+        title: "Diplom-Informatiker.",
+        short: "Dipl.-Inf."
+      )
+  log AcademicTitle.create!(
+        title: "Diplom Ingineur.",
+        short: "Dipl. Ing."
+      )
+  log AcademicTitle.create!(
+        title: "Professor",
+        short: "Prof"
+      )
+
+end
+
+
 block 'create users' do
   log u = User.create!(
                        matriculation_number: 890,

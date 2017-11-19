@@ -308,13 +308,29 @@ private
     return unless (current_user.roles.include?(Role.find_by_name('Admin')) || 
                    current_user.roles.include?(Role.find_by_name('Secretary')) || 
                    current_user.roles.include?(Role.find_by_name('UserAdmin')))
-    
     @user.entered_apprentice_since = params[:user][:entered_apprentice_since]
     @user.fellow_craft_since = params[:user][:fellow_craft_since]
     @user.master_mason_since = params[:user][:master_mason_since]
-
-    params[:user][:role_ids] << Role.find_by_name('EnteredApprentice').id if(@user.entered_apprentice_since)
-    params[:user][:role_ids] << Role.find_by_name('FellowCraft').id if(@user.fellow_craft_since)
-    params[:user][:role_ids] << Role.find_by_name('MasterMason').id if(@user.master_mason_since)
+    
+    #params[:user][:role_ids] << Role.find_by_name('EnteredApprentice').id if(@user.entered_apprentice_since)
+    #params[:user][:role_ids] << Role.find_by_name('FellowCraft').id if(@user.fellow_craft_since)
+    #params[:user][:role_ids] << Role.find_by_name('MasterMason').id if(@user.master_mason_since)
   end
+
+  def user_params
+    if current_user.secretary? || current_user.admin?
+      params.require(:user).permit(:email, :password, :password_confirmation, :entered_apprentice_since, :fellow_craft_since, :master_mason_since, :academic_title_id, :firstname, :lastname, :date_of_birth, :academic_title_id, :accepted_at, :mother_lodge, :role_id, :role_ids, :matriculation_number)
+    else
+      params.require(:user).permit(:password, :password_confirmation, :job_title, :academic_title_id, :academic_title)
+    end
+
+    
+=begin    
+    :email, :password, :password_confirmation, :remember_me,
+      :firstname, :lastname, :date_of_birth, :academic_title_id,
+      :accepted_at, :mother_lodge, :role_id, :role_ids, :matriculation_number, :job_title,
+      :entered_apprentice_since, :fellow_craft_since, :master_mason_since
+=end
+  end
+  
 end

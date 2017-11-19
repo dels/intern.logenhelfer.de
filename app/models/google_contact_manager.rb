@@ -156,10 +156,8 @@ class GoogleContactManager
     rescue Exception => e
       Rails.logger.fatal("could not update #{contact.name}: #{e.inspect}")
       return nil
+    end
     xml_resp
   end
-
-
-  private
 
 end

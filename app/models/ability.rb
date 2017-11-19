@@ -1,5 +1,63 @@
 class Ability
   include CanCan::Ability
+
+  # admin
+  def admin_abilities
+    worshipful_master_abilities
+    secretary_abilities
+    net_delegate_abilities
+    user_admin_abilities
+    application_admin_abilities
+    member_of_council_abilities
+    can :manage, Statistic
+  end
+  
+  # korrespondierender Schriftfuehrer
+  def secretary_abilities
+    working_plan_admin_abilities
+    announcement_admin_abilities
+    lodges_admin_abilites
+    file_admin_abilities
+    user_admin_abilities
+    can :manage, Statistic
+  end
+
+  # Meister vom Stuhl
+  def worshipful_master_abilities
+    working_plan_admin_abilities
+    announcement_admin_abilities
+    file_admin_abilities
+    lodges_admin_abilites
+    can :manage, Seeker
+  end
+  
+  # Internet-Beauftragter
+  def net_delegate_abilities
+    file_admin_abilities
+    user_admin_abilities
+    can :manage, Statistic
+  end
+  
+  # Mitglied des Beamtenrates
+  def member_of_council_abilities
+    can [:index, :file_stats, :user_stats, :user_file_stats, :space_stats], Statistic
+    can [:csv_export], User
+    can [:index, :show, :accepted, :inactive, :declined], Seeker
+  end
+
+  #
+  def file_admin_abilities
+    can :manage, Category
+    can :manage, Directory
+    can :manage, AttachedFile
+  end
+
+  def user_admin_abilities
+    can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update, :destroy, :create, :csv_export], User, ["users.deleted = false"] do |u|
+      AppConfig[:show_admins] || @user.admin? || !u.admin?
+    end
+    can :manage, UserRole
+  end
   
   def initialize(user)
     can :workingplan, Event
@@ -7,12 +65,9 @@ class Ability
     @user = user
     
     @user.roles.each do |role|
-      archive = AppConfig[:archive] ? 'archive_' : ''
-      method = :"#{role.name.underscore}_#{archive}abilities"
+      method = :"#{role.name.underscore}_abilities"
       self.send(method) if self.respond_to?(method)
     end
-    can [:show, :edit, :update, :update_announcement_subscription, :google_sync, :create_google_contact], User, id: @user.id unless AppConfig[:archive]
-    #    can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
     can [:index, :show], Announcement
     can [:index, :show], ExternalEvent
     can [:add_me, :remove_me], ExternalEvent, user_id: @user.id
@@ -45,12 +100,6 @@ class Ability
     can :manage, Officer
   end
 
-  def user_admin_abilities
-    can [:index, :show, :members_list, :phone_list, :birthday_list, :edit, :update, :destroy, :create, :csv_export], User, ["users.deleted = false"] do |u|
-      AppConfig[:show_admins] || @user.admin? || !u.admin?
-    end
-    can :manage, UserRole
-  end
   
   def application_admin_abilities
     can :manage, AppConfig
@@ -65,77 +114,21 @@ class Ability
     can :manage, ExternalEvent
   end
   
-  # korrespondierender Schriftfuehrer
-  def secretary_abilities
-    working_plan_admin_abilities
-    announcement_admin_abilities
-    lodges_admin_abilites
-    file_admin_abilities
-    user_admin_abilities
-    can :manage, Statistic
-  end
-  
-  def secretary_archive_abilities
-    can [:index, :show], Event
-    can [:index, :show], User
-    
-  end
-  
-  # Deft
-  def admin_abilities
-    worshipful_master_abilities
-    secretary_abilities
-    member_of_council_abilities
-    net_delegate_abilities
-    user_admin_abilities
-    application_admin_abilities
-    can :manage, Statistic
-  end
-  
-  def admin_archive_abilities
-    # can [:index, :show, :destroy], Event
-    can [:index, :show, :destroy], Category
-    can [:index, :show, :destroy], Directory
-    can [:index, :show, :destroy], AttachedFile
-    can [:index, :show], User
-  end
-  
   def announcement_admin_abilities
     can :manage, Announcement
-  end
-  
-  def announcement_admin_archive_abilities
-    can :manage, Announcement
-  end
-  
-  #
-  def file_admin_abilities
-    can :manage, Category
-    can :manage, Directory
-    can :manage, AttachedFile
-  end
-  
-  def file_admin_archive_abilities
-    can [:index, :show, :destroy], Category
-    can [:index, :show, :destroy], Directory
-    can [:index, :show, :destroy], AttachedFile
   end
   
   # Lehrling
   def entered_apprentice_abilities
     can [:google_sync, :create_google_contact, :update_google_contact], User
+    can [:show, :edit, :update, :update_announcement_subscription], User, id: @user.id
+    #    can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
   end
 
-  def entered_apprentice_archive_abilities
-    
-  end
   
   # Geselle
   def fellow_craft_abilities
     entered_apprentice_abilities
-  end
-  
-  def fellow_craft_archive_abilities
   end
   
   # Meister
@@ -143,40 +136,7 @@ class Ability
     fellow_craft_abilities
   end
   
-  def master_mason_archive_abilities
-  end
   
-  # Meister vom Stuhl
-  def worshipful_master_abilities
-    working_plan_admin_abilities
-    announcement_admin_abilities
-    file_admin_abilities
-    lodges_admin_abilites
-    can :manage, Seeker
-  end
-  
-  def worshipful_master_archive_abilities
-  end
-  
-  # Mitglied des Beamtenrates
-  def member_of_council_abilities
-    can [:index, :file_stats, :user_stats, :user_file_stats, :space_stats], Statistic
-    can [:csv_export], User
-    can [:index, :show, :accepted, :inactive, :declined], Seeker
-  end
-  
-  def member_of_council_archive_abilities
-  end
-  
-  # Internet-Beauftragter
-  def net_delegate_abilities
-    file_admin_abilities
-    user_admin_abilities
-    can :manage, Statistic
-  end
-  
-  def net_delegate_archive_abilities
-  end
 end
 
 
