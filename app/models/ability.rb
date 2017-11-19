@@ -1,6 +1,32 @@
 class Ability
   include CanCan::Ability
 
+  def default_user_abilities
+    can [:google_sync, :create_google_contact, :update_google_contact], User
+    can [:show, :edit, :update, :update_announcement_subscription], User, id: @user.id
+    #    can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
+    can [:index, :show], Announcement
+    can [:index, :show], ExternalEvent
+    can [:add_me, :remove_me], ExternalEvent, user_id: @user.id
+    can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
+    can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
+      [] != (c.roles & @user.roles)
+    end
+    can [:index, :show], Directory, ['directories.deleted = ?', false] do |d|
+      [] != (d.roles & @user.roles)
+    end
+    can [:index, :show, :download], AttachedFile, ['attached_files.deleted = ?', false] do |f|
+      [] != (f.roles & @user.roles)
+    end
+    admin_role = Role.find_by_name("Admin")
+    user_admin_role = Role.find_by_name("UserAdmin")
+    
+    can [:index, :show, :members_list, :phone_list, :birthday_list, :members_of_council, :file_io_link], User, ["users.deleted = false"] { |u|
+      AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
+    }
+    can [:index, :file_stats, :mem_stats, :downloads], Statistic
+  end
+  
   # admin
   def admin_abilities
     worshipful_master_abilities
@@ -68,26 +94,8 @@ class Ability
       method = :"#{role.name.underscore}_abilities"
       self.send(method) if self.respond_to?(method)
     end
-    can [:index, :show], Announcement
-    can [:index, :show], ExternalEvent
-    can [:add_me, :remove_me], ExternalEvent, user_id: @user.id
-    can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
-    can [:index, :show], Category, ['categories.deleted = ?', false] do |c|
-      [] != (c.roles & @user.roles)
-    end
-    can [:index, :show], Directory, ['directories.deleted = ?', false] do |d|
-      [] != (d.roles & @user.roles)
-    end
-    can [:index, :show, :download], AttachedFile, ['attached_files.deleted = ?', false] do |f|
-      [] != (f.roles & @user.roles)
-    end
-    admin_role = Role.find_by_name("Admin")
-    user_admin_role = Role.find_by_name("UserAdmin")
+
     
-    can [:index, :show, :members_list, :phone_list, :birthday_list, :members_of_council, :file_io_link], User, ["users.deleted = false"] do |u|
-      AppConfig[:show_admins] || @user.roles.include?(admin_role) || !u.roles.include?(admin_role)
-    end
-    can [:index, :file_stats, :mem_stats, :downloads], Statistic
   end
   
   def working_plan_admin_abilities
@@ -120,9 +128,7 @@ class Ability
   
   # Lehrling
   def entered_apprentice_abilities
-    can [:google_sync, :create_google_contact, :update_google_contact], User
-    can [:show, :edit, :update, :update_announcement_subscription], User, id: @user.id
-    #    can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
+    default_user_abilities
   end
 
   

@@ -1,7 +1,5 @@
 class UsersController < AuthorizedController
   helper_method :sort_column, :sort_direction
-  
-  before_filter :authenticate_user!
   load_and_authorize_resource :find_by => :uuid
   
   def index
@@ -231,7 +229,7 @@ class UsersController < AuthorizedController
       [
         :matriculation_number, :email, :firstname, :lastname, :date_of_birth,
         :accepted_at, :entered_apprentice_since, :fellow_craft_since,
-        :master_mason_since, :title, :academic_title
+        :master_mason_since
       ].each do |attribute|
         params[:user].delete(attribute)
       end
@@ -312,25 +310,63 @@ private
     @user.fellow_craft_since = params[:user][:fellow_craft_since]
     @user.master_mason_since = params[:user][:master_mason_since]
     
-    #params[:user][:role_ids] << Role.find_by_name('EnteredApprentice').id if(@user.entered_apprentice_since)
-    #params[:user][:role_ids] << Role.find_by_name('FellowCraft').id if(@user.fellow_craft_since)
-    #params[:user][:role_ids] << Role.find_by_name('MasterMason').id if(@user.master_mason_since)
+    params[:user][:role_ids] << Role.find_by_name('EnteredApprentice').id if(@user.entered_apprentice_since)
+    params[:user][:role_ids] << Role.find_by_name('FellowCraft').id if(@user.fellow_craft_since)
+    params[:user][:role_ids] << Role.find_by_name('MasterMason').id if(@user.master_mason_since)
   end
 
   def user_params
     if current_user.secretary? || current_user.admin?
-      params.require(:user).permit(:email, :password, :password_confirmation, :entered_apprentice_since, :fellow_craft_since, :master_mason_since, :academic_title_id, :firstname, :lastname, :date_of_birth, :academic_title_id, :accepted_at, :mother_lodge, :role_id, :role_ids, :matriculation_number)
+      params.require(:user).permit(:email,
+                                   :password,
+                                   :password_confirmation,
+                                   :entered_apprentice_since,
+                                   :fellow_craft_since,
+                                   :master_mason_since,
+                                   :academic_title_id,
+                                   :firstname,
+                                   :lastname,
+                                   :date_of_birth,
+                                   :academic_title_id,
+                                   :accepted_at,
+                                   :mother_lodge,
+                                   :matriculation_number,
+                                   { role_ids: []},
+                                   { address_attributes: [:id,
+                                                          :type_of_address,
+                                                          :purpose,
+                                                          :street1,
+                                                          :street2,
+                                                          :street3,
+                                                          :zip,
+                                                          :city,
+                                                          :phone,
+                                                          :fax,
+                                                          :mobile,
+                                                          :email, :remarks
+                                                         ]}
+                                  )
     else
-      params.require(:user).permit(:password, :password_confirmation, :job_title, :academic_title_id, :academic_title)
+      params.require(:user).permit(:password,
+                                   :password_confirmation,
+                                   :job_title,
+                                   :academic_title_id,
+                                   :academic_title,
+                                   { address_attributes: [:id,
+                                                          :type_of_address,
+                                                          :purpose,
+                                                          :street1,
+                                                          :street2,
+                                                          :street3,
+                                                          :zip,
+                                                          :city,
+                                                          :phone,
+                                                          :fax,
+                                                          :mobile,
+                                                          :email, :remarks
+                                                         ]}
+                                  )
     end
-
-    
-=begin    
-    :email, :password, :password_confirmation, :remember_me,
-      :firstname, :lastname, :date_of_birth, :academic_title_id,
-      :accepted_at, :mother_lodge, :role_id, :role_ids, :matriculation_number, :job_title,
-      :entered_apprentice_since, :fellow_craft_since, :master_mason_since
-=end
   end
   
 end

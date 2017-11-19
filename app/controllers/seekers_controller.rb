@@ -1,4 +1,4 @@
-class SeekersController < AuthorizedController
+class SeekersController < AuthorizedController #ApplicationController
   helper_method :sort_column, :sort_direction
   load_and_authorize_resource :find_by => :uuid
   
@@ -56,6 +56,30 @@ class SeekersController < AuthorizedController
 
   def sort_column
     (Seeker.column_names).include?(params[:sort_by]) ? params[:sort_by] : "lastname ASC, firstname"
+  end
+
+  def seeker_params
+    params.require(:seeker).permit(:firstname,
+                                   :lastname,
+                                   :source,
+                                   :status,
+                                   :invite,
+                                   :preferred_way_of_contact,
+                                   :notes,
+                                   { address_attributes: [:id,
+                                                          :type_of_address,
+                                                          :purpose,
+                                                          :street1,
+                                                          :street2,
+                                                          :street3,
+                                                          :zip,
+                                                          :city,
+                                                          :phone,
+                                                          :fax,
+                                                          :mobile,
+                                                          :email, :remarks
+                                                         ]}
+                                  )
   end
 
 end

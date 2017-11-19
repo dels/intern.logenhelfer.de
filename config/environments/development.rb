@@ -42,4 +42,5 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: 'localhost:5800' }
   config.action_mailer.delivery_method = :letter_opener
   
+  config.action_controller.action_on_unpermitted_parameters = :raise
 end

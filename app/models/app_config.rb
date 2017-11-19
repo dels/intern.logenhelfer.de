@@ -53,7 +53,7 @@ module AppConfig
         end
         @@access_times[key] = Time.now
       end
-      Rails.logger.warn("--> #{key} was requested returning: #{@@records[key].try(:value)}.")
+      # Rails.logger.warn("--> #{key} was requested returning: #{@@records[key].try(:value)}.")
       @@records[key].try :value
     end
 
