@@ -5,6 +5,7 @@
 //= require jquery.contextMenu
 //= require autolink_table_rows
 //= require calendar
+//= require addresses
 //= require select2
 //= require html54ie
 //= require jquery.mailto

@@ -237,6 +237,7 @@ class UsersController < AuthorizedController
     end
 
     # FIXME: there must be a much more elegant way to solve this issue
+    Rails.logger.warn("####################################  params addresses: #{params[:user][:addresses_attributes]}")
     begin
       if @user.update_attributes(params[:user])
         deleted_addresses = []
@@ -334,7 +335,7 @@ private
                                    :mother_lodge,
                                    :matriculation_number,
                                    { role_ids: []},
-                                   { address_attributes: [:id,
+                                   { addresses_attributes: [:id,
                                                           :type_of_address,
                                                           :purpose,
                                                           :street1,
@@ -345,7 +346,9 @@ private
                                                           :phone,
                                                           :fax,
                                                           :mobile,
-                                                          :email, :remarks
+                                                          :email,
+                                                          :remarks,
+                                                          :_destroy
                                                          ]}
                                   )
     else
@@ -357,7 +360,7 @@ private
                                    :job_title,
                                    :academic_title_id,
                                    :academic_title,
-                                   { address_attributes: [:id,
+                                   { addresses_attributes: [:id,
                                                           :type_of_address,
                                                           :purpose,
                                                           :street1,
@@ -368,7 +371,9 @@ private
                                                           :phone,
                                                           :fax,
                                                           :mobile,
-                                                          :email, :remarks
+                                                          :email,
+                                                          :remarks,
+                                                            :_destroy
                                                          ]}
                                   )
     end

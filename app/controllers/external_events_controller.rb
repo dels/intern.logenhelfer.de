@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 class ExternalEventsController < AuthorizedController
-
+  load_and_authorize_resource :find_by => :uuid
+  
   def index
     @external_events = ExternalEvent.where('date >= ?', Date.today - 1.day).order('date ASC, time ASC')
   end

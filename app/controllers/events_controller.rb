@@ -287,4 +287,17 @@ private
     send_data pdf.render, type: "application/pdf", filename: filename
   end
 
+  private
+
+  def event_params
+    params.require(:event).permit(:title,
+                                  :date,
+                                  :location,
+                                  :whole_day,
+                                  :time,
+                                  :public_description,
+                                  :private_description
+                                 )
+  end
+  
 end

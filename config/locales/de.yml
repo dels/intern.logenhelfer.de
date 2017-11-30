@@ -510,6 +510,7 @@ de:
       default: ! '%d.%m.%Y'
       long: ! '%e. %B %Y'
       short: ! '%e. %b'
+      time: "%A, %d. %B %Y, %H:%M Uhr"
   datetime:
     distance_in_words:
       about_x_hours:
@@ -920,7 +921,7 @@ de:
       default: "%A, %d. %B %Y, %H:%M Uhr"
       long: "%A, %d. %B %Y, %H:%M Uhr"
       short: "%d. %B, %H:%M Uhr"
-      date_only: "%A, %d. %B %Y" 
+      date_only: "%A, %d. %B %Y"
     pm: nachmittags
   unauthorized:
     default: You are not authorized to access this page.

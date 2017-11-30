@@ -8,18 +8,22 @@ module ApplicationHelper
     link_to title, {:sort_by => column, :direction => direction}, {:class => css_class}
   end
 
+  # FIXME moved to address helper
   def link_to_remove_fields(name, f, js_function=:remove_fields)
     f.hidden_field(:_destroy) + link_to_function(name, js_functions_collection(js_function))
   end
 
+  # FIXME moved to address helper
   def link_to_add_fields(name, f, association, js_function=:add_fields)
     new_object = f.object.class.reflect_on_association(association).klass.new
     fields = f.fields_for(association, new_object, :child_index => "new_#{association}") do |builder|
       render(association.to_s.pluralize + "/form_fields", :f => builder)
     end
-    link_to_function(name, js_functions_collection(js_function)[association, fields])
+    # was: link_to_function(name, js_functions_collection(js_function)[association, fields])
+    #link_to(name, '')
   end
-
+  
+  # FIXME moved to address helper
   def js_functions_collection which
     @signatures ||= {
       add_fields: ->(assoc, fields) {

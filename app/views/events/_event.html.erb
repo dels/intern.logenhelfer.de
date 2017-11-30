@@ -13,7 +13,7 @@
     <%- if event.whole_day? -%>
       <span class="time">ganztags:</span>
     <%- else -%>
-      <span class="time"><%= l event.time, format: :time %> Uhr:</span>
+      <span class="time"><%= l event.time, format: :default %> Uhr:</span>
     <%- end -%>
     <%= event.title %>
   </h3>
