@@ -290,6 +290,7 @@ private
   private
 
   def event_params
+    return unless can?(:manage, Event)
     params.require(:event).permit(:title,
                                   :date,
                                   :location,

@@ -922,6 +922,7 @@ de:
       long: "%A, %d. %B %Y, %H:%M Uhr"
       short: "%d. %B, %H:%M Uhr"
       date_only: "%A, %d. %B %Y"
+      pure_time: "%H:%M"
     pm: nachmittags
   unauthorized:
     default: You are not authorized to access this page.
