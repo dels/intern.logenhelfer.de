@@ -1,7 +1,7 @@
 class LodgesController < AuthorizedController
   helper_method :sort_column, :sort_direction
 
-  load_and_authorize_resource :find_by => :uuid
+  load_and_authorize_resource :find_by => :slug
   
   def index
   end
@@ -43,4 +43,13 @@ class LodgesController < AuthorizedController
   def sort_column
     (Officer.column_names).include?(params[:sort_by]) ? params[:sort_by] : "lastname"
   end
+
+  def lodge_params
+    params.require(:lodge).permit(:lodge,
+                                  :district_id,
+                                  :name,
+                                  :description
+                                 )
+  end
+  
 end

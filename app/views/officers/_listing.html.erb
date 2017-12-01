@@ -18,9 +18,9 @@
       <td><%= officer.role.display_name %></td>
       <td><%= mail_to(officer.role_email, officer.role_email) %></td>
       <td>
-        <%= show_link_to officer if can?(:show, officer) %>
-        <%= edit_link_to officer if can?(:edit, officer) %>
-        <%= destroy_link_to officer if can?(:destroy, officer) %>
+        <%= show_link_to @officer if can?(:show, @officer) %>
+        <%= edit_link_to @officer if can?(:edit, @officer) %>
+        <%= destroy_link_to @officer if can?(:destroy, @officer) %>
       </td>
     </tr>
   <% end %>
