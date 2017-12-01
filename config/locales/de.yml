@@ -811,6 +811,29 @@ de:
       default: "%d.%m.%Y"
       long: "%e. %B %Y"
       short: "%e. %b"
+      month_year: "%b %Y"
+    abbr_day_names:
+      - So
+      - Mo
+      - Di
+      - Mi
+      - Do
+      - Fr
+      - Sa
+    abbr_month_names:
+      -
+      - Jan
+      - Feb
+      - Mär
+      - Apr
+      - Mai
+      - Jun
+      - Jul
+      - Aug
+      - Sep
+      - Okt
+      - Nov
+      - Dez
     month_names:
     -
     - Januar

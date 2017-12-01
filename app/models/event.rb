@@ -76,7 +76,6 @@ class Event < ActiveRecord::Base
       next if event.public_description.blank?
       event.ical_event(cal)
     end
-
     cal.to_ical
   end
 end

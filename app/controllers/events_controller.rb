@@ -48,7 +48,7 @@ class EventsController < ApplicationController #AuthorizedController
     respond_to do |format|
       format.html do
         @from   = Date.today
-        @to     = (@from + 2.month)
+        @to     = (Date.today + 2.month)
         @events = @events.where('date >= ? AND date <= ?', @from, @to).order('date ASC, whole_day ASC, time ASC')
         fd.filename = "Arbeitsplan (Abruf per HTML)"
         fd.save!

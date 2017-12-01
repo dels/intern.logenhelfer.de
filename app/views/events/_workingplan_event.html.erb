@@ -1,6 +1,6 @@
 <div class="event small">
   <div class="date">
-    <span class="month"><%= l(date, format: '%b').upcase %></span>
+    <span class="month"><%= l(date, format: '%b') %></span>
     <span class="day"><%= l date, format: '%d' %></span>
     <span class="dow"><%= l(date, format: '%a').upcase %></span>
     <span class="year"><%= l date, format: '%Y' %></span>
@@ -11,7 +11,7 @@
       <%- if event.whole_day? -%>
         <span class="time">ganztags:</span>
       <%- else -%>
-        <span class="time"><%= l event.time, format: :time %> Uhr:</span>
+        <span class="time"><%= l event.time, format: :pure_time %> Uhr:</span>
       <%- end -%>
       <%= event.title %>
     </h3>
