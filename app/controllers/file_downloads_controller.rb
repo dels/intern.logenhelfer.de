@@ -1,4 +1,4 @@
-class FileDownloadsController < ApplicationController
+class FileDownloadsController < AuthorizedController
   load_and_authorize_resource
 
   def index

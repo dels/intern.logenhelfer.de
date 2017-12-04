@@ -257,7 +257,7 @@
   </table>
   <dl class="buttons">
     <dt>&nbsp;</dt>
-    <dd><%= submit_tag t('helpers.button.update', model: t('activerecord.models.app_config')), name: nil %></dd>
+    <dd><%= submit_tag t('helpers.button.update', model: t('activerecord.models.app_config')), name: nil, id: "commit_config" %></dd>
   </dl>
 <%- end -%>
 
@@ -268,14 +268,15 @@
   <dt><%= t '.header.districts' %></dt>
   <dd>
     <table class="narrow">
-      <%- @districts.each do |d| -%>
+      <%- @districts.each do |district| -%>
         <tr>
-          <td class="wide-25em"><%= best_in_place d, :name %></td>
-          <td><%#= d.lodges.count 
-                   %> <%#= t 'activerecord.models.lodges' 
-                                          %></td>
-          <td><%= destroy_link_to d # if d.lodges.count.zero?
-                  %></td>
+          <td class="wide-25em"><%= best_in_place district, :name %></td>
+          <td>
+            <%= district.lodges.count %>
+            <%#= t 'activerecord.models.lodges' %>
+          </td>
+          <td>
+            <%= destroy_link_to district %></td>
         </tr>
       <%- end -%>
     </table>
@@ -285,7 +286,7 @@
   <dd>
     <%= form_for District.new do |f| -%>
       <%= f.text_field :name %>
-      <%= f.submit %>
+      <%= f.submit(id:  "commit_district") %>
     <%- end -%>
   </dd>
 </dl>
@@ -311,7 +312,7 @@
   <dd>
     <%= form_for AcademicTitle.new do |f| -%>
       <%= f.text_field :short %>
-      <%= f.submit %>
+      <%= f.submit(id:  "commit_acdemic_title") %>
     <%- end -%>
   </dd>
 </dl>

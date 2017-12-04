@@ -377,6 +377,51 @@ block 'create files' do
   
 end
 
+hh = nil
+hb = nil
+h = nil
+block 'create districts' do
+  log hh = District.create!(
+        name: "Hamburg"
+      )
+  log hb = District.create!(
+        name: "Bremen"
+      )
+    log h = District.create!(
+        name: "Hannover"
+      )
+end
+
+ss = nil
+baer = nil
+block 'create lodges' do
+  log ss = Lodge.create!(
+        district_id: hb.id,
+        name: "Silberner Schlüssel"
+      )
+    log baer = Lodge.create!(
+        district_id: h.id,
+        name: "Zum schwarzen Bär"
+      )
+end
+
+block 'create officers' do
+  log Officer.create!(
+        firstname: "Mark A.",
+        lastname: "Waldmann",
+        lodge_id: baer.id,
+        role_email: "Sekretaer@zum-schwarzen-baer.de",
+        role_id: sr.id
+      )
+  log Officer.create!(
+        firstname: "Roland",
+        lastname: "Kerstein",
+        lodge_id: ss.id,
+        role_email: "mvst@silberner-schluessel.de",
+        role_id: wm.id
+      )
+end
+
 
 block 'configuring app' do
   {

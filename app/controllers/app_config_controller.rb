@@ -1,6 +1,7 @@
-class AppConfigController < ApplicationController
-  before_filter :authenticate_user!
+class AppConfigController < AuthorizedController
 
+  authorize_resource
+  
   def index
     @config_keys = AppConfig.keys
     @academic_titles = AcademicTitle.undeleted.all

@@ -1,4 +1,4 @@
-class CategoriesController < ApplicationController
+class CategoriesController < AuthorizedController
   helper_method :sort_column, :sort_direction
   load_and_authorize_resource :except => :create, :find_by => :slug
   

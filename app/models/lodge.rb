@@ -9,4 +9,14 @@ class Lodge < ActiveRecord::Base
   has_many :officers
 
   default_scope { where(:deleted => false) }
+
+  after_save do |lodge|
+    next unless deleted
+    officers.each do |officer|
+      Rails.logger.debug("deleting officer #{officer.fullname}")
+      officer.deleted = true
+      officer.save
+    end
+  end
+
 end

@@ -8,4 +8,14 @@ class District < ActiveRecord::Base
 
   default_scope { where(:deleted => false) }
   default_scope { order('name ASC') }
+
+  after_save do |district|
+    next unless deleted
+    self.lodges.each do |lodge|
+      Rails.logger.debug("deleting lodge #{lodge.name}")
+      lodge.deleted = true
+      lodge.save!
+    end    
+  end
+
 end

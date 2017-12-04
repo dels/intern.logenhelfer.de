@@ -12,4 +12,9 @@ class Officer < ActiveRecord::Base
   validates_presence_of :firstname, :lastname, :role_id, :role_email, :lodge_id
 
   default_scope { where(:deleted => false) }
+
+  def fullname
+    "#{firstname} #{lastname}"
+  end
+  
 end

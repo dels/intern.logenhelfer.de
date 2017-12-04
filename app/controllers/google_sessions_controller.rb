@@ -1,4 +1,5 @@
-class GoogleSessionsController < ApplicationController
+class GoogleSessionsController < AuthorizedController
+  
   def create
     user = User.from_omniauth(current_user, env["omniauth.auth"])
     session[:google_user_id] = user.id

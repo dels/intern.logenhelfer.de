@@ -1,4 +1,5 @@
-class SeekersController < AuthorizedController #ApplicationController
+
+class SeekersController < AuthorizedController
   helper_method :sort_column, :sort_direction
   load_and_authorize_resource :find_by => :uuid
   
@@ -77,7 +78,9 @@ class SeekersController < AuthorizedController #ApplicationController
                                                           :phone,
                                                           :fax,
                                                           :mobile,
-                                                          :email, :remarks
+                                                          :email,
+                                                          :remarks,
+                                                          :_destroy
                                                          ]}
                                   )
   end
