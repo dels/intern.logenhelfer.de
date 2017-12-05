@@ -108,7 +108,7 @@ block 'create users' do
   u.roles << ar
   u.save!
   log u = User.create!(
-                       matriculation_number: 891,
+                       matriculation_number: 890,
                        email: 'uploader@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "Hoch",
@@ -123,7 +123,7 @@ block 'create users' do
   u.save!
 
   log u = User.create!(
-                       matriculation_number: 892,
+                       matriculation_number: 890,
                        email: 'sekretaer@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "Korrespondierender",
@@ -137,7 +137,7 @@ block 'create users' do
   u.roles << sr
   u.save!
   log u = User.create!(
-                       matriculation_number: 896,
+                       matriculation_number: 890,
                        email: 'schaffer@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "Erster",
@@ -151,7 +151,7 @@ block 'create users' do
   u.roles << sd
   u.save!
   log u = User.create!(
-                       matriculation_number: 924,
+                       matriculation_number: 890,
                        email: 'mvst@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "Meister",
@@ -165,7 +165,7 @@ block 'create users' do
   u.roles << wm
   u.save!
   log u = User.create!(
-                       matriculation_number: 893,
+                       matriculation_number: 890,
                        email: 'meister@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "master",
@@ -179,7 +179,7 @@ block 'create users' do
   u.master_mason_since = Date.today - 1.years
   u.save!
   log u = User.create!(
-                       matriculation_number: 894,
+                       matriculation_number: 890,
                        email: 'geselle@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "fellow",
@@ -192,7 +192,7 @@ block 'create users' do
   u.fellow_craft_since = Date.today - 1.year
   u.save!
   log u = User.create!(
-                       matriculation_number: 895,
+                       matriculation_number: 890,
                        email: 'lehrling@logenhelfer.de',
                        password: 'jakin1024',
                        firstname: "entered",

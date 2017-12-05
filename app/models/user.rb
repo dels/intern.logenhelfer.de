@@ -13,7 +13,7 @@ class User < ActiveRecord::Base
   attr_accessor :google_edit_url, :google_self_url
   
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
-  validates_uniqueness_of :matriculation_number
+  validate :validate_matriculation_number
   validate :validate_addresses
   validate :validate_degrees
   validate :validate_roles, :on => :update
@@ -212,6 +212,15 @@ class User < ActiveRecord::Base
   def app_responsible?
     return true if admin? or secretary? or worshipful_master? or net_delegate?
     false
+  end
+
+  def validate_matriculation_number
+    doubles = User.where(matriculation_number: matriculation_number)
+    unless doubles.empty?
+      Rails.logger.debug("found entry with m nr #{matriculation_number} (#{doubles.first.fullname})")
+      self.matriculation_number = User.maximum(:matriculation_number) + 1
+      Rails.logger.debug("set m nr to #{self.matriculation_number} for #{fullname}")
+    end
   end
   
   def validate_degrees
