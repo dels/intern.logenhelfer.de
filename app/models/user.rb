@@ -13,6 +13,7 @@ class User < ActiveRecord::Base
   attr_accessor :google_edit_url, :google_self_url
   
   validates_presence_of :firstname, :lastname, :date_of_birth, :matriculation_number
+  # FIXME: should be before create and we should have a uniqueness of clause here
   validate :validate_matriculation_number
   validate :validate_addresses
   validate :validate_degrees
@@ -216,6 +217,9 @@ class User < ActiveRecord::Base
 
   def validate_matriculation_number
     doubles = User.where(matriculation_number: matriculation_number)
+    if doubles && self.id
+      doubles = doubles.where("id != #{self.id}")
+    end
     unless doubles.empty?
       Rails.logger.debug("found entry with m nr #{matriculation_number} (#{doubles.first.fullname})")
       self.matriculation_number = User.maximum(:matriculation_number) + 1
