@@ -80,4 +80,15 @@ class ExternalEventsController < AuthorizedController
     redirect_to external_events_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.external_event"))
   end
 
+  private
+
+  def external_event_params
+    params.require(:external_event).permit(:title,
+                                           :time,
+                                           :date,
+                                           :host,
+                                           :location,
+                                           :description)
+  end
+  
 end

@@ -28,4 +28,13 @@ private
   def sort_column
     (Role.column_names).include?(params[:sort_by]) ? params[:sort_by] : "display_name ASC"
   end
+
+  def role_params
+    params.require(:role).permit(:role,
+                                 :email,
+                                 :display_name
+    )
+    
+  end
+  
 end

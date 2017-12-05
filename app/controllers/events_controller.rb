@@ -267,7 +267,7 @@ private
         [
           wday,
           date,
-          event.whole_day? ? 'ganztags' : I18n.l(event.time, format: :pure_time),
+          event.whole_day? ? 'ganztags' : I18n.l(event.time, format: :time_only),
           internal ? event.private_description : event.public_description
         ]
       end

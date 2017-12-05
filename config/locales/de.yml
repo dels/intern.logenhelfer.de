@@ -218,7 +218,7 @@ de:
       long: "%A, %d. %B %Y, %H:%M Uhr"
       short: "%d. %B, %H:%M Uhr"
       date_only: "%A, %d. %B %Y"
-      pure_time: "%H:%M"
+      time_only: "%H:%M"
     pm: nachmittags
   contact_sync:
     title: 'Kontakte Synchronisieren'
