@@ -245,7 +245,7 @@ class UsersController < AuthorizedController
           deleted_addresses << a if a[:_destroy] == "1"
         end
         
-        UserMailer.change_notification(@user, deleted_addresses, current_user).deliver
+        UserMailer.change_notification(@user, deleted_addresses, current_user).deliver_later
         redirect_to @user, notice: t("activerecord.update_success", model: t("activerecord.models.user"))
       else
         render :edit

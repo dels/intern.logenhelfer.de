@@ -18,14 +18,14 @@ class Announcement < ActiveRecord::Base
 
   def notify_subscribers_new_announcement
     AnnouncementSubscription.all.each do |subscription|
-      UserMailer.announcement_published_notification(self, subscription.user).deliver
+      UserMailer.announcement_published_notification(self, subscription.user).deliver_later
     end
   end
 
   def notify_subscribers_announcement_updated
 # XXX: do we really want this? 
 #    AnnouncementSubscription.all.each do |subscription|
-#      UserMailer.announcement_updated_notification(self, subscription.user).deliver
+#      UserMailer.announcement_updated_notification(self, subscription.user).deliver_later
 #    end
   end
 

@@ -63,4 +63,3 @@ group :test do
   gem 'rspec-given'
   gem 'webrat'
 end
-

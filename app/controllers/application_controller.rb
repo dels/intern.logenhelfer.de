@@ -15,7 +15,7 @@ class ApplicationController < ActionController::Base
   end
   
   rescue_from CanCan::AccessDenied do |exception|
-    UserMailer.access_denied_notification(current_user, exception, request).deliver
+    UserMailer.access_denied_notification(current_user, exception, request).deliver_later
     logger.debug "Access denied on #{exception.action} #{exception.subject.inspect}"
     redirect_to login_url, alert: t("devise.error.access_denied")
   end

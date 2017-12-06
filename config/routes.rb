@@ -42,6 +42,7 @@ FwzeIntern::Application.routes.draw do
       resources :attached_files do
         member do
           get 'download'
+          get 'upload'
         end
       end
     end

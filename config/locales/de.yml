@@ -602,6 +602,7 @@ de:
     destroy_success: '%{model} wurde erfolgreich gelöscht.'
     subscription_successful: 'Anmeldung erfolgreich übermittel.'
     unsubscribing_successful: 'Abmeldung erfolgreich übermittel.'
+    file_upload_started: "Datei wird hochgeladen. Du bekommst eine E-Mail mit dem einmalig teilbaren Link. "
     errors:
       format: '%{attribute} %{message}'
       header: Fehlerhafte oder fehlende Einträge
@@ -802,6 +803,7 @@ de:
       user:
         signed_in: Anmeldung erfolgreich!
         signed_out: Sie haben sich erfolgreich abgemeldet.
+        already_signed_out: Sie haben sich erfolgreich abgemeldet.
     unlocks:
       send_instructions: You will receive an email with instructions about how to unlock your account in a few minutes.
       send_paranoid_instructions: 'If your account exists, you will receive an email with instructions about how to unlock it in a few minutes.'
@@ -951,6 +953,8 @@ de:
     default: You are not authorized to access this page.
   user_fields:
     address_attributes: Adressen
+  file_mailer:
+    file_uploaded: "Datei erfolgreich hochgeladen"
   user_mailer:
     change_notification:
       subject: Änderungsbenachrichtigung für Benutzer

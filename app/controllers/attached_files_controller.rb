@@ -76,6 +76,11 @@ class AttachedFilesController < ApplicationController
     redirect_to [@attached_file.directory.category, @attached_file.directory], notice: t("activerecord.destroy_success", model: t("activerecord.models.attached_file"))
   end
 
+  def upload
+    UploadToFileIoJob.perform_later(@attached_file, current_user)
+    redirect_to [@attached_file.directory.category, @attached_file.directory], notice: t("activerecord.file_upload_started")
+  end
+
   private
 
   def attached_file_params

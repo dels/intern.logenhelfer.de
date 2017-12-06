@@ -23,7 +23,7 @@ class ExternalEventsController < AuthorizedController
       eep.festive_board = params[:festive_board]
       eep.save!
     end
-    UserMailer.new_subscription_notification(cur_event, cur_user).deliver unless User.secretary == current_user
+    UserMailer.new_subscription_notification(cur_event, cur_user).deliver_later unless User.secretary == current_user
     redirect_to cur_event, notice: t("activerecord.subscription_successful")
   end
 
