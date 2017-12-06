@@ -1,5 +1,7 @@
 class AnnouncementsController < AuthorizedController
 
+  load_and_authorize_resource :find_by => :uuid
+  
   def index
   end
 
@@ -34,5 +36,10 @@ class AnnouncementsController < AuthorizedController
     @announcement.deleted = true
     @announcement.save
     redirect_to announcements_url, notice: t("activerecord.destroy_success", model: t("activerecord.models.announcement"))
+  end
+
+  def announcement_params
+    params.require(:announcement).permit(:title,
+                                         :message_body)
   end
 end

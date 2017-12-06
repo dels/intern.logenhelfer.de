@@ -1,6 +1,7 @@
 class CategoriesController < AuthorizedController
   helper_method :sort_column, :sort_direction
-  load_and_authorize_resource :except => :create, :find_by => :slug
+  
+  load_and_authorize_resource :find_by => :slug
   
   def index
     @categories = view_context.get_authorized_paginated(@categories.order(:name)).page(params[:page])
@@ -43,5 +44,13 @@ class CategoriesController < AuthorizedController
     (Directory.column_names).include?(params[:sort_by]) ? params[:sort_by] : "name"
   end
 
+  def category_params
+    params.require(:category).permit({:role_ids => [] },
+                                     :name,
+                                     :description
+                                    )
+  end
+
+  
 
 end
