@@ -1,13 +1,15 @@
 module AddressHelper
 
 
-  def link_to_add_fields(name, f, association)
+  def link_to_add_fields(name, f, association, js_function=:add_fields)
     new_object = f.object.send(association).klass.new
     id = new_object.object_id
     fields = f.fields_for(association, new_object, child_index: id) do |address|
       render(association.to_s.pluralize + "/form_fields", f: address)
     end
     link_to(name, '', class: "add_fields", data: { id: id, fields: fields.gsub("\n", "")})
+    #link_to(name, '', class: js_functions_collection(js_function)[association, fields], data: { id: id, fields: fields.gsub("\n", "")})
+    
   end
 
   def link_to_remove_fields(name, f, association)
@@ -30,7 +32,7 @@ module AddressHelper
     f.hidden_field(:_destroy) + link_to_function(name, js_functions_collection(js_function))
   end
 
-  
+=end  
   def js_functions_collection which
     @signatures ||= {
       add_fields: ->(assoc, fields) {
@@ -44,5 +46,5 @@ module AddressHelper
     }
     @signatures[which]
   end
-=end
+
 end

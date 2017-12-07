@@ -1,23 +1,24 @@
-#window.remove_fields = (link)->
-#  $link = $ link
-#  $link.prev('input[type=hidden]').val('1')
-#  $link.closest(".fields").hide()
+###
+window.remove_fields = (link)->
+  $link = $ link
+  $link.prev('input[type=hidden]').val('1')
+  $link.closest(".fields").hide()
 
-#window.remove_address_fields = (link)->
-#  $link = $ link
-#  $link.prev('input[type=hidden]').val('1')
-#  container = $link.closest(".fields")
-#  container.hide()
-#  purpose = container.find('.fields_for_type_of_address select')
-#  text = purpose.find("option[value="+purpose.val()+"]").text()
-#  purpose.val('2')
-#  $link.find('.fields_for_address_purpose input').val(text)
+window.remove_address_fields = (link)->
+  $link = $ link
+  $link.prev('input[type=hidden]').val('1')
+  container = $link.closest(".fields")
+  container.hide()
+  purpose = container.find('.fields_for_type_of_address select')
+  text = purpose.find("option[value="+purpose.val()+"]").text()
+  purpose.val('2')
+  $link.find('.fields_for_address_purpose input').val(text)
 
-#window.add_fields = (link, association, content)->
-#  new_id = new Date().getTime()
-#  regexp = new RegExp("new_#{association}", "g")
-#  $(link).parent().after(content.replace(regexp, new_id))
-#  restore_dynamicsm($(link).parent().parent(), association)
+window.add_fields = (link, association, content)->
+  new_id = new Date().getTime()
+  regexp = new RegExp("new_#{association}", "g")
+  $(link).parent().after(content.replace(regexp, new_id))
+  restore_dynamicsm($(link).parent().parent(), association)
 
 window.add_fields_bottom = (link, association, content)->
   new_id = new Date().getTime()
@@ -47,3 +48,4 @@ window.restore_dynamicsm = (anchor, association)->
 
 jQuery ->
   $("select.type_of_address").css({ width:'20em'}).select2().bind('change', set_purpose)
+###
