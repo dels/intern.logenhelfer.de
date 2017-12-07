@@ -34,9 +34,11 @@
     <%= f.submit %>
   </dl>
 
+  <h2><%= t 'user_fields.address_attributes' %></h2>
+
+
   <p><%= link_to_add_fields Address.human_attribute_name(:add_fields), f, :addresses %></p>
 
-  <h2><%= t 'user_fields.address_attributes' %></h2>
   <dl>
     <%= f.fields_for :addresses do |builder| %>
       <%= render 'addresses/form_fields', f: builder %>
