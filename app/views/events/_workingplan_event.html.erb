@@ -7,6 +7,7 @@
   </div>
 
   <%- events.each do |event| -%>
+  <div id="event_list_item">
     <h3>
       <%- if event.whole_day? -%>
         <span class="time">ganztags:</span>
@@ -16,10 +17,11 @@
       <%= event.title %>
     </h3>
     <%- unless event.birthday? -%>
-      <p class="map icon"><%= dash event.location %></p>
-      <div class="public top icon">
+      <p id="event_list_item_location" class="map icon"><%= dash event.location %></p>
+      <div id="event_list_item_public_description"  class="public top icon">
         <%= simple_format dash(event.public_description) %>
-      </div>
-    <%- end -%>
+    </div>
+  </div>
   <%- end -%>
+<%- end -%>
 </div>

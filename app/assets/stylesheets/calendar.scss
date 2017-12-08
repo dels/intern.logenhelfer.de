@@ -255,7 +255,19 @@ div.event {
     margin: 0;
   }
 
-  p.description {
+  
+  p.public_description {
+    margin: 1ex 0 1ex 14em;
+  }
+  p.private_description {
+    margin: 1ex 0 1ex 14em;
+  }
+  
+  p.edit_event {
+    margin: 1ex 0 1ex 14em;
+  }
+  
+  p.delete_event {
     margin: 1ex 0 1ex 14em;
   }
 

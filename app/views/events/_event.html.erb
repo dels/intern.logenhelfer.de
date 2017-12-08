@@ -8,7 +8,7 @@
       <span class="year"><%= l event.date, format: '%Y' %></span>
     </div>
   <%- end -%>
-
+  
   <h3>
     <%- if event.whole_day? -%>
       <span class="time">ganztags:</span>
@@ -20,17 +20,17 @@
   <%- unless event.birthday? -%>
     <p class="map icon"><%= dash event.location %></p>
     <p class="private icon label"><%= Event.human_attribute_name :private_description %>:</p>
-    <%= simple_format dash(event.private_description), class: 'description' %>
+    <%= simple_format dash(event.private_description), class: 'private_description' %>
     <p class="public icon label"><%= Event.human_attribute_name :public_description %>:</p>
-    <%= simple_format dash(event.public_description), class: 'description' %>
+    <%= simple_format dash(event.public_description), class: 'public_description' %>
 
     <p class="action icon label"><%= t '.actions' %></p>
-    <p class="description calendar icon"><%=  raw t '.ical_export', url: event_path(event, format: :ics) %></p>
+    <p class="public_description calendar icon"><%=  raw t '.ical_export', url: event_path(event, format: :ics) %></p>
     <%- if can?(:edit, event) -%>
-      <p class="description"><%= edit_link_to(event, true) %></p>
+      <p class="edit_event"><%= edit_link_to(event, true) %></p>
     <%- end -%>
     <%- if can?(:edit, event) -%>
-      <p class="description"><%= destroy_link_to(event, true) %></p>
+      <p class="delete_event"><%= destroy_link_to(event, true) %></p>
     <%- end -%>
 
     <p class="meta">
