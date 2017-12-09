@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171118170242) do
+ActiveRecord::Schema.define(version: 20171209220423) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -175,10 +175,10 @@ ActiveRecord::Schema.define(version: 20171118170242) do
   create_table "external_event_participants", force: :cascade do |t|
     t.integer  "user_id"
     t.integer  "external_event_id"
-    t.boolean  "subscription_sent", default: false
+    t.boolean  "subscription_confirmed", default: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "festive_board",     default: false
+    t.boolean  "festive_board",          default: false
   end
 
   create_table "external_events", force: :cascade do |t|

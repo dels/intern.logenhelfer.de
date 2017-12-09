@@ -353,13 +353,19 @@ class User < ActiveRecord::Base
     User.undeleted.count
   end
 
+  def subscribed_to_external_event?(event)
+    ExternalEvent.where(user_id: self.id).where(id: event.id)
+  end
+  
+
+
   def subscription_status(ext_event)
     eep = ExternalEventParticipant.where(:user_id => self.id).where(:external_event_id => ext_event.id)
     return I18n.t("text.external_event_subscription.not_subscribed") if eep.empty?
     eep = eep.first
-    if eep.subscription_sent
-      return I18n.t("text.external_event_subscription.subscription_to_work_sent") unless eep.festive_board
-      return I18n.t("text.external_event_subscription.subscription_to_work_and_festive_board_sent")
+    if eep.subscription_confirmed
+      return I18n.t("text.external_event_subscription.subscription_to_work_confirmed") unless eep.festive_board
+      return I18n.t("text.external_event_subscription.subscription_to_work_and_festive_board_confirmed")
     end
     return I18n.t("text.external_event_subscription.to_be_subscribed_to_work") unless eep.festive_board
     return I18n.t("text.external_event_subscription.to_be_subscribed_to_work_and_festive_board") 

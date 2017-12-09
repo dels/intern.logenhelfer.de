@@ -101,6 +101,7 @@ class Ability
   def working_plan_admin_abilities
     can :manage, Event
     can :manage, ExternalEvent
+    can :manage, ExternalEventParticipant
   end
   
   def lodges_admin_abilites

@@ -18,8 +18,8 @@
     </h3>
     <%- unless event.birthday? -%>
       <p id="event_list_item_location" class="map icon"><%= dash event.location %></p>
-      <div id="event_list_item_public_description"  class="public top icon">
-        <%= simple_format dash(event.public_description) %>
+      <div class="public top icon">
+        <%= simple_format dash(event.public_description), id: "event_list_item_public_description"   %>
     </div>
   </div>
   <%- end -%>

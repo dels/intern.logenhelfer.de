@@ -20,6 +20,7 @@ class ExternalEventsController < AuthorizedController
     ExternalEventParticipant.new do |eep|
       eep.user = cur_user
       eep.external_event = cur_event
+      eep.subscription_confirmed = false
       eep.festive_board = params[:festive_board]
       eep.save!
     end
@@ -33,6 +34,7 @@ class ExternalEventsController < AuthorizedController
     unless (eep = ExternalEventParticipant.where(:user_id => cur_user.id).where(:external_event_id => cur_event.id)).empty?
       eep.first.destroy
     end
+    # FIXME: email should be sent to user
     redirect_to cur_event, notice: t("activerecord.unsubscribing_successful")
   end
 
@@ -41,7 +43,7 @@ class ExternalEventsController < AuthorizedController
     cur_user = User.find_by_uuid(params[:user])
     unless (eep = ExternalEventParticipant.where(:external_event_id => cur_event.id).where(:user_id => cur_user.id)).empty?
       eep = eep.first
-      eep.subscription_sent = true
+      eep.subscription_confirmed = true
       eep.save!
     else
       raise "user/event combination not found"

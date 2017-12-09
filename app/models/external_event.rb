@@ -17,15 +17,20 @@ class ExternalEvent < ActiveRecord::Base
   default_scope { where(:deleted => false) } 
 
   def subscription(usr)
-    ExternalEventParticipant.where(:user_id => usr.id).first
+    ExternalEventParticipant.where(external_event_id: self.id).where(user_id: usr.id).first
   end
 
-  def subscribed?(usr)
-    false == ExternalEventParticipant.where(:user_id => usr.id).where(:external_event_id => self.id).empty?
-  end
-
-  def subscription_sent?(usr)
-    (subscribed?(usr) && true == ExternalEventParticipant.where(:user_id => usr.id).first.subscription_sent)
+  def subscription_confirmed?(usr)
+    participants = ExternalEventParticipant.where(:user_id => usr.id).where(:external_event_id => self.id)
+    if participants.empty?
+      Rails.logger.warn("asked for subscription confirmed, but not subscribed (user_id: #{usr.id}. external_event_id: #{self.id})")
+      return false
+    end
+    if participants.count != 1
+      Rails.logger.warn("found more than one participants (user_id: #{usr.id}. external_event_id: #{self.id})")
+      return false
+    end
+    participants.first.subscription_confirmed?
   end
 
   def to_s
