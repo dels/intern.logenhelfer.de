@@ -229,6 +229,18 @@ de:
       sign_out: 'Bei Google abmelden'
       sign_in: 'Anmelden mit Google Konto'      
   text:
+    event_subscription:
+      subscription_to_work_confirmed: 'Für Arbeit (ohne Tafel) angemeldet'
+      subscription_to_work_and_festive_board_confirmed: 'Für Arbeit und Tafel angemeldet'
+      to_be_subscribed_to_work: 'Anmeldung ausstehend (ohne Tafel)'
+      to_be_subscribed_to_work_and_festive_board: 'Anmeldung ausstehend (inkl. Tafel)'
+      awaiting_secretary_to_confirm_subscription: 'Sekretär benachrichtigt (Anmeldung ohne Tafel)'
+      awaiting_secretary_to_confirm_subscription_including_festive_board: 'Sekretär benachrichtigt (Anmeldung inkl. Tafel)'
+      not_subscribed: 'Nicht angemeldet'
+      subscribe_to_work: 'Anmelden (ohne Tafel)'
+      subscribe_to_work_and_festive_board: 'Anmelden (inkl. Tafel)'
+      subscribed_to_work: 'Angemeldet (ohne Tafel)'
+      subscribed_to_work_and_festive_board: 'Angemeldet (inkl. Tafel)'
     external_event_subscription:
       subscription_to_work_confirmed: 'Für Arbeit (ohne Tafel) angemeldet'
       subscription_to_work_and_festive_board_confirmed: 'Für Arbeit und Tafel angemeldet'
@@ -965,10 +977,23 @@ de:
       subject: 'Neue Meldung auf %{domain} veröffentlicht'
     updated_announcement_notification:
       subject: 'Eine Meldung auf %{domain} wurde aktualisiert'
-    new_subscription_notification:
-      subject: 'Br. %{user} hat sich zu einer Veranstaltung angemeldet'
     access_denied_notification:
       subject: 'Br. %{user} wurde der Zugriff verweigert'
+  event_mailer:
+    new_subscription_notification:
+      subject: 'Br. %{user} hat sich zu einer Veranstaltung angemeldet'
+    new_desubscription_notification:
+      subject: 'Br. %{user} hat sich von einer Veranstaltung abgemeldet'
+    subscribed_to_external_event_by_secretary:
+      subject: 'Br. %{user} hat Dich zu einer Veranstaltung angemeldet'
+    subscribed_to_event_by_secretary:
+      subject: 'Br. %{user} hat Dich zu einer Veranstaltung angemeldet'
+    desubscribed_to_external_event_by_secretary:
+      subject: 'Br. %{user} hat Dich von der Teilnehmerliste genommen'
+    desubscribed_to_event_by_secretary:
+      subject: 'Br. %{user} hat Dich von der Teilnehmerliste genommen'
+    subscription_confirmed_notification:
+      subject: 'Br. %{user} hat Dich bei einer anderen Loge zu einer Veranstaltung angemeldet'
   views:
     pagination:
       first: ! '&laquo; Erste'

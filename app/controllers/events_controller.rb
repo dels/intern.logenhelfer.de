@@ -17,10 +17,83 @@ class EventsController < ApplicationController #AuthorizedController
   end
 
   def show
+    if params[:search].present?
+      @users = User.search(params[:search]) - @event.participants
+      @searched = true
+    end
     respond_to do |format|
       format.html
       format.ics
     end
+  end
+
+
+  def add_me
+    if params[:search].present?
+      @users = User.search(params[:search]) - @event.participants
+      @searched = true
+    end
+    cur_event = Event.find_by_uuid(params[:event_id])
+    cur_user = User.find_by_uuid(params[:user])
+    cur_user ||= current_user
+    EventParticipant.new do |ep|
+      ep.user = cur_user
+      ep.event = cur_event
+      ep.subscription_confirmed = false
+      ep.festive_board = params[:festive_board]
+      ep.save!
+    end
+    unless User.secretary == current_user
+      EventMailer.new_event_subscription_notification(cur_event, cur_user).deliver_later
+    else
+      EventMailer.subscribed_to_event_by_secretary(cur_event, cur_user).deliver_later
+    end
+    redirect_to cur_event, notice: t("activerecord.subscription_successful")
+  end
+
+  
+  def remove_me
+    if params[:search].present?
+      @users = User.search(params[:search]) - @external_event.participants
+      @searched = true
+    end
+    cur_event = Event.find_by_uuid(params[:event_id])
+    cur_user = User.find_by_uuid(params[:user])
+    ep = nil
+    unless (ep = EventParticipant.where(:user_id => cur_user.id).where(:event_id => cur_event.id)).empty?
+      ep = ep.first
+      ep_attribs = {
+        title: ep.event.title,
+        date: ep.event.date.to_s,
+        festive_board: ep.festive_board?.to_s
+      }
+      ep.destroy
+    end
+    if User.secretary == current_user
+      EventMailer.desubscribed_to_event_by_secretary(ep_attribs, cur_user).deliver_later
+    else
+      EventMailer.new_event_desubscription_notification(cur_event, cur_user).deliver_later
+    end
+    redirect_to cur_event, notice: t("activerecord.unsubscribing_successful")
+  end
+  
+  def confirm_subscription
+    if params[:search].present?
+      @users = User.search(params[:search]) - @external_event.participants
+      @searched = true
+    end
+    
+    cur_event = Event.find_by_uuid(params[:event_id])
+    cur_user = User.find_by_uuid(params[:user])
+    unless (ep = EventParticipant.where(:event_id => cur_event.id).where(:user_id => cur_user.id)).empty?
+      ep = ep.first
+      ep.subscription_confirmed = true
+      ep.save!
+    else
+      raise "user/event combination not found"
+    end
+    EventMailer.event_subscription_confirmed_notification(cur_event, cur_user).deliver_later # unless User.secretary == current_user
+    redirect_to cur_event, notice: t("activerecord.subscription_successful")
   end
 
   def date

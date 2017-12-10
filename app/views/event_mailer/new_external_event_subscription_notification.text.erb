@@ -4,8 +4,4 @@ der Br. <%= @user.fullname %> hat sich soeben für die externe Veranstaltung <%=
 
 Wenn Du den Br. bei der Loge <%= @external_event.host %> angemeldet hast, so klicke <%= link_to "hier",external_event_confirm_subscription_url(@external_event, :user => @user)%>, um die Anmeldung im internen Bereich als erfolgreich zu markieren. 
 
-Mit freundlichen Grüßen
-
---
-Dies ist eine automatisch generierte E-Mail.
-Bei Fragen wenden Sie sich bitte an <%= AppConfig[:technical_contact_email] %>
+<%= render 'mailer/footer' %>

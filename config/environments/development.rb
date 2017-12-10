@@ -43,6 +43,20 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.default_url_options = { host: 'localhost:5800' }
   config.action_mailer.delivery_method = :letter_opener
+
+  config.action_mailer.smtp_settings = {
+    address:                '88.198.37.243',
+    port:                   587,
+    domain:                 'fwze.de',
+    user_name:              'website@fwze.de',
+    password:               'superduperkeks1024',
+    authentication:         :login,
+    enable_starttls_auto:   :true,
+    openssl_verify_mode:    'none'
+  }
+
+
+                                
   
   config.action_controller.action_on_unpermitted_parameters = :raise
 end

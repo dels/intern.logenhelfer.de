@@ -8,12 +8,16 @@ class ExternalEventsController < AuthorizedController
 
   def show
     if params[:search].present?
-      @users = User.search(params[:search]) 
+      @users = User.search(params[:search]) - @external_event.participants
       @searched = true
     end
   end
 
   def add_me
+    if params[:search].present?
+      @users = User.search(params[:search]) - @external_event.participants
+      @searched = true
+    end
     cur_event = ExternalEvent.find_by_uuid(params[:external_event_id])
     cur_user = User.find_by_uuid(params[:user])
     cur_user ||= current_user
@@ -24,21 +28,49 @@ class ExternalEventsController < AuthorizedController
       eep.festive_board = params[:festive_board]
       eep.save!
     end
-    UserMailer.new_subscription_notification(cur_event, cur_user).deliver_later unless User.secretary == current_user
+    unless User.secretary == current_user
+      EventMailer.new_external_event_subscription_notification(cur_event, cur_user).deliver_later
+    else
+      EventMailer.subscribed_to_external_event_by_secretary(cur_event, cur_user).deliver_later
+    end
     redirect_to cur_event, notice: t("activerecord.subscription_successful")
   end
 
   def remove_me
+    if params[:search].present?
+      @users = User.search(params[:search]) - @external_event.participants
+      @searched = true
+    end
     cur_event = ExternalEvent.find_by_uuid(params[:external_event_id])
     cur_user = User.find_by_uuid(params[:user])
+    eep = nil
     unless (eep = ExternalEventParticipant.where(:user_id => cur_user.id).where(:external_event_id => cur_event.id)).empty?
-      eep.first.destroy
+      eep = eep.first
+      eep_attribs = {
+        title: eep.external_event.title,
+        host: eep.external_event.host,
+        location: eep.external_event.location,
+        festive_board: eep.festive_board?.to_s
+      }
+      eep.destroy
     end
-    # FIXME: mail should be sent to user
+    Rails.logger.debug("attribs from eep: #{eep_attribs.to_s}")
+    Rails.logger.fatal("did not find ExternalEventParticipant (already removed?)")
+    Rails.logger.debug("--> secretary is #{User.secretary == current_user}")
+    if User.secretary == current_user
+      EventMailer.desubscribed_to_external_event_by_secretary(eep_attribs, cur_user).deliver_later
+    else
+      EventMailer.new_external_event_desubscription_notification(cur_event, cur_user).deliver_later
+    end
     redirect_to cur_event, notice: t("activerecord.unsubscribing_successful")
   end
 
   def confirm_subscription
+    if params[:search].present?
+      @users = User.search(params[:search]) - @external_event.participants
+      @searched = true
+    end
+    
     cur_event = ExternalEvent.find_by_uuid(params[:external_event_id])
     cur_user = User.find_by_uuid(params[:user])
     unless (eep = ExternalEventParticipant.where(:external_event_id => cur_event.id).where(:user_id => cur_user.id)).empty?
@@ -48,7 +80,7 @@ class ExternalEventsController < AuthorizedController
     else
       raise "user/event combination not found"
     end
-    # FIXME mail should be sent to user
+    EventMailer.external_event_subscription_confirmed_notification(cur_event, cur_user).deliver_later# unless User.secretary == current_user
     redirect_to cur_event, notice: t("activerecord.subscription_successful")
   end
 

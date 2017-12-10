@@ -1,15 +1,6 @@
 class UserMailer < ActionMailer::Base
   default from: AppConfig[:default_from_email]
 
-  def new_subscription_notification(external_event, user)
-    @secretary  = User.secretary
-    return unless @secretary
-    email = @secretary.roles.where(:name => "Secretary").first.email
-    @user = user
-    @external_event = external_event
-    mail to: email, subject: I18n.t('user_mailer.new_subscription_notification.subject', user: user.firstname)
-  end
-
   def announcement_published_notification(announcement, user)
     @announcement = announcement
     @user = user

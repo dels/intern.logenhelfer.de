@@ -353,21 +353,32 @@ class User < ActiveRecord::Base
     User.undeleted.count
   end
 
+  def subscribed_to_event?(event)
+    ExternalEvent.where(user_id: self.id).where(id: event.id)
+  end
+  
   def subscribed_to_external_event?(event)
     ExternalEvent.where(user_id: self.id).where(id: event.id)
   end
   
-
-
-  def subscription_status(ext_event)
-    eep = ExternalEventParticipant.where(:user_id => self.id).where(:external_event_id => ext_event.id)
-    return I18n.t("text.external_event_subscription.not_subscribed") if eep.empty?
-    eep = eep.first
-    if eep.subscription_confirmed
-      return I18n.t("text.external_event_subscription.subscription_to_work_confirmed") unless eep.festive_board
+  def subscription_status(event)
+    p = nil
+    p = case event.class.to_s
+    when Event.to_s
+      p = EventParticipant.where(:user_id => self.id).where(:event_id => event.id)
+    when ExternalEvent.to_s
+      p = ExternalEventParticipant.where(:user_id => self.id).where(:external_event_id => event.id)
+    else
+      Rails.logger.error("unhandeled class: #{event.class}")
+      return I18n.t("text.external_event_subscription.not_subscribed")
+    end
+    return I18n.t("text.external_event_subscription.not_subscribed") if p.empty?
+    p = p.first
+    if p.subscription_confirmed?
+      return I18n.t("text.external_event_subscription.subscription_to_work_confirmed") unless p.festive_board
       return I18n.t("text.external_event_subscription.subscription_to_work_and_festive_board_confirmed")
     end
-    return I18n.t("text.external_event_subscription.to_be_subscribed_to_work") unless eep.festive_board
+    return I18n.t("text.external_event_subscription.to_be_subscribed_to_work") unless p.festive_board
     return I18n.t("text.external_event_subscription.to_be_subscribed_to_work_and_festive_board") 
   end
 

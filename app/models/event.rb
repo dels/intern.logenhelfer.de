@@ -14,6 +14,11 @@ class Event < ActiveRecord::Base
   belongs_to :created_by, foreign_key: :created_by_id, class_name: 'User'
   belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User'
 
+  has_many :event_participants
+  has_many :participants, :through => :event_participants, :source => :user
+
+  default_scope { where(:deleted => false) } 
+  
   attr_accessor :target
 
   def to_s
@@ -78,4 +83,27 @@ class Event < ActiveRecord::Base
     end
     cal.to_ical
   end
+
+
+  def subscription(usr)
+    EventParticipant.where(event_id: self.id).where(user_id: usr.id).first
+  end
+
+  def subscription_confirmed?(usr)
+    participants = EventParticipant.where(:user_id => usr.id).where(:event_id => self.id)
+    if participants.empty?
+      Rails.logger.warn("asked for subscription confirmed, but not subscribed (user_id: #{usr.id}. event_id: #{self.id})")
+      return false
+    end
+    if participants.count != 1
+      Rails.logger.warn("found more than one participants (user_id: #{usr.id}. event_id: #{self.id})")
+      return false
+    end
+    participants.first.subscription_confirmed?
+  end
+
+  def to_s
+    title
+  end
+  
 end

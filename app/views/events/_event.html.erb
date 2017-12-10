@@ -46,10 +46,10 @@
   -%>
 <%- unless event.subscription(current_user) -%>
   <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work" %>' class="description newspaper icon">
-    <%= link_to t('text.external_event_subscription.subscribe_to_work'), external_event_add_me_to_work_path(event, :festive_board => false)%>
+    <%= link_to t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work"), send("#{event.class.to_s.underscore}_add_me_to_work_path", event, :festive_board => false)%>
   </p>
-  <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work_and_festive_board" %>' class="description , newspaper_add icon">
-    <%= link_to t('text.external_event_subscription.subscribe_to_work_and_festive_board'), external_event_add_me_to_work_and_festive_board_path(event, :festive_board => true)%>
+  <p id='<%= "text.#{event.class.to_s.underscore}_subscribe_to_work_and_festive_board" %>' class="description , newspaper_add icon">
+    <%= link_to t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work_and_festive_board"), send("#{event.class.to_s.underscore}_add_me_to_work_and_festive_board_path", event, :festive_board => true)%>
   </p>
   <%- end -%>
   <%-
@@ -57,11 +57,13 @@
     -%>  
   <%- if event.subscription(current_user) && false == event.subscription_confirmed?(current_user) -%>  
   <p id='<%= "#{event.class.to_s.underscore}_awaiting_subscribed" %>' class="description spinner icon">
-    <%= event.try(:subscription, current_user).try(:festive_board) ? t('text.external_event_subscription.awaiting_secretary_to_confirm_subscription_including_festive_board') : t('text.external_event_subscription.awaiting_secretary_to_confirm_subscription') %>
+    <%= event.try(:subscription, current_user).try(:festive_board) ? t("text.#{event.class.to_s.underscore}_subscription.awaiting_secretary_to_confirm_subscription_including_festive_board") : t("text.#{event.class.to_s.underscore}_subscription.awaiting_secretary_to_confirm_subscription") %>
   </p>
   <%- elsif (event.subscription(current_user) && event.subscription_confirmed?(current_user)) -%>
+
   <p id='<%= "#{event.class.to_s.underscore}_subscribed" %>' class="description success icon">
-    <%= event.subscription(current_user).try(:festive_board) ? t('text.external_event_subscription.subscribed_to_work_with_festive_board') : t('text.external_event_subscription.subscribed_to_work') %>
+    
+    <%= event.subscription(current_user).try(:festive_board) ? t('"text.#{event.class.to_s.underscore}_subscription.subscribed_to_work_and_festive_board"') : t("text.#{event.class.to_s.underscore}_subscription.subscribed_to_work") %>
   </p>
   <%- end -%>
   <%- end -%>
@@ -91,7 +93,7 @@
 </div>
 
 <%- if event.respond_to?(:participants) && current_user == User.secretary -%>
-  <%= form_tag external_event_path(event), method: :get, class: 'search icon' do %>
+  <%= form_tag send("#{event.class.to_s.underscore}_path", event), method: :get, class: 'search icon' do %>
   <p>
     <%= text_field_tag :search, params[:search], class: 'jqueryui_input_classes', placeholder: t('helpers.label.user.search_placeholder') , data: {autocomplete_source: search_users_path}, id: "srch_fld"  %>
     <%= submit_tag 'Suchen', name: nil, id: "srch_btn" %>
@@ -116,8 +118,9 @@
       <td><%= dash(user.private_address.try :phone) %></td>
       <td><%= dash(user.private_address.try :mobile) %></td>
       <td>
-        <%= image_link_tag_helper 'add',  external_event_add_me_to_work_path(event, :user => user), title: t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work") if can?(:show, user) %>
-        <%= image_link_tag_helper 'add',  external_event_add_me_to_work_and_festive_board_path(event, :user => user) , title: t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work_and_festive_board") if can?(:show, user) %>
+        <%= image_link_tag_helper('add',  send("#{event.class.to_s.underscore}_add_me_to_work_path", event, user: user), title: t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work")) if can?(:show, user) %>
+        
+        <%= image_link_tag_helper 'add',  send("#{event.class.to_s.underscore}_add_me_to_work_and_festive_board_path", event, :user => user) , title: t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work_and_festive_board") if can?(:show, user) %>
       </td>
     </tr>
     <% end %>
@@ -146,10 +149,10 @@
         <td><%= dash(participant.private_address.try :mobile) %></td>
         <td><%= participant.subscription_status(event) %></td>
         <td>
-          <%- if participant.subscribed_to_external_event?(event) && false == event.subscription_confirmed?(participant) -%>
-          <%= link_to '<i class="success icon"></i>'.html_safe,  send("#{event.class.to_s.underscore}_confirm_subscription_path", event, :user => participant), id: "#{event.class.to_s.underscore}_confirm_subscription" if can?(:confirm_subscription, "#{event.class}Participant".constantize.where(:external_event_id => event.id).where(:user_id => participant.id).first) %>
+          <%- if participant.send("subscribed_to_#{event.class.to_s.underscore}?", event) && false == event.subscription_confirmed?(participant) -%>
+          <%= link_to '<i class="success icon"></i>'.html_safe,  send("#{event.class.to_s.underscore}_confirm_subscription_path", event, :user => participant), id: "#{event.class.to_s.underscore}_confirm_subscription" if can?(:confirm_subscription, "#{event.class}Participant".constantize.where("#{event.class.to_s.underscore}_id".to_sym => event.id).where(:user_id => participant.id).first) %>
           <%- end -%>
-          <%= destroy_link_to(send("#{event.class.to_s.underscore}_remove_me_path", event, :user => participant))  if can?(:destroy, "#{event.class}Participant".constantize.where(:external_event_id => event.id).where(:user_id => participant.id).first)|| (participant == current_user &&  false == event.subscription_confirmed?(participant)) %>
+          <%= destroy_link_to(send("#{event.class.to_s.underscore}_remove_me_path", event, :user => participant))  if can?(:destroy, "#{event.class}Participant".constantize.where("#{event.class.to_s.underscore}_id".to_sym => event.id).where(:user_id => participant.id).first)|| (participant == current_user &&  false == event.subscription_confirmed?(participant)) %>
         </td>
       </tr>
     <% end %>

@@ -29,7 +29,12 @@ FwzeIntern::Application.routes.draw do
     end
     get '(:year(/:month(/:day)))(.:format)' => 'events#date',          as: :calendar
   end
-  resources :events
+  resources :events do
+    get  'add_me_to_work',                    to: 'events#add_me'
+    get  'add_me_to_work_and_festive_board',  to: 'events#add_me', festive_board: true
+    delete 'remove_me',                       to: 'events#remove_me'
+    get  'confirm_subscription',              to: 'events#confirm_subscription'
+  end
 
   resources :lodges do
     resources :officers
