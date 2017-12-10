@@ -1,0 +1,5 @@
+Guten Tag Br. <%= @user.firstname %>,
+
+der Br. <%= @secretary.firstname %> hat Dich soeben bei der Loge <%= @external_event.host %> zur Veranstaltung <%= @external_event.title %><%= " inklusive Tafel" if @external_event.subscription(@user).festive_board? %> angemeldet.
+
+<%= render 'mailer/footer' %>

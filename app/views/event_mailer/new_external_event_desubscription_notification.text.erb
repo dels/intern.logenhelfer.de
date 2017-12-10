@@ -1,0 +1,7 @@
+Guten Tag Br. <%= @secretary.firstname %>,
+
+der Br. <%= @user.fullname %> hat sich soeben von der externe Veranstaltung <%= @external_event %> der Loge <%= @external_event.host %> abgemeldet.
+
+Falls Du den Br. bereits angemeldet hast, so kontaktiere bitte die Loge <%= @external_event.host %>.
+
+<%= render 'mailer/footer' %>
