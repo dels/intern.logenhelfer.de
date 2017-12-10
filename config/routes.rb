@@ -22,7 +22,8 @@ FwzeIntern::Application.routes.draw do
     get   'internal_workingplan',               to: 'events#internal_workingplan'
     post  'internal_workingplan',               to: 'events#internal_workingplan'
     resources :external_events do
-      get  'add_me',                            to: 'external_events#add_me'
+      get  'add_me_to_work',                    to: 'external_events#add_me'
+      get  'add_me_to_work_and_festive_board',  to: 'external_events#add_me', festive_board: true
       delete 'remove_me',                       to: 'external_events#remove_me'
       get  'confirm_subscription',              to: 'external_events#confirm_subscription'
     end

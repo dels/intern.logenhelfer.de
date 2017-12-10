@@ -46,10 +46,10 @@
   -%>
 <%- unless event.subscription(current_user) -%>
   <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work" %>' class="description newspaper icon">
-    <%= link_to t('text.external_event_subscription.subscribe_to_work'), external_event_add_me_path(event, :festive_board => false)%>
+    <%= link_to t('text.external_event_subscription.subscribe_to_work'), external_event_add_me_to_work_path(event, :festive_board => false)%>
   </p>
   <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work_with_festive_board" %>' class="description , newspaper_add icon">
-    <%= link_to t('text.external_event_subscription.subscribe_to_work_and_festive_board'), external_event_add_me_path(event, :festive_board => true)%>
+    <%= link_to t('text.external_event_subscription.subscribe_to_work_and_festive_board'), external_event_add_me_to_work_and_festive_board_path(event, :festive_board => true)%>
   </p>
   <%- end -%>
   <%-
@@ -116,7 +116,8 @@
       <td><%= dash(user.private_address.try :phone) %></td>
       <td><%= dash(user.private_address.try :mobile) %></td>
       <td>
-        <%= image_link_tag_helper 'add',  external_event_add_me_path(event, :user => user)            if can?(:show, user) %>
+        <%= image_link_tag_helper 'add',  external_event_add_me_to_work_path(event, :user => user) if can?(:show, user) %>
+        <%= image_link_tag_helper 'add',  external_event_add_me_to_work_and_festive_board_path(event, :user => user) if can?(:show, user) %>
       </td>
     </tr>
     <% end %>
@@ -146,7 +147,7 @@
         <td><%= participant.subscription_status(event) %></td>
         <td>
           <%- if participant.subscribed_to_external_event?(event) && false == event.subscription_confirmed?(participant) -%>
-          <%= link_to '<i class="success icon"></i>'.html_safe,  send("#{event.class.to_s.underscore}_confirm_subscription_path", event, :user => participant) unless event.subscription_confirmed?(participant) if can?(:confirm_subscription, "#{event.class}Participant".constantize.where(:external_event_id => event.id).where(:user_id => participant.id).first) %>
+          <%= link_to '<i class="success icon"></i>'.html_safe,  send("#{event.class.to_s.underscore}_confirm_subscription_path", event, :user => participant), id: "#{event.class.to_s.underscore}_confirm_subscription" if can?(:confirm_subscription, "#{event.class}Participant".constantize.where(:external_event_id => event.id).where(:user_id => participant.id).first) %>
           <%- end -%>
           <%= destroy_link_to(send("#{event.class.to_s.underscore}_remove_me_path", event, :user => participant))  if can?(:destroy, "#{event.class}Participant".constantize.where(:external_event_id => event.id).where(:user_id => participant.id).first)|| (participant == current_user &&  false == event.subscription_confirmed?(participant)) %>
         </td>
