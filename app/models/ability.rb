@@ -4,9 +4,11 @@ class Ability
   def default_user_abilities
     can [:google_sync, :create_google_contact, :update_google_contact], User
     can [:show, :edit, :update, :update_announcement_subscription], User, id: @user.id
+    can [:show, :create, :edit, :update], EventParticipant, user_id: @user.id
     can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
     can [:index, :show], Announcement
     can [:index, :show], ExternalEvent
+    can [:add_me, :remove_me], Event, user_id: @user.id
     can [:add_me, :remove_me], ExternalEvent, user_id: @user.id
     can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event
     can [:index, :show], Category, ['categories.deleted = ?', false] do |c|

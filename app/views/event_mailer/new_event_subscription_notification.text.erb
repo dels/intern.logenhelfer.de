@@ -1,0 +1,5 @@
+Guten Tag Br. <%= @secretary.firstname %>,
+
+der Br. <%= @user.fullname %> hat sich soeben für die Veranstaltung <%= @event %> am <%= l(@event.date) %><%= " inkl. Tafel" if @event.subscription(@user).festive_board %> angemeldet. 
+
+<%= render 'mailer/footer' %>
