@@ -34,7 +34,7 @@ class ExternalEventsController < AuthorizedController
     unless (eep = ExternalEventParticipant.where(:user_id => cur_user.id).where(:external_event_id => cur_event.id)).empty?
       eep.first.destroy
     end
-    # FIXME: email should be sent to user
+    # FIXME: mail should be sent to user
     redirect_to cur_event, notice: t("activerecord.unsubscribing_successful")
   end
 
@@ -48,6 +48,7 @@ class ExternalEventsController < AuthorizedController
     else
       raise "user/event combination not found"
     end
+    # FIXME mail should be sent to user
     redirect_to cur_event, notice: t("activerecord.subscription_successful")
   end
 

@@ -48,7 +48,7 @@
   <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work" %>' class="description newspaper icon">
     <%= link_to t('text.external_event_subscription.subscribe_to_work'), external_event_add_me_to_work_path(event, :festive_board => false)%>
   </p>
-  <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work_with_festive_board" %>' class="description , newspaper_add icon">
+  <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work_and_festive_board" %>' class="description , newspaper_add icon">
     <%= link_to t('text.external_event_subscription.subscribe_to_work_and_festive_board'), external_event_add_me_to_work_and_festive_board_path(event, :festive_board => true)%>
   </p>
   <%- end -%>
@@ -116,8 +116,8 @@
       <td><%= dash(user.private_address.try :phone) %></td>
       <td><%= dash(user.private_address.try :mobile) %></td>
       <td>
-        <%= image_link_tag_helper 'add',  external_event_add_me_to_work_path(event, :user => user) if can?(:show, user) %>
-        <%= image_link_tag_helper 'add',  external_event_add_me_to_work_and_festive_board_path(event, :user => user) if can?(:show, user) %>
+        <%= image_link_tag_helper 'add',  external_event_add_me_to_work_path(event, :user => user), title: t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work") if can?(:show, user) %>
+        <%= image_link_tag_helper 'add',  external_event_add_me_to_work_and_festive_board_path(event, :user => user) , title: t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work_and_festive_board") if can?(:show, user) %>
       </td>
     </tr>
     <% end %>

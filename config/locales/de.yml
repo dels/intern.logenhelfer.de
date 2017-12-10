@@ -237,10 +237,10 @@ de:
       awaiting_secretary_to_confirm_subscription: 'Sekretär benachrichtigt (Anmeldung ohne Tafel)'
       awaiting_secretary_to_confirm_subscription_including_festive_board: 'Sekretär benachrichtigt (Anmeldung inkl. Tafel)'
       not_subscribed: 'Nicht angemeldet'
-      subscribe_to_work: 'Anmelden'
+      subscribe_to_work: 'Anmelden (ohne Tafel)'
       subscribe_to_work_and_festive_board: 'Anmelden (inkl. Tafel)'
       subscribed_to_work: 'Angemeldet (ohne Tafel)'
-      subscribed_to_work_with_festive_board: 'Angemeldet (inkl. Tafel)'
+      subscribed_to_work_and_festive_board: 'Angemeldet (inkl. Tafel)'
       
   mail:
     seeker:
