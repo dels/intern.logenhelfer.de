@@ -48,7 +48,7 @@
   <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work" %>' class="description newspaper icon">
     <%= link_to t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work"), send("#{event.class.to_s.underscore}_add_me_to_work_path", event, :festive_board => false)%>
   </p>
-  <p id='<%= "text.#{event.class.to_s.underscore}_subscribe_to_work_and_festive_board" %>' class="description , newspaper_add icon">
+  <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work_and_festive_board" %>' class="description , newspaper_add icon">
     <%= link_to t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work_and_festive_board"), send("#{event.class.to_s.underscore}_add_me_to_work_and_festive_board_path", event, :festive_board => true)%>
   </p>
   <%- end -%>
@@ -63,7 +63,7 @@
 
   <p id='<%= "#{event.class.to_s.underscore}_subscribed" %>' class="description success icon">
     
-    <%= event.subscription(current_user).try(:festive_board) ? t('"text.#{event.class.to_s.underscore}_subscription.subscribed_to_work_and_festive_board"') : t("text.#{event.class.to_s.underscore}_subscription.subscribed_to_work") %>
+    <%= event.subscription(current_user).try(:festive_board) ? t("text.#{event.class.to_s.underscore}_subscription.subscribed_to_work_and_festive_board") : t("text.#{event.class.to_s.underscore}_subscription.subscribed_to_work") %>
   </p>
   <%- end -%>
   <%- end -%>
