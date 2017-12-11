@@ -1,4 +1,4 @@
-class Event < ActiveRecord::Base
+class Event < ApplicationRecord
 
   include UuidHelper
   before_create :generate_uuid
@@ -12,7 +12,7 @@ class Event < ActiveRecord::Base
   validates_presence_of :time,                          unless: :whole_day?
 
   belongs_to :created_by, foreign_key: :created_by_id, class_name: 'User'
-  belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User'
+  belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User', optional: true
 
   has_many :event_participants
   has_many :participants, :through => :event_participants, :source => :user

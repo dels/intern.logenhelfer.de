@@ -1,4 +1,4 @@
-class Lodge < ActiveRecord::Base
+class Lodge < ApplicationRecord
   extend FriendlyId
   friendly_id :name, use: :slugged
 

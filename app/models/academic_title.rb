@@ -1,4 +1,4 @@
-class AcademicTitle < ActiveRecord::Base
+class AcademicTitle < ApplicationRecord
 
   has_many :users
 

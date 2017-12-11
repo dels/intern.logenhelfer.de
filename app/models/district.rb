@@ -1,4 +1,4 @@
-class District < ActiveRecord::Base
+class District < ApplicationRecord
   extend FriendlyId
   friendly_id :name
 

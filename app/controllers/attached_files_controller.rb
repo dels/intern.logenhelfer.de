@@ -1,5 +1,5 @@
 class AttachedFilesController < ApplicationController
-  before_filter :authenticate_user!
+  before_action :authenticate_user!
   check_authorization :except => :create
   helper_method :sort_column, :sort_direction
   load_and_authorize_resource except: [:create], :find_by => :uuid

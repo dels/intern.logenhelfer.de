@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-class User < ActiveRecord::Base
+class User < ApplicationRecord
   include ActsAsAddressable
   include UuidHelper
   before_create :generate_uuid
@@ -28,7 +28,7 @@ class User < ActiveRecord::Base
   has_many :announcement_subscription
   has_many :external_event_participants
   has_many :external_events, :through => :external_event_participants
-  belongs_to :academic_title
+  belongs_to :academic_title, optional: true
 
   default_scope { includes(:academic_title) }
   scope :undeleted, -> { where(deleted: false) }

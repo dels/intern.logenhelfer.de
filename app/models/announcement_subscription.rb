@@ -1,4 +1,4 @@
-class AnnouncementSubscription < ActiveRecord::Base
+class AnnouncementSubscription < ApplicationRecord
 
   belongs_to :user
 

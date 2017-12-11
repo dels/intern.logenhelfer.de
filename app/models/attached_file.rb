@@ -1,4 +1,4 @@
-class AttachedFile < ActiveRecord::Base
+class AttachedFile < ApplicationRecord
   include UuidHelper
   before_create :generate_uuid
 
