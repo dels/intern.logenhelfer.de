@@ -138,6 +138,9 @@ class EventsController < ApplicationController #AuthorizedController
         fd.save!
         render_workingplan(false, date_from, date_to)
       end
+      format.json do
+        render text: "to be implemented"
+      end
     end
   end
 
