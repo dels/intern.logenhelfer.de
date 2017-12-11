@@ -426,7 +426,7 @@ end
 block 'configuring app' do
   {
     :default_from_email => "web@logenhelfer.de",
-    :user_change_notification_email => "report@elsbroek.com",
+    :user_change_notification_email => "web@logenhelfer.de",
     :default_event_location => "Bremen",
     :technical_contact_email => "report@elsbroek.com",
   }.each_pair do |key,val|
