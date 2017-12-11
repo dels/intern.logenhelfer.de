@@ -58,13 +58,13 @@ Rails.application.configure do
   # config.cache_store = :mem_cache_store
 
   # Use a real queuing backend for Active Job (and separate queues per environment)
-  # config.active_job.queue_adapter     = :resque
-  # config.active_job.queue_name_prefix = "fwze_intern_#{Rails.env}"
-  config.action_mailer.perform_caching = false
+  config.active_job.queue_adapter     = :resque
+  config.active_job.queue_name_prefix = "#{Rails.env}"
+  config.action_mailer.perform_deliveries = true
+  config.action_mailer.raise_delivery_errors = true
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.perform_caching = false
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
@@ -80,12 +80,32 @@ Rails.application.configure do
   # require 'syslog/logger'
   # config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new 'app-name')
 
+  default_url_options[:host] = "logenhelfer.de"
+
   if ENV["RAILS_LOG_TO_STDOUT"].present?
     logger           = ActiveSupport::Logger.new(STDOUT)
     logger.formatter = config.log_formatter
     config.logger    = ActiveSupport::TaggedLogging.new(logger)
   end
 
+  config.action_mailer.smtp_settings = {
+    address:                'mail.fwze.de',
+    port:                   587,
+    domain:                 'fwze.de',
+    user_name:              'website@fwze.de',
+    password:               'superduperkeks1024',
+    authentication:         :login,
+    enable_starttls_auto:   :true,
+    openssl_verify_mode:    'none'
+  }
+  
+  FwzeIntern::Application.config.middleware.use ExceptionNotification::Rack,
+  :email => {
+    :email_prefix =>           "[Exception] ",
+    :sender_address =>         %{"Exception Notifier" <technik@fwze.de>},
+    :exception_recipients =>   %w{de@elsbroek.com}
+  }
+  
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
 end

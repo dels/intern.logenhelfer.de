@@ -1,0 +1,4 @@
+customize config/environments/<lodgename>.rb # use production.rb as example
+customize config/resque-pool.yml 
+
+
