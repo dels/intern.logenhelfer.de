@@ -6,7 +6,7 @@
   <% else %>
   <li><%= link_to t('menu.login'), login_path %></li>
   <li><%= AppConfig[:public_wp_available_to_anon_users] %></li>
-    <% if AppConfig[:public_wp_available_to_anon_users].eql?("t") %>
+    <% if ActiveModel::Type::Boolean.new.cast(AppConfig[:public_wp_available_to_anon_users]) %>
       <li><%= link_to t('menu.working_plan'), calendar_export_path %></li>
     <% end %>
   <% end %>
