@@ -1,8 +1,8 @@
 require 'rest_client'
 
 class UploadToFileIoJob < ActiveJob::Base
+  self.queue_adapter = :resque
   queue_as :default
-
 
   def perform(file, user)
     lnk = nil
@@ -38,7 +38,6 @@ class UploadToFileIoJob < ActiveJob::Base
   end
 
   private
-
   
   def stringfile(content, filename, content_type)
     file = StringIO.new(content)

@@ -1,5 +1,5 @@
 class FileMailer < ActionMailer::Base
-  default from: AppConfig[:default_from_email]
+  ActionMailer::Base.default from: AppConfig[:default_from_email]
 
   def file_upload_success_mail(user, success_link)
     @success_link = success_link
