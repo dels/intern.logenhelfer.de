@@ -1,0 +1,8 @@
+development:
+  default: 1
+  mailer: 1
+
+
+rzdap:
+  rzdap_default: 4
+  rzdap_mailer: 4

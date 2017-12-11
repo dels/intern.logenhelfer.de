@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 namespace :import do 
   desc 'import existing data'
   task :memberlist  => :environment do

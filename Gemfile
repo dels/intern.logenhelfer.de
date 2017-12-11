@@ -10,6 +10,8 @@ gem 'libv8'
 #gem 'compass-rails'
 gem 'execjs'
 gem 'resque'
+gem 'resque-pool'
+gem 'god'
 
 gem 'bcrypt-ruby',              require: 'bcrypt'
 gem 'devise'

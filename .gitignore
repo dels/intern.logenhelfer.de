@@ -27,3 +27,4 @@ TODO
 *.xml
 logfile
 update
+config/resque-pool.yml
