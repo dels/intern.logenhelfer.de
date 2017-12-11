@@ -10,6 +10,7 @@ tmp/
 .#*
 *#
 thin.yml
+config/puma.rb
 config/database.yml
 restart.sh
 public/assets/
@@ -25,4 +26,4 @@ TODO
 *.json
 *.xml
 logfile
-
+update
