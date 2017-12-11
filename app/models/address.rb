@@ -1,5 +1,5 @@
-class Address < ActiveRecord::Base
-  belongs_to :addressable, polymorphic: true
+class Address < ApplicationRecord
+  belongs_to :addressable, polymorphic: true, optional: true
 
   default_scope { where(:deleted => false) }
 

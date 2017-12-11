@@ -1,4 +1,4 @@
-class CategoryRole < ActiveRecord::Base
+class CategoryRole < ApplicationRecord
 
   belongs_to :category
   belongs_to :role

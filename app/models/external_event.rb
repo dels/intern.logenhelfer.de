@@ -1,4 +1,4 @@
-class ExternalEvent < ActiveRecord::Base
+class ExternalEvent < ApplicationRecord
   include UuidHelper
   before_create :generate_uuid
 
@@ -8,8 +8,7 @@ class ExternalEvent < ActiveRecord::Base
   validates_presence_of :title, :host, :time, :date
 
   belongs_to :created_by, foreign_key: :created_by_id, class_name: 'User'
-  belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User'
-
+  belongs_to :updated_by, foreign_key: :updated_by_id, class_name: 'User', optional: true
 
   has_many :external_event_participants
   has_many :participants, :through => :external_event_participants, :source => :user

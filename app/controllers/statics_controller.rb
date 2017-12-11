@@ -1,5 +1,5 @@
 class StaticsController < ApplicationController
-  before_filter :authenticate_user!, :except => [:index, :impressum, :robots_txt]
+  before_action :authenticate_user!, :except => [:index, :impressum, :robots_txt]
 
   respond_to :html, :text
 

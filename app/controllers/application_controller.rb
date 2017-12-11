@@ -6,9 +6,9 @@ class ApplicationController < ActionController::Base
 
   #helper_method :get_safe_date, :get_safe_start_end_date
 
-  before_filter :filter_empty_passwords_and_user_type, only: [:create, :update]
+  before_action :filter_empty_passwords_and_user_type, only: [:create, :update]
 
-  before_filter do
+  before_action do
     resource = controller_name.singularize.to_sym
     method = "#{resource}_params"
     params[resource] &&= send(method) if respond_to?(method, true)

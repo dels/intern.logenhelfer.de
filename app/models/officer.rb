@@ -1,4 +1,4 @@
-class Officer < ActiveRecord::Base
+class Officer < ApplicationRecord
   include ActsAsAddressable
   include UuidHelper
   before_create :generate_uuid

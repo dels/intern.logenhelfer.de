@@ -1,4 +1,4 @@
-class Directory < ActiveRecord::Base
+class Directory < ApplicationRecord
   extend FriendlyId
   friendly_id :name, use: :slugged
 

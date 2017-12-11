@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-class Seeker < ActiveRecord::Base
+class Seeker < ApplicationRecord
   include ActsAsAddressable
   include UuidHelper
   before_create :generate_uuid

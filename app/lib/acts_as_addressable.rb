@@ -14,22 +14,26 @@ module ActsAsAddressable
       cattr_accessor :_has_many_addresses
       self._has_many_addresses = options[:has_many]
       if options[:has_many]
-        has_many :addresses, :as => :addressable
+        has_many :addresses, as: :addressable
         accepts_nested_attributes_for :addresses, :reject_if => :all_blank, :allow_destroy => true
-        alias_method_chain :addresses, :autobuild
+        alias_method :addresses_without_autobuild, :addresses
+        alias_method :addresses, :addresses_with_autobuild
+      #alias_method_chain :addresses, :autobuild
       else
-        has_one :address, :as => :addressable
+        has_one :address, as: :addressable
         accepts_nested_attributes_for :address, :reject_if => :all_blank, :allow_destroy => true
-        alias_method_chain :address, :autobuild
+        alias_method :address_without_autobuild, :address
+        alias_method :address, :address_with_autobuild
+        #alias_method_chain :address, :autobuild
       end
     end
 
     def has_one_address
-      acts_as_addressable :has_many => false
+      acts_as_addressable has_many: false
     end
 
     def has_many_addresses
-      acts_as_addressable :has_many => true
+      acts_as_addressable has_many: true
     end
   end # module ClassMethods
 
