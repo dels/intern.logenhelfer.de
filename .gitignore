@@ -1,6 +1,6 @@
 Gemfile.lock
 .bundle
-start_db
+start_*
 log/pg_log
 db/*.sqlite3
 log/*.log

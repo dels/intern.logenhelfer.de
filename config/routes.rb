@@ -1,10 +1,16 @@
+require 'resque/server'
+
 Rails.application.routes.draw do
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 
   get 'auth/:provider/callback', to: 'google_sessions#create'
   get 'auth/failure', to: redirect('/')
   get 'signout', to: 'google_sessions#destroy', as: 'signout'
-  
+
+  authenticate :user do
+    mount Resque::Server, at: '/jobs'
+  end
+
   resources :google_sessions, only: [:create, :destroy]
 
   resources :seekers do

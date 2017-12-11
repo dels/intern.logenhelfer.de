@@ -9,25 +9,23 @@ gem 'coffee-rails'
 gem 'libv8' 
 #gem 'compass-rails'
 gem 'execjs'
-
-#gem 'thin'
-gem 'pg'
-gem 'exception_notification'
+gem 'resque'
 
 gem 'bcrypt-ruby',              require: 'bcrypt'
 gem 'devise'
 gem 'uuid'
+gem 'pg'
+gem 'exception_notification'
 
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
 gem 'best_in_place'
 
 gem 'friendly_id'
-gem 'cancancan'#, '~> 2.0'
-#gem 'cancan'
+gem 'cancancan'
 gem 'prawn',                    '~> 1.0.0.rc1'
 gem 'later_dude',               '>= 0.3.1'
-gem 'icalendar',                               '~> 1.5.4'
+gem 'icalendar',                '~> 1.5.4'
 gem 'kaminari'                  
 
 # gems for google sync 
@@ -38,9 +36,7 @@ gem 'nokogiri'
 
 
 group :development, :archive_dev do
-#  gem 'quiet_assets'
   gem 'rails_best_practices',   require: false
-#  gem 'rails-erd'
   gem 'letter_opener'
   gem 'brakeman'
   gem 'test-unit'
@@ -50,13 +46,4 @@ end
 group :test do
   gem 'turn',                   require: false
   gem 'mocha',                  require: false
-#  gem "rspec-rails"
-#  gem "rspec"
-#  gem "rspec-core"
-#  gem "rspec-expectations"
-#  gem "rspec-mocks"
-#  gem 'factory_girl_rails'
-#  gem 'shoulda-matchers'
-#  gem 'rspec-given'
-#  gem 'webrat'
 end
