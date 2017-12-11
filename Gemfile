@@ -8,6 +8,7 @@ gem 'uglifier'
 gem 'coffee-rails'
 gem 'libv8' 
 #gem 'compass-rails'
+gem 'execjs'
 
 #gem 'thin'
 gem 'pg'
