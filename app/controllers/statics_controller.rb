@@ -5,7 +5,7 @@ class StaticsController < ApplicationController
 
   def index
     unless request.path.eql?("/anmelden")
-      if(ActiveModel::Type::Boolean.new.cast(AppConfig[:working_plan_as_start_page]) && ActiveModel::Type::Boolean.new.cast(AppConfig[:public_wp_available_to_anon_users])
+      if(ActiveModel::Type::Boolean.new.cast(AppConfig[:working_plan_as_start_page]) && ActiveModel::Type::Boolean.new.cast(AppConfig[:public_wp_available_to_anon_users]))
         redirect_to calendar_export_url
       end
     end
