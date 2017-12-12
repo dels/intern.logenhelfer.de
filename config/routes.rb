@@ -75,7 +75,7 @@ Rails.application.routes.draw do
       get 'downloads'
       get 'user_file_stats'
       get 'mem_stats'
-      get 'application'
+      get 'app_info'
       authenticate :user do
         mount Resque::Server, at: '/resque_jobs', as: :resque_backend
       end

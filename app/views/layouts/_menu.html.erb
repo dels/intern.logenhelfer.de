@@ -46,6 +46,12 @@
                   <%= link_to t("helpers.pages.user_file_stats"), user_file_stats_statistics_path -%>
                 <%- end -%>
               <%- end -%>
+              <%- if can? :app_info, Statistic -%>
+                <%= content_tag :li, class: (request.fullpath =~ /^\/statistics\/app_info/ ? 'active' : nil) do -%>
+                  <%= link_to t("helpers.pages.app_info"), app_info_statistics_path -%>
+                <%- end -%>
+              <%- end -%>
+
             <%- end -%>
           <%- end -%>
         <%- end -%>
