@@ -52,7 +52,7 @@ class Event < ApplicationRecord
 
   def ical_event(calendar=nil)
     calendar          ||= Icalendar::Calendar.new
-
+    
     event               = calendar.event
     event.summary       = title
     event.description   = public_description
