@@ -7,7 +7,7 @@ class StaticsController < ApplicationController
     begin
       user_signed_in?
     rescue
-      reset_session
+      session.clear
     end
     unless request.path.eql?("/anmelden")
       # FIXME: MUST BE TO bool
