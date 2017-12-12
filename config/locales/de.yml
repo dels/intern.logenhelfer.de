@@ -217,6 +217,7 @@ de:
       default: "%A, %d. %B %Y, %H:%M Uhr"
       long: "%A, %d. %B %Y, %H:%M Uhr"
       short: "%d. %B, %H:%M Uhr"
+      numbers_only: "%d.%m.%Y, %H:%M " 
       date_only: "%A, %d. %B %Y"
       time_only: "%H:%M"
     pm: nachmittags

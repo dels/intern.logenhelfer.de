@@ -45,9 +45,9 @@
 
     <footer>
     <% if Rails.env.development? || Rails.env.test? %>
-      Running in <%= Rails.env %> mode. Version <%= APP_VERSION_STRING %>, zuletzt aktualisiert am <%= APP_VERSION[:last_commit_at] %>
+      In <%= Rails.env %> mode. Version <%= APP_VERSION_STRING %>, zuletzt aktualisiert am <%= l(Date.parse(APP_VERSION[:last_commit_at]), format: :long) %>
     <% else %>
-      Version <%= APP_VERSION_STRING %>, zuletzt aktualisiert am <%= APP_VERSION[:last_commit_at] %>
+      Version <%= APP_VERSION_STRING %>, zuletzt aktualisiert am <%= l(Date.parse(APP_VERSION[:last_commit_at]), format: :date_only) %>
     <% end %>
     </footer>
 
