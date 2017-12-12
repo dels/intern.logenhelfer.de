@@ -46,7 +46,8 @@ class Event < ApplicationRecord
   def ical_date(date, &block)
     _d = date.to_datetime.in_time_zone(Time.zone)
     _d = yield _d if block_given?
-    _d.in_time_zone('UTC').tap {|d| d.icalendar_tzid = 'UTC' }
+    #_d.in_time_zone('UTC').tap {|d| d.icalendar_tzid = 'UTC' }
+    _d
   end
 
   def ical_event(calendar=nil)
@@ -65,6 +66,7 @@ class Event < ApplicationRecord
       event.dtend       = ical_date(date) {|d| d.end_of_day }
     else
       event.dtstart     = ical_date(date) {|d| d.change(hour: time.hour, min: time.min) }
+      event.dtend     = ical_date(date) {|d| d.change(hour: time.hour + 1, min: time.min) }
     end
 
     calendar
