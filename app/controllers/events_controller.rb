@@ -352,37 +352,17 @@ private
     
     pdf.start_new_page
     add_pdf_html(AppConfig[:workingplan_footer], pdf)
-    pdf.start_new_page
-    add_pdf_title("Geburtstage vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
-=begin
-    bday_list.map do |bday|
-      Rails.logger.debug("#{bday.date_of_birth.yday} < #{Date.today.yday}? #{bday.date_of_birth.yday > Date.today.yday}")
-      if bday.date_of_birth.yday > Date.today.yday
-        Rails.logger.debug("changing date of birth")
-
-        
-
-        
-        bday.date_of_birth = bday.date_of_birth - Date.today.yday.days
+    # on internal plan lets append the birthday list
+    if internal 
+      pdf.start_new_page
+      add_pdf_title("Geburtstage vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
+      bday_list = User.undeleted.upcoming_birthdays(from, to).sort{|a, b|      
+        ((from.yday > a.date_of_birth.yday) ? a.date_of_birth.yday : a.date_of_birth.yday - from.yday - 365) <=> ((from.yday > b.date_of_birth.yday) ? b.date_of_birth.yday : b.date_of_birth.yday - from.yday - 365)
+      }.map do |bday|
+        ["#{l(bday.date_of_birth)}", bday.fullname]
       end
+      get_pdf_list(%w[Datum Bruder], bday_list, { width: pdf.bounds.width, column_widths: { 3 => 330 } }, {}, pdf)
     end
-=end
-    
-    bday_list = User.undeleted.upcoming_birthdays(from, to).sort{|a, b|      
-      ((from.yday > a.date_of_birth.yday) ? a.date_of_birth.yday : a.date_of_birth.yday - from.yday - 365) <=> ((from.yday > b.date_of_birth.yday) ? b.date_of_birth.yday : b.date_of_birth.yday - from.yday - 365)
-    }
-    
-    vals = bday_list.map do |bday|
-      ["#{l(bday.date_of_birth)}", bday.fullname]
-    end
-    get_pdf_list(%w[Datum Bruder], vals, { width: pdf.bounds.width, column_widths: { 3 => 330 } }, {}, pdf)
-
-    
-#    User.undeleted.upcoming_birthdays(from, to).sort{|a, b| b.date_of_birth <=> a.date_of_birth }.each do |bday|
-#      pdf.text_box("#{l(bday.date_of_birth)}: #{bday.fullname}", leading: 10)
-#    end
-
-
     # could be shorter, but lets keep it readable
     if AppConfig[:lodge_short].nil? || AppConfig[:lodge_short].blank?
       filename = "Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]
