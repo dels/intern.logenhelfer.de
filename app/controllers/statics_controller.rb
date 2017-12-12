@@ -4,7 +4,11 @@ class StaticsController < ApplicationController
   respond_to :html, :text
 
   def index
-    
+    begin
+      user_signed_in?
+    rescue
+      reset_session
+    end
     unless request.path.eql?("/anmelden")
       # FIXME: MUST BE TO bool
       if AppConfig[:working_plan_as_start_page].eql?("t") && AppConfig[:public_wp_available_to_anon_users].eql?("t")
