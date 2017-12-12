@@ -27,7 +27,7 @@
       <th><%= t '.options.public_wp_available_to_anon_users.name' %></th>
       <td>
         <label><%= radio_button_tag 'app_config[public_wp_available_to_anon_users]', '1', AppConfig[:public_wp_available_to_anon_users] %> ja</label>
-        <label><%= radio_button_tag 'app_config[public_wp_available_to_anon_users]', '0', "0".eql?(AppConfig[:public_wp_available_to_anon_users]) %> nein</label>
+        <label><%= radio_button_tag 'app_config[public_wp_available_to_anon_users]', '0', false == ActiveModel::Type::Boolean.new.cast(AppConfig[:public_wp_available_to_anon_users]) %> nein</label>
       </td>
       <%- if t('.options.public_wp_available_to_anon_users').key?(:description) -%>
         <td><%= t '.options.public_wp_available_to_anon_users.description' %></td>
@@ -42,7 +42,7 @@
       <th><%= t '.options.working_plan_as_start_page.name' %></th>
       <td>
         <label><%= radio_button_tag 'app_config[working_plan_as_start_page]', '1', AppConfig[:working_plan_as_start_page] %> ja</label>
-        <label><%= radio_button_tag 'app_config[working_plan_as_start_page]', '0', "0".eql?(AppConfig[:working_plan_as_start_page]) %> nein</label>
+        <label><%= radio_button_tag 'app_config[working_plan_as_start_page]', '0', false == ActiveModel::Type::Boolean.new.cast(AppConfig[:working_plan_as_start_page]) %> nein</label>
       </td>
       <%- if t('.options.working_plan_as_start_page').key?(:description) -%>
         <td><%= t '.options.working_plan_as_start_page.description' %></td>
