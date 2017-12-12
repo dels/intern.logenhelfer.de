@@ -182,6 +182,11 @@ class User < ApplicationRecord
     secretary_user_role.user if secretary_user_role
   end
 
+  def self.admin
+    admin_user_role = Role.find_by_name("Admin").user_roles.first
+    admin_user_role.user if admin_user_role
+  end
+
   def self.worshipful_master
     # FIXME: should we return nil if we didn't find a worshipful master?
     whorshipful_master_user_role = Role.find_by_name("WorshipfulMaster").user_roles.first

@@ -34,7 +34,7 @@ class UploadToFileIoJob < ActiveJob::Base
     end
     return unless res
     json = JSON::parse(res)
-    FileMailer.file_upload_success_mail(user, json['link']).deliver_later
+    FileMailer.file_upload_success_mail(user, json['link'], file.filename).deliver_later
   end
 
   private
