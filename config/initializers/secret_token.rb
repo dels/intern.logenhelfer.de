@@ -4,4 +4,4 @@
 # If you change this key, all old signed cookies will become invalid!
 # Make sure the secret is at least 30 characters and all random,
 # no regular words or you'll be exposed to dictionary attacks.
-FwzeIntern::Application.config.secret_token = '186c73f4d7b2dd40ccb30d268a0454655499056ec09ff4fc1a5eec8bd8094468458c44ba4b1115fd7032de8f45e6a96a520d2fd2d7e26540b6dfc3bb004173e0'
+FwzeIntern::Application.config.secret_token = '2a9bc19386b370ecb840f14f003d82a0a09eaf01e575771ec448a73254bd4fb4c7cca3cf6fe0b9b5778b28ae7e487258182d27729a3fe28d9d90e8e138b97059'
