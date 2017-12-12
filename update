@@ -20,8 +20,8 @@ RAILS_ENV=$RAILS_ENV rails resque:stop ;
 if [ "$RAILS_ENV" != "development" ] ; then
    echo "updating git to HEAD of $GIT_BRANCH" ; 
    git reset --hard HEAD ; 
+   git pull origin $GIT_BRANCH ; 
 fi
-git pull origin $GIT_BRANCH &&
 RAILS_ENV=$RAILS_ENV bundle update &&
 RAILS_ENV=$RAILS_ENV rails db:migrate &&
 RAILS_ENV=$RAILS_ENV rails assets:clean assets:precompile &&

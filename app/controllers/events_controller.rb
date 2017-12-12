@@ -50,7 +50,6 @@ class EventsController < ApplicationController #AuthorizedController
     end
     redirect_to cur_event, notice: t("activerecord.subscription_successful")
   end
-
   
   def remove_me
     if params[:search].present?
@@ -350,15 +349,30 @@ private
 
       get_pdf_list(%w[Wochentag Datum Uhrzeit Beschreibung], event_list, { width: pdf.bounds.width, column_widths: { 3 => 330 } }, {}, pdf)
     end
-
+    
     pdf.start_new_page
     add_pdf_html(AppConfig[:workingplan_footer], pdf)
+    pdf.start_new_page
+    add_pdf_title("Geburtstage vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
+    bday_list = User.undeleted.upcoming_birthdays(from, to).sort{|a, b| b.date_of_birth <=> a.date_of_birth }
+    vals = bday_list.map do |bday|
+      ["#{l(bday.date_of_birth)}", bday.fullname]
+    end
+    get_pdf_list(%w[Datum Bruder], vals, { width: pdf.bounds.width, column_widths: { 3 => 330 } }, {}, pdf)
+
+    
+#    User.undeleted.upcoming_birthdays(from, to).sort{|a, b| b.date_of_birth <=> a.date_of_birth }.each do |bday|
+#      pdf.text_box("#{l(bday.date_of_birth)}: #{bday.fullname}", leading: 10)
+#    end
+
+
     # could be shorter, but lets keep it readable
     if AppConfig[:lodge_short].nil? || AppConfig[:lodge_short].blank?
       filename = "Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'oeffentlich', I18n.l(from), I18n.l(to)]
     else
       filename = "#{AppConfig[:lodge_short]}_Arbeitsplan_%s_%s-%s.pdf" % [internal ? 'intern' : 'öffentlich', I18n.l(from), I18n.l(to)]
     end
+    
     send_data pdf.render, type: "application/pdf", filename: filename
   end
 

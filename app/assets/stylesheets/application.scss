@@ -1,9 +1,15 @@
+// @import "bootstrap-sprockets";
+// @import "bootstrap";
+
 // $main-color:            #002E61;
 // $footer-color:          #EDE2C9;
 // $text-color:            #111;
 // $gray:                  #e3e3e3;
 // $dark-gray:             darken($gray, 20%);
 // $white:                 #f9f9f9;
+
+$primary-color: #00153b !default;
+$secondary-color: #d5b05e !default;
 
 $black:           #111;
 $gray:            #e3e3e3;
@@ -24,7 +30,6 @@ $nav-width:       200px;
 
 @import url('https://fonts.googleapis.com/css?family=Bree+Serif');
 @import url('https://fonts.googleapis.com/css?family=PT+Sans:400,700,400italic');
-
 
 @mixin radii($radius: $default-radius) {
   -webkit-border-radius: $radius;
@@ -186,3 +191,4 @@ div#banner-content {
 @import 'error';
 @import 'jquery.contextMenu';
 @import 'calendar';
+

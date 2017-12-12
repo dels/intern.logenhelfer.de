@@ -11,6 +11,7 @@
 //= require html54ie
 //= require jquery.mailto
 //= require best_in_place
+//= require bootstrap-sprockets
 //= require_self
 
 jQuery ->
