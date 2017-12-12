@@ -1,15 +1,19 @@
 
 source update.conf
 
+echo "using $RAILS_ENV environment"
 RAILS_ENV=$RAILS_ENV bundle exec pumactl -P $RAILS_PATH/tmp/pids/puma.pid stop;
 RAILS_ENV=$RAILS_ENV rails resque:stop ;
-if "$RAILS_ENV" -ne "development"
-  git reset --hard HEAD &&
-end
+if [ "$RAILS_ENV" -ne "development" ] ; then
+   echo "updating git to HEAD of $GIT_BRANCH" &&
+   git reset --hard HEAD &&
+fi
 git pull origin $GIT_BRANCH &&
-bundle update &&
+RAILS_ENV=$RAILS_ENV bundle update &&
 RAILS_ENV=$RAILS_ENV rails db:migrate &&
 RAILS_ENV=$RAILS_ENV rails assets:clean assets:precompile &&
-chown -R webster:webster $RAILS_PATH &&
+if [ "$RAILS_ENV" -ne "development" ] ; then
+   chown -R webster:webster $RAILS_PATH &&
+fi
 RAILS_ENV=$RAILS_ENV bundle exec puma &&
 RAILS_ENV=$RAILS_ENV rails resque:start
