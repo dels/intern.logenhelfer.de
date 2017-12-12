@@ -49,7 +49,7 @@ module AppConfig
         when :archive
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "0")
         when :default_from_email
-          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "no-reply@logenhelfer.de")
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "website@logenhelfer.de")
         when :technical_contact_email
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "technik@logenhelfer.de")
         else          
