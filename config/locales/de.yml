@@ -969,7 +969,7 @@ de:
   user_fields:
     address_attributes: Adressen
   file_mailer:
-    file_uploaded: "Datei erfolgreich hochgeladen"
+    file_uploaded: "%{file} ist jetzt verfügbar: %{link}"
   user_mailer:
     change_notification:
       subject: Änderungsbenachrichtigung für Benutzer

@@ -5,7 +5,7 @@ class FileMailer < ActionMailer::Base
     @success_link = success_link
     @user = user
     @filename = filename
-    mail(to: user.email, bcc: User.admin.email, subject: "#{I18n.t('file_mailer.file_uploaded')} #{success_link}", user: user.firstname)
+    mail(to: user.email, bcc: User.admin.email, subject: "#{I18n.t('file_mailer.file_uploaded', file: filename, link: success_link)}", user: user.firstname)
   end
 
 end
