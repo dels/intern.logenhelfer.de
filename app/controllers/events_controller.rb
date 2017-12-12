@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 class EventsController < ApplicationController #AuthorizedController
-  if ActiveModel::Type::Boolean.new.cast(AppConfig[:public_wp_available_to_anon_users]
+  if ActiveModel::Type::Boolean.new.cast(AppConfig[:public_wp_available_to_anon_users])
     before_action :authenticate_user!, :except => [:workingplan]
   else
     before_action :authenticate_user!
