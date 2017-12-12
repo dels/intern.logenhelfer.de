@@ -8,6 +8,7 @@ class Ability
     can [:show, :create, :edit, :update], ExternalEventParticipant, user_id: @user.id
     can [:index, :show], Announcement
     can [:index, :show], ExternalEvent
+    can [:show], AcademicTitle
     can [:add_me, :remove_me], Event, user_id: @user.id
     can [:add_me, :remove_me], ExternalEvent, user_id: @user.id
     can [:index, :show, :upcoming, :date, :public_workingplan, :internal_workingplan], Event

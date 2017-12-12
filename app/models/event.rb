@@ -46,7 +46,6 @@ class Event < ApplicationRecord
   def ical_date(date, &block)
     _d = date.to_datetime.in_time_zone(Time.zone)
     _d = yield _d if block_given?
-    #_d.in_time_zone('UTC').tap {|d| d.icalendar_tzid = 'UTC' }
     _d
   end
 
