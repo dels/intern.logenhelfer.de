@@ -11,7 +11,7 @@ if [ "__$RAILS_USER" = "__" ] ; then
    exit 1;
 fi
 if [ "__$RAILS_GROUP" = "__" ] ; then
-   RAILS_GROUP = $RAILS_USER
+   RAILS_GROUP="$RAILS_USER"
 fi
 
 echo "using $RAILS_ENV as environment. will chmod to $RAILS_USER:$RAILS_GROUP"
