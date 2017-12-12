@@ -354,9 +354,24 @@ private
     add_pdf_html(AppConfig[:workingplan_footer], pdf)
     pdf.start_new_page
     add_pdf_title("Geburtstage vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
-    bday_list = User.undeleted.upcoming_birthdays(from, to).sort{|a, b|
-      a.date_of_birth.yday <=> b.date_of_birth.yday
+=begin
+    bday_list.map do |bday|
+      Rails.logger.debug("#{bday.date_of_birth.yday} < #{Date.today.yday}? #{bday.date_of_birth.yday > Date.today.yday}")
+      if bday.date_of_birth.yday > Date.today.yday
+        Rails.logger.debug("changing date of birth")
+
+        
+
+        
+        bday.date_of_birth = bday.date_of_birth - Date.today.yday.days
+      end
+    end
+=end
+    
+    bday_list = User.undeleted.upcoming_birthdays(from, to).sort{|a, b|      
+      ((Date.today.yday > a.date_of_birth.yday) ? a.date_of_birth.yday : a.date_of_birth.yday - Date.today.yday - 365) <=> ((Date.today.yday > b.date_of_birth.yday) ? b.date_of_birth.yday : b.date_of_birth.yday - Date.today.yday - 365)
     }
+    
     vals = bday_list.map do |bday|
       ["#{l(bday.date_of_birth)}", bday.fullname]
     end
