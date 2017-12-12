@@ -41,7 +41,7 @@ class ApplicationController < ActionController::Base
         'simplistic'
       end
     rescue
-      session.clear
+      session = nil
       reset_session
       'simplistic'
     end
