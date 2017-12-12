@@ -20,6 +20,10 @@
   
   <%- unless event.try(:birthday?) -%>
   <p class="map icon"id='<%= "#{event.class.to_s.underscore}_location"%>'><%= dash event.location %></p>
+  <%- if event.respond_to?(:host) -%>
+  <p class="book icon"id='<%= "#{event.class.to_s.underscore}_host"%>'><%= dash event.host %></p>
+  <%- end -%>
+
   <%- if event.try(:private_description) -%>
   <!-- fields for internal event -->
   <p class="icon label"><%= Event.human_attribute_name :private_description %>:</p>
@@ -40,10 +44,7 @@
   
 <!-- fields for external event subscription -->
 <%- if event.respond_to?(:subscription) -%>
-<!-- fields for external event subscription -->
-<%-
-  # user has no subscption to this event
-  -%>
+<%- # user has no subscption to this event -%>
 <%- unless event.subscription(current_user) -%>
   <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work" %>' class="description newspaper icon">
     <%= link_to t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work"), send("#{event.class.to_s.underscore}_add_me_to_work_path", event, :festive_board => false)%>
@@ -52,9 +53,7 @@
     <%= link_to t("text.#{event.class.to_s.underscore}_subscription.subscribe_to_work_and_festive_board"), send("#{event.class.to_s.underscore}_add_me_to_work_and_festive_board_path", event, :festive_board => true)%>
   </p>
   <%- end -%>
-  <%-
-    # user has an unconfirmed subscription
-    -%>  
+  <%- # user has an unconfirmed subscription -%>  
   <%- if event.subscription(current_user) && false == event.subscription_confirmed?(current_user) -%>  
   <p id='<%= "#{event.class.to_s.underscore}_awaiting_subscribed" %>' class="description spinner icon">
     <%= event.try(:subscription, current_user).try(:festive_board) ? t("text.#{event.class.to_s.underscore}_subscription.awaiting_secretary_to_confirm_subscription_including_festive_board") : t("text.#{event.class.to_s.underscore}_subscription.awaiting_secretary_to_confirm_subscription") %>
