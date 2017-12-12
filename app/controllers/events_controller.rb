@@ -354,7 +354,7 @@ private
     add_pdf_html(AppConfig[:workingplan_footer], pdf)
     pdf.start_new_page
     add_pdf_title("Geburtstage vom #{I18n.l from} bis zum #{I18n.l to}", pdf)
-    bday_list = User.undeleted.upcoming_birthdays(from, to).sort{|a, b| b.date_of_birth <=> a.date_of_birth }
+    bday_list = User.undeleted.upcoming_birthdays(from, to).sort{|a, b| b.date_of_birth.yday <=> a.date_of_birth.yday }
     vals = bday_list.map do |bday|
       ["#{l(bday.date_of_birth)}", bday.fullname]
     end
