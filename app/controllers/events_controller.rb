@@ -369,7 +369,7 @@ private
 =end
     
     bday_list = User.undeleted.upcoming_birthdays(from, to).sort{|a, b|      
-      ((Date.today.yday > a.date_of_birth.yday) ? a.date_of_birth.yday : a.date_of_birth.yday - Date.today.yday - 365) <=> ((Date.today.yday > b.date_of_birth.yday) ? b.date_of_birth.yday : b.date_of_birth.yday - Date.today.yday - 365)
+      ((from.yday > a.date_of_birth.yday) ? a.date_of_birth.yday : a.date_of_birth.yday - from.yday - 365) <=> ((from.yday > b.date_of_birth.yday) ? b.date_of_birth.yday : b.date_of_birth.yday - from.yday - 365)
     }
     
     vals = bday_list.map do |bday|
