@@ -52,6 +52,8 @@ module AppConfig
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "website@logenhelfer.de")
         when :technical_contact_email
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "technik@logenhelfer.de")
+        when :robots_txt
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "User-Agent: *\nDisallow: /")
         else          
           Rails.logger.warn("#{key} has no default value")
         end

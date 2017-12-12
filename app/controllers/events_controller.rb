@@ -27,7 +27,6 @@ class EventsController < ApplicationController #AuthorizedController
     end
   end
 
-
   def add_me
     if params[:search].present?
       @users = User.search(params[:search]) - @event.participants
