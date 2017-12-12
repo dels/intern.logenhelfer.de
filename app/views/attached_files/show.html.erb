@@ -5,6 +5,8 @@
   <%= destroy_link_to @attached_file.path_array if can?(:destroy, @attached_file) %>
   <%= show_link_to_all [@attached_file.directory.category, @attached_file.directory] if can?(:show, @attached_file.directory) %>
   <%= image_link_tag_helper "disk", download_category_directory_attached_file_path(@attached_file.directory.category, @attached_file.directory, @attached_file) %>
+  <%= image_link_tag_helper 'group_link',  upload_category_directory_attached_file_path(@attached_file.directory.category, @attached_file.directory, @attached_file) if can?(:file_io_link, @attached_file) %>
+
 </p>
 
 <dl>
