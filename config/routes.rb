@@ -7,9 +7,6 @@ Rails.application.routes.draw do
   get 'auth/failure', to: redirect('/')
   get 'signout', to: 'google_sessions#destroy', as: 'signout'
 
-  authenticate :user do
-    mount Resque::Server, at: '/jobs'
-  end
 
   resources :google_sessions, only: [:create, :destroy]
 
@@ -79,6 +76,9 @@ Rails.application.routes.draw do
       get 'user_file_stats'
       get 'mem_stats'
       get 'application'
+      authenticate :user do
+        mount Resque::Server, at: '/resque_jobs', as: :resque_backend
+      end
     end
   end
 
