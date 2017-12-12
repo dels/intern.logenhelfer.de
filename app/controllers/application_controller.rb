@@ -41,7 +41,7 @@ class ApplicationController < ActionController::Base
         'simplistic'
       end
     rescue
-      current_user.sign_out
+      'simplistic'
     end
   end
 
