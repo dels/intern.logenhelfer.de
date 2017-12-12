@@ -34,13 +34,9 @@ class ApplicationController < ActionController::Base
   protected
 
   def simplistic
-    begin
-      if user_signed_in?
-        'application'
-      else
-        'simplistic'
-      end
-    rescue
+    if user_signed_in?
+      'application'
+    else
       'simplistic'
     end
   end
