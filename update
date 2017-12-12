@@ -6,6 +6,14 @@ if [ "__$RAILS_ENV" = "__" ] ; then
    exit 1;
 fi
 
+if [ "__$RAILS_USER" = "__" ] ; then
+   echo "rails user not found";
+   exit 1;
+fi
+if [ "__$RAILS_GROUP" = "__" ] ; then
+   RAILS_GROUP = $RAILS_USER
+fi
+
 echo "using $RAILS_ENV as environment"
 RAILS_ENV=$RAILS_ENV bundle exec pumactl -P $RAILS_PATH/tmp/pids/puma.pid stop;
 RAILS_ENV=$RAILS_ENV rails resque:stop ;
@@ -18,7 +26,7 @@ RAILS_ENV=$RAILS_ENV bundle update &&
 RAILS_ENV=$RAILS_ENV rails db:migrate &&
 RAILS_ENV=$RAILS_ENV rails assets:clean assets:precompile &&
 if [ "$RAILS_ENV" != "development" ] ; then
-   chown -R webster:webster $RAILS_PATH ;
+   chown -R $RAILS_USER:RAILS_GROUP $RAILS_PATH ;
 fi
 RAILS_ENV=$RAILS_ENV bundle exec puma &&
 RAILS_ENV=$RAILS_ENV rails resque:start
