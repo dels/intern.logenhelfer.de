@@ -26,5 +26,5 @@ TODO
 *.json
 *.xml
 logfile
-update
+update.conf
 config/resque-pool.yml

@@ -1,0 +1,15 @@
+
+source update.conf
+
+RAILS_ENV=$RAILS_ENV bundle exec pumactl -P $RAILS_PATH/tmp/pids/puma.pid stop;
+RAILS_ENV=$RAILS_ENV rails resque:stop ;
+if "$RAILS_ENV" -ne "development"
+  git reset --hard HEAD &&
+end
+git pull origin $GIT_BRANCH &&
+bundle update &&
+RAILS_ENV=$RAILS_ENV rails db:migrate &&
+RAILS_ENV=$RAILS_ENV rails assets:clean assets:precompile &&
+chown -R webster:webster $RAILS_PATH &&
+RAILS_ENV=$RAILS_ENV bundle exec puma &&
+RAILS_ENV=$RAILS_ENV rails resque:start
