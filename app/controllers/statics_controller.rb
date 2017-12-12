@@ -4,7 +4,9 @@ class StaticsController < ApplicationController
   respond_to :html, :text
 
   def index
+    
     unless request.path.eql?("/anmelden")
+      # FIXME: MUST BE TO bool
       if AppConfig[:working_plan_as_start_page].eql?("t") && AppConfig[:public_wp_available_to_anon_users].eql?("t")
         redirect_to calendar_export_url
       end
