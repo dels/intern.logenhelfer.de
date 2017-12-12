@@ -26,7 +26,7 @@ class StatisticsController < AuthorizedController
 
   # show
   def user_file_stats
-    @users = view_context.get_authorized(User.joins(:file_downloads).select("distinct users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname, count(*)").group("users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname").order(sort_column(User.column_names + %w|6|, '6 DESC, lastname') + " " + sort_direction))
+    @users = view_context.get_authorized(User.joins(:file_downloads).select("distinct users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname, user.academic_title_id, count(*)").group("users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname").order(sort_column(User.column_names + %w|6|, '6 DESC, lastname') + " " + sort_direction))
     
   end
 
