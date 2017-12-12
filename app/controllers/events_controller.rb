@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 class EventsController < ApplicationController #AuthorizedController
+  
   if ActiveModel::Type::Boolean.new.cast(AppConfig[:public_wp_available_to_anon_users])
     before_action :authenticate_user!, :except => [:workingplan]
   else
@@ -8,7 +9,7 @@ class EventsController < ApplicationController #AuthorizedController
 
   load_and_authorize_resource :find_by => :uuid
   
-  if AppConfig[:public_wp_available_to_anon_users].eql?("t")
+  if ActiveModel::Type::Boolean.new.cast(AppConfig[:public_wp_available_to_anon_users])
     skip_authorize_resource :only => :workingplan
   end
 
