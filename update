@@ -26,7 +26,7 @@ RAILS_ENV=$RAILS_ENV bundle update &&
 RAILS_ENV=$RAILS_ENV rails db:migrate &&
 RAILS_ENV=$RAILS_ENV rails assets:clean assets:precompile &&
 if [ "$RAILS_ENV" != "development" ] ; then
-   chown -R $RAILS_USER:RAILS_GROUP $RAILS_PATH ;
+   chown -R $RAILS_USER:$RAILS_GROUP $RAILS_PATH ;
 fi
 RAILS_ENV=$RAILS_ENV bundle exec puma &&
 RAILS_ENV=$RAILS_ENV rails resque:start
