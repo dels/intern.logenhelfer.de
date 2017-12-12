@@ -27,7 +27,7 @@ gem 'friendly_id'
 gem 'cancancan'
 gem 'prawn',                    '~> 1.0.0.rc1'
 gem 'later_dude',               '>= 0.3.1'
-gem 'icalendar',                '~> 1.5.4'
+gem 'icalendar'
 gem 'kaminari'                  
 
 # gems for google sync 
