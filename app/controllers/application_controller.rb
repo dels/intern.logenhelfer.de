@@ -31,13 +31,17 @@ class ApplicationController < ActionController::Base
     login_path
   end
 
-protected
+  protected
 
   def simplistic
-    if user_signed_in?
-      'application'
-    else
-      'simplistic'
+    begin
+      if user_signed_in?
+        'application'
+      else
+        'simplistic'
+      end
+    rescue
+      current_user.sign_out
     end
   end
 
