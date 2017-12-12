@@ -48,6 +48,10 @@ module AppConfig
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: (1024*1024*100).to_s)
         when :archive
           @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "0")
+        when :default_from_email
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "no-reply@logenhelfer.de")
+        when :technical_contact_email
+          @@records[key] = AppConfig::Adapter.new(key: "#{Rails.env}_#{key}", value: "technik@logenhelfer.de")
         else          
           Rails.logger.warn("#{key} has no default value")
         end
