@@ -1,5 +1,5 @@
 
-source update.conf
+. ./update.conf
 
 if [ "__$RAILS_ENV" = "__" ] ; then
    echo "rails env not found";
