@@ -1,6 +1,9 @@
 Guten Tag <%= @admin.fullname %>,
-
-Der Nutzer <%= @user.fullname%> hat versucht auf <%= @url %> zuzugreifen. Der Zugriff wurde verweigert:
+<%- if @user -%>
+Der Nutzer <%= @user %> hat versucht auf <%= @url %> zuzugreifen. Der Zugriff wurde verweigert:
+<%- else -%>
+Es ist versucht worden auf <%= url %> zuzugreifen. Der Zugriff wurde verweigert:
+<%- end -%>
 
 <%= @action %> <%= @subject %>
 

@@ -14,13 +14,13 @@ class UserMailer < ActionMailer::Base
   end
 
   def access_denied_notification(user, action, subject, url)
-    @user = user
+    @user = user.try(:fullname)
     @url = url
     @admin  = UserRole.where(role_id: Role.where(name: 'Admin').first).first.user
     return unless @admin
     @action = action
     @subject = subject
-    mail to: AppConfig[:technical_contact_email], subject: I18n.t('user_mailer.access_denied_notification.subject', user: user.firstname)
+    mail to: AppConfig[:technical_contact_email], subject: I18n.t('user_mailer.access_denied_notification.subject', user: user)
   end
   
   def change_notification(changed_user, deleted_addresses, changing_user)
