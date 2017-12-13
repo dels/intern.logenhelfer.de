@@ -9,7 +9,6 @@ class StatisticsController < AuthorizedController
   # show last users activity and last login
   def user_stats
     age_all = 0
-    Rails.logger.info("found #{User.undeleted.count} users")
     User.undeleted.each { |usr| age_all = age_all + usr.age }
     @avg_age = age_all / User.undeleted.count
     @users = view_context.get_authorized_paginated(User.where("current_sign_in_at IS NOT NULL").order(sort_column(User.column_names, "current_sign_in_at DESC, sign_in_count") + " " + sort_direction)).page(params[:page])
@@ -27,7 +26,7 @@ class StatisticsController < AuthorizedController
 
   # show
   def user_file_stats
-    @users = view_context.get_authorized(User.joins(:file_downloads).select("distinct users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname, user.academic_title_id, count(*)").group("users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname").order(sort_column(User.column_names + %w|6|, '6 DESC, lastname') + " " + sort_direction))
+    @users = view_context.get_authorized(User.joins(:file_downloads).select("distinct users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname, users.academic_title_id, count(*)").group("users.id, users.uuid, users.matriculation_number, users.firstname, users.lastname").order(sort_column(User.column_names + %w|6|, '6 DESC, lastname') + " " + sort_direction))
     
   end
 
