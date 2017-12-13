@@ -3,7 +3,7 @@ APP_VERSION = {
   :minor => 9,
   :patch => `git log -n1 --date=short --pretty=format:"%h"`.chomp,
   :hash =>  `git log -n1 --date=short --pretty=format:"%H"`.chomp,
-  :last_commit_at => `git log -n1 --date=short --pretty=format:"%cd"`.chomp,
+  :last_commit_at => `git log -n1 --date=short --pretty=format:"%ci"`.chomp,
   :deployed_at => Time.now.strftime("%d.%m.%Y"),
   :deployed_at_full => Time.now
 }.freeze

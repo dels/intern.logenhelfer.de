@@ -12,7 +12,7 @@
 <p><b><%= APP_VERSION[:hash] %></b></p>
 
 <h3>Last Commit</h3>
-<p><b><%= l(Date.parse(APP_VERSION[:last_commit_at])) %></b></p>
+<p><b><%= l(DateTime.parse(APP_VERSION[:last_commit_at], format: :numbers_only)) %></b></p>
 
 <h3>Deployed at:</h3>
 <p><b><%= l(APP_VERSION[:deployed_at_full], format: :numbers_only) %></b></p>
