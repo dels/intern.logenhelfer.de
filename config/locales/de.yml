@@ -86,6 +86,7 @@ de:
       long: "%e. %B %Y"
       short: "%e. %b"
       month_year: "%b %Y"
+      date_only: "%A, %d. %B %Y"
     abbr_day_names:
       - So
       - Mo
