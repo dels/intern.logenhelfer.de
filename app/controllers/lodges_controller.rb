@@ -1,9 +1,11 @@
+# coding: utf-8
 class LodgesController < AuthorizedController
   helper_method :sort_column, :sort_direction
 
   load_and_authorize_resource :find_by => :slug
   
   def index
+    flash.now[:error] = "Lodgen können nicht erstellt werden, weil keine Distrikte angelegt sind." if District.undeleted.empty?
   end
 
   def show
@@ -11,6 +13,7 @@ class LodgesController < AuthorizedController
   end
 
   def new
+    redirect_to lodges_path if District.undeleted.empty?
   end
 
   def create

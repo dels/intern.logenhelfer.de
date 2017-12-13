@@ -18,4 +18,6 @@ class District < ApplicationRecord
     end    
   end
 
+  scope :undeleted, -> { where(deleted: false) }
+  
 end

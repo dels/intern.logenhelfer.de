@@ -1,6 +1,6 @@
 <% title t("activerecord.models.lodge") %>
 
-<% if can? :create, Lodge %>
+<% if (false == District.undeleted.empty?) && (can? :create, Lodge) %>
 <p class="horizontal-menu"><%= link_to t("activerecord.actions.create_new", :model => t("activerecord.models.lodge")), new_lodge_path %></p>
 <% end %>
 
