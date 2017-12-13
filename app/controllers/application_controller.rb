@@ -19,7 +19,7 @@ class ApplicationController < ActionController::Base
     UserMailer.access_denied_notification(current_user, exception.action.to_s, exception.subject.inspect, request.url).deliver_later
     redirect_to login_url, alert: t("devise.error.access_denied")
   end
-  
+
   def current_google_user
     @current_google_user ||= User.find(session[:google_user_id]) if session[:google_user_id]
     return nil unless @current_google_user

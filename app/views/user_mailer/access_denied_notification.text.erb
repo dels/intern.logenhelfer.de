@@ -1,16 +1,17 @@
 Guten Tag <%= @admin.fullname %>,
+
 <%- if @user -%>
-Der Nutzer <%= @user %> hat versucht auf <%= @url %> zuzugreifen. Der Zugriff wurde verweigert:
+Der Nutzer <%= @user.fullname %> hat versucht auf <%= @url %> zuzugreifen. Der Zugriff wurde verweigert:
 <%- else -%>
 Es ist versucht worden auf <%= url %> zuzugreifen. Der Zugriff wurde verweigert:
 <%- end -%>
 
 <%= @action %> <%= @subject %>
 
-Tel: <%= @user.phone %>
-Mail: <%= @user.email %>
-
-Mit freundlichen Grüßen
+<%- if @user -%>
+Tel: <%= @user.try(:phone) %>
+Mail: <%= @user.try(:email) %>
+<%- end -%>
 
 --
 Dies ist eine automatisch generierte E-Mail.

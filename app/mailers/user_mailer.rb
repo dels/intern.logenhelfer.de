@@ -14,7 +14,7 @@ class UserMailer < ActionMailer::Base
   end
 
   def access_denied_notification(user, action, subject, url)
-    @user = user.try(:fullname)
+    @user = user
     @url = url
     @admin  = UserRole.where(role_id: Role.where(name: 'Admin').first).first.user
     return unless @admin
