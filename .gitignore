@@ -27,4 +27,5 @@ TODO
 *.xml
 logfile
 update.conf
-config/resque-pool.yml
+config/resque-pool.ymlconfig/secrets.yml.key
+node_modules

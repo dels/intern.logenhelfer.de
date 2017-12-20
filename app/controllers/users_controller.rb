@@ -143,7 +143,7 @@ class UsersController < AuthorizedController
 
  def members_of_council
    @users = view_context.get_authorized_paginated(Kaminari.paginate_array(User.undeleted.members_of_council)).page(params[:page])
-   @roles = Role.where(:administrational_role => false, :ordering_number => [1 .. 100]).order(:ordering_number).delete_if{|r| r.users.empty? }
+   @roles = Role.where(:administrational_role => false, :ordering_number => [1..100]).order(:ordering_number).select {|r| false == r.users.first.nil?}
  end
 
   def birthday_list

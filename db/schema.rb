@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171210173716) do
+ActiveRecord::Schema.define(version: 20171219180144) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -163,7 +163,7 @@ ActiveRecord::Schema.define(version: 20171210173716) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.date "date", null: false
-    t.time "time", null: false
+    t.time "time"
     t.string "uuid", limit: 36
     t.string "location"
     t.index ["created_by_id"], name: "index_events_on_created_by_id"

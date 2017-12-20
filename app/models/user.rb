@@ -167,7 +167,7 @@ class User < ApplicationRecord
   end
 
   def self.members_of_council
-    User.all(:joins => :roles, :conditions => "roles.name = 'MemberOfCouncil'", :order => 'roles.ordering_number ASC, roles.display_name ASC, users.lastname')
+    User.undeleted.joins(:roles).where("roles.name = 'MemberOfCouncil'", :order => 'roles.ordering_number ASC, roles.display_name ASC, users.lastname')
   end
 
   def positions_email_adresses
