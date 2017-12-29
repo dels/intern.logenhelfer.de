@@ -10,61 +10,61 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171219180144) do
+ActiveRecord::Schema.define(version: 20171224133501) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "academic_titles", id: :serial, force: :cascade do |t|
-    t.string "title"
-    t.string "short"
+    t.string "title", limit: 255
+    t.string "short", limit: 255
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["short"], name: "index_academic_titles_on_short", unique: true
     t.index ["title"], name: "index_academic_titles_on_title", unique: true
   end
 
   create_table "addresses", id: :serial, force: :cascade do |t|
     t.integer "addressable_id"
-    t.string "addressable_type"
-    t.string "purpose"
-    t.string "street1"
-    t.string "street2"
-    t.string "street3"
-    t.string "zip"
-    t.string "city"
-    t.string "phone"
-    t.string "fax"
-    t.string "email"
+    t.string "addressable_type", limit: 255
+    t.string "purpose", limit: 255, default: "geschäftlich"
+    t.string "street1", limit: 255
+    t.string "street2", limit: 255
+    t.string "street3", limit: 255
+    t.string "zip", limit: 255
+    t.string "city", limit: 255
+    t.string "phone", limit: 255
+    t.string "fax", limit: 255
+    t.string "email", limit: 255
     t.text "remarks"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.integer "type_of_address"
-    t.string "mobile"
+    t.string "mobile", limit: 255
   end
 
   create_table "announcement_subscriptions", id: :serial, force: :cascade do |t|
     t.integer "user_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_announcement_subscriptions_on_user_id"
   end
 
   create_table "announcements", id: :serial, force: :cascade do |t|
-    t.string "uuid"
-    t.string "title"
+    t.string "uuid", limit: 255
+    t.string "title", limit: 255
     t.text "message_body"
     t.integer "created_by_id"
     t.integer "updated_by_id"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "app_config_adapters", id: :serial, force: :cascade do |t|
-    t.string "key"
+    t.string "key", limit: 255
     t.text "value"
     t.index ["key"], name: "index_app_config_adapters_on_key", unique: true
   end
@@ -72,22 +72,22 @@ ActiveRecord::Schema.define(version: 20171219180144) do
   create_table "attached_file_roles", id: :serial, force: :cascade do |t|
     t.integer "attached_file_id"
     t.integer "role_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["attached_file_id"], name: "index_attached_file_roles_on_attached_file_id"
     t.index ["role_id"], name: "index_attached_file_roles_on_role_id"
   end
 
   create_table "attached_files", id: :serial, force: :cascade do |t|
     t.string "uuid", limit: 36
-    t.string "filename"
+    t.string "filename", limit: 255
     t.binary "content"
-    t.string "content_type"
+    t.string "content_type", limit: 255
     t.integer "directory_id"
     t.integer "uploader_id"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.integer "content_length", default: -1
     t.index ["deleted"], name: "index_attached_files_on_deleted"
     t.index ["directory_id"], name: "index_attached_files_on_directory_id"
@@ -95,55 +95,59 @@ ActiveRecord::Schema.define(version: 20171219180144) do
   end
 
   create_table "categories", id: :serial, force: :cascade do |t|
-    t.string "name"
+    t.string "name", limit: 255
     t.text "description"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string "slug"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "slug", limit: 255
+    t.string "uuid"
     t.index ["slug"], name: "index_categories_on_slug"
+    t.index ["uuid"], name: "index_categories_on_uuid"
   end
 
   create_table "category_roles", id: :serial, force: :cascade do |t|
     t.integer "category_id"
     t.integer "role_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["category_id"], name: "index_category_roles_on_category_id"
     t.index ["role_id"], name: "index_category_roles_on_role_id"
   end
 
   create_table "directories", id: :serial, force: :cascade do |t|
-    t.string "name"
+    t.string "name", limit: 255
     t.text "description"
     t.integer "category_id"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string "slug"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "slug", limit: 255
+    t.string "uuid"
     t.index ["category_id"], name: "index_directories_on_category_id"
     t.index ["deleted"], name: "index_directories_on_deleted"
     t.index ["slug"], name: "index_directories_on_slug"
+    t.index ["uuid"], name: "index_directories_on_uuid"
   end
 
   create_table "directory_roles", id: :serial, force: :cascade do |t|
     t.integer "directory_id"
     t.integer "role_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["directory_id"], name: "index_directory_roles_on_directory_id"
     t.index ["role_id"], name: "index_directory_roles_on_role_id"
   end
 
   create_table "districts", id: :serial, force: :cascade do |t|
-    t.string "slug"
-    t.string "name"
+    t.string "slug", limit: 255
+    t.string "name", limit: 255
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
-  create_table "event_participants", id: :serial, force: :cascade do |t|
+  create_table "event_participants", force: :cascade do |t|
     t.integer "user_id"
     t.integer "event_id"
     t.boolean "festive_board", default: false
@@ -153,19 +157,19 @@ ActiveRecord::Schema.define(version: 20171219180144) do
   end
 
   create_table "events", id: :serial, force: :cascade do |t|
-    t.string "title"
+    t.string "title", limit: 255
     t.text "public_description"
     t.text "private_description"
     t.boolean "whole_day"
     t.integer "created_by_id"
     t.integer "updated_by_id"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.date "date", null: false
     t.time "time"
     t.string "uuid", limit: 36
-    t.string "location"
+    t.string "location", limit: 255
     t.index ["created_by_id"], name: "index_events_on_created_by_id"
     t.index ["updated_by_id"], name: "index_events_on_updated_by_id"
   end
@@ -174,34 +178,34 @@ ActiveRecord::Schema.define(version: 20171219180144) do
     t.integer "user_id"
     t.integer "external_event_id"
     t.boolean "subscription_confirmed", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.boolean "festive_board", default: false
   end
 
   create_table "external_events", id: :serial, force: :cascade do |t|
-    t.string "uuid"
-    t.string "title", null: false
+    t.string "uuid", limit: 255
+    t.string "title", limit: 255, null: false
     t.text "description"
-    t.string "location", null: false
+    t.string "location", limit: 255, null: false
     t.time "time", null: false
     t.date "date", null: false
     t.integer "created_by_id", null: false
     t.integer "updated_by_id"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string "host"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "host", limit: 255
   end
 
   create_table "file_downloads", id: :serial, force: :cascade do |t|
     t.integer "attached_file_id"
     t.integer "user_id"
-    t.string "remote_ip"
+    t.string "remote_ip", limit: 255
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string "filename"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "filename", limit: 255
     t.index ["deleted"], name: "index_file_downloads_on_deleted"
     t.index ["user_id"], name: "index_file_downloads_on_user_id"
   end
@@ -219,47 +223,48 @@ ActiveRecord::Schema.define(version: 20171219180144) do
   end
 
   create_table "lodges", id: :serial, force: :cascade do |t|
-    t.string "slug"
-    t.string "name"
+    t.string "slug", limit: 255
+    t.string "name", limit: 255
     t.text "description"
     t.integer "district_id"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "officers", id: :serial, force: :cascade do |t|
-    t.string "uuid"
+    t.string "uuid", limit: 255
     t.integer "lodge_id"
-    t.string "firstname"
-    t.string "lastname"
+    t.string "firstname", limit: 255
+    t.string "lastname", limit: 255
     t.integer "role_id"
-    t.string "role_email"
+    t.string "role_email", limit: 255
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "roles", id: :serial, force: :cascade do |t|
-    t.string "name"
-    t.string "description"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string "display_name"
+    t.string "name", limit: 255
+    t.string "description", limit: 255
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "display_name", limit: 255
     t.boolean "group", default: false
     t.boolean "administrational_role", default: true
-    t.string "email"
+    t.string "email", limit: 255
     t.integer "ordering_number"
+    t.boolean "deleted", default: false
   end
 
   create_table "seekers", id: :serial, force: :cascade do |t|
-    t.string "firstname"
-    t.string "lastname"
-    t.string "source"
+    t.string "firstname", limit: 255
+    t.string "lastname", limit: 255
+    t.string "source", limit: 255
     t.boolean "invite"
     t.boolean "deleted", default: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.string "uuid", limit: 36
     t.integer "preferred_way_of_contact"
     t.integer "status"
@@ -269,43 +274,44 @@ ActiveRecord::Schema.define(version: 20171219180144) do
   create_table "user_roles", id: :serial, force: :cascade do |t|
     t.integer "user_id"
     t.integer "role_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.date "role_added_at"
   end
 
   create_table "users", id: :serial, force: :cascade do |t|
-    t.string "email", default: "", null: false
-    t.string "encrypted_password", default: "", null: false
-    t.string "reset_password_token"
+    t.string "email", limit: 255, default: "", null: false
+    t.string "encrypted_password", limit: 255, default: "", null: false
+    t.string "reset_password_token", limit: 255
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
     t.integer "sign_in_count", default: 0
     t.datetime "current_sign_in_at"
     t.datetime "last_sign_in_at"
-    t.string "current_sign_in_ip"
-    t.string "last_sign_in_ip"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.string "uuid"
-    t.string "firstname"
-    t.string "lastname"
+    t.string "current_sign_in_ip", limit: 255
+    t.string "last_sign_in_ip", limit: 255
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "uuid", limit: 255
+    t.string "firstname", limit: 255
+    t.string "lastname", limit: 255
     t.date "date_of_birth"
     t.date "accepted_at"
     t.boolean "deleted", default: false
     t.integer "matriculation_number"
-    t.string "job_title"
+    t.string "job_title", limit: 255
     t.integer "title"
     t.integer "academic_title_id"
-    t.string "mother_lodge"
-    t.string "provider"
-    t.string "g_uid"
-    t.string "g_name"
-    t.string "g_mail"
-    t.string "oauth_token"
+    t.string "mother_lodge", limit: 255
+    t.string "provider", limit: 255
+    t.string "g_uid", limit: 255
+    t.string "g_name", limit: 255
+    t.string "g_mail", limit: 255
+    t.string "oauth_token", limit: 255
     t.datetime "oauth_expires_at"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["uuid"], name: "index_users_on_uuid"
   end
 
 end
