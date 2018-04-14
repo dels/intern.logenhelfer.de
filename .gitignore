@@ -29,3 +29,14 @@ logfile
 update.conf
 config/resque-pool.ymlconfig/secrets.yml.key
 node_modules
+bin/webpack*
+.postcssrc.yml
+.babelrc
+config/resque-pool.yml
+config/secrets.yml
+config/webpacker.yml
+environment
+public/javascripts/
+public/packs/
+yarn*
+config/secrets.yml.key
