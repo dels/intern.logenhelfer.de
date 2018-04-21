@@ -90,7 +90,7 @@ block 'create academic titles' do
 
 end
 
-
+uploader = nil
 block 'create users' do
   log u = User.create!(
                        matriculation_number: 890,
@@ -121,6 +121,7 @@ block 'create users' do
   u.master_mason_since = Date.today - 1.years
   u.roles << ur
   u.save!
+  uploader = u
 
   log u = User.create!(
                        matriculation_number: 890,
@@ -348,6 +349,7 @@ block 'create files' do
                            content: File.open(File.join(Rails.root, "/app/assets/seed/MasterMasonRite.pdf")),
                            content_type: "application/pdf",
                            directory_id: master_mason_dir.id,
+                           uploader: uploader,
                            roles: [mr]
                            )
   
@@ -356,6 +358,7 @@ block 'create files' do
                            content: File.open(File.join(Rails.root, "/app/assets/seed/FellowCraftRite.pdf")),
                            content_type: "application/pdf",
                            directory_id: fellow_craft_dir.id,
+                           uploader: uploader,
                            roles: [fr , mr]
                            )
   
@@ -364,6 +367,7 @@ block 'create files' do
                            content: File.open(File.join(Rails.root, "/app/assets/seed/EnteredApprenticeRite.pdf")),
                            content_type: "application/pdf",
                            directory_id: entered_apprentice_dir.id,
+                           uploader: uploader,
                            roles: [er, fr , mr]
                            )
   
@@ -372,6 +376,7 @@ block 'create files' do
                            content: File.open(File.join(Rails.root, "/app/assets/seed/InitiationRite.pdf")),
                            content_type: "application/pdf",
                            directory_id: entered_apprentice_dir.id,
+                           uploader: uploader,
                            roles: [er, fr , mr]
                            )
   
