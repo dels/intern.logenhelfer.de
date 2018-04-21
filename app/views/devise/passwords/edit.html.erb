@@ -1,16 +1,16 @@
-<h2>Change your password</h2>
+<h2>Passwort ändern</h2>
 
 <%= form_for(resource, :as => resource_name, :url => password_path(resource_name), :html => { :method => :put }) do |f| %>
   <%= devise_error_messages! %>
   <%= f.hidden_field :reset_password_token %>
 
-  <div><%= f.label :password, "New password" %><br />
+  <div><%= f.label :password, "Neues Password" %><br />
   <%= f.password_field :password, class: jqueryui_input_classes %></div>
 
-  <div><%= f.label :password_confirmation, "Confirm new password" %><br />
+  <div><%= f.label :password_confirmation, "Neues Passwort bestätigen" %><br />
   <%= f.password_field :password_confirmation, class: jqueryui_input_classes %></div>
 
-  <div><%= f.submit "Change my password" %></div>
+  <div><%= f.submit "Password ändern" %></div>
 <% end %>
 
 <%= render :partial => "devise/shared/links" %>

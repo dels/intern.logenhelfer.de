@@ -369,7 +369,7 @@ de:
       workingplan:
         header: 'Arbeitsplan %{from}-%{to}'
         pdf_export: 'Diese Ansicht kann auch <a href="%{url}">als PDF</a> heruntergeladen werden.'
-        ical_export: 'Um den Arbeitsplan in Ihrem Kalender zu importieren, benutzen Sie bitte diese Adresse: <tt>%{url}</tt>'
+        ical_export: 'Um den Arbeitsplan in Deinen Kalender zu importieren, benutze bitte diese Adresse: <tt>%{url}</tt>'
       no_events: 'Derzeit keine Termine verfügbar.'
     event:
       ical_export: 'Diesen Termin in den lokalen Kalender <a href="%{url}">importieren</a>.'
@@ -752,7 +752,7 @@ de:
     imprint: Impressum
   devise:
     confirmations:
-      confirmed: Ihr Account wurde erfolgreich bestätigt. Du kannst Dich nun anmelden.
+      confirmed: Dein Account wurde erfolgreich bestätigt. Du kannst Dich nun anmelden.
       send_instructions: Du wirst in Kürze eine E-Mail mit einer Bestätigungsanweisung erhalten.
       send_paranoid_instructions: 'Du wirst in Kürze eine E-Mail mit allen weiteren Anweisungen bekommen, wenn ihre E-Mail Adresse in der Datenbank gefunden worden ist. Falls nicht, so wirst Du darüber nicht informiert werden.'
     error:
@@ -806,15 +806,15 @@ de:
       updated_not_active: Das Passwort wurde erfolgreich aktualisiert.
       user:
         send_instructions: Du wirst in Kürze eine E-Mail erhalten. Die E-Mail enthält die notwendigen Informationen über das weitere Vorgehen.
-        updated: Ihr Passwort wurde erfolgreich geändert. Du bist jetzt angemeldet.
+        updated: Dein Passwort wurde erfolgreich geändert. Du bist jetzt angemeldet.
     registrations:
       destroyed: Bye! Your account was successfully cancelled. We hope to see you again soon.
       signed_up: Sie haben sich erfolgreich registriert!
       signed_up_but_inactive: 'You have signed up successfully. However, we could not sign you in because your account is not yet activated.'
       signed_up_but_locked: 'You have signed up successfully. However, we could not sign you in because your account is locked.'
-      signed_up_but_unconfirmed: Eine E-Mail mit Anweisungen zur Bestätigung Ihrer E-Mail Adresse ist soeben versendet worden. Bitte prüfen Sie ihre E-Mails.
-      update_needs_confirmation: Sie haben Ihren Account erfolgreich aktualisiert. Wir verifizieren nun Ihre E-Mail Adresse. Bitte prüfen Sie ihre E-Mails und folgen Sie den Anweisungen.
-      updated: Ihr Account wurde erfolgreich aktualisiert.
+      signed_up_but_unconfirmed: Eine E-Mail mit Anweisungen zur Bestätigung Deiner E-Mail Adresse ist soeben versendet worden. Bitte prüfe Deine E-Mails.
+      update_needs_confirmation: Du hast Deinen Account erfolgreich aktualisiert. Wir verifizieren nun Deine E-Mail Adresse. Bitte prüfe Deine E-Mails und folge den Anweisungen.
+      updated: Deine Account wurde erfolgreich aktualisiert.
     sessions:
       signed_in: Anmeldung erfolgreich.
       signed_out: Abmeldung erfolgreich.
@@ -825,12 +825,12 @@ de:
     unlocks:
       send_instructions: You will receive an email with instructions about how to unlock your account in a few minutes.
       send_paranoid_instructions: 'If your account exists, you will receive an email with instructions about how to unlock it in a few minutes.'
-      unlocked: Sie haben Ihr Benutzerkonto erfolgreich entsperrt. Sie können sich nun anmelden.
+      unlocked: Du hast soeben Benutzerkonto erfolgreich entsperrt. Du kannst Dich nun anmelden.
   errors:
     format: '%{attribute} %{message}'
     messages:
       accepted: muss akzeptiert werden
-      already_confirmed: Sie haben Ihre Adresse bereits bestätigt. Bitte versuchen Sie sich anzumelden.
+      already_confirmed: Du hast Deine E-Mail Adresse bereits bestätigt. Bitte versuche Dich anzumelden.
       blank: muss ausgefüllt werden
       confirmation: stimmt nicht mit der Bestätigung überein
       empty: muss ausgefüllt werden
