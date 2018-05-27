@@ -10,6 +10,13 @@ class StaticsController < ApplicationController
       end
     end
     @announcements = Announcement.page(params[:page]).per(5)
+    unless current_user.try(:accepted_gdpr)
+      if params[:accept_gdpr]
+        current_user.accept_gdpr!
+        return
+      end
+      @has_to_accept_gdpr = true
+    end
   end
 
   def impressum

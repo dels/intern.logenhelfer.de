@@ -2,6 +2,33 @@
 <% title AppConfig[:lodge] %>
 <% if user_signed_in? %>
 
+<% unless current_user.accepted_gdpr %>
+
+<h2>Willkommen Br. <%= h current_user.fullname %></h2>
+
+<p>
+
+  <h3>Datenschutzbestimmungen</h3>
+  <p>
+    Bitte lese die Datenschutzbestimmungen im <%= link_to "Impressum", :impressum, target: "_blank" %> nach. 
+  </p>
+  <p>
+  <b>Um diesen Webdienst weiter nutzen zu können müssen sie den Datenschutzbedinungen zustimmen.</b>
+  </p>
+  
+  <%= form_tag  do %>
+
+  <%= check_box_tag(:accept_gdpr) %>
+  <%= label_tag(:accept_gdpr, "Datenschutzvereinbarung akzeptieren und der Erhebung, Speicherung und Verarbeitung der Daten zustimmen.") %>
+  <p>
+    <%= submit_tag("Ich akzeptiere die Datenschutzvereinbarung") %>
+  </p>
+  <% end %>
+  
+</p>
+
+<% else %>
+
 <h2>Willkommen Br. <%= h current_user.fullname %></h2>
 
 Hier findest Du die neusten Meldungen Deiner Loge. Wenn Du bei Neuigkeiten eine E-Mail bekommen möchtest, dann markiere diese Checkbox:
@@ -20,6 +47,7 @@ Hier findest Du die neusten Meldungen Deiner Loge. Wenn Du bei Neuigkeiten eine 
 <% end %>
 <%= paginate @announcements if @announcements.present? %>
 
+<% end %>
 <% else %>
   <p>Bitte loggen Sie sich ein:</p>
   <%= render 'devise/sessions/form' %>

@@ -387,6 +387,13 @@ class User < ApplicationRecord
     return I18n.t("text.external_event_subscription.to_be_subscribed_to_work_and_festive_board") 
   end
 
+  def accept_gdpr!
+    self.accepted_gdpr = true
+    Rails.logger.info("#{fullname} has accepted GDPR.")
+    
+    self.save
+  end
+  
   alias to_s fullname
 
 end

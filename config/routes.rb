@@ -117,6 +117,7 @@ Rails.application.routes.draw do
 
   
   get '/anmelden', to: 'statics#index', as: :login
+  post '/anmelden', to: 'statics#index'
   get '/hilfe', to: 'statics#help', as: :help
 
 

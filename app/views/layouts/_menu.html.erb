@@ -1,5 +1,11 @@
 <%- if user_signed_in? -%>
-  <ul>
+<% unless current_user.accepted_gdpr %>
+<ul>
+  <li><%= t "devise.information.signed_in_as", user: current_user.email %></li>
+  <li class="space-bottom"><%= link_to t("devise.links.sign_out"), destroy_user_session_path %></li>
+</ul>
+<% else %>
+<ul>
     <li><%= t "devise.information.signed_in_as", user: current_user.email %></li>
     <li class="space-bottom"><%= link_to t("devise.links.sign_out"), destroy_user_session_path %></li>
     <li>
@@ -129,7 +135,8 @@
       <ul class="space-top"><%= categories_menu %></ul>
     </li>
   </ul>
-<%- else -%>
+  <% end %>
+  <%- else -%>
   <ul>
     <%= content_tag :li, link_to(AppConfig[:lodge], root_url) -%>
     <%= content_tag :li, link_to(t("devise.links.sign_in"), new_user_session_path) -%>
