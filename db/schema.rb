@@ -255,6 +255,9 @@ ActiveRecord::Schema.define(version: 20180527073059) do
     t.string "email", limit: 255
     t.integer "ordering_number"
     t.boolean "deleted", default: false
+    t.boolean "admin_role", default: false
+    t.boolean "officer_role", default: false
+    t.integer "index"
   end
 
   create_table "seekers", id: :serial, force: :cascade do |t|

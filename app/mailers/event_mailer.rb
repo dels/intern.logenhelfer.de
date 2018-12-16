@@ -9,6 +9,14 @@ class EventMailer < ActionMailer::Base
     mail to: @secretary.email, cc: user.email, subject: I18n.t('event_mailer.new_subscription_notification.subject', user: user.firstname)
   end
 
+  def new_event_desubscription_notification(event, user)
+    @secretary  = User.secretary
+    return unless @secretary
+    @user = user
+    @external_event = event
+    mail to: @secretary.email, cc: user.email, subject: I18n.t('event_mailer.new_desubscription_notification.subject', user: user.firstname)
+  end
+  
   def new_external_event_subscription_notification(event, user)
     @secretary  = User.secretary
     return unless @secretary

@@ -40,3 +40,4 @@ public/javascripts/
 public/packs/
 yarn*
 config/secrets.yml.key
+redis_start
