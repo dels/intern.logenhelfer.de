@@ -43,7 +43,7 @@
 
   
 <!-- fields for external event subscription -->
-<%- if event.respond_to?(:subscription) -%>
+<%- if event.respond_to?(:subscription) && event.date >= DateTime.now -%>
 <%- # user has no subscption to this event -%>
 <%- unless event.subscription(current_user) -%>
   <p id='<%= "#{event.class.to_s.underscore}_subscribe_to_work" %>' class="description newspaper icon">
