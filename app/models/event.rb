@@ -68,6 +68,12 @@ class Event < ApplicationRecord
       event.dtend     = ical_date(date) {|d| d.change(hour: time.hour + 1, min: time.min) }
     end
 
+    tzid = "Europe/Berlin"
+    timezone = TZInfo::Timezone.get tzid
+    calendar.timezone do |t|
+      t.tzid = "Europe/Berlin"
+    end
+    
     calendar
   end
 
