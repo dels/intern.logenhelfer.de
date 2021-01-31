@@ -2,7 +2,8 @@ source 'https://rubygems.org'
 
 #gem 'rails',                    '~>5.1'
 gem 'rails', '~> 5.1.4'
-gem 'puma'
+gem 'puma-daemon', require: false
+gem 'puma',  '~> 5'
 gem 'uglifier'
 gem 'coffee-rails'
 gem 'libv8' 

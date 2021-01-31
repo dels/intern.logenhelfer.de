@@ -27,7 +27,8 @@ TODO
 *.xml
 logfile
 update.conf
-config/resque-pool.ymlconfig/secrets.yml.key
+config/resque-pool.yml
+config/secrets.yml.key
 node_modules
 bin/webpack*
 .postcssrc.yml
