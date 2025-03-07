@@ -1,0 +1,34 @@
+services:
+  postgres:
+    # We should use the same version of Postgres in development as in production
+    image: postgres:15.10
+    environment:
+      POSTGRES_PASSWORD: password
+      PGUSER: postgres
+    volumes:
+      - postgresvolume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+
+  logenhelfer:
+    build: ./rails-app/
+    ports:
+      - "9876:9876"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgres:5432/fwzeintern
+      RAILS_ENV: development
+      RAILS_PATH: /logenhelfer
+      GIT_BRANCH: master
+      RAILS_USER: webster
+      RAILS_MAX_THREADS: 5
+      PUMA_BIND: 'tcp://127.0.0.1:9876'
+
+
+
+volumes:
+  postgresvolume: {}
+  cache:
+    driver: local

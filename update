@@ -11,10 +11,7 @@ if [ "__$RAILS_USER" = "__" ] ; then
    exit 1;
 fi
 
-if [ "__$RAILS_PATH" = "__" ] ; then
-   echo "rails path not found";
-   exit 1;
-fi
+
 
 if [ "__$RAILS_GROUP" = "__" ] ; then
    RAILS_GROUP="$RAILS_USER"
@@ -24,9 +21,9 @@ echo "using $RAILS_ENV as environment. will chmod to $RAILS_USER:$RAILS_GROUP"
 RAILS_PATH=$RAILS_PATH RAILS_ENV=$RAILS_ENV bundle exec pumactl -P $RAILS_PATH/tmp/pids/puma.pid stop;
 RAILS_ENV=$RAILS_ENV rails resque:stop ;
 if [ "$RAILS_ENV" != "development" ] ; then
-   echo "updating git to HEAD of $GIT_BRANCH" ; 
-   git reset --hard HEAD ; 
-   sudo -u$RAILS_USER git pull origin $GIT_BRANCH ; 
+   echo "updating git to HEAD of $GIT_BRANCH" ;
+   git reset --hard HEAD ;
+   sudo -u$RAILS_USER git pull origin $GIT_BRANCH ;
    RAILS_ENV=$RAILS_ENV bundle update ;
 fi
 RAILS_ENV=$RAILS_ENV rails db:migrate &&
