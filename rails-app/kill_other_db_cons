@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  psql -h localhost -Udels -d template1 -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pid <> pg_backend_pid();";
+  exit 0;
+fi
+psql -h localhost -Upostgres -d template1 -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pid <> pg_backend_pid();";

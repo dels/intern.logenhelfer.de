@@ -1,3 +1,39 @@
+
+
+
+== general installation ToDos
+
+customize config/environments/<lodgename>.rb # use production.rb as example
+customize config/resque-pool.yml 
+
+- update thin according to name
+- update update-script according to name
+- create environment file
+  - set lodgename as env name
+  - customize mail settings
+- create database.yml
+- add database user to postgres
+psql  -Upostgres -d template1 -c "create role NEW_USER with createdb login password 'NEW_PASS'"
+
+- add rvm environment
+
+
+
+== install nokogiri on modifications
+
+gem uninstall nokogiri libxml-ruby &&
+
+brew update &&brew uninstall libxml2 && brew install libxml2 --with-xml2-config && brew install libxslt &&
+
+bundle config build.nokogiri --with-xml2-include=/usr/local/Cellar/libxml2/2.8.0/include/libxml2 --with-xml2-lib=/usr/local/Cellar/libxml2/2.8.0/lib --with-xslt-dir=/usr/local/Cellar/libxslt/1.1.26/ && bundle install
+
+
+
+
+
+
+
+
 == Welcome to Rails
 
 Rails is a web-application framework that includes everything needed to create

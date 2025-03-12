@@ -24,7 +24,22 @@ services:
       GIT_BRANCH: master
       RAILS_USER: webster
       RAILS_MAX_THREADS: 5
-      PUMA_BIND: 'tcp://127.0.0.1:9876'
+      PUMA_BIND: 'tcp://0.0.0.0:9876'
+
+  # logenhelfer-prod:
+  #   build: ./rails-app/
+  #   ports:
+  #     - "9876:9876"
+  #   depends_on:
+  #     - postgres
+  #   environment:
+  #     DATABASE_URL: postgres://fwzeintern:fwzeintern@pg.elsbroek.com:5432/fwzeintern
+  #     RAILS_ENV: fwze
+  #     RAILS_PATH: /logenhelfer
+  #     GIT_BRANCH: master
+  #     RAILS_USER: webster
+  #     RAILS_MAX_THREADS: 5
+  #     PUMA_BIND: 'tcp://0.0.0.0:9876'
 
 
 

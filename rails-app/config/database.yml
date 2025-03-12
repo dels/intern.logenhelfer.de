@@ -1,0 +1,19 @@
+fwze:
+  database: fwzeintern
+  #  min_messages: error
+  adapter: postgresql
+  encoding: unicode
+  host: pg.elsbroek.com
+  username: fwzeintern
+  password: fwzeintern
+  pool: 5
+
+archive:
+  database: fwzeinternarchieve
+  #  min_messages: error
+  adapter: postgresql
+  encoding: unicode
+  host: pg.elsbroek.com
+  username: fwzeinternarch
+  password: fwzeinternarch
+  pool: 5

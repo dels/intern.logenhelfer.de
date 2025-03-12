@@ -6,16 +6,16 @@
 #
 require 'puma/daemon'
 
-threads_count = ENV.fetch("RAILS_MAX_THREADS") { 4 }
+threads_count = ENV.fetch('RAILS_MAX_THREADS', 4).to_i
 threads threads_count, threads_count
 
-directory '/logenhelfer'
-pidfile 'tmp/pids/puma.pid'
-state_path 'tmp/pids/puma.state'
+directory '/logenhelfer/'
+pidfile '/logenhelfer/tmp/pids/puma.pid'
+state_path '/logenhelfer/tmp/pids/puma.state'
 
 daemonize false
 
-bind ENV.fetch('PUMA_BIND', 'tcp://127.0.0.1:9876')
+bind ENV.fetch('PUMA_BIND') { 'tcp://127.0.0.1:9876' }
 
 tag 'fwze'
 
@@ -23,7 +23,7 @@ prune_bundler
 
 # Specifies the `environment` that Puma will run in.
 #
-environment ENV.fetch('RAILS_ENV', 'development')
+environment ENV.fetch('RAILS_ENV') { 'development' }
 
 # Specifies the number of `workers` to boot in clustered mode.
 # Workers are forked webserver processes. If using threads and workers together
@@ -67,3 +67,4 @@ on_worker_boot do
   ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
 end
 #
+

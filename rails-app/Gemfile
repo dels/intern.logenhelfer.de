@@ -1,11 +1,11 @@
-source 'https://rubygems.org'
+source 'http://rubygems.org'
 
-#gem 'rails',                    '~>5.1'
 gem 'rails', '~> 5.1.4'
 gem 'puma-daemon', require: false
 gem 'puma',  '~> 5'
 gem 'uglifier'
 gem 'coffee-rails'
+# gem 'coffee-script-source', '1.8.0'
 gem 'libv8'
 #gem 'compass-rails'
 gem 'execjs'
@@ -21,7 +21,7 @@ gem 'materialize'
 gem 'materialize-sass'
 gem 'best_in_place'
 
-gem 'bcrypt',              require: 'bcrypt'
+gem 'bcrypt'
 gem 'devise'
 gem 'uuid'
 gem 'pg'

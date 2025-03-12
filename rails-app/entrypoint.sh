@@ -1,35 +1,26 @@
 #!/bin/bash
 
-if [ "__$RAILS_ENV" = "__" ] ; then
-   echo "rails env not found";
-   exit 1;
-fi
+npm install yarn -g &&
 
-if [ "__$RAILS_USER" = "__" ] ; then
-   echo "rails user not found";
-   exit 1;
-fi
+/root/.rbenv/shims/gem install bundler:1.16.6 &&
 
-if [ "__$RAILS_PATH" = "__" ] ; then
-   echo "rails path not found";
-   exit 1;
-fi
+echo "bundle install" &&
+RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle install &&
+# echo "bundle update" &&
+# /root/.rbenv/shims/bundle update &&
 
-echo "using $RAILS_ENV as environment. will chmod to $RAILS_USER:$RAILS_GROUP"
-echo "installing gems" &&
-RAILS_ENV=$RAILS_ENV bundle install &&
-if [ "__$RAILS_ENV" = "__development" ] ; then
+if [ "X$RAILS_ENV" = "Xdevelopment" ] ; then
   echo "setting up database in development mode..." &&
-  RAILS_ENV=$RAILS_ENV rails db:setup
+  RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle exec rails db:setup
 fi
-echo "migrating..." &&
-RAILS_ENV=$RAILS_ENV rails db:migrate &&
-echo "compiling assets" &&
-RAILS_ENV=$RAILS_ENV rails assets:clean assets:precompile &&
 
+echo "migrating... " &&
+RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle exec rails db:migrate &&
+#echo "compiling assets" &&
+#RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle exec rails assets:clean assets:precompile &&
 
 # chown -R $RAILS_USER:$RAILS_GROUP $RAILS_PATH ;
 echo "starting resque" &&
-RAILS_ENV=$RAILS_ENV rails resque:start &&
+RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle exec rails resque:start &&
 echo "starting puma..." &&
-RAILS_ENV=$RAILS_ENV bundle exec puma
+RAILS_ENV=$RAILS_ENV RAILS_PATH=$RAILS_PATH /root/.rbenv/shims/bundle exec bundle exec puma
