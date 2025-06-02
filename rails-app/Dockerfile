@@ -1,77 +1,50 @@
-FROM debian:12.9
+FROM ruby:3.4.4-slim AS logenhelgfer
 
-RUN apt update && apt install -y \
-  iputils-ping \
-  iproute2 \
-  curl \
-  git \
-  wget \
-  sudo \
-  build-essential \
-  libssl-dev \
-  libpq-dev \
-  bash \
-  libssl-dev \
-  rbenv \
-	bison \
-	dpkg-dev \
-	libgdbm-dev \
-	autoconf \
-	bzip2 \
-	g++ \
-	gcc \
-	libbz2-dev \
-	libffi-dev \
-	libgdbm-compat-dev \
-	libglib2.0-dev \
-	libgmp-dev \
-	libncurses-dev \
-	libreadline-dev \
-	libxml2-dev \
-	libxslt-dev \
-	libyaml-dev \
-	make \
-	xz-utils \
-	zlib1g-dev \
-  ruby-build \
-  ruby-dev \
-  ruby
+# Set environment variables for bundler
+ENV BUNDLER_VERSION=2.6.9 \
+    LANG=C.UTF-8 \
+    RAILS_ENV=development \
+    NODE_ENV=development
 
-RUN apt update && apt upgrade -y && \
-    apt install -y nodejs \
-    npm
+WORKDIR /app
 
-RUN wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl1.1_1.1.1n-0+deb10u6_amd64.deb -O /tmp/libssl1.1_1.1.1n-0+deb10u6_amd64.deb
-RUN dpkg -i /tmp/libssl1.1_1.1.1n-0+deb10u6_amd64.deb
+# Install system dependencies for gems, NodeJS, Yarn, and more
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends \
+      build-essential \
+      libpq-dev \
+      nodejs \
+      yarn \
+      git \
+      libxml2-dev \
+      libxslt1-dev \
+      zlib1g-dev \
+      tzdata \
+      curl \
+      gnupg2 \
+      imagemagick \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN wget http://security.debian.org/debian-security/pool/updates/main/o/openssl/libssl-dev_1.1.1n-0+deb10u6_amd64.deb -O /tmp/libssl-dev_1.1.1n-0+deb10u6_amd64.deb
-RUN dpkg -i /tmp/libssl-dev_1.1.1n-0+deb10u6_amd64.deb
 
-# RUN rbenv install 2.7.6
-RUN rbenv install 2.7.6
+# (Optional: Install correct version of bundler)
+RUN gem install bundler -v "$BUNDLER_VERSION"
 
-RUN rbenv global 2.7.6
+# Copy Gemfiles first (better layer caching)
+COPY Gemfile Gemfile.lock ./
 
-RUN rbenv rehash
+# Install Ruby gems
+RUN bundle install
 
-RUN useradd -ms /bin/bash webster
+# Copy the rest of the app source
+COPY . .
 
-RUN mkdir /logenhelfer
-
-RUN chown -R webster /logenhelfer
-
-ENV PATH "/root/.rbenv/shims/:/root/.rbenv/shims/:$PATH"
-
-# USER webster
-
-COPY . /logenhelfer
-
-WORKDIR /logenhelfer
+# Precompile assets if needed (uncomment for production)
+RUN bundle exec rails assets:precompile
 
 EXPOSE 9876
 
 COPY --chmod=755 ./entrypoint.sh /logenhelfer/entrypoint.sh
 
-ENTRYPOINT [ "./entrypoint.sh" ]
+# ENTRYPOINT [ "./entrypoint.sh" ]
 
-#CMD [ "/bin/bash" ]
+CMD [ "bundle", "exec", "puma", "start" ]

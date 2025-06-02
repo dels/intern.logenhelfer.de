@@ -1,13 +1,19 @@
 #!/bin/bash
 
+npm install -g corepack &&
 npm install yarn -g &&
+corepack enable yarn
 
-/root/.rbenv/shims/gem install bundler:1.16.6 &&
+if [ -e "/logenhelfer/Gemfile.lock" ] ; then
+  /root/.rbenv/shims/gem install bundler:1.16.6 &&
+  echo "bundle install" &&
+  RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle install
 
-echo "bundle install" &&
-RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle install &&
-# echo "bundle update" &&
-# /root/.rbenv/shims/bundle update &&
+else
+  echo "bundle update" &&
+  /root/.rbenv/shims/bundle update
+
+fi
 
 if [ "X$RAILS_ENV" = "Xdevelopment" ] ; then
   echo "setting up database in development mode..." &&
@@ -16,8 +22,8 @@ fi
 
 echo "migrating... " &&
 RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle exec rails db:migrate &&
-#echo "compiling assets" &&
-#RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle exec rails assets:clean assets:precompile &&
+echo "compiling assets" &&
+RAILS_ENV=$RAILS_ENV /root/.rbenv/shims/bundle exec rails assets:clean assets:precompile &&
 
 # chown -R $RAILS_USER:$RAILS_GROUP $RAILS_PATH ;
 echo "starting resque" &&

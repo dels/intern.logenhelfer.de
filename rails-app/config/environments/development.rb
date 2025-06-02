@@ -50,7 +50,7 @@ Rails.application.configure do
   config.action_view.raise_on_missing_translations = true
 
   config.i18n.fallbacks = [I18n.default_locale]
-  
+
   # Use an evented file watcher to asynchronously detect changes in source code,
   # routes, locales, etc. This feature depends on the listen gem.
   config.file_watcher = ActiveSupport::EventedFileUpdateChecker
@@ -58,6 +58,12 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.default_url_options = { host: 'localhost:5800' }
   config.action_mailer.delivery_method = :letter_opener
+
+  if ENV["RAILS_LOG_TO_STDOUT"].present?
+    logger           = ActiveSupport::Logger.new(STDOUT)
+    logger.formatter = config.log_formatter
+    config.logger    = ActiveSupport::TaggedLogging.new(logger)
+  end
 
   config.action_mailer.smtp_settings = {
     address:                '88.198.37.243',

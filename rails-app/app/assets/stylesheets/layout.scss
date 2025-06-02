@@ -1,3 +1,4 @@
+
 html {
   @include linear-gradient($gray, darken($gray, 5%));
   background-repeat: no-repeat;
@@ -492,7 +493,7 @@ span.add {
 
   &.spinner { background-image: image-url('spinner.gif'); }
   &.success { background-image: image-url('success.png'); }
-  
+
   &.add { background-image: image-url('add.png')}
   &.edit { background-image: image-url('edit.png'); }
   &.destroy { background-image: image-url('destroy.png'); }
@@ -507,7 +508,7 @@ span.add {
   &.newspaper_add { background-image: image-url('newspaper_add.png'); }
 
   &.book { background-image: image-url('book.png'); }
-  
+
 }
 
 .avoid-bijoux {

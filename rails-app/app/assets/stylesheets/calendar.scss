@@ -1,3 +1,26 @@
+@import 'mixins';
+@import 'variables';
+
+$primary-color: #00153b !default;
+$secondary-color: #d5b05e !default;
+
+$black:           #111;
+$gray:            #e3e3e3;
+$white:           #f9f9f9;
+
+$main-color:      #00153b; // from bijoux
+$light-color:     #d5b05e; // from bijoux
+$dark-color:      darken($light-color, 10%);
+$link-color:      $main-color;
+
+$box-distance:    12px;
+$font-family:     'PT Sans', 'Dejavu Sans Condensed', Helvetica, Tahoma, Verdana, Arial, sans-serif;
+$font-size:       14px;
+$line-height:     1.45;
+$default-radius:  1px;
+$nav-width:       200px;
+
+
 table.calendar {
   th {
     text-align: center;
@@ -139,7 +162,6 @@ table.calendar.week {
     }
 
     li.event {
-      @include radii(2px);
       border: 1px solid rgba($link-color, 0.5);
       margin: 1px 0;
       @include linear-gradient(lighten($light-color, 33%), $light-color);
@@ -255,18 +277,18 @@ div.event {
     margin: 0;
   }
 
-  
+
   p.public_description {
     margin: 1ex 0 1ex 14em;
   }
   p.private_description {
     margin: 1ex 0 1ex 14em;
   }
-  
+
   p.edit_event {
     margin: 1ex 0 1ex 14em;
   }
-  
+
   p.delete_event {
     margin: 1ex 0 1ex 14em;
   }

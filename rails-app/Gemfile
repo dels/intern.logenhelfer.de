@@ -1,56 +1,60 @@
 source 'http://rubygems.org'
 
-gem 'rails', '~> 5.1.4'
-gem 'puma-daemon', require: false
-gem 'puma',  '~> 5'
-gem 'uglifier'
-gem 'coffee-rails'
-# gem 'coffee-script-source', '1.8.0'
-gem 'libv8'
-#gem 'compass-rails'
-gem 'execjs'
-gem 'resque'
-gem 'resque-pool'
-gem 'god'
-gem 'bootstrap-sass'
+gem 'best_in_place'
 gem 'bootstrap-material-design'
-gem 'sass-rails'
+gem 'bootstrap-sass'
+gem 'coffee-rails', '4.2.2'
+gem 'rails', '~> 5.2.8'
+gem 'rack', '~> 2.2.0'
+gem 'sprockets', '3.7.5'
+gem 'sprockets-rails', '3.4.2'
+gem 'sass-rails', '5.1.0'
+gem 'execjs'
+gem 'ffi', '< 1.17.0'
+gem 'god'
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
+gem 'libv8'
 gem 'materialize'
 gem 'materialize-sass'
-gem 'best_in_place'
+gem 'matrix'
+gem 'puma', '~> 5'
+gem 'puma-daemon', require: false
+gem 'resque'
+gem 'resque-pool'
+gem 'uglifier'
 
 gem 'bcrypt'
 gem 'devise'
+gem 'exception_notification', '~> 4.5'
+gem 'pg', '>= 1.5.4'
 gem 'uuid'
-gem 'pg'
-gem 'exception_notification'
 
-gem 'friendly_id'
 gem 'cancancan'
-gem 'prawn'#,                    '~> 1.0.0.rc1'
-gem 'prawn-table'
-gem 'later_dude',               '>= 0.3.1'
+gem 'friendly_id'
 gem 'icalendar'
 gem 'kaminari'
+gem 'later_dude', '>= 0.3.1'
+gem 'prawn' # ,                    '~> 1.0.0.rc1'
+gem 'prawn-table'
 
 # gems for google sync
-gem 'omniauth-google-oauth2'
 gem 'google-api-client'
-gem 'rest-client'
 gem 'nokogiri'
-
+gem 'omniauth-google-oauth2'
+gem 'rest-client'
 
 group :development, :archive_dev do
-  gem 'rails_best_practices',   require: false
-  gem 'letter_opener'
   gem 'brakeman'
-  gem 'test-unit'
+  gem 'letter_opener'
   gem 'listen'
+  gem 'rails_best_practices', require: false
+  gem 'test-unit'
 end
 
 group :test do
-  gem 'turn',                   require: false
   gem 'mocha',                  require: false
+  gem 'turn',                   require: false
 end
+
+gem 'bundler', '~> 2.2'

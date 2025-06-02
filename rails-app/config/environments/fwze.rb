@@ -98,14 +98,14 @@ Rails.application.configure do
     enable_starttls_auto:   :true,
     openssl_verify_mode:    'none'
   }
-  
-  FwzeIntern::Application.config.middleware.use ExceptionNotification::Rack,
+=begin
+  FwzeIntern::Application.config.middleware.use ExceptionNotifAication::Rack,
   :email => {
     :email_prefix =>           "[Exception] ",
     :sender_address =>         %{"Exception Notifier" <technik@fwze.de>},
     :exception_recipients =>   %w{de@elsbroek.com}
   }
-  
+=end
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
 end

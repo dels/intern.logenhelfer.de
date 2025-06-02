@@ -20,7 +20,6 @@ $light-color:     #d5b05e; // from bijoux
 $dark-color:      darken($light-color, 10%);
 $link-color:      $main-color;
 
-
 $box-distance:    12px;
 $font-family:     'PT Sans', 'Dejavu Sans Condensed', Helvetica, Tahoma, Verdana, Arial, sans-serif;
 $font-size:       14px;
@@ -157,30 +156,30 @@ dd div input.ui-autocomplete-input {
   visibility: hidden;
 }
 
-div#mem_banner { 
-    position: relativ; 
-    top: 0; 
-    left: 0; 
-    background-color: red; 
-    width: 100%; 
+div#mem_banner {
+    position: relativ;
+    top: 0;
+    left: 0;
+    background-color: red;
+    width: 100%;
 }
-div#mem_banner-content { 
-    width: 800px; 
-    margin: 0 auto; 
+div#mem_banner-content {
+    width: 800px;
+    margin: 0 auto;
     padding: 5px;
     text-align: center;
 }
 
-div#banner { 
-    position: absolut; 
-    top: 0; 
-    left: 0; 
+div#banner {
+    position: absolut;
+    top: 0;
+    left: 0;
     background-color: #B9B9AA;
-    width: 100%; 
+    width: 100%;
 }
-div#banner-content { 
-    width: 800px; 
-    margin: 0 auto; 
+div#banner-content {
+    width: 800px;
+    margin: 0 auto;
     padding: 5px;
     text-align: center;
 }

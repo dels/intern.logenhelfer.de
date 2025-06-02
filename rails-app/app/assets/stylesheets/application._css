@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css?family=Bree+Serif');
+ @import url('https://fonts.googleapis.com/css?family=PT+Sans:400,700,400italic');
+ @import 'select2';
+ @import "layout";
+ @import 'simpistic-layout';
+ @import 'error';
+ @import 'jquery.contextMenu';
+ @import 'calendar';
+/* *= require jquery-ui */
+ label {
+	 cursor: pointer;
+}
+ label.required:after {
+	 content: ' (*)';
+	 font-weight: normal;
+}
+ .ui-widget, .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
+	 font: normal 14px/1.45 'PT Sans', 'Dejavu Sans Condensed', Helvetica, Tahoma, Verdana, Arial, sans-serif;
+}
+ input {
+	 width: 20em;
+	 height: 1.8em;
+	 padding: 0.125em 0.5em;
+}
+ input.large {
+	 width: 30em;
+}
+ input.medium-small {
+	 width: 9.8em;
+}
+ input.small {
+	 width: 5em;
+}
+ input.very-small {
+	 width: 3em;
+}
+ input[type="submit"], input[type="radio"], input[type="checkbox"] {
+	 width: auto;
+	 height: auto;
+}
+ input[readonly] {
+	 color: #777;
+}
+ input.ui-autocomplete-input {
+	 width: 17.7em;
+}
+ input.datepicker {
+	 background-image: image-url('calendar.png');
+	 background-position: 2px center;
+	 background-repeat: no-repeat;
+	 padding-left: 2em;
+	 width: 18.5em;
+}
+ dd div input.ui-autocomplete-input {
+	 width: 15em;
+}
+ .ui-datepicker {
+	 width: 20em;
+}
+ .ui-autocomplete li a {
+	 font-weight: normal;
+	 white-space: nowrap;
+}
+ .ui-autocomplete-category {
+	 font-weight: bold;
+	 text-transform: uppercase;
+	 margin: 0.2em 0.4em;
+	 line-height: 2em;
+}
+ .ui-button {
+	 margin: 0 0 0 -1px;
+}
+ .ui-button-icon-only .ui-button-text {
+	 line-height: 1.2;
+}
+ #tabs ul {
+	 height: 30px;
+}
+ #tabs.ui-tabs ul.ui-tabs-nav li a {
+	 padding: 0.5em 1ex !important;
+}
+ #flash-timedout {
+	 visibility: hidden;
+}
+ div#mem_banner {
+	 position: relativ;
+	 top: 0;
+	 left: 0;
+	 background-color: red;
+	 width: 100%;
+}
+ div#mem_banner-content {
+	 width: 800px;
+	 margin: 0 auto;
+	 padding: 5px;
+	 text-align: center;
+}
+ div#banner {
+	 position: absolut;
+	 top: 0;
+	 left: 0;
+	 background-color: #b9b9aa;
+	 width: 100%;
+}
+ div#banner-content {
+	 width: 800px;
+	 margin: 0 auto;
+	 padding: 5px;
+	 text-align: center;
+}
+ 

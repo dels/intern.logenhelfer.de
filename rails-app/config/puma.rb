@@ -9,9 +9,9 @@ require 'puma/daemon'
 threads_count = ENV.fetch('RAILS_MAX_THREADS', 4).to_i
 threads threads_count, threads_count
 
-directory '/logenhelfer/'
-pidfile '/logenhelfer/tmp/pids/puma.pid'
-state_path '/logenhelfer/tmp/pids/puma.state'
+# directory '/logenhelfer/'
+pidfile 'tmp/pids/puma.pid'
+state_path 'tmp/pids/puma.state'
 
 daemonize false
 
@@ -66,5 +66,3 @@ end
 on_worker_boot do
   ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
 end
-#
-
