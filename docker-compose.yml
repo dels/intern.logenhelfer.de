@@ -1,50 +1,24 @@
 services:
-  postgres:
-    # We should use the same version of Postgres in development as in production
-    image: postgres:15.10
-    environment:
-      POSTGRES_PASSWORD: password
-      PGUSER: postgres
-    volumes:
-      - postgresvolume:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-
   logenhelfer:
     build: ./rails-app/
     ports:
       - "9876:9876"
-    depends_on:
-      - postgres
-    environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/fwzeintern
-      RAILS_ENV: development
-      RAILS_PATH: /logenhelfer
-      GIT_BRANCH: master
-      RAILS_USER: webster
-      RAILS_MAX_THREADS: 5
-      PUMA_BIND: 'tcp://0.0.0.0:9876'
-      RAILS_LOG_TO_STDOUT: true
-
-  logenhelfer-prod:
-    build: ./rails-app/
-    ports:
-      - "9876:9876"
-    depends_on:
-      - postgres
+    networks:
+      - logenhelfer
     environment:
       DATABASE_URL: postgres://fwzeintern:fwzeintern@pg.elsbroek.com:5432/fwzeintern
       RAILS_ENV: fwze
-      RAILS_PATH: /logenhelfer
-      GIT_BRANCH: master
-      RAILS_USER: webster
+      # RAILS_USER: webster
       RAILS_MAX_THREADS: 5
       PUMA_BIND: 'tcp://0.0.0.0:9876'
-
-
+      RAILS_LOG_TO_STDOUT: true
 
 volumes:
   postgresvolume: {}
   cache:
     driver: local
+
+networks:
+  logenhelfer:
+    driver: bridge
+    enable_ipv6: true

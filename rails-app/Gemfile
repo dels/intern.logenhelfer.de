@@ -1,6 +1,7 @@
 source 'http://rubygems.org'
 
-# gem 'best_in_place', github: 'kstaven/best_in_place'
+# gem 'best_in_place'
+gem 'benchmark', require: false
 gem 'bootstrap-material-design'
 gem 'bootstrap-sass'
 gem 'coffee-rails', '4.2.2'

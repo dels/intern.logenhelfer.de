@@ -2,7 +2,6 @@ development:
   default: 1
   mailers: 1
 
-
 fwze:
   fwze_default: 2
   fwze_mailers: 2

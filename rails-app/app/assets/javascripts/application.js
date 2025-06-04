@@ -1,5 +1,5 @@
-// Importing necessary libraries
 import $ from 'jquery';
+window.$ = window.jQuery = $
 import 'jquery-ui';
 import 'select2';
 import 'jquery.contextMenu';
@@ -9,7 +9,7 @@ import 'calendar';
 import 'addresses';
 import 'html54ie';
 import 'jquery.mailto';
-import 'best_in_place';
+// import 'best_in_place';
 import 'bootstrap-sprockets';
 
 // Document ready function

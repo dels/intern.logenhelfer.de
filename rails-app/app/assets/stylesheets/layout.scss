@@ -1,3 +1,5 @@
+@import 'mixins';
+@import 'variables';
 
 html {
   @include linear-gradient($gray, darken($gray, 5%));

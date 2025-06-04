@@ -1,3 +1,13 @@
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  host: <%= ENV.fetch("POSTGRES_HOST", "pg.elsbroek.com") %>
+  username: <%= ENV.fetch("POSTGRES_USER", "fwzeintern") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "fwzeintern") %>
+  database: <%= ENV.fetch("POSTGRES_DB", "fwzeintern") %>
+  pool: 5
+
 fwze:
   database: fwzeintern
   #  min_messages: error
@@ -8,22 +18,22 @@ fwze:
   password: fwzeintern
   pool: 5
 
-archive:
-  database: fwzeinternarchieve
-  #  min_messages: error
-  adapter: postgresql
-  encoding: unicode
-  host: pg.elsbroek.com
-  username: fwzeinternarch
-  password: fwzeinternarch
-  pool: 5
+# archive:
+#   database: fwzeinternarchieve
+#   #  min_messages: error
+#   adapter: postgresql
+#   encoding: unicode
+#   host: pg.elsbroek.com
+#   username: fwzeinternarch
+#   password: fwzeinternarch
+#   pool: 5
 
-  development:
-    database: fwzeintern
-    #  min_messages: error
-    adapter: postgresql
-    encoding: unicode
-    host: localhost
-    username: postgres
-    password: password
-    pool: 5
+#   development:
+#     database: fwzeintern
+#     #  min_messages: error
+#     adapter: postgresql
+#     encoding: unicode
+#     host: localhost
+#     username: postgres
+#     password: password
+#     pool: 5

@@ -1,0 +1,26 @@
+
+$main-color:            #002E61;
+$footer-color:          #EDE2C9;
+$text-color:            #111;
+$gray:                  #e3e3e3;
+$dark-gray:             darken($gray, 20%);
+$white:                 #f9f9f9;
+
+$primary-color: #00153b !default;
+$secondary-color: #d5b05e !default;
+
+$black:           #111;
+$gray:            #e3e3e3;
+$white:           #f9f9f9;
+
+$main-color:      #00153b; // from bijoux
+$light-color:     #d5b05e; // from bijoux
+$dark-color:      darken($light-color, 10%);
+$link-color:      $main-color;
+
+$box-distance:    12px;
+$font-family:     'PT Sans', 'Dejavu Sans Condensed', Helvetica, Tahoma, Verdana, Arial, sans-serif;
+$font-size:       14px;
+$line-height:     1.45;
+$default-radius:  1px;
+$nav-width:       200px;

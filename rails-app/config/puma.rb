@@ -9,11 +9,8 @@
 threads_count = ENV.fetch('RAILS_MAX_THREADS', 4).to_i
 threads threads_count, threads_count
 
-# directory '/logenhelfer/'
 pidfile 'tmp/pids/puma.pid'
 state_path 'tmp/pids/puma.state'
-
-# daemonize false
 
 bind ENV.fetch('PUMA_BIND') { 'tcp://127.0.0.1:9876' }
 
@@ -62,7 +59,7 @@ end
 # option, you will want to use this block to reconnect to any threads
 # or connections that may have been created at application boot, as Ruby
 # cannot share connections between processes.
-#
+
 on_worker_boot do
   ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
 end

@@ -1,8 +1,0 @@
-development:
-  default: 1
-  mailers: 1
-
-
-dev_logenhelfer:
-  dev_logenhelfer_default: 4
-  dev_logenhelfer_mailers: 4

@@ -1,0 +1,40 @@
+
+@import url('https://fonts.googleapis.com/css?family=Bree+Serif');
+@import url('https://fonts.googleapis.com/css?family=PT+Sans:400,700,400italic');
+
+@mixin linear-gradient($from, $to, $direction: to bottom) {
+  background: linear-gradient($direction, $from, $to);
+}
+
+@mixin radii($radius: $default-radius) {
+  -webkit-border-radius: $radius;
+  -moz-border-radius: $radius;
+  -ms-border-radius: $radius;
+  -o-border-radius: $radius;
+  border-radius: $radius;
+}
+
+@mixin shadow($color: #ccc, $radius: $default-radius) {
+  -webkit-box-shadow: 0 0 $radius $color;
+  -moz-box-shadow: 0 0 $radius $color;
+  -ms-box-shadow: 0 0 $radius $color;
+  -o-box-shadow: 0 0 $radius $color;
+  box-shadow: 0 0 $radius $color;
+}
+
+@mixin no-shadow() {
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  -ms-box-shadow: none;
+  -o-box-shadow: none;
+  box-shadow: none;
+}
+
+@mixin linear-gradient($a-color, $b-color) {
+  background-color: $b-color;
+  background-image: -webkit-linear-gradient($a-color, $b-color);
+  background-image: -moz-linear-gradient($a-color, $b-color);
+  background-image: -ms-linear-gradient($a-color, $b-color);
+  background-image: -o-linear-gradient($a-color, $b-color);
+  background-image: linear-gradient($a-color, $b-color);
+}

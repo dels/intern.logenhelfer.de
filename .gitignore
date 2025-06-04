@@ -1,5 +1,5 @@
 *.bak
-
+rails-app/public/assets
 Gemfile.lock
 .bundle
 start_*
