@@ -4,7 +4,7 @@
 # the maximum value specified for Puma. Default is set to 5 threads for minimum
 # and maximum; this matches the default thread size of Active Record.
 #
-require 'puma/daemon'
+# require 'puma/daemon'
 
 threads_count = ENV.fetch('RAILS_MAX_THREADS', 4).to_i
 threads threads_count, threads_count
@@ -13,7 +13,7 @@ threads threads_count, threads_count
 pidfile 'tmp/pids/puma.pid'
 state_path 'tmp/pids/puma.state'
 
-daemonize false
+# daemonize false
 
 bind ENV.fetch('PUMA_BIND') { 'tcp://127.0.0.1:9876' }
 

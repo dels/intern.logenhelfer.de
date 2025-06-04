@@ -17,3 +17,13 @@ archive:
   username: fwzeinternarch
   password: fwzeinternarch
   pool: 5
+
+  development:
+    database: fwzeintern
+    #  min_messages: error
+    adapter: postgresql
+    encoding: unicode
+    host: localhost
+    username: postgres
+    password: password
+    pool: 5
