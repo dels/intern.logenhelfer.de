@@ -1,0 +1,34 @@
+{
+  "name": "rails-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=iife --outdir=app/assets/builds --public-path=/assets --inject:app/javascript/shim-jquery.js"
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.11.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.1",
+  "dependencies": {
+    "bootstrap": "^5.3.6",
+    "esbuild": "^0.25.5",
+    "jquery": "^3.7.1",
+    "jquery-contextmenu": "^2.9.2",
+    "jquery-ui": "^1.14.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "select2": "4.1.0-rc.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.6",
+    "@types/select2": "^4.0.63",
+    "typescript": "^5.8.3"
+  }
+}

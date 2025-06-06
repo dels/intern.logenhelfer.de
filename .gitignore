@@ -18,7 +18,6 @@ pg_dump*
 .DS_Store
 *pg_dump.tar.gz
 TODO
-*.json
 *.xml
 logfile
 update.conf
@@ -37,3 +36,4 @@ public/packs/
 yarn*
 config/secrets.yml.key
 redis_start
+rails-app/google_auth.json
