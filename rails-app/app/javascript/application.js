@@ -1,4 +1,7 @@
 // Standard npm packages
+import Rails from '@rails/ujs';
+Rails.start();
+
 import "./shim-jquery.js";
 import $ from 'jquery';
 

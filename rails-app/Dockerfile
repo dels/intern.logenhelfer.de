@@ -51,6 +51,11 @@ RUN gem install bundler -v "$BUNDLER_VERSION"
 # Install Ruby gems
 RUN bundle install
 
+RUN mkdir -p tmp/pids
+RUN mkdir -p tmp/sockets
+RUN mkdir -p tmp/cache
+RUN mkdir -p tmp/log
+
 # Precompile assets if needed (uncomment for production)
 RUN RAILS_ENV=$RAILS_ENV bundle exec rails assets:clobber
 RUN RAILS_ENV=$RAILS_ENV bundle exec rails assets:precompile
