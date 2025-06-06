@@ -14,6 +14,8 @@ COPY Gemfile Gemfile.lock ./
 # Copy the rest of the app source
 COPY . .
 
+RUN rm -R node_modules
+
 # Install system dependencies for gems, NodeJS, Yarn, and more
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends \
@@ -31,12 +33,17 @@ RUN apt-get update -qq && \
 
 # Install Node.js from NodeSource (includes corepack)
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && corepack enable \
-    && corepack prepare yarn@stable --activate
+    && apt-get install -y nodejs
 
-# (Optional) Show versions
-RUN node --version && yarn --version
+RUN npm install -g pnpm --force
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+RUN pnpm install
+
+RUN pnpm run build
 
 # (Optional: Install correct version of bundler)
 RUN gem install bundler -v "$BUNDLER_VERSION"
@@ -44,11 +51,8 @@ RUN gem install bundler -v "$BUNDLER_VERSION"
 # Install Ruby gems
 RUN bundle install
 
-RUN npm install -g yarn --force
-
-RUN corepack enable && corepack prepare yarn@stable --activate
-
 # Precompile assets if needed (uncomment for production)
+RUN bundle exec rails assets:clobber
 RUN bundle exec rails assets:precompile
 
 EXPOSE 9876

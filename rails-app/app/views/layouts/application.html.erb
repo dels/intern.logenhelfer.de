@@ -4,7 +4,9 @@
     <title><%= content_for?(:title) ? "#{yield(:title)} - #{AppConfig[:lodge]}" : AppConfig[:lodge] %></title>
     <%= render 'layouts/jquery_format_locales' %>
     <%= stylesheet_link_tag "application" %>
-    <%= javascript_include_tag "application" %>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.full.min.js"></script>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
     <%= favicon_link_tag %>
     <%= csrf_meta_tag %>
     <%= yield(:head) %>

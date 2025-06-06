@@ -9,6 +9,7 @@ gem 'rails', '~> 6.1.7'
 gem 'rack', '~> 2.2.0'
 gem 'sprockets', '~> 4.0'
 gem 'sass-rails', '~> 6.0'
+gem "jsbundling-rails"
 gem 'execjs'
 gem 'ffi', '< 1.17.0'
 gem 'god'

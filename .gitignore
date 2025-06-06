@@ -17,8 +17,8 @@ config/database.yml
 restart.sh
 public/assets/
 config/app_config.yml
-2012_09_29_FWzE_MitgliederVerzeichnis/
-memberlist.csv
+*_MitgliederVerzeichnis/
+*memberlist*.csv
 *.sql
 *.tar.gz.gpg
 pg_dump*
