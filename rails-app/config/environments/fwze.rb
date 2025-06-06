@@ -80,6 +80,7 @@ Rails.application.configure do
   # require 'syslog/logger'
   # config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new 'app-name')
   config.hosts << "dev.elsbroek.com"
+  config.hosts << "intern.fwze.de"
 
   default_url_options[:host] = "logenhelfer.de"
   logger           = ActiveSupport::Logger.new(STDOUT)
