@@ -1,7 +1,5 @@
 *.bak
 rails-app/public/assets
-Gemfile.lock
-.bundle
 start_*
 log/pg_log
 db/*.sqlite3
@@ -11,12 +9,7 @@ tmp/
 #*
 .#*
 *#
-thin.yml
-config/puma.rb
-config/database.yml
 restart.sh
-public/assets/
-config/app_config.yml
 *_MitgliederVerzeichnis/
 *memberlist*.csv
 *.sql
