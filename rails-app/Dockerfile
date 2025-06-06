@@ -14,7 +14,7 @@ COPY Gemfile Gemfile.lock ./
 # Copy the rest of the app source
 COPY . .
 
-RUN rm -R node_modules
+RUN rm -fR node_modules
 
 # Install system dependencies for gems, NodeJS, Yarn, and more
 RUN apt-get update -qq && \
@@ -52,15 +52,9 @@ RUN gem install bundler -v "$BUNDLER_VERSION"
 RUN bundle install
 
 # Precompile assets if needed (uncomment for production)
-RUN bundle exec rails assets:clobber
-RUN bundle exec rails assets:precompile
+RUN RAILS_ENV=$RAILS_ENV bundle exec rails assets:clobber
+RUN RAILS_ENV=$RAILS_ENV bundle exec rails assets:precompile
 
 EXPOSE 9876
-
-# COPY --chmod=755 ./entrypoint.sh /logenhelfer/entrypoint.sh
-
-# ENTRYPOINT [ "./entrypoint.sh" ]
-
-# CMD ["echo", "Hello, World!"]
 
 CMD [ "bundle", "exec", "puma", "-C", "config/puma.rb" ]
