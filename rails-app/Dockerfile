@@ -1,4 +1,4 @@
-FROM ruby:3.4.4-slim AS logenhelgfer
+FROM ruby:3.4.7-slim AS logenhelgfer
 
 # Set environment variables for bundler
 ENV BUNDLER_VERSION=2.6.9 \
@@ -47,6 +47,8 @@ RUN pnpm run build
 
 # (Optional: Install correct version of bundler)
 RUN gem install bundler -v "$BUNDLER_VERSION"
+
+
 
 # Install Ruby gems
 RUN bundle install

@@ -15,7 +15,7 @@ gem 'ffi', '< 1.17.0'
 gem 'god'
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
-gem 'libv8'
+
 gem 'materialize'
 gem 'materialize-sass'
 gem 'matrix'
