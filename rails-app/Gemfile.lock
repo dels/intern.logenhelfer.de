@@ -415,7 +415,7 @@ GEM
     uber (0.1.0)
     uglifier (4.2.1)
       execjs (>= 0.3.0, < 3)
-    uri (1.0.3)
+    uri (1.0.4)
     uuid (2.3.9)
       macaddr (~> 1.0)
     version_gem (1.1.8)
