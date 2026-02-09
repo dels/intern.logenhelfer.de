@@ -107,12 +107,12 @@ GEM
       actionmailer (>= 5.2, < 9)
       activesupport (>= 5.2, < 9)
     execjs (2.10.0)
-    faraday (2.13.1)
+    faraday (2.14.1)
       faraday-net_http (>= 2.0, < 3.5)
       json
       logger
-    faraday-net_http (3.4.0)
-      net-http (>= 0.5.0)
+    faraday-net_http (3.4.2)
+      net-http (~> 0.5)
     ffi (1.16.3)
     friendly_id (5.5.1)
       activerecord (>= 4.0.0)
@@ -173,7 +173,7 @@ GEM
       railties (>= 3.2.16)
     jsbundling-rails (1.3.1)
       railties (>= 6.0.0)
-    json (2.12.2)
+    json (2.18.1)
     jwt (2.10.1)
       base64
     kaminari (1.2.2)
@@ -235,8 +235,8 @@ GEM
     mustermann (3.0.3)
       ruby2_keywords (~> 0.0.1)
     mutex_m (0.3.0)
-    net-http (0.6.0)
-      uri
+    net-http (0.9.1)
+      uri (>= 0.11.1)
     net-imap (0.5.8)
       date
       net-protocol
@@ -415,7 +415,7 @@ GEM
     uber (0.1.0)
     uglifier (4.2.1)
       execjs (>= 0.3.0, < 3)
-    uri (1.0.3)
+    uri (1.1.1)
     uuid (2.3.9)
       macaddr (~> 1.0)
     version_gem (1.1.8)
