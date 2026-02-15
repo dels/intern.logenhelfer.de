@@ -54,6 +54,16 @@ describe User do
 #    master_without_fellow_craft.master_mason_since.should be_nil
   end
 
+  context "addresses" do
+    it "allows multiple addresses of the same type" do
+      user = FactoryGirl.build(:user, :entered_apprentice_since => 5.years.ago)
+      user.addresses.build(:type_of_address => Address::TYPES[:private], :street1 => "Main St 1")
+      user.addresses.build(:type_of_address => Address::TYPES[:private], :street1 => "Side St 2")
+
+      user.should be_valid
+    end
+  end
+
   context "upcoming birthdays" do
     it "does return birthdays of users" do
       usr = FactoryGirl.create(:user, :date_of_birth => '01.01.1990')
@@ -71,6 +81,5 @@ describe User do
     end
   end
 end
-
 
 

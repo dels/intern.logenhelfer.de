@@ -18,6 +18,14 @@ fwze:
   password: fwzeintern
   pool: 5
 
+development:
+  <<: *default
+  database: fwzeintern_development
+
+test:
+  <<: *default
+  database: fwzeintern_test
+
 # archive:
 #   database: fwzeinternarchieve
 #   #  min_messages: error

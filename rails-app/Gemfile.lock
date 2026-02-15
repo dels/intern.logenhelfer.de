@@ -77,11 +77,22 @@ GEM
     brakeman (7.0.2)
       racc
     builder (3.3.0)
+    byebug (12.0.0)
     cancancan (3.6.1)
+    capybara (3.40.0)
+      addressable
+      matrix
+      mini_mime (>= 0.1.3)
+      nokogiri (~> 1.11)
+      rack (>= 1.6.0)
+      rack-test (>= 0.6.3)
+      regexp_parser (>= 1.5, < 3.0)
+      xpath (~> 3.2)
     childprocess (5.1.0)
       logger (~> 1.5)
     code_analyzer (0.5.5)
       sexp_processor
+    coderay (1.1.3)
     coffee-rails (4.2.2)
       coffee-script (>= 2.2.0)
       railties (>= 4.0.0)
@@ -100,7 +111,9 @@ GEM
       railties (>= 4.1.0)
       responders
       warden (~> 1.2.3)
+    diff-lcs (1.6.2)
     domain_name (0.6.20240107)
+    drb (2.2.3)
     erubi (1.13.1)
     erubis (2.7.0)
     exception_notification (4.6.0)
@@ -195,10 +208,6 @@ GEM
       logger (~> 1.6)
     letter_opener (1.10.0)
       launchy (>= 2.2, < 4)
-    libv8 (8.4.255.0.1)
-    libv8 (8.4.255.0.1-universal-darwin)
-    libv8 (8.4.255.0.1-x86_64-darwin)
-    libv8 (8.4.255.0.1-x86_64-linux)
     listen (3.9.0)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
@@ -280,6 +289,9 @@ GEM
     ostruct (0.6.1)
     pdf-core (0.10.0)
     pg (1.5.9)
+    playwright-ruby-client (1.55.0)
+      concurrent-ruby (>= 1.1.6)
+      mime-types (>= 3.0)
     power_assert (2.0.5)
     prawn (2.5.0)
       matrix (~> 0.4)
@@ -287,6 +299,12 @@ GEM
       ttfunk (~> 1.8)
     prawn-table (0.2.2)
       prawn (>= 1.3.0, < 3.0.0)
+    pry (0.15.2)
+      coderay (~> 1.1)
+      method_source (~> 1.0)
+    pry-byebug (3.11.0)
+      byebug (~> 12.0)
+      pry (>= 0.13, < 0.16)
     public_suffix (6.0.2)
     puma (5.6.9)
       nio4r (~> 2.0)
@@ -343,6 +361,7 @@ GEM
       connection_pool
     redis-namespace (1.11.0)
       redis (>= 4)
+    regexp_parser (2.11.3)
     representable (3.2.0)
       declarative (< 0.1.0)
       trailblazer-option (>= 0.1.1, < 0.2.0)
@@ -365,6 +384,23 @@ GEM
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
     retriable (3.1.2)
+    rspec-core (3.13.5)
+      rspec-support (~> 3.13.0)
+    rspec-expectations (3.13.5)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-mocks (3.13.6)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-rails (6.1.5)
+      actionpack (>= 6.1)
+      activesupport (>= 6.1)
+      railties (>= 6.1)
+      rspec-core (~> 3.13)
+      rspec-expectations (~> 3.13)
+      rspec-mocks (~> 3.13)
+      rspec-support (~> 3.13)
+    rspec-support (3.13.6)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
     sass-rails (6.0.0)
@@ -425,6 +461,8 @@ GEM
       base64
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
+    xpath (3.2.0)
+      nokogiri (~> 1.8)
     zeitwerk (2.6.18)
 
 PLATFORMS
@@ -442,8 +480,10 @@ DEPENDENCIES
   brakeman
   bundler (~> 2.2)
   cancancan
+  capybara
   coffee-rails (= 4.2.2)
   devise
+  drb
   exception_notification (~> 4.5)
   execjs
   ffi (< 1.17.0)
@@ -457,7 +497,6 @@ DEPENDENCIES
   kaminari
   later_dude (>= 0.3.1)
   letter_opener
-  libv8
   listen
   materialize
   materialize-sass
@@ -466,8 +505,10 @@ DEPENDENCIES
   nokogiri
   omniauth-google-oauth2
   pg (>= 1.5.4)
+  playwright-ruby-client
   prawn
   prawn-table
+  pry-byebug
   puma (~> 5.0)
   rack (~> 2.2.0)
   rails (~> 6.1.7)
@@ -475,6 +516,7 @@ DEPENDENCIES
   resque
   resque-pool
   rest-client
+  rspec-rails
   sass-rails (~> 6.0)
   sprockets (~> 4.0)
   test-unit

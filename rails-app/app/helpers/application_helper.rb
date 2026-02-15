@@ -8,36 +8,6 @@ module ApplicationHelper
     link_to title, {:sort_by => column, :direction => direction}, {:class => css_class}
   end
 
-  # FIXME moved to address helper
-  def link_to_remove_fields(name, f, js_function=:remove_fields)
-    f.hidden_field(:_destroy) + link_to_function(name, js_functions_collection(js_function))
-  end
-
-  # FIXME moved to address helper
-  def link_to_add_fields(name, f, association, js_function=:add_fields)
-    new_object = f.object.class.reflect_on_association(association).klass.new
-    fields = f.fields_for(association, new_object, :child_index => "new_#{association}") do |builder|
-      render(association.to_s.pluralize + "/form_fields", :f => builder)
-    end
-    # was: link_to_function(name, js_functions_collection(js_function)[association, fields])
-    #link_to(name, '')
-  end
-  
-  # FIXME moved to address helper
-  def js_functions_collection which
-    @signatures ||= {
-      add_fields: ->(assoc, fields) {
-        "add_fields(this, '#{assoc}', '#{escape_javascript(fields)}')"
-      },
-      add_fields_bottom: ->(assoc, fields) {
-        "add_fields_bottom(this, '#{assoc}', '#{escape_javascript(fields)}')"
-      },
-      remove_fields: "remove_fields(this)",
-      remove_address_fields: "remove_address_fields(this)"
-    }
-    @signatures[which]
-  end
-
   def get_authorized_paginated objects
     Kaminari.paginate_array(get_authorized objects)
   end

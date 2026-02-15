@@ -50,11 +50,16 @@ group :development, :archive_dev do
   gem 'listen'
   gem 'rails_best_practices', require: false
   gem 'test-unit'
+  gem 'rspec-rails'
+  gem 'pry-byebug'
 end
 
 group :test do
   gem 'mocha',                  require: false
   gem 'turn',                   require: false
+  gem 'playwright-ruby-client'
+  gem 'capybara'
 end
 
 gem 'bundler', '~> 2.2'
+gem 'drb'
