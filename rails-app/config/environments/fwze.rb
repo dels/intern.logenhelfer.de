@@ -94,7 +94,7 @@ Rails.application.configure do
     user_name:              'website@fwze.de',
     password:               'superduperkeks1024',
     authentication:         :login,
-    enable_starttls_auto:   :true,
+    enable_starttls_auto:   true,
     openssl_verify_mode:    'none'
   }
 

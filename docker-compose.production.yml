@@ -2,6 +2,7 @@ services:
 
   redis-service:
     image: redis:latest
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 1s
@@ -11,6 +12,7 @@ services:
 
   logenhelfer:
     build: ./rails-app/
+    restart: unless-stopped
     ports:
       - "9876:9876"
     networks:
