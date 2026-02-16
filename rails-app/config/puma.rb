@@ -16,26 +16,7 @@ bind ENV.fetch('PUMA_BIND') { 'tcp://127.0.0.1:9876' }
 
 tag 'fwze'
 
-prune_bundler
-
-# Specifies the `environment` that Puma will run in.
-#
-environment ENV.fetch('RAILS_ENV') { 'development' }
-
-# Specifies the number of `workers` to boot in clustered mode.
-# Workers are forked webserver processes. If using threads and workers together
-# the concurrency of the application would be max `threads` * `workers`.
-# Workers do not work on JRuby or Windows (both of which do not support
-# processes).
-#
-workers ENV.fetch('WEB_CONCURRENCY', 2)
-restart_command 'bundle exec puma'
-prune_bundler
-
-on_restart do
-  puts 'Refreshing Gemfile'
-  ENV['BUNDLE_GEMFILE'] = ''
-end
+preload_app!
 
 # Use the `preload_app!` method when specifying a `workers` number.
 # This directive tells Puma to first boot the application and load code

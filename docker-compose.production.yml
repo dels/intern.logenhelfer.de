@@ -1,14 +1,4 @@
 services:
-  postgres-db:
-    image: postgres:18.1-trixie
-    container_name: postgres-prod
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
-    env_file:
-      - .env
-    volumes:
-      - postgresvolume:/var/lib/postgresql:rw
 
   redis-service:
     image: redis:latest
@@ -29,7 +19,7 @@ services:
       DATABASE_URL: ${DB_URL:-postgres-db}
       RAILS_ENV: ${RAILS_ENV:?error}
       RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-5}
-      PUMA_BIND: ${PUMA_BIND:-"tcp://0.0.0.0:9876"}
+      PUMA_BIND: ${PUMA_BIND:-tcp://0.0.0.0:9876}
       RAILS_LOG_TO_STDOUT: true
 
 volumes:
@@ -40,4 +30,4 @@ volumes:
 networks:
   logenhelfer:
     driver: bridge
-    enable_ipv6: true
+    enable_ipv6: false
