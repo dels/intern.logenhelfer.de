@@ -15,6 +15,7 @@ import { useDistricts } from '../lodges/api';
 import { useRoles } from '../categories/api';
 import DistrictForm from './DistrictForm';
 import AcademicTitleForm from './AcademicTitleForm';
+import LogoSection from './LogoSection';
 import { apiErrorMessage } from '../../api/client';
 import { useDemoMode } from '../../api/useDemoMode';
 import { useAuth } from '../../auth/AuthProvider';
@@ -38,14 +39,16 @@ export default function ConfigurationPage() {
             <Tab label={t('configuration.tabs.konfiguration')} />
             <Tab label={t('configuration.tabs.impressum')} />
             <Tab label={t('configuration.tabs.sicherheit')} />
+            <Tab label={t('configuration.tabs.design')} />
             <Tab label={t('configuration.districtsHeader')} />
             <Tab label={t('configuration.academicTitlesHeader')} />
             <Tab label={t('configuration.rolesHeader')} />
           </Tabs>
           <AppConfigSection activeTab={activeTab} />
-          <TabPanel active={activeTab === 4}><DistrictSection /></TabPanel>
-          <TabPanel active={activeTab === 5}><AcademicTitleSection /></TabPanel>
-          <TabPanel active={activeTab === 6}><RoleEmailSection /></TabPanel>
+          <TabPanel active={activeTab === 4}><LogoSection /></TabPanel>
+          <TabPanel active={activeTab === 5}><DistrictSection /></TabPanel>
+          <TabPanel active={activeTab === 6}><AcademicTitleSection /></TabPanel>
+          <TabPanel active={activeTab === 7}><RoleEmailSection /></TabPanel>
         </>
       )}
     </Box>

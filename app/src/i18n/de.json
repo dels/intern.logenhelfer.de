@@ -340,7 +340,8 @@
       "funktionen": "Funktionen",
       "konfiguration": "Konfiguration",
       "impressum": "Impressum",
-      "sicherheit": "Sicherheit"
+      "sicherheit": "Sicherheit",
+      "design": "Design"
     },
     "generalHeader": "Allgemeine Einstellungen",
     "districtsHeader": "Distrikte",
@@ -355,6 +356,10 @@
     "rolesHeader": "Rollen (E-Mail-Adressen)",
     "roleEmail": "E-Mail-Adresse",
     "roleEditEmail": "E-Mail bearbeiten",
+    "logoHeader": "Logo (Bijou)",
+    "logoDescription": "Lade ein eigenes Logo hoch, um das Standard-Bijou in Navigation, Login-Seiten und Favicon zu ersetzen. Erlaubt: PNG, JPG, SVG, max. 5 MB.",
+    "logoUpload": "Logo hochladen",
+    "logoReset": "Auf Standard zurücksetzen",
     "cancel": "Abbrechen",
     "save": "Speichern",
     "forbidden": "Sie haben keine Berechtigung, die Konfiguration zu bearbeiten.",
