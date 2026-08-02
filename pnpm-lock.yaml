@@ -28,6 +28,9 @@ importers:
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
+      dompurify:
+        specifier: ^3.4.12
+        version: 3.4.12
       express:
         specifier: ^5.2.1
         version: 5.2.1(supports-color@10.2.2)
@@ -43,6 +46,9 @@ importers:
       ical-generator:
         specifier: ^11.0.0
         version: 11.0.0(@types/node@22.20.1)
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1(@noble/hashes@1.8.0)
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
