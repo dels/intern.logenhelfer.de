@@ -16,7 +16,7 @@ import createDOMPurify from 'dompurify';
  */
 export function sanitizeSvg(raw: string): string {
   const { window } = new JSDOM('');
-  const DOMPurify = createDOMPurify(window as unknown as Window);
+  const DOMPurify = createDOMPurify(window);
   return DOMPurify.sanitize(raw, {
     USE_PROFILES: { svg: true, svgFilters: true },
     FORBID_TAGS: ['script', 'foreignObject'],
