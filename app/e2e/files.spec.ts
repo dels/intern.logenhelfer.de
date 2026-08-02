@@ -46,25 +46,37 @@ test('admin can upload, download, edit, and delete a file', async ({ page }) => 
   await expect(page.getByText(uploadFileName)).toBeVisible();
   await expect(page.getByRole('heading', { name: folderName })).toBeVisible();
 
+  // There's no file detail/"show" page any more (dropped 2026-08-02, along
+  // with clicking the row text now triggering a download rather than
+  // navigating anywhere) - every action below happens via the row's own
+  // icon buttons, in place on this same folder page. The folder's own
+  // top-level "Bearbeiten"/"Löschen" buttons share the exact same
+  // accessible name as the file row's edit/delete icon buttons (both reuse
+  // the generic i18n "Bearbeiten"/"Löschen" strings), so every row action
+  // below is scoped to this file's own <li> to avoid a strict-mode
+  // violation against the folder's controls.
+  const fileRow = page.getByRole('listitem').filter({ hasText: uploadFileName });
+
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Herunterladen' }).click();
+  await fileRow.getByRole('button', { name: 'Herunterladen' }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe(uploadFileName);
-  await page.getByRole('button', { name: 'Info' }).click();
+  await fileRow.getByRole('button', { name: 'Info' }).click();
   await expect(page.getByText('Downloads', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'Schließen' }).click();
-  await page.getByText(uploadFileName).click();
-  await expect(page.getByRole('heading', { name: uploadFileName })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Bearbeiten' }).click();
+  await fileRow.getByRole('button', { name: 'Bearbeiten' }).click();
+  await expect(page.getByRole('heading', { name: 'Bearbeiten' })).toBeVisible();
   await page.getByLabel('Dateiname').fill(renamedFileName);
   await page.getByRole('button', { name: 'Speichern' }).click();
-  await expect(page.getByRole('heading', { name: renamedFileName })).toBeVisible();
-
-  await page.getByRole('button', { name: 'Löschen' }).click();
-  await page.getByRole('button', { name: 'Wirklich löschen?' }).click();
   await expect(page.getByRole('heading', { name: folderName })).toBeVisible();
+  await expect(page.getByText(renamedFileName)).toBeVisible();
+
+  const renamedRow = page.getByRole('listitem').filter({ hasText: renamedFileName });
+  await renamedRow.getByRole('button', { name: 'Löschen' }).click();
+  await renamedRow.getByRole('button', { name: 'Wirklich löschen?' }).click();
   await expect(page.getByText(renamedFileName)).not.toBeVisible();
+  await expect(page.getByText('Keine Dateien vorhanden.')).toBeVisible();
 
   fs.unlinkSync(tmpFile);
 });
