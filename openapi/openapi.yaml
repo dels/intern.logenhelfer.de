@@ -2565,6 +2565,17 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PublicLandingConfig' }
+  /api/v1/public/logo:
+    get:
+      operationId: getPublicLogo
+      security: []
+      responses:
+        '200':
+          description: The active custom logo's raw bytes, if one has been uploaded
+          content:
+            image/png: {}
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/public/impressum:
     get:
       operationId: getPublicImpressum
@@ -2979,11 +2990,12 @@ components:
     PublicLandingConfig:
       type: object
       additionalProperties: false
-      required: [calendar_as_landing_page, lodge, language]
+      required: [calendar_as_landing_page, lodge, language, logo_version]
       properties:
         calendar_as_landing_page: { type: boolean }
         lodge: { type: string }
         language: { type: string }
+        logo_version: { type: integer, nullable: true }
     CustomLogoMeta:
       type: object
       additionalProperties: false

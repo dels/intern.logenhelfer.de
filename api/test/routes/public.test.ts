@@ -110,7 +110,7 @@ describe('GET /api/v1/public/landing', () => {
   it('is false when working_plan_as_start_page is off (default)', async () => {
     const res = await request(app).get('/api/v1/public/landing');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de' });
+    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null });
   });
 
   it('is true when both flags are on', async () => {
@@ -118,7 +118,7 @@ describe('GET /api/v1/public/landing', () => {
     await setAppConfig('public_wp_available_to_anon_users', true);
 
     const res = await request(app).get('/api/v1/public/landing');
-    expect(res.body).toEqual({ calendar_as_landing_page: true, lodge: 'Logenhelfer', language: 'de' });
+    expect(res.body).toEqual({ calendar_as_landing_page: true, lodge: 'Logenhelfer', language: 'de', logo_version: null });
   });
 
   it('is false when working_plan_as_start_page is on but anon access is off', async () => {
@@ -126,7 +126,7 @@ describe('GET /api/v1/public/landing', () => {
     await setAppConfig('public_wp_available_to_anon_users', false);
 
     const res = await request(app).get('/api/v1/public/landing');
-    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de' });
+    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null });
   });
 
   it('is false when working_plan_as_start_page is off even if anon access is on', async () => {
@@ -134,7 +134,7 @@ describe('GET /api/v1/public/landing', () => {
     await setAppConfig('public_wp_available_to_anon_users', true);
 
     const res = await request(app).get('/api/v1/public/landing');
-    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de' });
+    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null });
   });
 
   it('reflects a configured lodge name', async () => {
@@ -149,6 +149,47 @@ describe('GET /api/v1/public/landing', () => {
 
     const res = await request(app).get('/api/v1/public/landing');
     expect(res.body.language).toBe('en');
+  });
+
+  it('reports logo_version as null when no custom logo is set', async () => {
+    const res = await request(app).get('/api/v1/public/landing');
+    expect(res.body.logo_version).toBeNull();
+  });
+
+  it('reports logo_version as the logo row\'s updated_at epoch once a custom logo is set', async () => {
+    const stored = await prisma.custom_logos.create({ data: { id: 1, content: Buffer.from('X'), content_type: 'image/png' } });
+    const res = await request(app).get('/api/v1/public/landing');
+    expect(res.body.logo_version).toBe(stored.updated_at.getTime());
+  });
+});
+
+// -- GET /api/v1/public/logo -----------------------------------------------
+
+describe('GET /api/v1/public/logo', () => {
+  it('returns 404 when no custom logo has been uploaded', async () => {
+    const res = await request(app).get('/api/v1/public/logo');
+    expect(res.status).toBe(404);
+  });
+
+  it('is reachable with no Authorization header at all', async () => {
+    await prisma.custom_logos.create({ data: { id: 1, content: Buffer.from('PNGDATA'), content_type: 'image/png' } });
+    const res = await request(app).get('/api/v1/public/logo');
+    expect(res.status).toBe(200);
+  });
+
+  it('serves the stored bytes and content-type', async () => {
+    await prisma.custom_logos.create({ data: { id: 1, content: Buffer.from('PNGDATA'), content_type: 'image/png' } });
+    const res = await request(app).get('/api/v1/public/logo');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('image/png');
+    expect(Buffer.isBuffer(res.body) ? res.body.toString() : res.text).toBe('PNGDATA');
+  });
+
+  it('returns 404 again after the logo has been reset', async () => {
+    await prisma.custom_logos.create({ data: { id: 1, content: Buffer.from('X'), content_type: 'image/png' } });
+    await prisma.custom_logos.deleteMany({ where: { id: 1 } });
+    const res = await request(app).get('/api/v1/public/logo');
+    expect(res.status).toBe(404);
   });
 });
 
