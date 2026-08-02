@@ -1,0 +1,522 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model academic_titles {
+  id         Int      @id @default(autoincrement())
+  title      String?  @unique(map: "index_academic_titles_on_title") @db.VarChar(255)
+  short      String?  @unique(map: "index_academic_titles_on_short") @db.VarChar(255)
+  deleted    Boolean? @default(false)
+  created_at DateTime @db.Timestamp(6)
+  updated_at DateTime @db.Timestamp(6)
+}
+
+model addresses {
+  id               Int      @id @default(autoincrement())
+  addressable_id   Int?
+  addressable_type String?  @db.VarChar(255)
+  purpose          String?  @default("geschäftlich") @db.VarChar(255)
+  street1          String?  @db.VarChar(255)
+  street2          String?  @db.VarChar(255)
+  street3          String?  @db.VarChar(255)
+  zip              String?  @db.VarChar(255)
+  city             String?  @db.VarChar(255)
+  phone            String?  @db.VarChar(255)
+  fax              String?  @db.VarChar(255)
+  email            String?  @db.VarChar(255)
+  remarks          String?
+  deleted          Boolean? @default(false)
+  created_at       DateTime @db.Timestamp(6)
+  updated_at       DateTime @db.Timestamp(6)
+  type_of_address  Int?
+  mobile           String?  @db.VarChar(255)
+}
+
+model announcement_subscriptions {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  created_at DateTime @db.Timestamp(6)
+  updated_at DateTime @db.Timestamp(6)
+
+  @@index([user_id], map: "index_announcement_subscriptions_on_user_id")
+}
+
+model announcements {
+  id            Int      @id @default(autoincrement())
+  uuid          String?  @db.VarChar(255)
+  title         String?  @db.VarChar(255)
+  message_body  String?
+  created_by_id Int?
+  updated_by_id Int?
+  deleted       Boolean? @default(false)
+  created_at    DateTime @db.Timestamp(6)
+  updated_at    DateTime @db.Timestamp(6)
+}
+
+model app_config_adapters {
+  id    Int     @id @default(autoincrement())
+  key   String? @unique(map: "index_app_config_adapters_on_key") @db.VarChar(255)
+  value String?
+}
+
+model ar_internal_metadata {
+  key        String   @id @db.VarChar
+  value      String?  @db.VarChar
+  created_at DateTime @db.Timestamp(6)
+  updated_at DateTime @db.Timestamp(6)
+}
+
+model attached_file_roles {
+  id               Int      @id @default(autoincrement())
+  attached_file_id Int?
+  role_id          Int?
+  created_at       DateTime @db.Timestamp(6)
+  updated_at       DateTime @db.Timestamp(6)
+
+  @@index([attached_file_id], map: "index_attached_file_roles_on_attached_file_id")
+  @@index([role_id], map: "index_attached_file_roles_on_role_id")
+}
+
+model attached_files {
+  id             Int      @id @default(autoincrement())
+  uuid           String?  @db.VarChar(36)
+  filename       String?  @db.VarChar(255)
+  content        Bytes?
+  content_type   String?  @db.VarChar(255)
+  directory_id   Int?
+  uploader_id    Int?
+  deleted        Boolean? @default(false)
+  created_at     DateTime @db.Timestamp(6)
+  updated_at     DateTime @db.Timestamp(6)
+  content_length Int?     @default(-1)
+
+  @@index([deleted], map: "index_attached_files_on_deleted")
+  @@index([directory_id], map: "index_attached_files_on_directory_id")
+  @@index([filename], map: "index_attached_files_on_filename")
+}
+
+model categories {
+  id          Int      @id @default(autoincrement())
+  name        String?  @db.VarChar(255)
+  description String?
+  deleted     Boolean? @default(false)
+  created_at  DateTime @db.Timestamp(6)
+  updated_at  DateTime @db.Timestamp(6)
+  slug        String?  @db.VarChar(255)
+  uuid        String?  @db.VarChar
+
+  @@index([slug], map: "index_categories_on_slug")
+  @@index([uuid], map: "index_categories_on_uuid")
+}
+
+model category_roles {
+  id          Int      @id @default(autoincrement())
+  category_id Int?
+  role_id     Int?
+  created_at  DateTime @db.Timestamp(6)
+  updated_at  DateTime @db.Timestamp(6)
+
+  @@index([category_id], map: "index_category_roles_on_category_id")
+  @@index([role_id], map: "index_category_roles_on_role_id")
+}
+
+model directories {
+  id          Int      @id @default(autoincrement())
+  name        String?  @db.VarChar(255)
+  description String?
+  category_id Int?
+  deleted     Boolean? @default(false)
+  created_at  DateTime @db.Timestamp(6)
+  updated_at  DateTime @db.Timestamp(6)
+  slug        String?  @db.VarChar(255)
+  uuid        String?  @db.VarChar
+
+  @@index([category_id], map: "index_directories_on_category_id")
+  @@index([deleted], map: "index_directories_on_deleted")
+  @@index([slug], map: "index_directories_on_slug")
+  @@index([uuid], map: "index_directories_on_uuid")
+}
+
+model directory_roles {
+  id           Int      @id @default(autoincrement())
+  directory_id Int?
+  role_id      Int?
+  created_at   DateTime @db.Timestamp(6)
+  updated_at   DateTime @db.Timestamp(6)
+
+  @@index([directory_id], map: "index_directory_roles_on_directory_id")
+  @@index([role_id], map: "index_directory_roles_on_role_id")
+}
+
+model districts {
+  id         Int      @id @default(autoincrement())
+  slug       String?  @db.VarChar(255)
+  name       String?  @db.VarChar(255)
+  deleted    Boolean? @default(false)
+  created_at DateTime @db.Timestamp(6)
+  updated_at DateTime @db.Timestamp(6)
+}
+
+model event_participants {
+  id                     BigInt    @id @default(autoincrement())
+  user_id                Int?
+  event_id               Int?
+  festive_board          Boolean?  @default(false)
+  subscription_confirmed Boolean?  @default(false)
+  created_at             DateTime  @db.Timestamp(6)
+  updated_at             DateTime  @db.Timestamp(6)
+  notified_at            DateTime?
+}
+
+model events {
+  id                  Int       @id @default(autoincrement())
+  title               String?   @db.VarChar(255)
+  public_description  String?
+  private_description String?
+  whole_day           Boolean?
+  created_by_id       Int?
+  updated_by_id       Int?
+  deleted             Boolean?  @default(false)
+  created_at          DateTime  @db.Timestamp(6)
+  updated_at          DateTime  @db.Timestamp(6)
+  date                DateTime  @db.Date
+  time                DateTime? @db.Time(6)
+  end_time            DateTime? @db.Time(6)
+  uuid                String?   @db.VarChar(36)
+  location            String?   @db.VarChar(255)
+
+  @@index([created_by_id], map: "index_events_on_created_by_id")
+  @@index([updated_by_id], map: "index_events_on_updated_by_id")
+}
+
+model external_event_participants {
+  id                     Int       @id @default(autoincrement())
+  user_id                Int?
+  external_event_id      Int?
+  subscription_confirmed Boolean?  @default(false)
+  created_at             DateTime  @db.Timestamp(6)
+  updated_at             DateTime  @db.Timestamp(6)
+  festive_board          Boolean?  @default(false)
+  notified_at            DateTime?
+
+  @@unique([external_event_id, user_id])
+}
+
+model external_events {
+  id            Int      @id @default(autoincrement())
+  uuid          String?  @db.VarChar(255)
+  title         String   @db.VarChar(255)
+  description   String?
+  location      String   @db.VarChar(255)
+  time          DateTime @db.Time(6)
+  end_time      DateTime? @db.Time(6)
+  date          DateTime @db.Date
+  created_by_id Int
+  updated_by_id Int?
+  deleted       Boolean? @default(false)
+  created_at    DateTime @db.Timestamp(6)
+  updated_at    DateTime @db.Timestamp(6)
+  host          String?  @db.VarChar(255)
+  ics_source_id Int?
+  ics_uid       String?  @db.VarChar(255)
+
+  @@unique([ics_source_id, ics_uid])
+}
+
+model external_event_ics_sources {
+  id            Int      @id @default(autoincrement())
+  uuid          String   @db.VarChar(255)
+  name          String   @db.VarChar(255)
+  url           String   @db.VarChar(2048)
+  created_by_id Int
+  deleted       Boolean  @default(false)
+  created_at    DateTime @db.Timestamp(6)
+  updated_at    DateTime @db.Timestamp(6)
+}
+
+model file_downloads {
+  id               Int      @id @default(autoincrement())
+  attached_file_id Int?
+  user_id          Int?
+  remote_ip        String?  @db.VarChar(255)
+  deleted          Boolean? @default(false)
+  created_at       DateTime @db.Timestamp(6)
+  updated_at       DateTime @db.Timestamp(6)
+  filename         String?  @db.VarChar(255)
+
+  @@index([deleted], map: "index_file_downloads_on_deleted")
+  @@index([user_id], map: "index_file_downloads_on_user_id")
+}
+
+model friendly_id_slugs {
+  id             Int       @id @default(autoincrement())
+  slug           String    @db.VarChar
+  sluggable_id   Int
+  sluggable_type String?   @db.VarChar(50)
+  scope          String?   @db.VarChar
+  created_at     DateTime? @db.Timestamp(6)
+
+  @@unique([slug, sluggable_type, scope], map: "index_friendly_id_slugs_on_slug_and_sluggable_type_and_scope")
+  @@index([slug, sluggable_type], map: "index_friendly_id_slugs_on_slug_and_sluggable_type")
+  @@index([sluggable_id], map: "index_friendly_id_slugs_on_sluggable_id")
+  @@index([sluggable_type], map: "index_friendly_id_slugs_on_sluggable_type")
+}
+
+model impersonation_events {
+  id         BigInt   @id @default(autoincrement())
+  // FK to users(id) exists in DB (fk_rails_05550bb908) but is not modeled as
+  // a Prisma relation: admin_id is int8 while users.id is int4 (serial), and
+  // Prisma requires matching field types for @relation. Kept as a plain
+  // scalar column rather than narrowing/widening either type, since changing
+  // either would alter the real production column shape at cutover.
+  admin_id   BigInt
+  // Same int8-FK-vs-int4-PK situation as admin_id above (fk_rails_25a1a135db).
+  user_id    BigInt
+  remote_ip  String?  @db.VarChar
+  created_at DateTime @db.Timestamp(6)
+  updated_at DateTime @db.Timestamp(6)
+
+  @@index([admin_id], map: "index_impersonation_events_on_admin_id")
+  @@index([user_id], map: "index_impersonation_events_on_user_id")
+}
+
+model lodges {
+  id          Int      @id @default(autoincrement())
+  slug        String?  @db.VarChar(255)
+  name        String?  @db.VarChar(255)
+  description String?
+  district_id Int?
+  deleted     Boolean? @default(false)
+  created_at  DateTime @db.Timestamp(6)
+  updated_at  DateTime @db.Timestamp(6)
+}
+
+// Net-new (TS-native, no Rails counterpart) table backing per-email
+// failed-login lockout - see api/src/auth/loginLockout.ts. Keyed by
+// normalized (lowercased/trimmed) email rather than a `users` FK, because a
+// row has to exist for emails that don't correspond to any real user yet (an
+// attacker enumerating unknown emails plus one real one must still get
+// throttled on the real one) - a column on `users` couldn't represent that.
+model login_lockouts {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique(map: "index_login_lockouts_on_email") @db.VarChar(255)
+  failed_count Int       @default(0)
+  locked_until DateTime? @db.Timestamp(6)
+  created_at   DateTime  @db.Timestamp(6)
+  updated_at   DateTime  @db.Timestamp(6)
+}
+
+model officers {
+  id         Int      @id @default(autoincrement())
+  uuid       String?  @db.VarChar(255)
+  lodge_id   Int?
+  firstname  String?  @db.VarChar(255)
+  lastname   String?  @db.VarChar(255)
+  role_id    Int?
+  role_email String?  @db.VarChar(255)
+  deleted    Boolean? @default(false)
+  created_at DateTime @db.Timestamp(6)
+  updated_at DateTime @db.Timestamp(6)
+}
+
+model refresh_tokens {
+  id           BigInt    @id @default(autoincrement())
+  // FK to users(id) exists in DB (fk_rails_279e9a0091) but is not modeled as
+  // a Prisma relation: user_id is int8 while users.id is int4 (serial), and
+  // Prisma requires matching field types for @relation. Kept as a plain
+  // scalar column rather than narrowing/widening either type, since changing
+  // either would alter the real production column shape at cutover.
+  user_id      BigInt
+  token_digest String    @unique(map: "index_refresh_tokens_on_token_digest") @db.VarChar
+  family_id    String    @db.VarChar
+  expires_at   DateTime  @db.Timestamp(6)
+  consumed_at  DateTime? @db.Timestamp(6)
+  revoked_at   DateTime? @db.Timestamp(6)
+  created_at   DateTime  @db.Timestamp(6)
+  updated_at   DateTime  @db.Timestamp(6)
+
+  @@index([family_id], map: "index_refresh_tokens_on_family_id")
+  @@index([user_id], map: "index_refresh_tokens_on_user_id")
+}
+
+model mfa_totp_credentials {
+  id               Int       @id @default(autoincrement())
+  user_id          Int       @unique(map: "index_mfa_totp_credentials_on_user_id")
+  encrypted_secret String    @db.VarChar
+  verified_at      DateTime? @db.Timestamp(6)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime  @db.Timestamp(6)
+}
+
+model mfa_email_credentials {
+  id          Int       @id @default(autoincrement())
+  user_id     Int       @unique(map: "index_mfa_email_credentials_on_user_id")
+  verified_at DateTime? @db.Timestamp(6)
+  created_at  DateTime  @db.Timestamp(6)
+  updated_at  DateTime  @db.Timestamp(6)
+}
+
+/// Ephemeral 6-digit codes for email-OTP setup verification AND email-OTP
+/// login challenges (see mfaEmailOtp.ts) - not a credential itself, purely a
+/// short-lived proof-of-mailbox-access record.
+model mfa_email_otp_codes {
+  id          Int       @id @default(autoincrement())
+  user_id     Int
+  purpose     String    @db.VarChar(20)
+  code_hash   String    @db.VarChar
+  expires_at  DateTime  @db.Timestamp(6)
+  consumed_at DateTime? @db.Timestamp(6)
+  created_at  DateTime  @db.Timestamp(6)
+
+  @@index([user_id], map: "index_mfa_email_otp_codes_on_user_id")
+}
+
+model mfa_passkey_credentials {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  credential_id String    @unique(map: "index_mfa_passkey_credentials_on_credential_id") @db.VarChar
+  public_key    String    @db.VarChar
+  sign_count    Int       @default(0)
+  name          String    @db.VarChar(255)
+  last_used_at  DateTime? @db.Timestamp(6)
+  created_at    DateTime  @db.Timestamp(6)
+  updated_at    DateTime  @db.Timestamp(6)
+
+  @@index([user_id], map: "index_mfa_passkey_credentials_on_user_id")
+}
+
+model mfa_backup_codes {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  code_hash  String    @db.VarChar
+  used_at    DateTime? @db.Timestamp(6)
+  created_at DateTime  @db.Timestamp(6)
+
+  @@index([user_id], map: "index_mfa_backup_codes_on_user_id")
+}
+
+model mfa_trusted_devices {
+  id                Int      @id @default(autoincrement())
+  user_id           Int
+  device_token_hash String   @unique(map: "index_mfa_trusted_devices_on_device_token_hash") @db.VarChar
+  user_agent        String?  @db.VarChar
+  last_ip           String?  @db.VarChar
+  expires_at        DateTime @db.Timestamp(6)
+  created_at        DateTime @db.Timestamp(6)
+
+  @@index([user_id], map: "index_mfa_trusted_devices_on_user_id")
+}
+
+/// Generic per-subject lockout (email for TOTP/email/backup-code challenge
+/// attempts, credential_id for passkey assertion attempts) - see
+/// mfaLockout.ts. Deliberately a separate table from login_lockouts (which
+/// is email-only) rather than widening that table's column semantics.
+model mfa_lockouts {
+  id           Int       @id @default(autoincrement())
+  subject_key  String    @unique(map: "index_mfa_lockouts_on_subject_key") @db.VarChar(255)
+  failed_count Int       @default(0)
+  locked_until DateTime? @db.Timestamp(6)
+  created_at   DateTime  @db.Timestamp(6)
+  updated_at   DateTime  @db.Timestamp(6)
+}
+
+/// Server-side audit trail for admin-triggered MFA resets (POST
+/// /members/:uuid/mfa/reset) - mirrors impersonation_events' shape for the
+/// same "admin acting on another user" audit need.
+model mfa_reset_events {
+  id         Int      @id @default(autoincrement())
+  admin_id   Int
+  user_id    Int
+  created_at DateTime @db.Timestamp(6)
+}
+
+model roles {
+  id                    Int      @id @default(autoincrement())
+  name                  String?  @db.VarChar(255)
+  description           String?  @db.VarChar(255)
+  created_at            DateTime @db.Timestamp(6)
+  updated_at            DateTime @db.Timestamp(6)
+  display_name          String?  @db.VarChar(255)
+  group                 Boolean? @default(false)
+  administrational_role Boolean? @default(true)
+  email                 String?  @db.VarChar(255)
+  ordering_number       Int?
+  deleted               Boolean? @default(false)
+  admin_role            Boolean? @default(false)
+  officer_role          Boolean? @default(false)
+  index                 Int?
+}
+
+model schema_migrations {
+  version String @id @db.VarChar
+}
+
+model seekers {
+  id                       Int      @id @default(autoincrement())
+  firstname                String?  @db.VarChar(255)
+  lastname                 String?  @db.VarChar(255)
+  source                   String?  @db.VarChar(255)
+  invite                   Boolean?
+  deleted                  Boolean? @default(false)
+  created_at               DateTime @db.Timestamp(6)
+  updated_at               DateTime @db.Timestamp(6)
+  uuid                     String?  @db.VarChar(36)
+  preferred_way_of_contact Int?
+  status                   Int?
+  notes                    String?
+}
+
+model user_roles {
+  id            Int       @id @default(autoincrement())
+  user_id       Int?
+  role_id       Int?
+  created_at    DateTime  @db.Timestamp(6)
+  updated_at    DateTime  @db.Timestamp(6)
+  role_added_at DateTime? @db.Date
+}
+
+model users {
+  id                     Int       @id @default(autoincrement())
+  email                  String    @unique(map: "index_users_on_email") @default("") @db.VarChar(255)
+  encrypted_password     String    @default("") @db.VarChar(255)
+  reset_password_token   String?   @unique(map: "index_users_on_reset_password_token") @db.VarChar(255)
+  reset_password_sent_at DateTime? @db.Timestamp(6)
+  remember_created_at    DateTime? @db.Timestamp(6)
+  sign_in_count          Int?      @default(0)
+  current_sign_in_at     DateTime? @db.Timestamp(6)
+  last_sign_in_at        DateTime? @db.Timestamp(6)
+  current_sign_in_ip     String?   @db.VarChar(255)
+  last_sign_in_ip        String?   @db.VarChar(255)
+  created_at             DateTime  @db.Timestamp(6)
+  updated_at             DateTime  @db.Timestamp(6)
+  uuid                   String?   @db.VarChar(255)
+  firstname              String?   @db.VarChar(255)
+  lastname               String?   @db.VarChar(255)
+  date_of_birth          DateTime? @db.Date
+  accepted_at            DateTime? @db.Date
+  deleted                Boolean?  @default(false)
+  matriculation_number   Int?      @unique(map: "index_users_on_matriculation_number")
+  job_title              String?   @db.VarChar(255)
+  title                  Int?
+  academic_title_id      Int?
+  mother_lodge           String?   @db.VarChar(255)
+  provider               String?   @db.VarChar(255)
+  g_uid                  String?   @db.VarChar(255)
+  g_name                 String?   @db.VarChar(255)
+  g_mail                 String?   @db.VarChar(255)
+  oauth_token            String?   @db.VarChar(255)
+  oauth_expires_at       DateTime? @db.Timestamp(6)
+  accepted_gdpr          Boolean?  @default(false)
+  // Note: impersonation_events.admin_id/user_id and refresh_tokens.user_id
+  // have real FK constraints pointing at users(id), but are int8 columns
+  // referencing this int4 (serial) PK. Prisma requires matching field types
+  // for @relation, so no back-relation is modeled here; see the comments on
+  // those models.
+
+  @@index([uuid], map: "index_users_on_uuid")
+}

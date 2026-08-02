@@ -1,0 +1,307 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi, beforeAll, afterEach, afterAll } from 'vitest';
+import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
+import MemberForm from './MemberForm';
+import type { MemberFormProps } from './MemberForm';
+import '../../i18n';
+
+const emptyValues = { firstname: '', lastname: '', email: '', date_of_birth: '', matriculation_number: undefined, job_title: '' };
+
+const positionRolesFixture = [
+  { id: 101, name: 'WorshipfulMaster', display_name: 'Meister vom Stuhl', email: null },
+  { id: 102, name: 'Speaker', display_name: 'Redner', email: null },
+];
+const adminRolesFixture = [
+  { id: 201, name: 'Secretary', display_name: 'Schriftführer', email: null },
+  { id: 202, name: 'Treasurer', display_name: 'Schatzmeister', email: null },
+];
+
+// MSW v2 ignores query strings when matching a handler's path - registering
+// separate handlers for '/api/v1/roles?scope=positions' and
+// '...?scope=administrational' would collapse to the same '/api/v1/roles'
+// path and always resolve to whichever handler was registered first. Branch
+// on the parsed query param in a single handler instead.
+const server = setupServer(
+  http.get('/api/v1/roles', ({ request }) => {
+    const scope = new URL(request.url).searchParams.get('scope');
+    if (scope === 'positions') return HttpResponse.json({ rows: positionRolesFixture });
+    if (scope === 'administrational') return HttpResponse.json({ rows: adminRolesFixture });
+    return HttpResponse.json({ rows: [...positionRolesFixture, ...adminRolesFixture] });
+  }),
+);
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+// MemberForm now calls useRoles() (useQuery) for its role pickers, so every
+// render needs a QueryClientProvider ancestor, not just the new tests.
+function renderForm(props: MemberFormProps) {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <MemberForm {...props} />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+describe('MemberForm', () => {
+  it('only renders job_title when editableFields is limited', () => {
+    renderForm({
+      defaultValues: emptyValues,
+      editableFields: ['job_title'],
+      onSubmit: vi.fn(),
+      submitting: false,
+    });
+    expect(screen.getByLabelText(/Beruf/)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/E-Mail/)).not.toBeInTheDocument();
+  });
+
+  it('renders all fields and submits them when editableFields is the full set', async () => {
+    const onSubmit = vi.fn();
+    renderForm({
+      defaultValues: emptyValues,
+      editableFields: ['email', 'firstname', 'lastname', 'date_of_birth', 'matriculation_number', 'job_title'],
+      onSubmit,
+      submitting: false,
+    });
+    await userEvent.type(screen.getByLabelText(/Vorname/), 'Max');
+    await userEvent.type(screen.getByLabelText(/Nachname/), 'Mustermann');
+    await userEvent.type(screen.getByLabelText(/E-Mail/), 'max@example.org');
+    await userEvent.type(screen.getByLabelText(/Matrikelnummer/), '42');
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]![0]).toMatchObject({ firstname: 'Max', lastname: 'Mustermann', email: 'max@example.org', matriculation_number: 42 });
+  });
+
+  it('renders and submits the degree dates when editable (regression: previously no field existed to fix a member missing entered_apprentice_since)', async () => {
+    const onSubmit = vi.fn();
+    renderForm({
+      defaultValues: {
+        ...emptyValues,
+        firstname: 'Max', lastname: 'Mustermann', email: 'max@example.org',
+        entered_apprentice_since: '2010-05-01', fellow_craft_since: '', master_mason_since: '',
+      },
+      editableFields: ['job_title', 'entered_apprentice_since', 'fellow_craft_since', 'master_mason_since'],
+      onSubmit,
+      submitting: false,
+    });
+
+    expect(screen.getByLabelText(/Aufgenommen am/)).toHaveValue('2010-05-01');
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ entered_apprentice_since: '2010-05-01' });
+  });
+
+  it('adds a new address row', async () => {
+    const onSubmit = vi.fn();
+    renderForm({
+      defaultValues: { ...emptyValues, firstname: 'Max', lastname: 'Mustermann', email: 'max@example.org', addresses: [] },
+      editableFields: ['job_title', 'addresses'],
+      onSubmit,
+      submitting: false,
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Adresse hinzufügen' }));
+    await userEvent.type(screen.getByLabelText(/Stadt/), 'Bremen');
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
+      addresses: [expect.objectContaining({ city: 'Bremen' })],
+    });
+  });
+
+  it('removes a persisted address by marking it _destroy, preserving its real id', async () => {
+    // Regression test: useFieldArray's default keyName ("id") shadows a
+    // real, persisted address's numeric id - MemberForm must use a
+    // different keyName so the id submitted to the server is the real one,
+    // not react-hook-form's own generated React key.
+    const onSubmit = vi.fn();
+    renderForm({
+      defaultValues: {
+        ...emptyValues,
+        firstname: 'Max',
+        lastname: 'Mustermann',
+        email: 'max@example.org',
+        addresses: [{ id: 42, type_of_address: 0, purpose: 'Privat', city: 'Bremen' }],
+      },
+      editableFields: ['job_title', 'addresses'],
+      onSubmit,
+      submitting: false,
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Adresse entfernen' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
+      addresses: [expect.objectContaining({ id: 42, _destroy: true })],
+    });
+  });
+
+  it('preserves a persisted address\'s real id when editing another field on it (sanity check, not a keyName regression guard)', async () => {
+    // Unlike the remove test above, this does NOT exercise the keyName
+    // id-shadowing bug: Controller-bound field edits (city here) write
+    // directly into react-hook-form's internal form values by dot-path
+    // name and never read/write through the `fields`/`update()` snapshot
+    // where the shadowing occurred - only `update()` (used by the remove
+    // button) rebuilds a row from that snapshot. This test still passes
+    // identically with or without `keyName: '_key'` - kept as a general
+    // correctness check, not proof against that specific bug class.
+    const onSubmit = vi.fn();
+    renderForm({
+      defaultValues: {
+        ...emptyValues,
+        firstname: 'Max',
+        lastname: 'Mustermann',
+        email: 'max@example.org',
+        addresses: [{ id: 42, type_of_address: 0, purpose: 'Privat', city: 'Bremen' }],
+      },
+      editableFields: ['job_title', 'addresses'],
+      onSubmit,
+      submitting: false,
+    });
+
+    const cityField = screen.getByLabelText(/Stadt/);
+    await userEvent.clear(cityField);
+    await userEvent.type(cityField, 'Bremerhaven');
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
+      addresses: [expect.objectContaining({ id: 42, city: 'Bremerhaven' })],
+    });
+  });
+
+  it('lists the Bezeichnung (purpose) field before Adresstyp (type_of_address), matching the read view\'s purpose-first headline', async () => {
+    renderForm({
+      defaultValues: {
+        ...emptyValues,
+        firstname: 'Max',
+        lastname: 'Mustermann',
+        email: 'max@example.org',
+        addresses: [{ id: 1, type_of_address: 0, purpose: 'Privat' }],
+      },
+      editableFields: ['job_title', 'addresses'],
+      onSubmit: vi.fn(),
+      submitting: false,
+    });
+
+    const purposeField = screen.getByLabelText('Bezeichnung');
+    const typeField = screen.getByLabelText('Adresstyp');
+    // eslint-disable-next-line no-bitwise
+    expect(purposeField.compareDocumentPosition(typeField) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shows mother lodge and accepted-on fields when editable', async () => {
+    renderForm({
+      defaultValues: { mother_lodge: '', accepted_at: '', role_ids: [] },
+      editableFields: ['mother_lodge', 'accepted_at'],
+      onSubmit: vi.fn(),
+      submitting: false,
+    });
+    expect(await screen.findByLabelText('Mutterloge')).toBeInTheDocument();
+    expect(screen.getByLabelText('Angenommen am')).toBeInTheDocument();
+  });
+
+  it('hides mother lodge and accepted-on fields when not editable', () => {
+    renderForm({
+      defaultValues: {},
+      editableFields: [],
+      onSubmit: vi.fn(),
+      submitting: false,
+    });
+    expect(screen.queryByLabelText('Mutterloge')).not.toBeInTheDocument();
+  });
+
+  it('shows position and admin-role pickers when editable, and submits selected role_ids', async () => {
+    const onSubmit = vi.fn();
+    renderForm({
+      defaultValues: { role_ids: [] },
+      editableFields: ['role_ids'],
+      onSubmit,
+      submitting: false,
+    });
+    const user = userEvent.setup();
+
+    const positionsField = await screen.findByLabelText('Ämter');
+    await user.click(positionsField);
+    await user.click(await screen.findByText('Meister vom Stuhl'));
+
+    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    // Not toHaveBeenCalledWith(expect.objectContaining(...)) - react-hook-form's
+    // handleSubmit invokes onSubmit with a second (SyntheticEvent) argument,
+    // so an exact-args matcher like toHaveBeenCalledWith never matches here.
+    // Every other test in this file already inspects mock.calls[0]?.[0]
+    // for exactly this reason - follow that convention instead.
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ role_ids: expect.arrayContaining([expect.any(Number)]) });
+  });
+
+  it('selecting an admin role preserves an already-selected position role, and vice versa (shared role_ids array)', async () => {
+    const onSubmit = vi.fn();
+    renderForm({
+      defaultValues: { role_ids: [] },
+      editableFields: ['role_ids'],
+      onSubmit,
+      submitting: false,
+    });
+    const user = userEvent.setup();
+
+    const positionsField = await screen.findByLabelText('Ämter');
+    await user.click(positionsField);
+    await user.click(await screen.findByText('Meister vom Stuhl'));
+
+    const adminField = screen.getByLabelText('Verwaltungsrollen');
+    await user.click(adminField);
+    await user.click(await screen.findByText('Schriftführer'));
+
+    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
+      role_ids: expect.arrayContaining([101, 201]),
+    });
+  });
+
+  it('renders a Cancel button that does not submit the form', async () => {
+    const onSubmit = vi.fn();
+    renderForm({
+      defaultValues: emptyValues,
+      editableFields: ['job_title'],
+      onSubmit,
+      submitting: false,
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abbrechen' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('calls onCancel instead of navigating when provided', async () => {
+    const onSubmit = vi.fn();
+    const onCancel = vi.fn();
+    renderForm({
+      defaultValues: emptyValues,
+      editableFields: ['job_title'],
+      onSubmit,
+      submitting: false,
+      onCancel,
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Abbrechen' }));
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});

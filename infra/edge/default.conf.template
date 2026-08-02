@@ -1,0 +1,63 @@
+server {
+    listen       8080;
+    # Same dual-stack fix as app/nginx.conf.template's listen block — bare
+    # `listen 8080;` is IPv4-only, and this container's network has
+    # enable_ipv6: true too. See that file's comment for the root cause this
+    # fixes (edge's own proxy_pass to app was hitting exactly this on the
+    # other end).
+    listen       [::]:8080;
+    server_name  _;
+
+    # nginx's own unconfigured default is 1m - well under the api's upload
+    # ceiling (contractValidation.ts's MULTIPART_FILE_SIZE_LIMIT_BYTES,
+    # enforced by express-openapi-validator's multer instance). Without this,
+    # edge (the first hop that sees the raw request body) silently 413s any
+    # oversized upload with a bare nginx error page - before the request ever
+    # reaches api's own, more informative {"error":"payload_too_large",...}
+    # response. Found 2026-07-28 via a real 1.4MB upload on next.
+    #
+    # Derived from MAX_UPLOAD_FILE_SIZE_MB in .env.<env> (default 20, matching
+    # the original fixed 20MB/21MB behavior for any environment that hasn't
+    # set it explicitly) - the api's own MULTIPART_FILE_SIZE_LIMIT_BYTES reads
+    # this exact same source value, so nginx and the api can no longer
+    # silently drift apart the way two independently-hardcoded numbers could
+    # (see api/src/middleware/contractValidation.ts).
+    #
+    # ponytail: deliberately no separate "nginx = ceiling+1MB" headroom value
+    # any more - nginx and the api now share the literal same number, rather
+    # than splitting into two env vars. This means a request landing exactly
+    # at the ceiling in raw multipart-encoded bytes (file content + multipart
+    # boundary/header overhead, typically a few hundred bytes) has a narrow
+    # chance of being rejected by nginx's bare error page instead of the
+    # api's clean JSON 413. Accepted as negligible in practice; if it ever
+    # needs revisiting, the fix is splitting into two separate env vars
+    # (nginx's own value bumped slightly higher than the api's), not
+    # attempted here to keep this simple.
+    client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE_MB}m;
+
+    # Same free bandwidth win as app/nginx.conf.template's gzip block — see
+    # that file's comment for why it's safe here too.
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    # This edge container is a dumb, total-passthrough reverse proxy —
+    # no knowledge of /api/, /arbeitsplan.*, /errors/, or any other routes.
+    # All routing happens inside the app container's own nginx
+    # (app/nginx.conf.template).
+    #
+    # Unlike app's /api/ block (which uses resolver + variable re-resolution
+    # to re-resolve DNS without reloading), edge always gets a full
+    # `nginx -s reload` on every blue-green swap (see later Task 3). Thus,
+    # a plain hardcoded `proxy_pass http://<container-name>:8080;`
+    # (re-rendered per swap into this template) is simpler and sufficient —
+    # no resolver trick needed here.
+
+    location / {
+        proxy_pass http://${ACTIVE_APP_UPSTREAM}:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

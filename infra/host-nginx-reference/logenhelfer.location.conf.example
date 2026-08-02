@@ -1,0 +1,130 @@
+# ============================================================================
+# REFERENCE ONLY. This file is NEVER read, templated, or applied by any
+# script in this repo — no bin/deploy-to step, no docker-entrypoint, nothing.
+# It exists purely so a human has something checked-in to copy from.
+#
+# To use it: copy the relevant directives below by hand into the existing
+# `server { ... }` block for <host> in
+# /etc/nginx/sites-available/<host> on the deploy host (the shared
+# TLS-terminating host nginx — see CLAUDE.md's deploy-mechanism notes,
+# "The host nginx only ever forwards a whole hostname..."). Then, still on
+# that host:
+#
+#     nginx -t && systemctl reload nginx
+#
+# ...run BY A HUMAN, never by an automated script — see CLAUDE.md: "Never
+# reload/edit host nginx as part of an automated deploy. It's shared
+# infrastructure for other projects on the same host."
+#
+# Why this file exists: the exact server-block diff needed for the
+# edge/blue-green migration (pointing host nginx at the new `edge`
+# container's port, plus wiring the static error pages for the "edge itself
+# is down" case) previously only existed in a 2026-07-20 chat transcript
+# that is no longer findable. That was a real gap — the next person (or the
+# same person, months later) bootstrapping `beta`/`dev`, or re-applying this
+# after a host nginx config gets rebuilt, had no durable reference. This
+# checked-in copy is the fix: keep it in sync whenever the edge/error-page
+# wiring changes on the app side.
+#
+# Placeholders to fill in per environment before pasting:
+#   <host>      - the public hostname this server block already serves
+#                 (e.g. next.example.com) — this snippet assumes that
+#                 server block, its `listen`/`server_name`/TLS
+#                 (ssl_certificate etc.) directives, already exist; they are
+#                 NOT reproduced here since they're unrelated to this change
+#                 and already differ per environment.
+#   <env>       - the environment name (next/prod/beta/dev) — used only to
+#                 build the error-pages directory path below. Must match
+#                 the {ENV}_ERROR_PAGES_PATH value set (or left unset) in
+#                 the local .env used by bin/deploy-to for this same
+#                 environment (see .env.example).
+#   <APP_PORT>  - this environment's APP_PORT value from its .env.<env> on
+#                 THIS deploy host (edge's published host port — see
+#                 infra/docker-compose.production.yml's `edge` service).
+#                 Same port the `app` container used to publish directly
+#                 before `edge` was introduced — this location block's
+#                 shape is otherwise unchanged from what was already there
+#                 for `app`.
+# ============================================================================
+
+    # --- location / : reverse-proxy to this environment's edge container ---
+    # Functionally identical to what already existed here for the `app`
+    # container's port — only the upstream changed (app -> edge), not the
+    # header set. Same X-Forwarded-For/X-Forwarded-Proto/X-Real-IP/Host set
+    # app/nginx.conf.template's own proxy blocks use; api/src/app.ts's
+    # `trust proxy` count assumes exactly this one hop from host nginx plus
+    # the second hop inside the app container (see CLAUDE.md) — don't drop
+    # any of these four headers or add/remove a proxy hop without also
+    # updating that count.
+    # nginx's own unconfigured default (1m) is well under the api's upload
+    # cap (contractValidation.ts's MULTIPART_FILE_SIZE_LIMIT_BYTES, driven by
+    # MAX_UPLOAD_FILE_SIZE_MB in .env.<env> - default 20, see CLAUDE.md).
+    # This host nginx is the OUTERMOST hop the raw upload body passes through
+    # (host nginx -> edge -> app -> api) - without this, it 413s any upload
+    # over 1MB with a bare nginx error page before the request ever reaches
+    # edge/app's own matching client_max_body_size (those two now derive
+    # from the same MAX_UPLOAD_FILE_SIZE_MB var automatically - see those
+    # nginx.conf.template files). Found 2026-07-28 via a real 1.4MB upload on
+    # next. THIS value is NOT templated (see the "never reload/edit host
+    # nginx" rule in CLAUDE.md - this whole file is copied by hand, never
+    # read by any script) - if MAX_UPLOAD_FILE_SIZE_MB is ever raised above
+    # 20 for this environment, this number must be bumped to match by hand
+    # in the same edit, or host nginx becomes the tighter constraint and
+    # 413s with its own bare error page before edge/app/api ever see the
+    # request.
+    client_max_body_size 20m;
+
+    location / {
+        proxy_pass http://127.0.0.1:<APP_PORT>;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # --- Static error pages for "edge itself is unreachable" ---
+    # This is the one failure mode app/nginx.conf.template's own error_page
+    # directives can NOT cover (nothing in that file runs if edge/app aren't
+    # up at all — see CLAUDE.md's "Styled error pages" section). bin/deploy-to
+    # rsyncs app/public/errors/{404,502}.html + style.css/countdown.js/
+    # bijou.png into /srv/logenhelfer-errors/<env>/ after every successful
+    # deploy, but ONLY if this environment's {ENV}_ERROR_PAGES_PATH local var
+    # is set to that same path (see .env.example) — if it's unset, this
+    # environment simply hasn't had this one-time nginx edit applied yet, and
+    # these error_page targets will 404 until it is. That's an acceptable,
+    # known gap for `beta`/`dev` before their first deploy.
+    #
+    # 500 is folded into the same 502.html copy as 502/503/504, mirroring
+    # app/nginx.conf.template's own `error_page 500 502 503 504 /errors/502.html;`
+    # line exactly — no code path in this app emits a bare 500 today, and the
+    # "Server wird aktualisiert" copy reads correctly for any of these
+    # upstream-unreachable cases either way.
+    error_page 404 /errors/404.html;
+    error_page 500 502 503 504 /errors/502.html;
+
+    # The rsynced copy of app/public/errors/ keeps its own internal absolute
+    # references (404.html/502.html link to /errors/style.css, /errors/
+    # bijou.png, /errors/countdown.js — see those files) — so this location
+    # prefix must be /errors/ here too, aliased to the rsync target
+    # directory, for those references to resolve.
+    #
+    # Only the *.html files are `internal` (unreachable by a direct client
+    # request — only reachable via the error_page redirect above), mirroring
+    # app/nginx.conf.template's own existing fix for this exact mistake:
+    # style.css/countdown.js/bijou.png must stay normal, publicly-fetchable
+    # static files, since the browser loads them as ordinary sub-resources
+    # *from* the already-served error page, not through the location that
+    # served the HTML itself. Making the whole /errors/ prefix internal (the
+    # mistake an earlier draft of app/nginx.conf.template made, caught by
+    # testing against a real nginx:alpine container — see that file's
+    # comment) would silently 404 those and ship an unstyled page with no
+    # countdown/reload.
+    location ~ ^/errors/([^/]+\.html)$ {
+        alias /srv/logenhelfer-errors/<env>/$1;
+        internal;
+    }
+
+    location /errors/ {
+        alias /srv/logenhelfer-errors/<env>/;
+    }

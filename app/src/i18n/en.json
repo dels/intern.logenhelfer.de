@@ -1,0 +1,627 @@
+{
+  "nav": {
+    "dashboard": "Overview",
+    "events": "Working plan",
+    "users": "Members",
+    "seekers": "Seekers",
+    "lodges": "Lodges",
+    "announcements": "News",
+    "categories": "Categories",
+    "statistics": "Statistics",
+    "settings": "Settings",
+    "configurationSection": "Configuration",
+    "filesSection": "Files",
+    "openMenu": "Open menu",
+    "externalEvents": "External Events",
+    "externalEventIcsSources": "External ICS Calendars"
+  },
+  "dashboard": {
+    "welcome": "Welcome Br. {{name}}",
+    "gdprHeader": "Privacy policy",
+    "gdprMustAccept": "To continue using this service you must accept the privacy policy.",
+    "gdprAcceptLabel": "Accept the privacy agreement and consent to the collection, storage and processing of the data.",
+    "gdprAcceptButton": "I accept the privacy agreement",
+    "recentAnnouncements": "Recent announcements",
+    "noAnnouncements": "There are no announcements yet.",
+    "seeAllAnnouncements": "See all announcements",
+    "upcomingEventsTitle": "Upcoming events",
+    "openWorkingplan": "Open working plan →",
+    "seeAllMembers": "See all members →",
+    "seeAllSeekers": "See all seekers →",
+    "stats": {
+      "noUpcomingEvents": "No upcoming events."
+    },
+    "storage": {
+      "banner": "{{percent}}% used ({{used}} of {{max}})."
+    }
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "invalidCredentials": "Email or password is incorrect.",
+    "networkError": "The server could not be reached. Please try again shortly.",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Forgot password",
+    "forgotPasswordSubmit": "Request link",
+    "forgotPasswordSent": "If this email address is registered, you'll receive an email with a password reset link shortly.",
+    "backToLogin": "Back to sign in",
+    "resetPasswordTitle": "Set a new password",
+    "newPassword": "New password",
+    "newPasswordConfirmation": "Confirm new password",
+    "resetPasswordSubmit": "Save password",
+    "resetPasswordSuccess": "Your password has been changed. You can now sign in.",
+    "resetPasswordInvalidToken": "This link is invalid or has expired. Please request a new one.",
+    "signInWithPasskey": "Sign in with a passkey",
+    "mfaInvalidCode": "The code you entered is invalid.",
+    "passkeyLoginFailed": "Signing in with the passkey failed."
+  },
+  "demoBanner": {
+    "text": "This is a demo environment and gets reset irregularly.",
+    "infoLabel": "About this demo environment",
+    "title": "Demo accounts",
+    "intro": "Log in with any of the following accounts, all sharing the password {{password}}.",
+    "limits": "This environment sends no email, resets irregularly, and caps file uploads at 100MB.",
+    "close": "Close",
+    "roles": {
+      "EnteredApprentice": "Entered Apprentice — member view, no special abilities",
+      "FellowCraft": "Fellow Craft — member view, no special abilities",
+      "MasterMason": "Master Mason — member view, no special abilities",
+      "Admin": "Admin — full system access",
+      "Secretary": "Secretary — working plan, announcements, lodges/officers, files, user roles, statistics",
+      "WorshipfulMaster": "Worshipful Master — lodge leadership",
+      "NetDelegate": "Net Delegate — files, user roles, statistics",
+      "MemberOfCouncil": "Member of Council — statistics, member export, seekers",
+      "FileAdmin": "File Admin — categories/directories/files only",
+      "UserAdmin": "User Admin — role assignment only",
+      "WorkingPlanAdmin": "Working Plan Admin — events only",
+      "ApplicationAdmin": "Application Admin — core configuration",
+      "AnnouncementAdmin": "Announcement Admin — announcements only"
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading …",
+    "close": "Close",
+    "serverUnavailable": "Connection to the server was lost.",
+    "visibleTo": "Visible to: {{groups}}",
+    "visibleToNone": "Visible to no group",
+    "toast": {
+      "created": "Created.",
+      "updated": "Saved.",
+      "deleted": "Deleted.",
+      "error": "Save failed."
+    }
+  },
+  "events": {
+    "date": "Date",
+    "time": "Time",
+    "beginTime": "Begin",
+    "endTime": "End",
+    "title": "Title",
+    "location": "Location",
+    "create": "New event",
+    "edit": "Edit",
+    "publicDescription": "Public description",
+    "privateDescription": "Internal description",
+    "wholeDay": "All day",
+    "participants": "Participants",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete this event?",
+    "save": "Save",
+    "register": "Register",
+    "unregister": "Unregister",
+    "registeredToast": "Registered for {{name}}.",
+    "exportWorkingplanPdf": "Export working plan as PDF",
+    "calendar": {
+      "filterBirthdays": "Birthdays",
+      "filterExternalEvents": "External events",
+      "filterLabel": "Show",
+      "filterPlaceholder": "Choose filters",
+      "filterSourcesTruncated": "Only the first 1000 ICS sources are shown.",
+      "viewList": "List",
+      "viewCalendar": "Calendar",
+      "previous": "Previous month",
+      "next": "Next month",
+      "today": "Today",
+      "month": "Month",
+      "week": "Week",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
+  "externalEvents": {
+    "title": "Title",
+    "host": "Lodge",
+    "location": "Location",
+    "date": "Date",
+    "time": "Time",
+    "beginTime": "Begin",
+    "endTime": "End",
+    "description": "Description",
+    "save": "Save",
+    "create": "New external event",
+    "edit": "Edit",
+    "empty": "No external events yet.",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete this external event?",
+    "participants": "Participants",
+    "register": "Register",
+    "unregister": "Unregister",
+    "confirm": "Confirm",
+    "confirmed": "Confirmed",
+    "festiveBoard": "Festive dinner"
+  },
+  "externalEventIcsSources": {
+    "title": "External ICS calendars",
+    "name": "Name",
+    "url": "URL",
+    "add": "Add",
+    "empty": "No external ICS calendars configured.",
+    "syncNow": "Sync now",
+    "edit": "Edit",
+    "delete": "Delete",
+    "syncResult": "{{created}} new, {{updated}} updated, {{removed}} removed",
+    "syncError": "Sync failed",
+    "editError": "Could not save changes"
+  },
+  "members": {
+    "firstname": "First name",
+    "lastname": "Last name",
+    "name": "Name",
+    "matriculationNumber": "Matriculation number",
+    "jobTitle": "Occupation",
+    "email": "Email",
+    "search": "Search",
+    "loadError": "The member list could not be loaded.",
+    "create": "New member",
+    "edit": "Edit",
+    "delete": "Delete",
+    "impersonate": "Impersonate",
+    "impersonationBanner": "Viewing as {{name}}",
+    "stopImpersonating": "Back to my account",
+    "deleteConfirm": "Really delete this member?",
+    "mfaEnabled": "Two-factor authentication enabled",
+    "mfaDisabled": "Two-factor authentication not set up",
+    "mfaReset": "Reset MFA",
+    "mfaResetConfirm": "Really reset?",
+    "mfaResetSuccess": "MFA has been reset",
+    "save": "Save",
+    "addresses": "Addresses",
+    "roles": "Roles",
+    "dateOfBirth": "Date of birth",
+    "enteredApprenticeSince": "Entered apprentice since",
+    "fellowCraftSince": "Fellow craft since",
+    "masterMasonSince": "Master mason since",
+    "addAddress": "Add address",
+    "removeAddress": "Remove address",
+    "addressType": "Address type",
+    "addressTypePrivate": "Private",
+    "addressTypeBusiness": "Business",
+    "addressTypeOther": "Other",
+    "addressPurpose": "Label",
+    "phone": "Phone",
+    "fax": "Fax",
+    "mobile": "Mobile",
+    "brotherName": "Br. {{firstname}} {{lastname}}",
+    "motherLodge": "Mother lodge",
+    "acceptedAt": "Accepted on",
+    "positions": "Positions",
+    "adminRoles": "Administrative roles",
+    "phoneListHeader": "Phone list",
+    "birthdayListHeader": "Birthday list",
+    "councilListHeader": "Council of officers",
+    "age": "Age",
+    "jubilee25": "25th anniversary",
+    "jubilee40": "40th anniversary",
+    "roleEmail": "Email",
+    "holder": "Officeholder",
+    "councilRole": "Office",
+    "exportCsv": "Export CSV",
+    "exportVcf": "Export vCard",
+    "exportPdf": "Export PDF",
+    "exportPdfPasswordPrompt": "Please set a password for the PDF file (min. 5 characters)",
+    "exportPdfPasswordLabel": "Password",
+    "exportPdfPasswordTooShort": "The password must be at least 5 characters long",
+    "exportPdfGenerate": "Generate PDF",
+    "exportForbidden": "You don't have permission for this action",
+    "exportRecordFailed": "The PDF file was downloaded, but logging the export failed. Please inform an administrator."
+  },
+  "seekers": {
+    "forbidden": "You do not have permission to view seekers.",
+    "lastname": "Name",
+    "source": "Source",
+    "contact": "Contact",
+    "status": "Status",
+    "updatedAt": "Last updated",
+    "loadError": "The seeker list could not be loaded.",
+    "create": "New seeker",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete this seeker?",
+    "save": "Save",
+    "notes": "Notes",
+    "address": "Address",
+    "firstname": "First name",
+    "invite": "Invite",
+    "preferredWayOfContact": "Preferred contact method",
+    "filter": {
+      "active": "Active",
+      "accepted": "Accepted",
+      "inactive": "Inactive",
+      "declined": "Declined"
+    },
+    "statusOptions": {
+      "contacted": "Contacted", "visiting": "Visiting", "applicationExpected": "Application expected",
+      "applicationReceived": "Application received", "ballotageScheduled": "Ballotage scheduled",
+      "readyForAdmission": "Ready for admission", "admissionScheduled": "Admission scheduled",
+      "accepted": "Accepted", "declined": "Declined"
+    },
+    "contactOptions": {
+      "email": "Email", "phone": "Phone", "fax": "Fax", "mobile": "Mobile", "mail": "Mail", "seeRemarks": "See remarks"
+    },
+    "addressFields": {
+      "street": "Street", "zip": "Zip", "city": "City", "phone": "Phone", "mobile": "Mobile", "email": "Email"
+    },
+    "namesList": {
+      "title": "Seeker Names",
+      "empty": "There are currently no seekers.",
+      "loadError": "The list of seeker names could not be loaded."
+    }
+  },
+  "categories": {
+    "name": "Name",
+    "description": "Description",
+    "roles": "Visible to roles",
+    "create": "New category",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete?",
+    "save": "Save",
+    "directories": "Directories"
+  },
+  "directories": {
+    "create": "New directory",
+    "name": "Name",
+    "description": "Description",
+    "roles": "Visible to roles",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete?",
+    "save": "Save"
+  },
+  "lodges": {
+    "name": "Name",
+    "description": "Description",
+    "district": "District",
+    "noDistricts": "No districts exist yet - a new lodge can't be created until at least one district exists.",
+    "create": "New lodge",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete?",
+    "save": "Save",
+    "officers": "Officers"
+  },
+  "officers": {
+    "firstname": "First name",
+    "lastname": "Last name",
+    "role": "Office",
+    "roleEmail": "Office email",
+    "create": "New officer",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete?",
+    "save": "Save"
+  },
+  "announcements": {
+    "title": "Title",
+    "messageBody": "Message",
+    "createdAt": "Created at",
+    "createdBy": "Created by {{name}} on {{date}}",
+    "updatedBy": "Last edited by {{name}} on {{date}}",
+    "subscribe": "Notify me by email about new announcements",
+    "create": "New announcement",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete?",
+    "save": "Save"
+  },
+  "configuration": {
+    "header": "Application configuration",
+    "tabs": {
+      "funktionen": "Features",
+      "konfiguration": "Configuration",
+      "impressum": "Legal notice (Impressum)",
+      "sicherheit": "Security"
+    },
+    "generalHeader": "General settings",
+    "districtsHeader": "Districts",
+    "districtCreate": "New district",
+    "districtEdit": "Edit district",
+    "districtName": "Name",
+    "academicTitlesHeader": "Academic Titles",
+    "academicTitleCreate": "Add title",
+    "academicTitleEdit": "Edit title",
+    "academicTitleShort": "Short form",
+    "academicTitleInUse": "{{count}} members",
+    "rolesHeader": "Roles (email addresses)",
+    "roleEmail": "Email address",
+    "roleEditEmail": "Edit email",
+    "cancel": "Cancel",
+    "save": "Save",
+    "forbidden": "You do not have permission to edit the configuration.",
+    "options": {
+      "public_wp_available_to_anon_users": {
+        "name": "Public working plan visible to anonymous users",
+        "description": "When enabled, the working plan is visible on the landing page next to the login. WARNING: changes only take effect after an application restart."
+      },
+      "working_plan_as_start_page": {
+        "name": "Working plan as start page",
+        "description": "When the start page is loaded, the working plan is shown instead of the login. Requires the working plan to be publicly visible. WARNING: changes only take effect after an application restart."
+      },
+      "archive": {
+        "name": "Archive mode",
+        "description": "Change at your own risk!"
+      },
+      "show_admins": {
+        "name": "Show administrators in the member list?",
+        "description": ""
+      },
+      "users_can_view_statistics": {
+        "name": "Statistics visible to all members",
+        "description": "When disabled, only council members and higher roles can see the statistics overview (downloads, downloads-per-file, storage usage). Council members and higher roles are unaffected by this setting."
+      },
+      "show_seeker_names_to_brothers": {
+        "name": "Seeker names visible to all brothers",
+        "description": "When enabled, brothers with no Seeker access of their own see a names-only list of active seekers (dashboard tile + own page). Does not affect the Worshipful Master or council members - they already have full access to seeker management."
+      },
+      "notify_technical_contact_on_unknown_password_reset": {
+        "name": "Notify on password reset for unknown email addresses",
+        "description": "A member may have forgotten which email address is on file"
+      },
+      "domain": {
+        "name": "Domain",
+        "description": "This application's domain (without protocol). Used for contact export and as an identifier in the calendar export."
+      },
+      "organisation": {
+        "name": "Organisation name",
+        "description": "Used mainly in contact exports."
+      },
+      "lodge": {
+        "name": "Lodge",
+        "description": "Displayed lodge name on the start page and in the page title."
+      },
+      "lodge_short": {
+        "name": "Lodge abbreviation",
+        "description": "Used e.g. as a prefix for the working plan."
+      },
+      "language": {
+        "name": "Language",
+        "description": "Language of the application, the working-plan PDF, and the calendar export.",
+        "values": { "de": "German", "en": "English" }
+      },
+      "default_workingplan_timespan": {
+        "name": "Default timespan for working plan exports",
+        "description": "Number of days."
+      },
+      "public_workingplan_html_timespan": {
+        "name": "Timespan for the public working plan (HTML)",
+        "description": "Number of days."
+      },
+      "public_workingplan_ics_timespan": {
+        "name": "Timespan for the public working plan (iCal)",
+        "description": "Number of days."
+      },
+      "default_event_location": {
+        "name": "Default location for new events",
+        "description": "The \"location\" field on the new-event form is pre-filled with this value."
+      },
+      "user_change_notification_email": {
+        "name": "Notification email address",
+        "description": "Email address that receives the report when a member's data has been changed. Multiple addresses can be separated by semicolons."
+      },
+      "default_from_email": {
+        "name": "Default sender address for system emails",
+        "description": "Sender used for all emails the application sends."
+      },
+      "technical_contact_email": {
+        "name": "Technical contact",
+        "description": "This email address is shown everywhere a technical contact is listed."
+      },
+      "mvst_email": {
+        "name": "Worshipful Master contact address",
+        "description": "Can be shown in the legal notice (Impressum)."
+      },
+      "zip": {
+        "name": "ZIP code",
+        "description": "Used (among other things) in the legal notice (Impressum)."
+      },
+      "location": {
+        "name": "Location",
+        "description": "Used (among other things) in the legal notice (Impressum)."
+      },
+      "max_db_mem_size": {
+        "name": "Maximum database storage size",
+        "description": "Maximum storage usage in megabytes before a warning is shown."
+      },
+      "max_db_mem_size_demo_locked": "Not editable in this demo environment.",
+      "max_upload_file_size": {
+        "name": "Maximum upload file size",
+        "description": "Maximum size (in MB) for a single uploaded file. Cannot exceed this server's configured ceiling."
+      },
+      "workingplan_footer": {
+        "name": "Working plan footer",
+        "description": "This text is written as a footer below the working plan."
+      },
+      "impressum": {
+        "name": "Legal notice (Impressum) text",
+        "description": "HTML formatting. Email addresses are obfuscated."
+      },
+      "help": {
+        "name": "Help content",
+        "description": "Shown on the Help page (linked from the top navigation)."
+      },
+      "robots_txt": {
+        "name": "robots.txt content",
+        "description": "Search engine indexing instructions for the website."
+      },
+      "mfa_mode": {
+        "name": "Two-factor authentication",
+        "description": "Controls whether two-factor authentication is optional or mandatory for all members.",
+        "values": { "optional": "Optional", "mandatory": "Mandatory" }
+      },
+      "mfa_enforce_for_officers": {
+        "name": "Mandatory for council members",
+        "description": "When enabled, council members and higher roles must set up two-factor authentication regardless of the general mode."
+      },
+      "mfa_grace_period_days": {
+        "name": "Grace period (days)",
+        "description": "Number of days members are given to set up two-factor authentication after switching to mandatory."
+      },
+      "mfa_trusted_device_days": {
+        "name": "Trusted device duration (days)",
+        "description": "Number of days a device is remembered as trusted after a successful two-factor authentication (maximum 90)."
+      }
+    }
+  },
+  "account": {
+    "navLabel": "My Account",
+    "title": "Account",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "newPasswordConfirmation": "Confirm new password",
+    "save": "Save",
+    "success": "Password changed successfully.",
+    "passwordTooShort": "Password must be at least 8 characters.",
+    "passwordMismatch": "Passwords do not match.",
+    "profileHeader": "Profile",
+    "profileSuccess": "Profile updated successfully.",
+    "manageSecurityLink": "Manage security"
+  },
+  "mfa": {
+    "setup": {
+      "title": "Set up two-factor authentication",
+      "chooseMethod": "Choose a method for two-factor authentication",
+      "authenticatorApp": "Authenticator app (TOTP)",
+      "email": "Email",
+      "passkey": "Passkey",
+      "qrAlt": "QR code to scan with your authenticator app",
+      "codeLabel": "Code",
+      "emailSent": "We sent you a code by email.",
+      "done": "Done!",
+      "continue": "Continue to dashboard",
+      "passkeyFailed": "Passkey registration failed."
+    },
+    "backupCodes": {
+      "warning": "Save these codes now - they're the only way to regain access to your account if you lose your device."
+    },
+    "challenge": {
+      "title": "Two-factor authentication",
+      "method": "Method",
+      "codeLabel": "Code",
+      "rememberDevice": "Remember this device"
+    },
+    "method": {
+      "totp": "Authenticator app",
+      "email": "Email",
+      "backup_code": "Backup code"
+    },
+    "dashboard": {
+      "banner": "You haven't set up two-factor authentication yet.",
+      "bannerCountdown": "{{days}} days left to set up two-factor authentication - after that it's required for your account.",
+      "setupCta": "Set up now"
+    },
+    "demoUnavailable": "MFA is not available in the demo environment.",
+    "security": {
+      "proofDialogTitle": "Confirm your identity",
+      "methodsHeader": "Your methods",
+      "remove": "Remove",
+      "lastMethodTooltip": "The last method can't be removed while two-factor authentication is mandatory.",
+      "proofFailed": "Verification failed. Please try again.",
+      "title": "Manage security",
+      "backupCodesHeader": "Backup codes",
+      "regenerateBackupCodes": "Regenerate backup codes",
+      "trustedDevicesHeader": "Trusted devices",
+      "noTrustedDevices": "No trusted devices.",
+      "unknownDevice": "Unknown device",
+      "revoke": "Revoke"
+    }
+  },
+  "files": {
+    "filename": "Filename",
+    "roles": "Visible to",
+    "size": "Size",
+    "filetype": "File type",
+    "uploadedBy": "Uploaded by",
+    "uploadedAt": "Uploaded at",
+    "downloadCount": "Downloads",
+    "info": "Info",
+    "infoTitle": "File information",
+    "download": "Download",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Really delete?",
+    "save": "Save",
+    "noFiles": "No files.",
+    "filesHeading": "Files",
+    "dropZoneLabel": "Drag files here or click to browse"
+  },
+  "statistics": {
+    "indexTitle": "Statistics",
+    "forbidden": "You do not have permission to view this statistic.",
+    "categoryMembers": "Members",
+    "categoryFiles": "Files",
+    "categoryMeta": "Meta",
+    "userStats": "Login activity",
+    "downloads": "Downloads",
+    "fileStats": "Downloads per file",
+    "userFileStats": "Downloads per member",
+    "memStats": "Storage usage",
+    "avgAge": "Current average age",
+    "matriculationNumber": "Matriculation number",
+    "lastname": "Last name",
+    "firstname": "First name",
+    "signInCount": "Sign-ins",
+    "lastSignIn": "Last sign-in",
+    "signInIp": "IP address",
+    "filename": "Filename",
+    "downloadedBy": "Downloaded by",
+    "remoteIp": "IP address",
+    "downloadedAt": "Timestamp",
+    "downloadCount": "Download count",
+    "userCount": "{{count}} members are currently registered in the system.",
+    "eventCount": "{{count}} events are currently on record.",
+    "memoryUsed": "All files together currently use {{size}} of database storage.",
+    "memoryAvailable": "{{size}} of database storage is still available.",
+    "memoryFull": "No storage space is left.",
+    "memoryUsedInclArchived": "All files, including already-archived ones, together use {{size}}."
+  },
+  "publicCalendar": {
+    "heading": "Public Calendar",
+    "noEvents": "No upcoming events.",
+    "icsSubscribe": "Subscribe to this calendar (.ics)",
+    "exportPdf": "Download as PDF"
+  },
+  "publicLayout": {
+    "loginLink": "Sign in",
+    "calendarLink": "Public Calendar",
+    "impressumLink": "Legal Notice"
+  },
+  "topNav": {
+    "helpLink": "Help"
+  },
+  "notFound": {
+    "heading": "Page not found",
+    "body": "The page you requested doesn't exist or has been moved.",
+    "backToDashboard": "Back to dashboard"
+  }
+}

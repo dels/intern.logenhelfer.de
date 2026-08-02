@@ -1,0 +1,791 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ─── Arguments ────────────────────────────────────────────────────────────────
+ENV=${1:?'Usage: ./bin/deploy-to <env> [branch] [--omit-tests] [--auto-push] [--remote] [--cpus <n>] [--workers <n>]'}
+[[ "$ENV" =~ ^[a-z0-9-]+$ ]] || { echo "Error: env name must match ^[a-z0-9-]+\$ (used unvalidated in container names, the compose project name, and remote paths), got '$ENV'" >&2; exit 1; }
+shift
+
+BRANCH=""
+OMIT_TESTS=false
+AUTO_PUSH=false
+REMOTE=false
+# Empty, not a hardcoded number - passed through as GATE_CPUS to bin/test-gate
+# (see below), whose own "${GATE_CPUS:-8}" default only takes effect when this
+# is empty. Commit 9178782 (same day) hardcoded this to "4", which silently
+# overrode that validated 8-CPU default with 4 on every `--remote` deploy
+# that didn't pass --cpus explicitly - reintroducing the exact
+# 1-CPU-per-Chromium-worker starvation bin/test-gate's own GATE_CPUS comment
+# documents fixing on 2026-07-24 (workers=4 needs 2 CPUs/worker, not 1).
+# Confirmed as the cause of a 2026-08-01 `next` deploy failure (2 failed + 2
+# flaky e2e specs, 4.4m runtime vs the validated 1.4m). Don't hardcode a
+# number here again without re-validating against test-gate's own default.
+CPUS=""
+WORKERS=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --omit-tests) OMIT_TESTS=true ;;
+    --auto-push)  AUTO_PUSH=true ;;
+    --remote)     REMOTE=true ;;
+    --cpus)       CPUS="$2"; shift ;;
+    --workers)    WORKERS="$2"; shift ;;
+    *)            BRANCH="$1" ;;
+  esac
+  shift
+done
+cd "$(dirname "$0")/.."
+BRANCH=${BRANCH:-$(git rev-parse --abbrev-ref HEAD)}
+
+# ─── Load global local config (REPO_URL only - everything else is per-env) ───
+LOCAL_ENV_FILE=.env
+[[ -f "$LOCAL_ENV_FILE" ]] || { echo "Error: $LOCAL_ENV_FILE not found. Copy .env.example and fill in your values." >&2; exit 1; }
+# shellcheck source=.env
+source "$LOCAL_ENV_FILE"
+: "${REPO_URL:?REPO_URL is required in $LOCAL_ENV_FILE}"
+
+# ─── Load this environment's own self-contained config ───────────────────────
+# .env.<env> is the SOURCE OF TRUTH for this environment - both deploy
+# orchestration (where to SSH to) and runtime secrets (DB_URL, JWT_SECRET,
+# container names, ...). It gets pushed to the deploy host before every
+# deploy (see the "Push local .env.<env> to the deploy host" section below) -
+# nobody hand-edits the copy on the host directly any more. See
+# .env.example for the full per-env template.
+ENV_ENV_FILE=".env.${ENV}"
+[[ -f "$ENV_ENV_FILE" ]] || { echo "Error: $ENV_ENV_FILE not found. Run 'bin/init-env ${ENV}' to scaffold one, or copy a template block from .env.example." >&2; exit 1; }
+# shellcheck source=/dev/null
+source "$ENV_ENV_FILE"
+
+: "${DEPLOY_HOST:?DEPLOY_HOST is required in $ENV_ENV_FILE}"
+: "${DEPLOY_USER:?DEPLOY_USER is required in $ENV_ENV_FILE}"
+: "${DEPLOY_PATH:?DEPLOY_PATH is required in $ENV_ENV_FILE}"
+DEPLOY_SSH_PORT="${DEPLOY_SSH_PORT:-22}"
+ERROR_PAGES_PATH="${ERROR_PAGES_PATH:-}"
+: "${API_CONTAINER_NAME:?API_CONTAINER_NAME is required in $ENV_ENV_FILE}"
+: "${APP_CONTAINER_NAME:?APP_CONTAINER_NAME is required in $ENV_ENV_FILE}"
+# EDGE_CONTAINER_NAME used to be optional (bare "edge" default) - flipped to
+# hard-required 2026-08-02 after finding two live environments sharing
+# deploy-host-1.example.com where the bare default was one collision away from a
+# sibling env's own container: see CLAUDE.md's container-naming note.
+: "${EDGE_CONTAINER_NAME:?EDGE_CONTAINER_NAME is required in $ENV_ENV_FILE}"
+
+COMPOSE_PROJECT="logenhelfer-${ENV}"
+API_CONTAINER="$API_CONTAINER_NAME"
+APP_CONTAINER="$APP_CONTAINER_NAME"
+
+# ─── Pre-flight: uncommitted changes ─────────────────────────────────────────
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "Error: uncommitted changes detected. Commit or stash them before deploying." >&2
+  git status --short >&2
+  exit 1
+fi
+
+# ─── Pre-flight: push unpushed commits ───────────────────────────────────────
+do_push() {
+  local push_cmd="$1" prompt="$2"
+  if [ "$AUTO_PUSH" = "true" ]; then
+    eval "$push_cmd" || { echo "Error: git push failed." >&2; exit 1; }
+  else
+    read -r -p "${prompt} [Y/n] " REPLY </dev/tty
+    REPLY=${REPLY:-Y}
+    case "$REPLY" in
+      [Yy]*) eval "$push_cmd" || { echo "Error: git push failed." >&2; exit 1; } ;;
+      *)     echo "Aborted." >&2; exit 1 ;;
+    esac
+  fi
+}
+
+if ! git ls-remote --exit-code origin "${BRANCH}" > /dev/null 2>&1; then
+  do_push "git push -u origin '${BRANCH}'" "Branch '${BRANCH}' not yet on origin. Push to origin?"
+else
+  UNPUSHED=$(git log "origin/${BRANCH}..${BRANCH}" --oneline 2>/dev/null | wc -l | tr -d ' ')
+  if [ "${UNPUSHED}" -gt 0 ]; then
+    git log "origin/${BRANCH}..${BRANCH}" --oneline
+    do_push "git push origin '${BRANCH}'" "${UNPUSHED} unpushed commit(s) on '${BRANCH}'. Push to origin?"
+  fi
+fi
+
+# ─── Pre-flight: test gate ────────────────────────────────────────────────────
+# --remote defers the gate to the SSH session below (RUN_REMOTE_GATE) so it runs
+# on the deploy host itself, right after checkout and before the image build —
+# testing the exact commit that gets built, not the local tree pre-push. Never
+# run it in both places.
+RUN_REMOTE_GATE=false
+if [ "$OMIT_TESTS" = "true" ]; then
+  echo ">>> Skipping bin/test-gate (--omit-tests)."
+elif [ "$REMOTE" = "true" ]; then
+  echo ">>> bin/test-gate will run remotely on the ${ENV} host (--remote)."
+  RUN_REMOTE_GATE=true
+else
+  echo ">>> Running bin/test-gate..."
+  GATE_CPUS="${CPUS}" E2E_WORKERS="${WORKERS}" ./bin/test-gate || { echo "Error: bin/test-gate failed — deploy aborted." >&2; exit 1; }
+  echo "    Gate passed."
+fi
+
+# ─── Push local .env.<env> to the deploy host (local is the source of truth) ─
+# The remote copy becomes a deploy artifact from here on - nobody hand-edits
+# it on the host again. Back up whatever's already there first (best-effort;
+# a brand-new environment's very first deploy has nothing to back up yet),
+# pruned to the 3 most recent backups so they don't accumulate forever.
+echo ">>> Verifying ${DEPLOY_PATH} is a git checkout on ${DEPLOY_HOST}..."
+ssh -p "${DEPLOY_SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "test -d '${DEPLOY_PATH}/.git'" \
+  || { echo "Error: ${DEPLOY_PATH} is not a git checkout on ${DEPLOY_HOST}. This script does not bootstrap a fresh environment — clone ${REPO_URL} there by hand first (see README.md)." >&2; exit 1; }
+
+# Auto-provision MFA_ENCRYPTION_KEY into the LOCAL .env.<env> if this
+# environment predates the MFA feature. Idempotent: no-op once the key is
+# present. Must operate on the local file, not the remote one: the very next
+# step (scp, below) overwrites the remote .env.<env> wholesale, so writing
+# the key remotely first would just get clobbered by that push — and worse,
+# since the idempotency check would then also be reading the
+# always-just-clobbered remote file, it would never see a key that "stuck",
+# and would mint a fresh (and therefore data-incompatible) key on every
+# single deploy. Local is already this project's source of truth (see
+# CLAUDE.md's "never hand-edit the remote copy" rule) and is what gets
+# pushed next, so appending here is what makes the key actually persist. A
+# freshly-scaffolded .env.<env> (via bin/init-env, which already writes
+# MFA_ENCRYPTION_KEY) never triggers this — only genuinely pre-existing local
+# files without it do.
+if ! grep -q '^MFA_ENCRYPTION_KEY=' "${ENV_ENV_FILE}"; then
+  echo ">>> Provisioning MFA_ENCRYPTION_KEY into ${ENV_ENV_FILE} (one-time)..."
+  command -v openssl >/dev/null 2>&1 || { echo "Error: openssl not found in PATH — cannot provision MFA_ENCRYPTION_KEY." >&2; exit 1; }
+  MFA_KEY="$(openssl rand -hex 32)"
+  # Guard against a silently-empty/short key even if the openssl binary is
+  # present but its invocation fails or produces unexpected output — without
+  # this, an empty value would satisfy the '^MFA_ENCRYPTION_KEY=' idempotency
+  # check above forever after, on every subsequent deploy.
+  [[ "${MFA_KEY}" =~ ^[0-9a-f]{64}$ ]] || { echo "Error: openssl did not produce a valid 64-char hex MFA_ENCRYPTION_KEY (got '${MFA_KEY}') — not writing it to ${ENV_ENV_FILE}." >&2; exit 1; }
+  # Found 2026-08-02 on prod: a pre-existing .env.prod with no trailing
+  # newline at EOF turned this append into a single glued line
+  # ("MAX_UPLOAD_FILE_SIZE_MB=512MFA_ENCRYPTION_KEY=...") - which broke that
+  # value (nginx rejected it as an invalid client_max_body_size) AND hid the
+  # key from every '^MFA_ENCRYPTION_KEY=' check from then on (the line no
+  # longer starts with that string), causing repeat deploys to mint a fresh,
+  # ALSO-glued key every time. `$(...)` strips trailing newlines, so this
+  # can't be fixed by piping through it - only add one if the file's actual
+  # last byte isn't already a newline (tail -c1 returns that byte verbatim;
+  # $() then strips it if it IS a newline, leaving the -n test false). An
+  # `if` (not `[ ... ] &&`) because set -e would otherwise abort the whole
+  # script on the common case where the file already ends cleanly.
+  if [ -n "$(tail -c1 "${ENV_ENV_FILE}")" ]; then
+    printf '\n' >> "${ENV_ENV_FILE}"
+  fi
+  echo "MFA_ENCRYPTION_KEY=${MFA_KEY}" >> "${ENV_ENV_FILE}"
+fi
+
+# Captured now (finalized local content, including any provisioning above) so
+# the remote session can re-assert it verbatim once it actually holds the
+# per-env lock below — see that reassert_env_file() definition's own comment
+# for why the scp push a few lines down is not sufficient by itself.
+ENV_FILE_B64="$(base64 < "${ENV_ENV_FILE}" | tr -d '\n')"
+
+echo ">>> Pushing ${ENV_ENV_FILE} to ${DEPLOY_HOST}:${DEPLOY_PATH}..."
+ssh -p "${DEPLOY_SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" bash -s -- "${DEPLOY_PATH}" "${ENV}" << 'ENVPUSH'
+set -euo pipefail
+DEPLOY_PATH="$1"; ENV_NAME="$2"
+TARGET="${DEPLOY_PATH}/.env.${ENV_NAME}"
+if [ -f "$TARGET" ]; then
+  cp "$TARGET" "${TARGET}.bak-$(date +%s)"
+  # Keep only the 3 most recent backups.
+  ls -t "${TARGET}".bak-* 2>/dev/null | tail -n +4 | xargs -r rm --
+fi
+ENVPUSH
+scp -P "${DEPLOY_SSH_PORT}" "${ENV_ENV_FILE}" "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/${ENV_ENV_FILE}"
+ssh -p "${DEPLOY_SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "chmod 600 '${DEPLOY_PATH}/${ENV_ENV_FILE}'"
+echo "    Pushed."
+echo ""
+
+echo "Deploying '${BRANCH}' -> ${ENV} (${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH})"
+echo ""
+
+# ─── Remote session ───────────────────────────────────────────────────────────
+# ServerAlive*: this session runs the whole remote deploy, including
+# bin/test-gate's build/typecheck/test/e2e steps - some of those (e.g. `tsc
+# -b`) produce no stdout for a couple of minutes at a time. Without an
+# explicit keepalive, something on the network path between here and
+# DEPLOY_HOST (found 2026-07-31 running this against `next`: a real, silent
+# SSH drop mid-`tsc -b`, twice, with no other symptom) can treat that silence
+# as an idle connection and kill it, aborting an otherwise-healthy deploy for
+# a reason that has nothing to do with the code being deployed. 30s pings,
+# tolerating 6 missed (3 minutes) before giving up, comfortably covers any
+# single silent step without waiting so long that a genuinely dead
+# connection hangs the whole script.
+ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -p "${DEPLOY_SSH_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" bash -s << ENDSSH
+set -euo pipefail
+
+COMPOSE_PROJECT="${COMPOSE_PROJECT}"
+API_CONTAINER="${API_CONTAINER}"
+APP_CONTAINER="${APP_CONTAINER}"
+RUN_REMOTE_GATE="${RUN_REMOTE_GATE}"
+GATE_CPUS="${CPUS}"
+E2E_WORKERS="${WORKERS}"
+COMPOSE_FILES=(-f infra/docker-compose.production.yml)
+ENV_FILE=".env.${ENV}"
+REPO_URL="${REPO_URL}"
+ERROR_PAGES_PATH="${ERROR_PAGES_PATH}"
+ENV_FILE_B64='${ENV_FILE_B64}'
+
+if [ ! -d "${DEPLOY_PATH}/.git" ]; then
+  echo "Error: ${DEPLOY_PATH} is not a git checkout. This script does not bootstrap a fresh environment — clone \$REPO_URL there and set up \$ENV_FILE by hand first (see README.md)." >&2
+  exit 1
+fi
+
+cd "${DEPLOY_PATH}"
+[ -f "\$ENV_FILE" ] || { echo "Error: \$ENV_FILE not found in ${DEPLOY_PATH}." >&2; exit 1; }
+
+# \${DEPLOY_PATH} is one shared git checkout per environment - two concurrent
+# deploy-to invocations for the same env (from different machines/sessions)
+# race on the same 'git checkout'/'dc build'/swap here, with no error, just
+# whichever process's steps interleave last winning. Found 2026-07-24: a
+# second, unrelated deploy-to next run was live on the same host during ours,
+# and its own git checkout silently switched this shared directory to a
+# different branch mid-build. flock fails the second invocation fast instead
+# of letting it corrupt the first one's build.
+LOCK_FILE="${DEPLOY_PATH}/.deploy-${ENV}.lock"
+exec 200>"\$LOCK_FILE"
+flock -n 200 || { echo "Error: another deploy to ${ENV} is already in progress (lock held on \$LOCK_FILE). Wait for it to finish, then retry." >&2; exit 1; }
+
+# Found 2026-08-01 on next: the "Push local .env.<env>" scp step above runs
+# *before* this flock is acquired, so it is not itself serialized against a
+# concurrent, unrelated deploy-to invocation for this same env — one whose
+# own push (from a different local .env.<env>, possibly stale/incomplete)
+# can land at any point during this invocation's test-gate/build (several
+# minutes, all before this script ever reads \$ENV_FILE for real). Observed
+# directly: MFA_ENCRYPTION_KEY present in this invocation's own pushed file
+# was clobbered by a concurrent invocation's keyless push mid-build, and the
+# container that got started minutes later read the clobbered (keyless)
+# file — a real, reproducible bug, not a one-off. Being the sole flock
+# holder from here on doesn't stop *other* invocations' unprotected pushes
+# from still landing (they aren't gated by this lock either) - so re-assert
+# this invocation's own already-pushed, already-finalized content verbatim,
+# both now (fixes anything already clobbered between the push above and
+# this point) and again immediately before the inactive slot actually starts
+# (fixes anything clobbered during the build in between) - see that second
+# call site below for why one reassert alone isn't enough.
+reassert_env_file() {
+  echo "\$ENV_FILE_B64" | base64 -d > "\$ENV_FILE"
+  chmod 600 "\$ENV_FILE"
+}
+reassert_env_file
+
+# API_CONTAINER/APP_CONTAINER (read locally above from ENV_ENV_FILE's
+# API_CONTAINER_NAME/APP_CONTAINER_NAME) are still only values threaded in
+# over SSH, not yet verified against this host - the name
+# docker-compose.production.yml actually gives each container comes from
+# \$ENV_FILE's API_CONTAINER_NAME/APP_CONTAINER_NAME (its
+# container_name: \${API_CONTAINER_NAME:-api}). Found 2026-07-24: next's real
+# .env.next sets these to logenhelfer-api-next/logenhelfer-app-next, not
+# api-next/app-next - a previous version of this check only verified the
+# KEYS existed, not that their VALUES matched this script's guess. That let
+# "Tagging currently-running images as :previous" and "Waiting for
+# healthchecks" silently query a container name that didn't exist (always
+# "not running"/"missing"): :previous never got refreshed (it sat 10+ hours
+# and 5 deploys stale) and every genuinely-healthy new deploy got rolled back
+# anyway, because the script could never see that it was healthy. Read the
+# authoritative values from \$ENV_FILE instead of trusting the threaded-in value.
+grep -q '^API_CONTAINER_NAME=' "\$ENV_FILE" || { echo "Error: API_CONTAINER_NAME not set in \$ENV_FILE — required so this script's container-name assumptions match docker-compose's actual naming. See CLAUDE.md's container-naming note." >&2; exit 1; }
+grep -q '^APP_CONTAINER_NAME=' "\$ENV_FILE" || { echo "Error: APP_CONTAINER_NAME not set in \$ENV_FILE — same reason as API_CONTAINER_NAME above." >&2; exit 1; }
+API_CONTAINER=\$(grep '^API_CONTAINER_NAME=' "\$ENV_FILE" | tail -1 | cut -d= -f2-)
+APP_CONTAINER=\$(grep '^APP_CONTAINER_NAME=' "\$ENV_FILE" | tail -1 | cut -d= -f2-)
+
+# EDGE_CONTAINER_NAME used to be OPTIONAL (bare "edge" compose-file default)
+# but that's exactly what let two environments on the same shared host both
+# want a container literally named "edge" - found 2026-08-02 on w1: next's
+# edge container was still bare "edge" even after its .env.next gained an
+# EDGE_CONTAINER_NAME value, one sibling-env deploy away from a real name
+# collision. Hard-require it now, same tier as API/APP above.
+grep -q '^EDGE_CONTAINER_NAME=' "\$ENV_FILE" || { echo "Error: EDGE_CONTAINER_NAME not set in \$ENV_FILE — required (no more bare 'edge' default) so this environment's edge container can never collide with a sibling project's or another logenhelfer environment's container on this shared host. See CLAUDE.md's container-naming note." >&2; exit 1; }
+EDGE_CONTAINER=\$(grep '^EDGE_CONTAINER_NAME=' "\$ENV_FILE" | tail -1 | cut -d= -f2-)
+
+# Self-heal: \$ENV_FILE saying the edge container SHOULD be named
+# \$EDGE_CONTAINER doesn't mean the container running right now actually is
+# - that value can be added/changed in \$ENV_FILE without anyone following
+# through with the container rename it implies (exactly what happened to
+# next above). \`docker rename\` is metadata-only - the container keeps
+# running under the same ID/network/IP, no restart, no dropped connections
+# - so it's safe to apply automatically on every deploy rather than relying
+# on a human to remember. Find the live edge container via this project's
+# own compose labels (not by guessing a specific old name - a bare "edge",
+# an older project-prefixed name, anything), and rename it in place if it
+# isn't already called \$EDGE_CONTAINER.
+if ! docker inspect "\$EDGE_CONTAINER" >/dev/null 2>&1; then
+  LEGACY_EDGE_ID=\$(docker ps -aq --filter "label=com.docker.compose.project=\$COMPOSE_PROJECT" --filter "label=com.docker.compose.service=edge")
+  if [ -n "\$LEGACY_EDGE_ID" ]; then
+    LEGACY_EDGE_NAME=\$(docker inspect -f '{{.Name}}' "\$LEGACY_EDGE_ID" | sed 's#^/##')
+    echo "Renaming legacy edge container '\$LEGACY_EDGE_NAME' -> '\$EDGE_CONTAINER' (docker rename - zero downtime, no restart)..."
+    docker rename "\$LEGACY_EDGE_NAME" "\$EDGE_CONTAINER"
+  fi
+fi
+
+# MAX_UPLOAD_MB, same OPTIONAL pattern as EDGE_CONTAINER above: most
+# environments have no MAX_UPLOAD_FILE_SIZE_MB key yet, default to 20
+# (matching the api's own MULTIPART_FILE_SIZE_LIMIT_BYTES default and the
+# prior hardcoded 20MB/21MB behavior). Read fresh from \$ENV_FILE on every
+# deploy - deliberately NOT read from the edge container's own baked-in env
+# (which only reflects whatever value was set when that container was last
+# created/recreated) - and threaded via -e into both edge-swap envsubst
+# execs below, the same way ACTIVE_APP_UPSTREAM already is. This is what
+# lets a MAX_UPLOAD_FILE_SIZE_MB change take effect on the very next
+# ordinary deploy, with no edge recreate required: unlike ACTIVE_APP_UPSTREAM
+# (which only the swap logic ever needs), NGINX_CLIENT_MAX_BODY_SIZE_MB is
+# also baked into the edge container's own compose environment: block for
+# its *first* start (docker-compose.production.yml), but that baked-in copy
+# would otherwise go stale exactly like the old literal 21m did until a
+# manual --force-recreate - reading it fresh here and overriding via -e on
+# every swap avoids reintroducing that same class of staleness.
+MAX_UPLOAD_MB=\$(grep '^MAX_UPLOAD_FILE_SIZE_MB=' "\$ENV_FILE" | tail -1 | cut -d= -f2- || echo "")
+MAX_UPLOAD_MB="\${MAX_UPLOAD_MB:-20}"
+
+# COMPOSE_EXTRA_FILES, like EDGE_CONTAINER_NAME above, is OPTIONAL: most
+# environments have no COMPOSE_EXTRA_FILES key at all, so this must default
+# to empty rather than hard-require it the way API_CONTAINER_NAME/
+# APP_CONTAINER_NAME do. Space-separated filenames, relative to infra/,
+# layered on top of the base production compose file via extra -f args.
+COMPOSE_EXTRA=\$(grep '^COMPOSE_EXTRA_FILES=' "\$ENV_FILE" | tail -1 | cut -d= -f2- || echo "")
+for extra_file in \$COMPOSE_EXTRA; do
+  COMPOSE_FILES+=(-f "infra/\$extra_file")
+done
+
+dc() { docker compose "\${COMPOSE_FILES[@]}" --env-file "\$ENV_FILE" -p "\$COMPOSE_PROJECT" "\$@"; }
+
+# ─── Rollback state + trap ────────────────────────────────────────────────────
+# These flags gate the trap's recovery branches. They are mutually exclusive
+# by construction and MUST be checked in the order below (EDGE_SWAPPED ->
+# OLD_BARE_STOPPED -> INACTIVE_SLOT_STARTED): the newest, most-live failure
+# state wins. Getting the order wrong (or making two true at once) would run
+# the wrong recovery.
+ROLLBACK_AVAILABLE=false      # a :previous image exists (last-resort fallback)
+EDGE_SWAPPED=false            # steady-state cutover reloaded edge to the new slot
+INACTIVE_SLOT_STARTED=false   # the freshly-built inactive slot's containers are up
+OLD_BARE_STOPPED=false        # one-time transition: pre-edge bare containers removed
+PREVIOUS_UPSTREAM=""          # the app upstream edge served before this deploy's swap
+DEPLOY_COMMITTED=false        # live verification passed - past the point of any rollback
+
+cleanup_on_exit() {
+  local exit_code=\$?
+  set +e
+  [ "\$exit_code" -eq 0 ] && return
+  # Past live verification the deploy is COMMITTED: the old slot has (or is
+  # about to be) retired, so a non-zero exit from the cleanup tail (a
+  # 'docker image prune'/'dc ps' daemon hiccup) must NOT re-fire a rollback -
+  # with EDGE_SWAPPED still true that would reload edge back onto the
+  # now-removed old upstream and 502 a deploy that actually succeeded. Disarm
+  # here rather than clearing EDGE_SWAPPED: clearing it would instead drop
+  # through to the INACTIVE_SLOT_STARTED branch and stop/rm the now-LIVE slot.
+  [ "\$DEPLOY_COMMITTED" = "true" ] && return
+  echo "" >&2
+  echo "=== DEPLOY FAILED (exit \$exit_code) ===" >&2
+  if [ "\$EDGE_SWAPPED" = "true" ] && [ -n "\$PREVIOUS_UPSTREAM" ]; then
+    # PRIMARY (steady-state) rollback: edge already reloaded onto the new
+    # slot, but something after that failed. The OLD slot's containers are
+    # still running (they're not retired until the very end, after live
+    # verification), so re-rendering edge back to \$PREVIOUS_UPSTREAM and
+    # reloading is an instant, warm rollback - zero downtime, same as the
+    # forward swap.
+    echo "Rolling back: reverting edge to its previous upstream (\$PREVIOUS_UPSTREAM)..." >&2
+    # NOTE ON QUOTING: 'envsubst \\\$ACTIVE_APP_UPSTREAM' (backslash-dollar)
+    # is deliberate and load-bearing - the '\\\$' emits a literal '\$' to the
+    # remote shell so that, inside 'sh -c', envsubst receives the LITERAL
+    # shell-format token \$ACTIVE_APP_UPSTREAM (naming which var to expand,
+    # reading its VALUE from the -e env above). Do NOT "fix" this to
+    # envsubst "\$ACTIVE_APP_UPSTREAM" (double quotes): sh would expand it to
+    # the hostname before envsubst ran, envsubst would then substitute
+    # nothing, and the rendered config would keep a literal
+    # proxy_pass http://\${ACTIVE_APP_UPSTREAM}:8080; (verified broken).
+    # SHELL-FORMAT now names TWO vars, quoted together as one envsubst
+    # argument ("\\\$FOO \\\$BAR" -> literal "\$FOO \$BAR", one double-quoted
+    # shell word): envsubst only accepts a single SHELL-FORMAT positional
+    # arg, so listing \$ACTIVE_APP_UPSTREAM and
+    # \$NGINX_CLIENT_MAX_BODY_SIZE_MB as two space-separated bare words
+    # (unquoted) would pass envsubst two args and error out. Any \${VAR}
+    # infra/edge/default.conf.template ever gains that must survive THIS
+    # restricted re-render (not just the container's first-start entrypoint
+    # envsubst, which substitutes every set env var automatically) has to be
+    # added to this list the same way. \$NGINX_CLIENT_MAX_BODY_SIZE_MB IS
+    # given its own -e here too (read fresh from \$ENV_FILE into
+    # \$MAX_UPLOAD_MB above), same as \$ACTIVE_APP_UPSTREAM - deliberately NOT
+    # left to fall back on whatever value happens to be baked into
+    # \$EDGE_CONTAINER's own environment from its last (re)creation, which
+    # would silently go stale exactly like the old hardcoded 21m did until a
+    # manual --force-recreate. Reading + overriding it fresh on every swap
+    # means a MAX_UPLOAD_FILE_SIZE_MB change takes effect on the very next
+    # ordinary deploy, no recreate required.
+    if docker exec -e ACTIVE_APP_UPSTREAM="\$PREVIOUS_UPSTREAM" -e NGINX_CLIENT_MAX_BODY_SIZE_MB="\$MAX_UPLOAD_MB" "\$EDGE_CONTAINER" \
+        sh -c 'envsubst "\\\$ACTIVE_APP_UPSTREAM \\\$NGINX_CLIENT_MAX_BODY_SIZE_MB" < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -s reload'; then
+      echo "Rollback reload succeeded — \$PREVIOUS_UPSTREAM is live again." >&2
+    else
+      echo "Rollback reload FAILED — site may be down. Investigate \$EDGE_CONTAINER manually." >&2
+    fi
+  elif [ "\$OLD_BARE_STOPPED" = "true" ]; then
+    # ONE-TIME-TRANSITION rollback (distinct from the edge-reload path above):
+    # the pre-existing bare-named containers were already stopped/removed to
+    # free the host port before edge could bind it, and something then failed
+    # (almost certainly 'dc up -d edge' itself). There is no "previous slot"
+    # to reload edge back to, so this branch stands on its own rather than
+    # sharing the edge-reload logic.
+    if [ "\$ROLLBACK_AVAILABLE" = "true" ]; then
+      echo "One-time transition failed after removing the old containers — restoring the previous images via compose..." >&2
+      # RESTORE DECISION (see .superpowers/sdd/task-3-report.md): restore via
+      # compose, NOT a raw 'docker run'. 'DEPLOY_TAG=previous dc up -d api app'
+      # brings the old images back with compose's own env mapping
+      # (\$ENV_FILE's DB_URL -> the container's DATABASE_URL) and network
+      # aliases intact - a raw docker run would have to hand-replicate that
+      # renaming (exactly what the inactive-slot 'dc run' comment below warns
+      # against) and juggle secrets inside a trap.
+      #
+      # IMPORTANT LIMITATION: this restores the old *code* but NOT host
+      # reachability. Under the current compose file the 'app' service
+      # publishes NO host port (edge is the sole publisher - and edge is what
+      # just failed to start). So the site stays unreachable until a human
+      # investigates why 'dc up -d edge' failed and re-runs the deploy. That
+      # re-run is safe: the next first-deploy attempt's 'docker stop/rm' of
+      # these bare containers cleans them up. Flagged as a known concern.
+      DEPLOY_TAG=previous dc up -d api app
+      echo "Previous images restored as \$API_CONTAINER / \$APP_CONTAINER — but they publish NO host port under the current compose file." >&2
+      echo "The site is NOT reachable until edge starts. Investigate why 'dc up -d edge' failed, then re-run 'bin/deploy-to ${ENV}'." >&2
+    else
+      echo "No :previous image available for the old containers — site may be DOWN. Manual recovery required." >&2
+    fi
+  elif [ "\$INACTIVE_SLOT_STARTED" = "true" ]; then
+    # Failure BEFORE any cutover: only the freshly-built inactive slot was
+    # touched, nothing serving live traffic. Just tear the half-built slot
+    # down (mirrors the old smoke-container cleanup) - the active slot and
+    # edge were never touched, so there is nothing to roll back.
+    echo "Failure before cutover — nothing live was touched. Cleaning up the half-built inactive slot..." >&2
+    docker stop "\${API_CONTAINER}-\${INACTIVE_SLOT}" "\${APP_CONTAINER}-\${INACTIVE_SLOT}" 2>/dev/null
+    docker rm   "\${API_CONTAINER}-\${INACTIVE_SLOT}" "\${APP_CONTAINER}-\${INACTIVE_SLOT}" 2>/dev/null
+  fi
+}
+trap cleanup_on_exit EXIT
+
+echo ">>> Fetching ${BRANCH}..."
+git fetch origin
+git checkout "${BRANCH}"
+git pull origin "${BRANCH}"
+EXPECTED_HASH=\$(git rev-parse HEAD)
+echo "    Commit: \$EXPECTED_HASH"
+
+if [ "\$RUN_REMOTE_GATE" = "true" ]; then
+  echo ""
+  echo ">>> Running bin/test-gate remotely on \$(hostname)..."
+  GATE_CPUS="\$GATE_CPUS" E2E_WORKERS="\$E2E_WORKERS" ./bin/test-gate || { echo "Error: remote bin/test-gate failed — deploy aborted." >&2; exit 1; }
+  echo "    Remote gate passed."
+fi
+
+# ─── Discover current deployment state (which slot is live?) ──────────────────
+echo ""
+echo ">>> Determining current deployment state..."
+EDGE_RUNNING=false
+if docker inspect "\$EDGE_CONTAINER" >/dev/null 2>&1 && [ "\$(docker inspect -f '{{.State.Running}}' "\$EDGE_CONTAINER" 2>/dev/null)" = "true" ]; then
+  EDGE_RUNNING=true
+fi
+
+if [ "\$EDGE_RUNNING" = "true" ]; then
+  # ── Steady state ──────────────────────────────────────────────────────────
+  # Edge already exists and is serving one of the two slots. Read its RENDERED
+  # config (/etc/nginx/conf.d/default.conf, not the template) to learn which.
+  # BusyBox grep (nginx:alpine) has no -P/lookbehind - use -E + sed instead.
+  # The rendered line looks like: proxy_pass http://<app-container>-<slot>:8080;
+  # so grep the host up to (but not including) the ':' the char class omits,
+  # then strip the fixed prefix.
+  ACTIVE_UPSTREAM=\$(docker exec "\$EDGE_CONTAINER" sh -c "grep -oE 'proxy_pass http://[a-zA-Z0-9_.-]+' /etc/nginx/conf.d/default.conf | head -1 | sed 's#proxy_pass http://##'")
+  case "\$ACTIVE_UPSTREAM" in
+    "\${APP_CONTAINER}-blue")  ACTIVE_SLOT=blue;  INACTIVE_SLOT=green ;;
+    "\${APP_CONTAINER}-green") ACTIVE_SLOT=green; INACTIVE_SLOT=blue ;;
+    *) echo "Error: could not determine active slot from edge's rendered upstream ('\$ACTIVE_UPSTREAM')." >&2; exit 1 ;;
+  esac
+  echo "    Active slot: \$ACTIVE_SLOT. Deploying to: \$INACTIVE_SLOT."
+
+  echo ""
+  echo ">>> Tagging currently-live images as :previous..."
+  # Deeper last-resort safety net, alongside the new warm edge-reload
+  # rollback. The :previous tag is keyed to the BARE container-name prefix
+  # (no -blue/-green suffix), because docker-compose.production.yml's
+  # image: \${API_CONTAINER_NAME:-api}:\${DEPLOY_TAG:-latest} resolves
+  # DEPLOY_TAG=previous against that bare name - compose knows nothing about
+  # slots, only image tags. So strip the slot suffix before tagging.
+  for c in "\${API_CONTAINER}-\${ACTIVE_SLOT}" "\${APP_CONTAINER}-\${ACTIVE_SLOT}"; do
+    base="\${c%-"\${ACTIVE_SLOT}"}"
+    IMG=\$(docker inspect --format='{{.Image}}' "\$c" 2>/dev/null || echo "")
+    if [ -n "\$IMG" ]; then
+      docker tag "\$IMG" "\${base}:previous"
+      echo "    \$c -> \${base}:previous (\${IMG:0:12})"
+    fi
+  done
+  [ -n "\$(docker images -q \${API_CONTAINER}:previous 2>/dev/null)" ] && ROLLBACK_AVAILABLE=true
+else
+  # ── First-ever deploy of the blue/green mechanism to this environment ──────
+  # The old bare-named containers ("\$API_CONTAINER"/"\$APP_CONTAINER", no
+  # slot suffix) may still be running under the PREVIOUS (pre-edge) deploy
+  # mechanism. We build 'blue' as the first slot, then (in the cutover
+  # section) stop the old bare containers to free the host port and start
+  # edge for the first time pointed at blue.
+  INACTIVE_SLOT=blue
+  echo "    No 'edge' container found — this is the one-time transition to blue/green"
+  echo "    for this environment. This moves the app port's ownership from"
+  echo "    '\$APP_CONTAINER' to the new edge container, and is NOT zero-downtime —"
+  echo "    the old container must free its port before edge can bind it. This is"
+  echo "    expected and documented; every deploy after this one is zero-downtime."
+
+  echo ""
+  echo ">>> Tagging currently-running (pre-blue/green) images as :previous..."
+  for c in "\$API_CONTAINER" "\$APP_CONTAINER"; do
+    IMG=\$(docker inspect --format='{{.Image}}' "\$c" 2>/dev/null || echo "")
+    if [ -n "\$IMG" ]; then
+      docker tag "\$IMG" "\${c}:previous"
+      echo "    \$c -> :previous (\${IMG:0:12})"
+    else
+      echo "    \$c not running — no :previous for this deploy."
+    fi
+  done
+  [ -n "\$(docker images -q \${API_CONTAINER}:previous 2>/dev/null)" ] && ROLLBACK_AVAILABLE=true
+fi
+
+# Export now, for every remaining 'dc' call in this script - 'docker compose'
+# interpolates the *whole* file's environment: blocks for every service on
+# every invocation, regardless of which service a given command actually
+# targets (found this reproducing the 2026-08-01 prod outage: a bare
+# 'docker compose ... down' for an unrelated project failed the same way,
+# on an entirely different service's required var). infra/docker-compose.production.yml's
+# edge service now requires ACTIVE_APP_UPSTREAM (\${ACTIVE_APP_UPSTREAM:?...} -
+# see that file's own comment for why a silent default is worse than this)
+# specifically so a human's ad hoc 'docker compose up --force-recreate edge'
+# fails loudly instead of silently baking in the literal, never-valid "app"
+# and crash-looping - but every 'dc build'/'dc run' below targets api/app,
+# never edge, and doesn't care what this value actually is, so without this
+# export they'd *also* start failing the interpolation check for a var
+# they've never needed. \$ACTIVE_SLOT is unset in the first-ever-deploy
+# branch above (edge doesn't exist yet to have an active slot); falling
+# back to \$INACTIVE_SLOT there is fine - this export's value is irrelevant
+# to edge's own eventual config either way, since both real edge call sites
+# below (the docker exec envsubst, and 'dc up -d edge' itself) already
+# supply the exact correct value inline, overriding this.
+export ACTIVE_APP_UPSTREAM="\${APP_CONTAINER}-\${ACTIVE_SLOT:-\$INACTIVE_SLOT}"
+
+# Re-assert \$ENV_FILE one more time right before 'dc build' actually reads it.
+# 'docker compose build' interpolates the ENTIRE compose file up front, not
+# just build-relevant keys - including the api service's environment: block -
+# so a missing/stale var (e.g. MFA_ENCRYPTION_KEY) fails the build exactly
+# like it would fail 'dc run'. Found 2026-08-02 on prod: this call was
+# missing here even though the identical call below (right before 'dc run')
+# already existed for the exact same reason - reassert #1 (right after the
+# flock above) covers everything up to here, but remote test-gate runs
+# between that point and this one and takes long enough (1-2+ minutes) for
+# the same class of concurrent-unrelated-push clobber CLAUDE.md already
+# documents for the run step to land here too, undetected until now because
+# no environment's MFA_ENCRYPTION_KEY auto-provisioning had exercised this
+# exact window before.
+reassert_env_file
+
+echo ""
+echo ">>> Building new images (GIT_HASH=\$EXPECTED_HASH)..."
+GIT_HASH="\$EXPECTED_HASH" dc build
+
+# ─── Start + verify the inactive slot (no published port at all) ──────────────
+# Re-assert \$ENV_FILE one more time right before 'dc run' actually reads it
+# (see reassert_env_file()'s own comment above) - the build step just above
+# takes long enough that a concurrent, unrelated deploy-to invocation's own
+# unprotected push (not gated by this lock either) could have landed during
+# it, same as it could before this lock was even acquired.
+reassert_env_file
+
+echo ""
+echo ">>> Starting inactive slot (\$INACTIVE_SLOT)..."
+docker rm -f "\${API_CONTAINER}-\${INACTIVE_SLOT}" 2>/dev/null || true
+# 'dc run' (not a raw 'docker run') so this inherits docker-compose's own
+# environment mapping (e.g. .env.<env>'s DB_URL -> the container's
+# DATABASE_URL, per docker-compose.production.yml's environment: block) and
+# joins the project's network automatically — a raw docker run would need to
+# hand-replicate that variable renaming and risk drifting out of sync.
+dc run -d --name "\${API_CONTAINER}-\${INACTIVE_SLOT}" api
+# 'dc run' containers default to restart=no; these slots are meant to be
+# persistent (they keep serving between deploys), so match the compose
+# services' 'restart: unless-stopped' or they'd silently die on host reboot.
+docker update --restart=unless-stopped "\${API_CONTAINER}-\${INACTIVE_SLOT}"
+INACTIVE_SLOT_STARTED=true
+
+docker rm -f "\${APP_CONTAINER}-\${INACTIVE_SLOT}" 2>/dev/null || true
+# API_UPSTREAM_HOST overrides app/nginx.conf.template's default ("api", the
+# real compose service name) so THIS slot's /api/ proxy targets ITS OWN
+# matching api container - not whatever "api" currently resolves to (which,
+# mid-deploy, is still the old/live image). This is what lets us verify both
+# new images together over the exact path a real request takes once deployed.
+dc run -d --name "\${APP_CONTAINER}-\${INACTIVE_SLOT}" \
+  -e "API_UPSTREAM_HOST=\${API_CONTAINER}-\${INACTIVE_SLOT}" \
+  app
+docker update --restart=unless-stopped "\${APP_CONTAINER}-\${INACTIVE_SLOT}"
+
+echo ">>> Waiting for \$INACTIVE_SLOT app hash (via docker exec — no published port needed)..."
+# wget -qO- is already used by app/Dockerfile's own HEALTHCHECK, so it is
+# present in the app image (no new dependency). Reaching the container over
+# 'docker exec' instead of a published port is the key difference from the
+# old '-smoke' containers, which needed APP_SMOKE_PORT bound to the host.
+MAX_WAIT=60; ELAPSED=0
+while true; do
+  HASH=\$(docker exec "\${APP_CONTAINER}-\${INACTIVE_SLOT}" wget -qO- http://127.0.0.1:8080/version.json 2>/dev/null | grep -o '"hash":"[^"]*"' | cut -d'"' -f4 || echo "")
+  [ "\$HASH" = "\$EXPECTED_HASH" ] && { echo "    App hash OK after \${ELAPSED}s."; break; }
+  [ "\$ELAPSED" -ge "\$MAX_WAIT" ] && { echo "ERROR: \$INACTIVE_SLOT app hash never matched (got '\$HASH')." >&2; docker logs "\${APP_CONTAINER}-\${INACTIVE_SLOT}" --tail=30 >&2; exit 1; }
+  sleep 3; ELAPSED=\$((ELAPSED+3))
+done
+
+echo ">>> Waiting for \$INACTIVE_SLOT API hash (through its own app nginx's /api/ proxy)..."
+# Goes app-<slot> nginx -> api-<slot> over the compose network, the same path
+# a real request takes once this slot is live - a strict superset of hitting
+# api directly (it also proves the app->api proxy path itself works).
+MAX_WAIT=90; ELAPSED=0
+while true; do
+  HASH=\$(docker exec "\${APP_CONTAINER}-\${INACTIVE_SLOT}" wget -qO- http://127.0.0.1:8080/api/v1/health 2>/dev/null | grep -o '"revision":"[^"]*"' | cut -d'"' -f4 || echo "")
+  [ "\$HASH" = "\$EXPECTED_HASH" ] && { echo "    API hash OK after \${ELAPSED}s."; break; }
+  [ "\$ELAPSED" -ge "\$MAX_WAIT" ] && { echo "ERROR: \$INACTIVE_SLOT API hash never matched (got '\$HASH')." >&2; docker logs "\${API_CONTAINER}-\${INACTIVE_SLOT}" --tail=30 >&2; docker logs "\${APP_CONTAINER}-\${INACTIVE_SLOT}" --tail=30 >&2; exit 1; }
+  sleep 3; ELAPSED=\$((ELAPSED+3))
+done
+
+echo ""
+echo ">>> Running migrations (new image, current slot still serving)..."
+# -T (no pseudo-tty) and </dev/null are both required: without them this
+# foreground 'dc run' inherits the remote bash's stdin, which is the SAME
+# SSH stream still carrying the REST of this script — the migration command
+# silently consumes it, and everything after this line never executes
+# (discovered live: the script exited 0 having never swapped containers).
+# Migrations are roll-forward only (see CLAUDE.md): a post-cutover rollback
+# restores the previous *image*, never the schema.
+dc run --rm -T api node --run migrate:deploy < /dev/null
+
+# ─── Cutover ──────────────────────────────────────────────────────────────────
+if [ "\$EDGE_RUNNING" = "true" ]; then
+  # Steady state: atomic, zero-downtime cutover. Re-render edge's config to
+  # point at the newly-verified inactive slot and reload nginx in place - no
+  # container restart, no dropped connection. Set PREVIOUS_UPSTREAM FIRST so
+  # the trap can warm-roll-back to it if anything after the reload fails.
+  echo ""
+  echo ">>> Cutting over: pointing edge at \$INACTIVE_SLOT and reloading (zero downtime)..."
+  PREVIOUS_UPSTREAM="\$ACTIVE_UPSTREAM"
+  # EDGE_SWAPPED must be set BEFORE the docker exec below (envsubst && reload
+  # is one exec that can fail after envsubst already wrote the new config) so
+  # the trap always takes the warm-rollback branch, not INACTIVE_SLOT's.
+  EDGE_SWAPPED=true
+  # See the QUOTING note in cleanup_on_exit above: 'envsubst \\\$ACTIVE_APP_UPSTREAM'
+  # (backslash-dollar, emitting a literal \$ to sh so envsubst gets the LITERAL
+  # shell-format token and reads its value from the -e env) is deliberate. Do
+  # NOT change it to envsubst "\$ACTIVE_APP_UPSTREAM" - that renders a broken
+  # config with a literal \${ACTIVE_APP_UPSTREAM} left in proxy_pass. Same
+  # note on the two-variable quoted SHELL-FORMAT string as the rollback
+  # branch above - \$NGINX_CLIENT_MAX_BODY_SIZE_MB has to be listed here too
+  # or every steady-state swap (not just a rollback) would re-render a
+  # literal, un-substituted \${NGINX_CLIENT_MAX_BODY_SIZE_MB}m into
+  # client_max_body_size, which nginx rejects as invalid on reload. Given its
+  # own -e here too (\$MAX_UPLOAD_MB, read fresh from \$ENV_FILE above) rather
+  # than relying on whatever \$EDGE_CONTAINER's own baked-in env happens to
+  # hold - see the matching note on the rollback branch above for why.
+  docker exec -e ACTIVE_APP_UPSTREAM="\${APP_CONTAINER}-\${INACTIVE_SLOT}" -e NGINX_CLIENT_MAX_BODY_SIZE_MB="\$MAX_UPLOAD_MB" "\$EDGE_CONTAINER" \
+    sh -c 'envsubst "\\\$ACTIVE_APP_UPSTREAM \\\$NGINX_CLIENT_MAX_BODY_SIZE_MB" < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -s reload'
+else
+  # First-ever deploy: NOT zero-downtime. The old bare containers still own
+  # the host port; they must free it before edge can bind it. No
+  # EDGE_SWAPPED=true here - this branch's rollback is the separate
+  # OLD_BARE_STOPPED path in the trap (there is no previous slot to reload
+  # edge back to yet).
+  echo ""
+  echo ">>> Stopping old (pre-blue/green) containers to free the port for edge..."
+  docker stop "\$API_CONTAINER" "\$APP_CONTAINER" 2>/dev/null || true
+  docker rm   "\$API_CONTAINER" "\$APP_CONTAINER" 2>/dev/null || true
+  OLD_BARE_STOPPED=true
+
+  echo ">>> Starting edge for the first time, pointed at \$INACTIVE_SLOT..."
+  ACTIVE_APP_UPSTREAM="\${APP_CONTAINER}-\${INACTIVE_SLOT}" dc up -d edge
+fi
+
+# ─── Post-cutover live verification (through edge's real published port) ──────
+echo ""
+echo ">>> Verifying live hashes (through edge)..."
+# edge is now the only service publishing a host port, so ask compose for its
+# actual bound address rather than trusting any local port var. Captured as a
+# full host:port pair, not just the port: when APP_LISTEN_IP is set to a
+# non-default (WireGuard tunnel) address, 'dc port' returns that IP, not
+# 127.0.0.1 - hardcoding 'localhost' would silently connect-refuse there.
+REAL_EDGE_ADDR=\$(dc port edge 8080 | head -1)
+MAX_WAIT=30; ELAPSED=0
+while true; do
+  LIVE_APP_HASH=\$(curl -sf --max-time 5 "http://\${REAL_EDGE_ADDR}/version.json" | grep -o '"hash":"[^"]*"' | cut -d'"' -f4 || echo "")
+  [ "\$LIVE_APP_HASH" = "\$EXPECTED_HASH" ] && break
+  [ "\$ELAPSED" -ge "\$MAX_WAIT" ] && { echo "ERROR: live app hash mismatch (\$LIVE_APP_HASH != \$EXPECTED_HASH)." >&2; docker logs "\${APP_CONTAINER}-\${INACTIVE_SLOT}" --tail=30 >&2; exit 1; }
+  sleep 3; ELAPSED=\$((ELAPSED+3))
+done
+# Curled through edge -> app-<slot> -> api-<slot>: going through the app
+# container's own location /api/ block proves BOTH the api image's hash AND
+# that the app -> api proxy path works, matching the real browser request
+# path once host nginx forwards to edge (see CLAUDE.md). A mismatch here can
+# be either container's fault, so both get their logs tailed.
+MAX_WAIT=30; ELAPSED=0
+while true; do
+  LIVE_API_HASH=\$(curl -sf --max-time 5 "http://\${REAL_EDGE_ADDR}/api/v1/health" | grep -o '"revision":"[^"]*"' | cut -d'"' -f4 || echo "")
+  [ "\$LIVE_API_HASH" = "\$EXPECTED_HASH" ] && break
+  [ "\$ELAPSED" -ge "\$MAX_WAIT" ] && {
+    echo "ERROR: live API hash mismatch (\$LIVE_API_HASH != \$EXPECTED_HASH)." >&2
+    echo "--- raw response from http://\${REAL_EDGE_ADDR}/api/v1/health ---" >&2
+    curl -sv --max-time 5 "http://\${REAL_EDGE_ADDR}/api/v1/health" >&2 2>&1 || true
+    echo "--- docker logs \${API_CONTAINER}-\${INACTIVE_SLOT} (tail 30) ---" >&2
+    docker logs "\${API_CONTAINER}-\${INACTIVE_SLOT}" --tail=30 >&2 || true
+    echo "--- docker logs \${APP_CONTAINER}-\${INACTIVE_SLOT} (tail 30) ---" >&2
+    docker logs "\${APP_CONTAINER}-\${INACTIVE_SLOT}" --tail=30 >&2 || true
+    exit 1
+  }
+  sleep 3; ELAPSED=\$((ELAPSED+3))
+done
+echo "    Both live hashes OK: \$EXPECTED_HASH"
+# Point of no return: the new slot is verified live. Everything below is
+# cleanup - disarm the rollback trap so a flaky prune/dc ps can't undo it.
+DEPLOY_COMMITTED=true
+
+# Found 2026-08-01 on prod: recovering from an edge container that needed a
+# manual, ad hoc recreate meant reverse-engineering the currently-active
+# slot from 'docker ps' timestamps and container health, with no
+# authoritative source once edge's own rendered config is exactly the thing
+# a recreate destroys. This file is a purely-advisory, best-effort recovery
+# aid for that exact situation - NOT a new source of truth for bin/deploy-to
+# itself, which still always reads edge's own live rendered config on every
+# run (see the "Discover current deployment state" step above) precisely so
+# it never depends on a flag file that could drift from reality. Written
+# only after live verification above, so it always reflects a genuinely
+# confirmed-good slot, never a rolled-back one.
+echo "\${APP_CONTAINER}-\${INACTIVE_SLOT}" > .active-app-slot 2>/dev/null || true
+
+# ─── Retire the now-old slot (steady state only) + prune ──────────────────────
+if [ "\$EDGE_RUNNING" = "true" ]; then
+  # Only now, after live verification confirmed the new slot is serving, tear
+  # down the slot edge USED to point at. (First-ever deploy has no old slot to
+  # retire - its old bare containers were already removed in the cutover
+  # branch above.)
+  echo ""
+  echo ">>> Retiring old slot (\$ACTIVE_SLOT)..."
+  docker stop "\${API_CONTAINER}-\${ACTIVE_SLOT}" "\${APP_CONTAINER}-\${ACTIVE_SLOT}" 2>/dev/null || true
+  docker rm   "\${API_CONTAINER}-\${ACTIVE_SLOT}" "\${APP_CONTAINER}-\${ACTIVE_SLOT}" 2>/dev/null || true
+fi
+
+docker image prune -f --filter "until=24h" > /dev/null
+
+echo ""
+echo "  Deploy successful"
+echo "  Env    : ${ENV}"
+echo "  Branch : ${BRANCH}"
+echo "  Commit : \$EXPECTED_HASH"
+dc ps
+
+# ─── Sync host-nginx error pages (from THIS deploy-host checkout) ─────────────
+# \${ENV}_ERROR_PAGES_PATH is optional - unset means this environment hasn't
+# had the one-time host-nginx edit that wires the static 502/500/404 pages
+# shown when the edge container itself is down. Sourcing from \$DEPLOY_PATH's
+# own app/public/errors/ (the exact commit just verified and deployed) rather
+# than the local operator's working tree avoids a branch-mismatch: everything
+# else here deploys the remotely-checked-out branch, so the error pages must
+# come from the same source, not from whatever branch the operator's local
+# checkout happens to be on. Both source and destination are on this host, so
+# a plain local rsync (no second SSH hop) suffices. This step ONLY ever writes
+# static files onto the host filesystem - it never touches nginx config and
+# never triggers any nginx reload/restart (that stays a manual, human-applied
+# action per CLAUDE.md). Best-effort/non-fatal: DEPLOY_COMMITTED is already
+# true by now, so a sync hiccup must never fail an otherwise-successful deploy.
+if [ -n "\$ERROR_PAGES_PATH" ]; then
+  echo ""
+  echo ">>> Syncing error pages to \$ERROR_PAGES_PATH..."
+  rsync -a --delete app/public/errors/ "\$ERROR_PAGES_PATH/" || echo "WARNING: error-page sync failed (non-fatal) - check \$ERROR_PAGES_PATH manually." >&2
+fi
+ENDSSH

@@ -1,0 +1,178 @@
+server {
+    listen       8080;
+    # nginx's bare `listen 8080;` binds 0.0.0.0 only (IPv4). This container's
+    # network has enable_ipv6: true, and every peer (edge, api's Node process
+    # via its own host-less app.listen()) already gets a real IPv6 address —
+    # without this, edge's proxy_pass round-robins between this container's
+    # v4 and v6 addresses and gets ECONNREFUSED every time it lands on v6
+    # (nothing listening there), self-healing via retry but spamming
+    # "connect() failed"/"temporarily disabled" in edge's error log. Found
+    # 2026-07-27 via a live prod deploy's edge access log.
+    listen       [::]:8080;
+    server_name  _;
+    root         /usr/share/nginx/html;
+
+    # Same MAX_UPLOAD_FILE_SIZE_MB-derived cap as infra/edge/default.conf.template's
+    # identical directive - see that file's comment for the full explanation
+    # (why there's no separate headroom value any more, and the accepted
+    # narrow-edge-case tradeoff that comes with sharing one number). This
+    # container is a second hop the raw upload body also passes through
+    # (edge -> this -> api), so it needs the same cap independently of
+    # edge's own.
+    client_max_body_size ${NGINX_CLIENT_MAX_BODY_SIZE_MB}m;
+
+    # Free bandwidth win for every visitor, no security tradeoff for this
+    # server: nothing served here reflects a request-controlled secret over
+    # TLS (the SPA bundle is static, /api/ JSON below is proxied, not
+    # compressed twice), so this isn't a BREACH-style compression oracle.
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    # Security headers shared by every response this container serves. `add_header`
+    # does not inherit from `server` into a `location` block that defines its own
+    # `add_header` (nginx re-collects the full set per block) — so these are
+    # duplicated into the `/version.json` location below rather than relying on
+    # inheritance. `always` makes each header apply on error responses too (e.g.
+    # nginx's own 4xx/5xx), not just 2xx.
+    #
+    # style-src/script-src allow 'unsafe-inline' for style only: MUI + Emotion
+    # (@emotion/react, @emotion/styled — see app/package.json) inject <style>
+    # tags at runtime for CSS-in-JS, which a nonce-based CSP can't accommodate
+    # on a static nginx-served SPA with no per-request templating. script-src
+    # stays 'self' only — index.html has no inline scripts, just a single
+    # `<script type="module" src="/src/main.tsx">`-built bundle.
+    # connect-src 'self' matches app/src/api/client.ts, which only ever fetches
+    # relative paths (e.g. `/api/v1/session/refresh`) — same-origin, no
+    # separate API origin configured.
+    add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'self'; form-action 'self'" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    # strict-origin-when-cross-origin (not same-origin): this SPA has no
+    # cross-origin navigation/link targets today, but same-origin would strip
+    # the referrer on same-scheme downgrade-free cross-origin cases too
+    # (e.g. a future external link) with no benefit here, so use the browser
+    # default-safe middle ground instead of over-restricting.
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    location = /version.json {
+        add_header Cache-Control "no-store";
+        add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'self'; form-action 'self'" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # Proxies /api to the api container over the compose network instead of
+    # requiring the host's TLS-terminating nginx to split traffic itself —
+    # that nginx only ever forwards everything to this container now (see
+    # CLAUDE.md). `resolver 127.0.0.11` (Docker's embedded DNS) + a variable
+    # in proxy_pass forces nginx to re-resolve the upstream hostname on each
+    # `valid=` window instead of caching the IP for this container's whole
+    # lifetime — a static `proxy_pass http://api:9876` would strand this
+    # proxy on a stale IP if the api container alone restarts (e.g.
+    # `restart: unless-stopped` after a crash) without this container also
+    # restarting. No path segment after the port, so nginx passes the
+    # request URI through unchanged (/api/v1/... reaches the api process
+    # exactly as sent, matching how api/src/app.ts mounts its routers).
+    #
+    # ${API_UPSTREAM_HOST} is this file's one templated value (this is
+    # nginx.conf.template, processed by the nginx:alpine image's built-in
+    # docker-entrypoint.d/20-envsubst-on-templates.sh into
+    # /etc/nginx/conf.d/default.conf at container start) - "api" in real
+    # deployments (docker-compose.production.yml's compose service name), or
+    # a specific "<api-container>-smoke" name when bin/deploy-to points a
+    # smoke-tested app instance at a smoke-tested api instance instead of
+    # whatever "api" currently resolves to. Every other $-token below
+    # ($host, $remote_addr, $scheme, $api_upstream itself) is an nginx
+    # variable, not a shell one - envsubst only touches names matching an
+    # actual environment variable, so those are left alone.
+    resolver 127.0.0.11 valid=10s;
+    location /api/ {
+        set $api_upstream ${API_UPSTREAM_HOST};
+        proxy_pass http://$api_upstream:9876;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Canonical public URLs for the working-plan feed/export - proxied to
+    # the api's existing /api/v1/public/workingplan.ics and .pdf routes
+    # under a stable top-level path, per the requirement that these be
+    # shareable as https://<domain>/arbeitsplan.ics / .pdf rather than the
+    # API's own internal path.
+    location = /arbeitsplan.ics {
+        set $api_upstream ${API_UPSTREAM_HOST};
+        proxy_pass http://$api_upstream:9876/api/v1/public/workingplan.ics;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /arbeitsplan.pdf {
+        set $api_upstream ${API_UPSTREAM_HOST};
+        proxy_pass http://$api_upstream:9876/api/v1/public/workingplan.pdf;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Styled error pages (app/public/errors/*.html — copied into
+    # /usr/share/nginx/html/errors/ by the Vite build like any other
+    # app/public/ asset, no Dockerfile change needed).
+    #
+    # Only the *.html pages themselves are `internal` (not directly
+    # loadable by a client, only reachable via nginx's own error_page
+    # redirect) — style.css/countdown.js/bijou.png must stay normal,
+    # publicly-fetchable static files, since the browser requests them as
+    # ordinary sub-resources *from* the already-rendered error page. Making
+    # the whole /errors/ prefix internal (as an earlier draft of this did)
+    # 404s those sub-resource requests and silently ships an unstyled page
+    # with no countdown/reload — verified by curling style.css against a
+    # real nginx:alpine container serving this exact config.
+    # This location declares no `add_header` of its own, so (per the
+    # comment on the server-level headers above) it inherits the full
+    # CSP/frame/etc. set from `server` unchanged — no duplication needed.
+    #
+    # This only covers errors *this* nginx process generates while the app
+    # container itself is up (e.g. a bad request hitting this server
+    # block). It does NOT cover the "app container is fully down/
+    # restarting" case — nothing in this file runs if this process isn't
+    # running at all. That case is handled by the deploy host's own nginx,
+    # a separate human-applied config change (see CLAUDE.md's deploy-
+    # mechanism notes).
+    #
+    # 500 is routed to the same 502.html copy as 502/503/504: this server
+    # block has no code path that emits a plain 500 today, but if one ever
+    # appears it's the same "something's wrong upstream/in this container"
+    # shape, and the "Server wird aktualisiert" copy is closer to reality
+    # for a visitor than nginx's bare default error page either way.
+    # Verified against a real nginx:alpine container: a request to
+    # /api/<anything> with no api upstream reachable comes back 502 with
+    # this page's body, CSP headers intact, and the *original* 502 status
+    # preserved (error_page doesn't rewrite the status unless given `=`).
+    #
+    # error_page 404 is wired for completeness/defense-in-depth as asked,
+    # but in practice it's close to dead code today: `location /`'s
+    # `try_files $uri /index.html` means any unmatched path here falls back
+    # to index.html (200), not a real nginx 404 — unknown in-app routes are
+    # a client-side concern, handled by react-router's `*` catch-all
+    # (NotFoundPage.tsx) after index.html has already loaded. This 404.html
+    # would only actually be served if index.html itself were missing from
+    # the image (a broken build), which is why it stays cheap to keep wired
+    # rather than a real behavior most users will ever see.
+    error_page 404 /errors/404.html;
+    error_page 500 502 503 504 /errors/502.html;
+    location ~ ^/errors/[^/]+\.html$ {
+        internal;
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
+}

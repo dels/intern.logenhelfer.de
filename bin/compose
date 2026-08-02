@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# bin/compose — thin, validated wrapper around docker compose for this
+# project. Its only job is picking the right --env-file/-f/-p for whichever
+# target you mean, then passing your command straight through — up, down,
+# logs, ps, restart, exec, build, whatever `docker compose` accepts. It
+# carries NO deployment logic (no build-before-up, no migrate, no test
+# gate) — that's entirely bin/deploy-to's job (see README.md's Deployment
+# section / CLAUDE.md). This script is for local dev and for quick,
+# low-risk operations against an already-deployed environment (start/stop
+# a container, tail logs) without needing to remember compose flags.
+#
+# Usage: bin/compose [--env <name>] <docker-compose-subcommand> [args...]
+#
+# Compose file: infra/docker-compose.yml (plain local dev), or
+# infra/docker-compose.production.yml when --env is given.
+#
+# --env <name>   target a named environment's own instance (e.g. "next",
+#                "prod") on the same host: reads .env.<name> instead of
+#                .env, and names the compose project logenhelfer-<name> so
+#                containers/networks never collide with any other
+#                environment or with Docker's own directory-basename-derived
+#                default project name.
+#
+# There is deliberately no standalone --prod flag (removed 2026-07-24): it
+# used the production compose file but passed no -p at all, so the compose
+# project fell back to Docker's directory-basename default instead of
+# logenhelfer-<name> — every OTHER piece of this repo (bin/deploy-to's
+# COMPOSE_PROJECT, bin/test-gate's GATE_PROJECT) always uses logenhelfer-<name>.
+# That mismatch is exactly what let docker compose treat prod's real,
+# already-running api/app containers as unmanaged/orphaned and kill them.
+# Always use --env <name> (--env prod, not a bare --prod) so the project name
+# is never left ambiguous.
+#
+# NOTE: flags must come before the subcommand: `bin/compose --env prod logs -f`,
+# not `bin/compose logs -f --env prod` (the latter passes --env/prod straight
+# to docker compose as unrecognized args).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+
+# --- docker availability ---
+command -v docker >/dev/null 2>&1 || die "docker not found in PATH"
+docker info >/dev/null 2>&1      || die "docker daemon not reachable — is Docker running?"
+if docker compose version >/dev/null 2>&1; then DC=(docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then DC=(docker-compose)
+else die "neither 'docker compose' nor 'docker-compose' available"; fi
+
+# --- flags ---
+ENV_NAME=""
+while [[ "${1:-}" == --* ]]; do
+  case "$1" in
+    --env) ENV_NAME="${2:?--env requires a name}"; shift 2 ;;
+    *) die "unknown flag: $1" ;;
+  esac
+done
+
+IS_PROD=false
+ENV_FILE=.env
+PROJECT_ARGS=()
+if [[ -n "$ENV_NAME" ]]; then
+  ENV_FILE=".env.$ENV_NAME"
+  PROJECT_ARGS=(-p "logenhelfer-$ENV_NAME")
+  IS_PROD=true
+fi
+
+# --- .env presence + parsing (grep, not source: .env must never execute code) ---
+[[ -f "$ENV_FILE" ]] || die "$ENV_FILE missing — run: cp .env.example $ENV_FILE   (then edit the values)"
+envval() { grep -E "^$1=" "$ENV_FILE" | tail -n1 | cut -d= -f2- || true; }
+require_env() {
+  local missing=0 v
+  for v in "$@"; do
+    [[ -n "$(envval "$v")" ]] || { echo "ERROR: $v is not set in $ENV_FILE" >&2; missing=1; }
+  done
+  [[ $missing -eq 0 ]] || exit 1
+}
+
+# --- compose file selection ---
+COMPOSE_FILE=infra/docker-compose.yml
+[[ "$IS_PROD" == true ]] && COMPOSE_FILE=infra/docker-compose.production.yml
+
+# --- validation ---
+if [[ "$COMPOSE_FILE" == "infra/docker-compose.production.yml" ]]; then
+  require_env DB_URL JWT_SECRET
+  case "$(envval DB_URL)" in
+    postgres://*|postgresql://*) ;;
+    *) die "DB_URL in $ENV_FILE must be a postgres:// URL" ;;
+  esac
+else
+  require_env POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB
+fi
+
+# --- ACTIVE_APP_UPSTREAM (edge's required var — see CLAUDE.md) ---
+# docker compose interpolates every service's environment block regardless
+# of which service the subcommand targets, so even `logs`/`ps` fail if this
+# is unset. Derive it the same way bin/deploy-to does: ask the running edge
+# container what it's actually proxying to (source of truth), falling back
+# to the advisory .active-app-slot marker if edge isn't up yet. Never
+# overrides a value the caller already exported.
+if [[ "$IS_PROD" == true && -z "${ACTIVE_APP_UPSTREAM:-}" ]]; then
+  EDGE_CONTAINER="$(envval EDGE_CONTAINER_NAME)"
+  if [[ -n "$EDGE_CONTAINER" ]] && [[ "$(docker inspect -f '{{.State.Running}}' "$EDGE_CONTAINER" 2>/dev/null)" == "true" ]]; then
+    ACTIVE_APP_UPSTREAM="$(docker exec "$EDGE_CONTAINER" sh -c \
+      "grep -oE 'proxy_pass http://[a-zA-Z0-9_.-]+' /etc/nginx/conf.d/default.conf | head -1 | sed 's#proxy_pass http://##'" 2>/dev/null || true)"
+  fi
+  [[ -n "$ACTIVE_APP_UPSTREAM" ]] || ACTIVE_APP_UPSTREAM="$(cat .active-app-slot 2>/dev/null || true)"
+  [[ -z "$ACTIVE_APP_UPSTREAM" ]] || export ACTIVE_APP_UPSTREAM
+fi
+
+dc() { "${DC[@]}" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "${PROJECT_ARGS[@]}" "$@"; }
+
+# No default command: require the caller to say what they mean (up, down,
+# logs -f, ps, restart api, ...) rather than silently defaulting to `up`.
+[[ $# -gt 0 ]] || die "no docker compose command given, e.g.: bin/compose --env prod logs -f api"
+dc "$@"

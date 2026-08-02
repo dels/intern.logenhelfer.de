@@ -1,0 +1,59 @@
+# infra/docker-compose.demo.yml
+# Layered on top of docker-compose.production.yml (via bin/deploy-to's
+# COMPOSE_EXTRA_FILES support) for the `demo` environment only - adds a
+# private Postgres so demo needs no shared-host DB role/database at all.
+# postgres-db service copied from infra/docker-compose.yml (local dev
+# stack) - same image pin, healthcheck, and hardening.
+services:
+  postgres-db:
+    image: postgres:18-trixie
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env.demo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.demo}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env.demo}
+    volumes:
+      - demo_postgresvolume:/var/lib/postgresql:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: "1.0"
+
+  # No host port, no build context override - only adding a dependency and
+  # letting DATABASE_URL (already ${DB_URL} from the base file) point at
+  # this compose-local hostname instead of a shared host.
+  #
+  # DEMO_MODE has to be added here explicitly - Docker Compose does not
+  # forward arbitrary .env-file variables into a container automatically,
+  # only ones actually listed under a service's `environment:` block (map
+  # keys merge across -f files, so this adds DEMO_MODE without disturbing
+  # docker-compose.production.yml's existing api environment entries).
+  # Found 2026-07-31 on the real first `demo` deploy: `.env.demo` had
+  # DEMO_MODE=true, but GET /api/v1/health still reported demo:false and
+  # /api/v1/public/demo-accounts 404'd, because the running container's
+  # actual environment (confirmed via `docker exec ... printenv`) had no
+  # DEMO_MODE key at all - this line is the fix.
+  api:
+    environment:
+      DEMO_MODE: ${DEMO_MODE:-}
+    restart: unless-stopped
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+volumes:
+  demo_postgresvolume: {}

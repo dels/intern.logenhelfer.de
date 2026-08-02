@@ -1,0 +1,252 @@
+#!/usr/bin/env bash
+# bin/test-gate — full test suite, run by bin/deploy-to before any deploy
+# touches build/containers (locally, or remotely via --remote). Any failure
+# aborts with non-zero exit before bin/deploy-to proceeds. Can also be run
+# standalone at any time. bin/compose does NOT run this — it's a pure
+# docker-compose wrapper with no deploy logic.
+#
+# Order (each step must be green before the next runs):
+#   1. app (frontend) — install, lint, typecheck, unit tests, build. Runs in a
+#      throwaway Node container (deploy hosts have no local Node). The build
+#      output lands in app/dist on the host, so the deploy step reuses it
+#      instead of a manual copy step.
+#   2. api (TypeScript) — an ephemeral Postgres (compose project
+#      "logenhelfer-gate", its own network/ports) gets migrated via
+#      `prisma migrate deploy`, then api's own build/typecheck/vitest suite
+#      runs against it, then api/e2e/seedFrontendE2e.ts seeds the fixed
+#      fixture data step 3's Playwright suite logs in as. This NEVER touches
+#      the real deploy target's database.
+#   3. e2e — brings up the actual `api` service (same ephemeral postgres,
+#      already seeded by step 2) and runs the frontend's Playwright suite
+#      against the Vite dev server, proxying to it. The ephemeral stack is
+#      always torn down (trap), win or lose — it never becomes a running
+#      deployment.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+NODE_IMAGE="node:22-slim"
+PLAYWRIGHT_IMAGE="mcr.microsoft.com/playwright:v1.61.1-noble"
+# PID-suffixed, not a fixed literal - found 2026-08-01: two concurrent
+# `bin/deploy-to <env> --remote` invocations for *different* environments
+# (their own per-env .deploy-<env>.lock doesn't stop this - it only
+# serializes deploys to the *same* env) each ran their own bin/test-gate at
+# the same time and both resolved to the exact same "logenhelfer-gate"
+# Compose project/network/Postgres container - confirmed directly via `ps`
+# showing two live `bash ./bin/test-gate` processes sharing one
+# logenhelfer-gate-postgres-db-1. One run's normal EXIT-trap teardown then
+# tore down the Postgres the other run's suite was still actively using
+# mid-test, producing cascading, unrelated-looking "record not found"/
+# connection-refused failures across totally unrelated test files - not a
+# code regression, a shared-mutable-host-state bug. $$ (this script's own
+# PID) makes every invocation's project/network genuinely distinct;
+# GATE_API_PORT/GATE_POSTGRES_PORT below are similarly PID-derived so two
+# concurrent *different* projects don't then also fight over the same
+# published host port. See the pre-flight cleanup below for how a crashed
+# run's now-differently-named leftovers still get found and removed.
+GATE_PROJECT="logenhelfer-gate-$$"
+GATE_API_PORT="${GATE_API_PORT:-$((19876 + ($$ % 5000)))}"
+# Distinct from docker-compose.yml's default 55432 — that port is already in use
+# by a real local dev stack on this host; colliding with it aborts the whole gate.
+GATE_POSTGRES_PORT="${GATE_POSTGRES_PORT:-$((55499 + ($$ % 5000)))}"
+# Caps each gate container's CPU use — matters most when bin/deploy-to --remote
+# runs this on a shared deploy host that's also serving live traffic. Override
+# via `bin/deploy-to ... --remote --cpus <n>` or GATE_CPUS directly.
+#
+# 8 (not 4) because E2E_WORKERS below needs real CPU headroom for its
+# Chromium instances - see that var's comment for why 4 was raised to 8.
+GATE_CPUS="${GATE_CPUS:-8}"
+# Not derived from GATE_CPUS via a formula (tried as CPUs+1 in 424d1c6,
+# reverted the same day - see that commit's message for the original
+# incident: a hardcoded-fixture-ID bug meant one transient flake under load
+# poisoned every retry, misread at the time as "more workers = more
+# breakage"). That fixture bug is fixed (per-attempt random identifiers
+# across members/categories/files/seekers/lodges/events/configuration/
+# announcements specs; the two genuinely state-mutating tests are tagged
+# @shared-state and serialized in their own Playwright project ahead of the
+# 'parallel' one - app/playwright.config.ts). With that fixed, a real
+# bin/test-gate run at workers=4/GATE_CPUS=4 (1 CPU/worker) still hit one
+# permanent failure (announcements.spec.ts, page.goto timing out at 30s) -
+# genuine CPU starvation of the 4 concurrent Chromium instances inside this
+# script's own capped container, not the shared api/Postgres/Vite instance.
+# Doubling the CPU budget to 2/worker (workers=4, GATE_CPUS=8) fixed it: a
+# real run against `next` (2026-07-24) went 44/44 green in 1.4m, one
+# already-known-flaky retry recovered, zero permanent failures. Only
+# validated with one such run so far - if you see a permanent failure
+# again at these values, that's grounds to re-open this, not a sign to
+# silently raise GATE_CPUS further without re-testing.
+E2E_WORKERS="${E2E_WORKERS:-4}"
+GATE_ENV_FILE="$(mktemp)"
+
+dcg() { docker compose -f infra/docker-compose.yml -p "$GATE_PROJECT" --env-file "$GATE_ENV_FILE" "$@"; }
+
+cleanup() {
+  dcg down -v --remove-orphans >/dev/null 2>&1 || true
+  rm -f "$GATE_ENV_FILE"
+  # GATE_PROJECT being PID-suffixed (see its own comment above) means the
+  # image `dcg build api` produces is also uniquely tagged per invocation
+  # (Compose's own "<project>-<service>" naming) instead of every run
+  # reusing one shared "logenhelfer-gate-api:latest" tag - without this,
+  # tagged (non-dangling) images from every past gate run would accumulate
+  # on the host's disk forever, since `docker image prune` (used elsewhere
+  # in this project) only ever removes *dangling* (untagged) images. This
+  # run's own image is genuinely throwaway (this script's own header
+  # comment: "the ephemeral stack ... never becomes a running deployment"),
+  # so remove it unconditionally on every exit, success or failure alike.
+  docker rmi -f "${GATE_PROJECT}-api:latest" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+# POSTGRES_DB deliberately equals POSTGRES_USER: the postgres image only
+# auto-creates a database matching POSTGRES_USER on first boot, and
+# `prisma migrate deploy` (unlike Rails' db:prepare) never creates the
+# database itself — a mismatch here would fail every gate run before any
+# migration gets a chance to apply.
+cat > "$GATE_ENV_FILE" <<EOF
+POSTGRES_USER=gate
+POSTGRES_PASSWORD=gate
+POSTGRES_DB=gate
+API_PORT=$GATE_API_PORT
+POSTGRES_PORT=$GATE_POSTGRES_PORT
+# The login rate limiter (api/src/middleware/rateLimit.ts) no-ops under
+# NODE_ENV=test, same as Rack::Attack's own !Rails.env.test? exemption -
+# without this, the e2e suite's ~20 sequential logins trip the 10-per-60s
+# throttle partway through and every later test fails at the login step.
+NODE_ENV=test
+# Dev-only fixed key (not a secret - same value as infra/docker-compose.yml's
+# own dev-only fallback), needed because infra/docker-compose.yml's api
+# service *requires* MFA_ENCRYPTION_KEY to be set (see that file's own
+# comment on the var) - without this, `dcg up -d --wait api` below would
+# fail outright rather than silently omit the key.
+MFA_ENCRYPTION_KEY=4a433fbe929476e8cbc24a43423b2055213c31d76e13aff562c2b169177bd9e8
+EOF
+
+# Pre-flight cleanup: the EXIT trap above only fires if this script's own
+# process gets to run it - if the run is killed abruptly (the deploy host
+# itself rebooting mid-gate, an OOM kill, `docker compose` up-vs-down races
+# on a hard interrupt) the previous run's containers are simply orphaned,
+# and the next run's `dcg up` fails with "container name ... already in
+# use" before a single test executes. Found 2026-07-31: a mid-gate reboot
+# of the shared deploy host left `logenhelfer-gate-postgres-db-1` running
+# (unhealthy) and blocked every subsequent --remote gate attempt until it
+# was force-removed by hand. Rather than requiring that by-hand step every
+# time, tear down anything left over from a previous run before starting -
+# label-based `dcg down` first (handles the common case cleanly, including
+# the compose network), then an explicit name-based `docker rm -f` fallback
+# for the exact container names this project's services produce, in case
+# the leftover container's compose-project labels ever don't match (e.g. a
+# stale project hash) and the label-based down misses it. Both are
+# idempotent no-ops when there's nothing to clean up.
+echo ">>> Cleaning up any orphaned containers from a previous interrupted gate run..."
+dcg down -v --remove-orphans >/dev/null 2>&1 || true
+docker rm -f "${GATE_PROJECT}-postgres-db-1" "${GATE_PROJECT}-api-1" >/dev/null 2>&1 || true
+# GATE_PROJECT is now PID-suffixed (see its own comment above), so a crashed
+# *previous* run's leftovers carry a *different* PID suffix than this run's
+# own $GATE_PROJECT and the two lines above never match them. Sweep every
+# "logenhelfer-gate-<pid>" project label on this host instead and tear down
+# any whose owning PID is no longer alive - this run's own PID ($$) is
+# always alive and always skipped, and a genuinely still-running concurrent
+# gate invocation's PID is also alive and correctly left alone.
+# Both `|| true` at the very end of this whole pipeline (not just inside the
+# loop body) matters under `set -eo pipefail`: a bare `while read; do ...;
+# done` exits non-zero when its input has zero lines (the very first `read`
+# hits EOF and fails) - the *common* case here, since most runs find nothing
+# to sweep. Without this trailing `|| true`, that "nothing to do" outcome
+# would itself abort the entire gate script on every single run, silently
+# and with no error of its own printed (`set -e` doesn't print anything) -
+# found the hard way: it did exactly this on this fix's very first live run.
+docker ps -a --filter 'label=com.docker.compose.project' --format '{{.Label "com.docker.compose.project"}}' 2>/dev/null \
+  | grep -E '^logenhelfer-gate-[0-9]+$' | sort -u | while read -r stale_project; do
+  stale_pid="${stale_project#logenhelfer-gate-}"
+  if [ "$stale_pid" != "$$" ] && ! kill -0 "$stale_pid" 2>/dev/null; then
+    echo "    Removing orphaned gate project $stale_project (owning pid $stale_pid no longer running)..."
+    # --env-file needed even for `down`: infra/docker-compose.yml's
+    # postgres-db service has required (`:?`) interpolated vars, and Compose
+    # validates/interpolates the whole file before running *any* subcommand,
+    # `down` included. The actual values don't matter for tearing down
+    # already-existing containers (identified by project label, not by
+    # these values) - reusing this run's own $GATE_ENV_FILE is just a
+    # convenient source of *some* valid values.
+    docker compose -f infra/docker-compose.yml -p "$stale_project" --env-file "$GATE_ENV_FILE" down -v --remove-orphans >/dev/null 2>&1 || true
+    # That crashed run's own cleanup() EXIT trap (see above) never got to
+    # fire either, so its uniquely-tagged image is leaked the same way its
+    # containers were - remove it here too, same reasoning as cleanup()'s
+    # own docker rmi.
+    docker rmi -f "${stale_project}-api:latest" >/dev/null 2>&1 || true
+  fi
+done || true
+
+echo "==> [1/3] app: install, lint, typecheck, unit tests, build"
+docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work -e CI=true -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 "$NODE_IMAGE" bash -euc "
+  corepack enable
+  pnpm install --frozen-lockfile
+  pnpm --filter app lint
+  pnpm --filter app typecheck
+  pnpm --filter app test
+  pnpm --filter app build
+"
+
+echo "==> [2/3] api: ephemeral db (gate) + migrate, build/typecheck/vitest, seed e2e fixtures"
+dcg up -d --wait postgres-db
+
+# Joins the gate project's own compose network and addresses postgres-db by
+# its service name, rather than host.docker.internal + --add-host=host-gateway
+# against the host-published port: that worked on Docker Desktop (Mac) but
+# silently fails on plain Linux Docker Engine, since postgres-db's port is
+# bound to 127.0.0.1 only (infra/docker-compose.yml) and host-gateway routes
+# through the bridge gateway IP, not loopback — a real deploy host hit this
+# as P1001 "Can't reach database server". Compose's default network is named
+# "<project>_default" ("logenhelfer-gate_default" here, verified via `docker
+# network ls`); joining it is the same pattern the api service itself already
+# uses for its own DATABASE_URL, and works identically on every platform.
+#
+# NODE_ENV=test here must match the api service's own NODE_ENV=test (set via
+# GATE_ENV_FILE above, step 3) - AppConfig rows are namespaced by env
+# (`${NODE_ENV}_${key}`, see api/src/lib/appConfig.ts's fullKey()), so
+# seed:e2e writing under one prefix while the real e2e-serving api container
+# reads under another makes every seeded AppConfig value (lodge, impressum)
+# invisible to it - e.g. the public Impressum page silently falling back to
+# its "not yet configured" placeholder instead of the seeded content.
+docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
+  --network "${GATE_PROJECT}_default" \
+  -e CI=true \
+  -e DATABASE_URL="postgresql://gate:gate@postgres-db:5432/gate" \
+  -e JWT_SECRET=gate-only-jwt-secret-not-for-production-use \
+  -e NODE_ENV=test \
+  -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+  "$NODE_IMAGE" bash -euc "
+    # Matches api/Dockerfile's build stage exactly (curl/ca-certificates/openssl) -
+    # without openssl, Prisma can't detect the real libssl version here and
+    # silently guesses 'openssl-1.1.x', which can pick a different query-engine
+    # binary than the one prod's image actually ships. See api/Dockerfile's own
+    # apt-get line for why these three packages specifically.
+    apt-get update -qq
+    apt-get install -y --no-install-recommends curl ca-certificates openssl
+    rm -rf /var/lib/apt/lists/*
+    corepack enable
+    cd /work && pnpm install --frozen-lockfile
+    cd /work/api
+    pnpm exec prisma generate
+    pnpm exec prisma migrate deploy
+    pnpm run build
+    pnpm run typecheck
+    pnpm run test
+    pnpm run seed:e2e
+  "
+
+echo "==> [3/3] e2e: playwright against the ephemeral stack"
+dcg build api
+dcg up -d --wait api
+
+docker run --rm --cpus "$GATE_CPUS" \
+  -v "$PWD:/work" -w /work \
+  --network "${GATE_PROJECT}_default" \
+  -e CI=true \
+  -e API_PROXY="http://api:3000" \
+  -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+  "$PLAYWRIGHT_IMAGE" bash -euc "
+    corepack enable
+    pnpm install --frozen-lockfile
+    cd app && pnpm e2e --workers=$E2E_WORKERS
+  "
+
+echo "==> gate passed: app + api + e2e all green"

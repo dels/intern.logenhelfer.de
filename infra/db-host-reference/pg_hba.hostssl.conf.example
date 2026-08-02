@@ -1,0 +1,64 @@
+# ============================================================================
+# REFERENCE ONLY. Never read, templated, or applied by any script in this
+# repo — no bin/deploy-to step touches pg_hba.conf. It exists purely so a
+# human has something checked-in to copy from, same convention as
+# infra/host-nginx-reference/logenhelfer.location.conf.example: this repo's
+# scripts never touch shared infrastructure config that other projects on
+# the same server also depend on.
+#
+# WHERE: /etc/postgresql/<version>/main/pg_hba.conf (or wherever postgres.conf
+# points hba_file at) on db.example.com — NOT any host this repo deploys to.
+# That server is shared by sibling projects; a bad line here can lock out
+# connections for all of them, not just this one.
+#
+# WHY hostssl and not host: `host` accepts both plaintext and SSL
+# connections; `hostssl` rejects plaintext. Flipping this is how you force
+# every client onto SSL. DO NOT do this before every client's DB_URL already
+# has `?sslmode=require` and has been redeployed and verified — see the
+# safe-ordering note below. A premature flip rejects every still-plaintext
+# connection immediately, which for a shared postgres host means breaking
+# sibling projects too, not just this one.
+#
+# SAFE ORDER (do not skip steps or reorder):
+#   1. Add `?sslmode=require` to this project's DB_URL for every environment
+#      (.env.<name> here), redeploy, confirm the app still works.
+#      GOTCHA (hit for real on 2026-07-28): db.example.com's server
+#      certificate is self-signed. libpq's `sslmode=require` just means
+#      "must be SSL, don't verify the cert" — but node-postgres/Prisma's
+#      driver adapter treats `require` as "verify the cert chain," which
+#      fails immediately against a self-signed cert with "Error opening a
+#      TLS connection: self-signed certificate" (Prisma P1011) on every
+#      DB-touching request. Use `?sslmode=no-verify` instead — still
+#      encrypted in transit, just doesn't demand a CA-trusted cert. This bit
+#      both `next` and `prod` simultaneously the first time `sslmode=require`
+#      was added, causing a real (brief) outage on both — test on `next`
+#      first and confirm login actually works (not just a static /health
+#      endpoint, which doesn't touch the DB) before trusting `prod` will too.
+#   2. On db.example.com, run:
+#        SELECT a.usename, a.datname, s.ssl
+#        FROM pg_stat_activity a JOIN pg_stat_ssl s ON a.pid = s.pid
+#        WHERE a.datname IS NOT NULL;
+#      Confirm ssl=t for every row belonging to this project's databases —
+#      and check what sibling projects on this same server are doing before
+#      assuming a server-wide flip is safe for them too.
+#   3. Only once step 2 confirms SSL is actually in use, change the specific
+#      `host` line(s) below to `hostssl` for this project's database(s).
+#      Prefer scoping the change to just this project's DATABASE/USER
+#      columns rather than a blanket file-wide flip, so a sibling project
+#      that isn't ready yet isn't broken by this change.
+#   4. `pg_hba.conf` changes require a config reload to take effect:
+#        sudo systemctl reload postgresql
+#      (or `SELECT pg_reload_conf();` as a superuser) — a reload, not a
+#      restart; existing connections are unaffected, only new ones are
+#      re-evaluated against the new rules.
+#
+# Example diff shape (DATABASE/USER/ADDRESS are placeholders — copy the
+# actual line for logenhelfer_<env>/logenhelfer_<env> from the real file,
+# change only the connection-type column):
+#
+# - host    logenhelfer_prod    logenhelfer_prod    <address>/<mask>    md5
+# + hostssl logenhelfer_prod    logenhelfer_prod    <address>/<mask>    md5
+#
+# - host    logenhelfer_next    logenhelfer_next    <address>/<mask>    md5
+# + hostssl logenhelfer_next    logenhelfer_next    <address>/<mask>    md5
+# ============================================================================

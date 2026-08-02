@@ -1,0 +1,119 @@
+services:
+  postgres-db:
+    # Floating minor tag (auto-picks up patch releases, e.g. the 18.1 -> 18.4
+    # jump that fixed 11 CVEs) rather than pinning an exact patch we'd have
+    # to remember to bump by hand.
+    image: postgres:18-trixie
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
+    environment:
+      # Deliberately no POSTGRES_DB: a pre-created empty database makes
+      # `prisma migrate deploy` replay every migration from scratch instead
+      # of assuming a preloaded schema.
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - postgresvolume:/var/lib/postgresql:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+    # The official postgres image's entrypoint starts as root (to chown a
+    # freshly-created/empty data volume, per the comment above) then `gosu`s
+    # down to the postgres user for the server process itself — cap_drop:
+    # [ALL] alone made that root-phase chown/privilege-drop fail outright
+    # (verified: container went "unhealthy" and bin/test-gate's ephemeral db
+    # never came up). These five are the minimum needed for that one-time
+    # setup phase; the actual running server drops the rest.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: "1.0"
+
+  api:
+    # Build context is the repo root (not ./api/) so the image can see
+    # pnpm-workspace.yaml/pnpm-lock.yaml and the sibling packages' package.json
+    # files — pnpm needs the whole workspace manifest to install, even though
+    # only api's own deps actually get used. Same convention as app/Dockerfile.
+    build:
+      context: ..
+      dockerfile: api/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3000}:3000"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: "3000"
+      # Built from the same split POSTGRES_* vars above (not the host-oriented
+      # DATABASE_URL that may be in .env for `pnpm --filter api test` running
+      # on the host) — this way both services provably point at the identical
+      # Postgres instance/database without duplicating credentials in two
+      # different var shapes.
+      DATABASE_URL: postgresql://${POSTGRES_USER:?set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres-db:5432/${POSTGRES_DB:?set POSTGRES_DB in .env}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-jwt-secret-not-for-production-use}
+      # Dev-only fallback (not a real secret, same convention as JWT_SECRET
+      # above) - a fixed, valid 64-hex-char/32-byte value so local
+      # `bin/compose up` and bin/test-gate's ephemeral gate-api container
+      # (infra/docker-compose.yml is also what `dcg` builds from) both have a
+      # working AES-256-GCM key for api/src/lib/mfaEncryption.ts without
+      # requiring local .env setup. See docker-compose.production.yml's own
+      # comment on this same var for why this line's mere existence matters
+      # (Compose's --env-file does not inject vars into the container by
+      # itself - only an explicit environment: entry does).
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:-4a433fbe929476e8cbc24a43423b2055213c31d76e13aff562c2b169177bd9e8}
+      # Rate limits: centrally configurable via the shared root .env.
+      RATE_LIMIT_LOGIN_MAX: ${RATE_LIMIT_LOGIN_MAX:-10}
+      RATE_LIMIT_LOGIN_WINDOW_MS: ${RATE_LIMIT_LOGIN_WINDOW_MS:-60000}
+      MAX_UPLOAD_FILE_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB:-20}
+      GIT_HASH: ${GIT_HASH:-}
+      # Mail (prod/production only; local dev logs instead of sending - see
+      # api/src/lib/mail.ts).
+      MAIL_TRANSPORT: ${MAIL_TRANSPORT:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      # Keeps V8's heap ceiling under mem_limit below so Node gets a chance to
+      # GC under memory pressure instead of the kernel OOM-killing the whole
+      # container outright.
+      NODE_OPTIONS: --max-old-space-size=576
+    healthcheck:
+      # A trivial DB round-trip, 200 "ok" on success, non-2xx otherwise.
+      # Distinct from GET /api/v1/health (unauthenticated, DB-independent,
+      # deploy-hash verification only) — don't merge them.
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/healthz || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    # cap_drop: [ALL] needs no add-back here — Node runs as the non-root
+    # `node` user (api/Dockerfile's USER node) and doesn't touch disk at
+    # runtime (uploads are in-memory, no temp files).
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: "2.0"
+
+volumes:
+  postgresvolume: {}
+
+networks:
+  default:
+    enable_ipv6: true

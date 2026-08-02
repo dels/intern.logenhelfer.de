@@ -1,0 +1,627 @@
+{
+  "nav": {
+    "dashboard": "Übersicht",
+    "events": "Arbeitsplan",
+    "users": "Mitglieder",
+    "seekers": "Suchende",
+    "lodges": "Logen",
+    "announcements": "Aktuelles",
+    "categories": "Kategorien",
+    "statistics": "Statistiken",
+    "settings": "Einstellungen",
+    "configurationSection": "Konfiguration",
+    "filesSection": "Dateien",
+    "openMenu": "Menü öffnen",
+    "externalEvents": "Externe Termine",
+    "externalEventIcsSources": "Externe ICS-Kalender"
+  },
+  "dashboard": {
+    "welcome": "Willkommen Br. {{name}}",
+    "gdprHeader": "Datenschutzbestimmungen",
+    "gdprMustAccept": "Um diesen Webdienst weiter nutzen zu können müssen Sie den Datenschutzbedingungen zustimmen.",
+    "gdprAcceptLabel": "Datenschutzvereinbarung akzeptieren und der Erhebung, Speicherung und Verarbeitung der Daten zustimmen.",
+    "gdprAcceptButton": "Ich akzeptiere die Datenschutzvereinbarung",
+    "recentAnnouncements": "Neuste Ankündigungen",
+    "noAnnouncements": "Es gibt noch keine Ankündigungen.",
+    "seeAllAnnouncements": "Alle Ankündigungen ansehen",
+    "upcomingEventsTitle": "Nächste Termine",
+    "openWorkingplan": "Arbeitsplan öffnen →",
+    "seeAllMembers": "Alle Mitglieder ansehen →",
+    "seeAllSeekers": "Alle Suchende ansehen →",
+    "stats": {
+      "noUpcomingEvents": "Keine anstehenden Termine."
+    },
+    "storage": {
+      "banner": "{{percent}}% belegt ({{used}} von {{max}})."
+    }
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signOut": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "invalidCredentials": "E-Mail oder Passwort ist falsch.",
+    "networkError": "Der Server ist momentan nicht erreichbar. Bitte versuche es später erneut.",
+    "forgotPassword": "Passwort vergessen?",
+    "forgotPasswordTitle": "Passwort vergessen",
+    "forgotPasswordSubmit": "Link anfordern",
+    "forgotPasswordSent": "Falls diese E-Mail-Adresse registriert ist, erhältst Du in Kürze eine E-Mail mit einem Link zum Zurücksetzen Deines Passworts.",
+    "backToLogin": "Zurück zur Anmeldung",
+    "resetPasswordTitle": "Neues Passwort vergeben",
+    "newPassword": "Neues Passwort",
+    "newPasswordConfirmation": "Neues Passwort bestätigen",
+    "resetPasswordSubmit": "Passwort speichern",
+    "resetPasswordSuccess": "Dein Passwort wurde geändert. Du kannst Dich jetzt anmelden.",
+    "resetPasswordInvalidToken": "Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.",
+    "signInWithPasskey": "Mit Passkey anmelden",
+    "mfaInvalidCode": "Der eingegebene Code ist ungültig.",
+    "passkeyLoginFailed": "Die Anmeldung mit dem Passkey ist fehlgeschlagen."
+  },
+  "demoBanner": {
+    "text": "Dies ist eine Demo-Umgebung und wird unregelmäßig zurückgesetzt.",
+    "infoLabel": "Informationen zur Demo-Umgebung",
+    "title": "Demo-Zugänge",
+    "intro": "Melde dich mit einem der folgenden Konten an, alle mit dem Passwort {{password}}.",
+    "limits": "Diese Umgebung sendet keine E-Mails, wird unregelmäßig zurückgesetzt und begrenzt den Datei-Upload auf 100MB.",
+    "close": "Schließen",
+    "roles": {
+      "EnteredApprentice": "Lehrling — Mitgliedsansicht ohne Sonderrechte",
+      "FellowCraft": "Geselle — Mitgliedsansicht ohne Sonderrechte",
+      "MasterMason": "Meister — Mitgliedsansicht ohne Sonderrechte",
+      "Admin": "Administrator — voller Systemzugriff",
+      "Secretary": "Schriftführer — Arbeitsplan, Aktuelles, Logen/Beamte, Dateien, Mitgliederverwaltung, Statistiken",
+      "WorshipfulMaster": "Meister vom Stuhl — Logenleitung",
+      "NetDelegate": "Internetbeauftragter — Dateien, Mitgliederverwaltung, Statistiken",
+      "MemberOfCouncil": "Beamtenrat — Statistiken, Mitgliederexport, Suchende",
+      "FileAdmin": "Dateiverwaltung — nur Kategorien/Verzeichnisse/Dateien",
+      "UserAdmin": "Mitgliederverwaltung — nur Rollenzuweisung",
+      "WorkingPlanAdmin": "Arbeitsplanverwaltung — nur Termine",
+      "ApplicationAdmin": "Anwendungsverwaltung — Kernkonfiguration",
+      "AnnouncementAdmin": "Ankündigungsverwaltung — nur Aktuelles"
+    }
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "loading": "Wird geladen …",
+    "close": "Schließen",
+    "serverUnavailable": "Verbindung zum Server unterbrochen.",
+    "visibleTo": "Sichtbar für: {{groups}}",
+    "visibleToNone": "Für keine Gruppe sichtbar",
+    "toast": {
+      "created": "Erstellt.",
+      "updated": "Gespeichert.",
+      "deleted": "Gelöscht.",
+      "error": "Fehler beim Speichern."
+    }
+  },
+  "events": {
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "beginTime": "Beginn",
+    "endTime": "Ende",
+    "title": "Titel",
+    "location": "Ort",
+    "create": "Neuer Termin",
+    "edit": "Bearbeiten",
+    "publicDescription": "Öffentliche Beschreibung",
+    "privateDescription": "Interne Beschreibung",
+    "wholeDay": "Ganztägig",
+    "participants": "Teilnehmer",
+    "delete": "Löschen",
+    "deleteConfirm": "Diesen Termin wirklich löschen?",
+    "save": "Speichern",
+    "register": "Anmelden",
+    "unregister": "Abmelden",
+    "registeredToast": "Zur Veranstaltung {{name}} angemeldet.",
+    "exportWorkingplanPdf": "Arbeitsplan als PDF exportieren",
+    "calendar": {
+      "filterBirthdays": "Geburtstage",
+      "filterExternalEvents": "Externe Termine",
+      "filterLabel": "Anzeigen",
+      "filterPlaceholder": "Filter wählen",
+      "filterSourcesTruncated": "Es werden nur die ersten 1000 ICS-Quellen angezeigt.",
+      "viewList": "Liste",
+      "viewCalendar": "Kalender",
+      "previous": "Vorheriger Monat",
+      "next": "Nächster Monat",
+      "today": "Heute",
+      "month": "Monat",
+      "week": "Woche",
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa",
+      "sun": "So"
+    }
+  },
+  "externalEvents": {
+    "title": "Titel",
+    "host": "Loge",
+    "location": "Ort",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "beginTime": "Beginn",
+    "endTime": "Ende",
+    "description": "Beschreibung",
+    "save": "Speichern",
+    "create": "Neuer externer Termin",
+    "edit": "Bearbeiten",
+    "empty": "Keine externen Termine vorhanden.",
+    "delete": "Löschen",
+    "deleteConfirm": "Diesen externen Termin wirklich löschen?",
+    "participants": "Teilnehmer",
+    "register": "Anmelden",
+    "unregister": "Abmelden",
+    "confirm": "Bestätigen",
+    "confirmed": "Bestätigt",
+    "festiveBoard": "Festtafel"
+  },
+  "externalEventIcsSources": {
+    "title": "Externe ICS-Kalender",
+    "name": "Name",
+    "url": "URL",
+    "add": "Hinzufügen",
+    "empty": "Keine externen ICS-Kalender konfiguriert.",
+    "syncNow": "Jetzt synchronisieren",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "syncResult": "{{created}} neu, {{updated}} aktualisiert, {{removed}} entfernt",
+    "syncError": "Synchronisierung fehlgeschlagen",
+    "editError": "Änderungen konnten nicht gespeichert werden"
+  },
+  "members": {
+    "firstname": "Vorname",
+    "lastname": "Nachname",
+    "name": "Name",
+    "matriculationNumber": "Matrikelnummer",
+    "jobTitle": "Beruf",
+    "email": "E-Mail",
+    "search": "Suche",
+    "loadError": "Die Mitgliederliste konnte nicht geladen werden.",
+    "create": "Neues Mitglied",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "impersonate": "Impersonate",
+    "impersonationBanner": "Ansicht als {{name}}",
+    "stopImpersonating": "Zurück zu meinem Konto",
+    "deleteConfirm": "Dieses Mitglied wirklich löschen?",
+    "mfaEnabled": "Zwei-Faktor-Authentifizierung aktiv",
+    "mfaDisabled": "Zwei-Faktor-Authentifizierung nicht eingerichtet",
+    "mfaReset": "MFA zurücksetzen",
+    "mfaResetConfirm": "Wirklich zurücksetzen?",
+    "mfaResetSuccess": "MFA wurde zurückgesetzt",
+    "save": "Speichern",
+    "addresses": "Adressen",
+    "roles": "Rollen",
+    "dateOfBirth": "Geburtsdatum",
+    "enteredApprenticeSince": "Aufgenommen am",
+    "fellowCraftSince": "Befördert am",
+    "masterMasonSince": "Erhoben am",
+    "addAddress": "Adresse hinzufügen",
+    "removeAddress": "Adresse entfernen",
+    "addressType": "Adresstyp",
+    "addressTypePrivate": "Privat",
+    "addressTypeBusiness": "Geschäftlich",
+    "addressTypeOther": "Sonstiges",
+    "addressPurpose": "Bezeichnung",
+    "phone": "Telefon",
+    "fax": "Fax",
+    "mobile": "Mobil",
+    "brotherName": "Br. {{firstname}} {{lastname}}",
+    "motherLodge": "Mutterloge",
+    "acceptedAt": "Angenommen am",
+    "positions": "Ämter",
+    "adminRoles": "Verwaltungsrollen",
+    "phoneListHeader": "Telefonliste",
+    "birthdayListHeader": "Geburtstagsliste",
+    "councilListHeader": "Beamtenrat",
+    "age": "Alter",
+    "jubilee25": "25-jähriges Jubiläum",
+    "jubilee40": "40-jähriges Jubiläum",
+    "roleEmail": "E-Mail",
+    "holder": "Amtsinhaber",
+    "councilRole": "Amt",
+    "exportCsv": "CSV exportieren",
+    "exportVcf": "vCard exportieren",
+    "exportPdf": "PDF exportieren",
+    "exportPdfPasswordPrompt": "Bitte ein Passwort für die PDF-Datei vergeben (mind. 5 Zeichen)",
+    "exportPdfPasswordLabel": "Passwort",
+    "exportPdfPasswordTooShort": "Das Passwort muss mindestens 5 Zeichen lang sein",
+    "exportPdfGenerate": "PDF erzeugen",
+    "exportForbidden": "Für diese Aktion fehlt die Berechtigung",
+    "exportRecordFailed": "Die PDF-Datei wurde heruntergeladen, aber die Protokollierung ist fehlgeschlagen. Bitte informieren Sie einen Administrator."
+  },
+  "seekers": {
+    "forbidden": "Sie haben keine Berechtigung, die Suchenden einzusehen.",
+    "lastname": "Name",
+    "source": "Quelle",
+    "contact": "Kontakt",
+    "status": "Status",
+    "updatedAt": "Zuletzt geändert",
+    "loadError": "Die Liste der Suchenden konnte nicht geladen werden.",
+    "create": "Neuer Suchender",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Diese*n Suchende*n wirklich löschen?",
+    "save": "Speichern",
+    "notes": "Notizen",
+    "address": "Adresse",
+    "firstname": "Vorname",
+    "invite": "Einladen",
+    "preferredWayOfContact": "Bevorzugter Kontaktweg",
+    "filter": {
+      "active": "Aktiv",
+      "accepted": "Angenommen",
+      "inactive": "Inaktiv",
+      "declined": "Abgelehnt"
+    },
+    "statusOptions": {
+      "contacted": "Kontaktiert", "visiting": "Besucht", "applicationExpected": "Antrag erwartet",
+      "applicationReceived": "Antrag erhalten", "ballotageScheduled": "Ballotage geplant",
+      "readyForAdmission": "Aufnahmebereit", "admissionScheduled": "Aufnahme geplant",
+      "accepted": "Angenommen", "declined": "Abgelehnt"
+    },
+    "contactOptions": {
+      "email": "E-Mail", "phone": "Telefon", "fax": "Fax", "mobile": "Mobil", "mail": "Post", "seeRemarks": "Siehe Notizen"
+    },
+    "addressFields": {
+      "street": "Straße", "zip": "PLZ", "city": "Stadt", "phone": "Telefon", "mobile": "Mobil", "email": "E-Mail"
+    },
+    "namesList": {
+      "title": "Namen der Suchenden",
+      "empty": "Es gibt aktuell keine Suchenden.",
+      "loadError": "Die Namen der Suchenden konnten nicht geladen werden."
+    }
+  },
+  "categories": {
+    "name": "Name",
+    "description": "Beschreibung",
+    "roles": "Sichtbar für Rollen",
+    "create": "Neue Kategorie",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Wirklich löschen?",
+    "save": "Speichern",
+    "directories": "Ordner"
+  },
+  "directories": {
+    "create": "Neuer Ordner",
+    "name": "Name",
+    "description": "Beschreibung",
+    "roles": "Sichtbar für Rollen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Wirklich löschen?",
+    "save": "Speichern"
+  },
+  "lodges": {
+    "name": "Name",
+    "description": "Beschreibung",
+    "district": "Distrikt",
+    "noDistricts": "Es sind keine Distrikte angelegt - eine neue Loge kann erst erstellt werden, wenn mindestens ein Distrikt existiert.",
+    "create": "Neue Loge",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Wirklich löschen?",
+    "save": "Speichern",
+    "officers": "Amtsträger"
+  },
+  "officers": {
+    "firstname": "Vorname",
+    "lastname": "Nachname",
+    "role": "Amt",
+    "roleEmail": "E-Mail des Amtes",
+    "create": "Neuer Amtsträger",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Wirklich löschen?",
+    "save": "Speichern"
+  },
+  "announcements": {
+    "title": "Titel",
+    "messageBody": "Text",
+    "createdAt": "Erstellt am",
+    "createdBy": "Erstellt von {{name}} am {{date}}",
+    "updatedBy": "Zuletzt bearbeitet von {{name}} am {{date}}",
+    "subscribe": "Per E-Mail benachrichtigen bei neuen Ankündigungen",
+    "create": "Neue Ankündigung",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Wirklich löschen?",
+    "save": "Speichern"
+  },
+  "configuration": {
+    "header": "Anwendungs-Konfiguration",
+    "tabs": {
+      "funktionen": "Funktionen",
+      "konfiguration": "Konfiguration",
+      "impressum": "Impressum",
+      "sicherheit": "Sicherheit"
+    },
+    "generalHeader": "Allgemeine Einstellungen",
+    "districtsHeader": "Distrikte",
+    "districtCreate": "Neuer Distrikt",
+    "districtEdit": "Distrikt bearbeiten",
+    "districtName": "Name",
+    "academicTitlesHeader": "Akademische Titel",
+    "academicTitleCreate": "Titel hinzufügen",
+    "academicTitleEdit": "Titel bearbeiten",
+    "academicTitleShort": "Kurzform",
+    "academicTitleInUse": "{{count}} Mitglieder",
+    "rolesHeader": "Rollen (E-Mail-Adressen)",
+    "roleEmail": "E-Mail-Adresse",
+    "roleEditEmail": "E-Mail bearbeiten",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "forbidden": "Sie haben keine Berechtigung, die Konfiguration zu bearbeiten.",
+    "options": {
+      "public_wp_available_to_anon_users": {
+        "name": "Öffentlicher Arbeitsplan öffentlich einsehbar",
+        "description": "Wenn die Option gesetzt ist, so ist der AP sichtbar auf der Startseite neben dem Login. ACHTUNG: Änderungen werden erst nach Neustart der Anwendung aktiv."
+      },
+      "working_plan_as_start_page": {
+        "name": "Arbeitsplan als Startseite",
+        "description": "Wenn die Startseite aufgerufen wird, wird nicht der Login, sondern der Arbeitsplan angezeigt. Setzt voraus, dass der AP öffentlich einsehbar ist. ACHTUNG: Änderungen werden erst nach Neustart der Anwendung aktiv."
+      },
+      "archive": {
+        "name": "Archiv-Modus",
+        "description": "Verändern nur auf eigene Gefahr!"
+      },
+      "show_admins": {
+        "name": "Administratoren in Benutzerliste anzeigen?",
+        "description": ""
+      },
+      "users_can_view_statistics": {
+        "name": "Statistiken für alle Mitglieder sichtbar",
+        "description": "Wenn deaktiviert, können nur Ratsmitglieder und höhere Rollen die Statistik-Übersicht (Downloads, Downloads pro Datei, Speichernutzung) sehen. Ratsmitglieder und höhere Rollen sind von dieser Einstellung nicht betroffen."
+      },
+      "show_seeker_names_to_brothers": {
+        "name": "Namen der Suchenden für alle Brüder sichtbar",
+        "description": "Wenn aktiviert, sehen Brüder ohne eigene Suchenden-Berechtigung eine reine Namensliste der aktiven Suchenden (Kachel auf der Übersicht + eigene Seite). Betrifft nicht den Meister vom Stuhl und Ratsmitglieder - die haben bereits vollen Zugriff auf die Suchenden-Verwaltung."
+      },
+      "notify_technical_contact_on_unknown_password_reset": {
+        "name": "Benachrichtigung bei Passwortreset unbekannter E-Mail Addressen",
+        "description": "Evtl. hat ein Bruder seine E-Mail Adresse vergessen"
+      },
+      "domain": {
+        "name": "Domain",
+        "description": "Die Domain dieser Anwendung (ohne Protokoll). Wird für den Export von Kontakten benutzt und dient als Identifikator im Kalender-Export."
+      },
+      "organisation": {
+        "name": "Vereinsname",
+        "description": "Wird hauptsächlich in Kontakt-Exporten benutzt."
+      },
+      "lodge": {
+        "name": "Loge",
+        "description": "Angezeigter Logenname auf der Startseite und im Seitentitel."
+      },
+      "lodge_short": {
+        "name": "Abkürzung Loge",
+        "description": "Wird z.B. als Prefix für den Arbeitsplan benutzt."
+      },
+      "language": {
+        "name": "Sprache",
+        "description": "Sprache der Anwendung, des Arbeitsplan-PDFs und des Kalender-Exports.",
+        "values": { "de": "Deutsch", "en": "Englisch" }
+      },
+      "default_workingplan_timespan": {
+        "name": "Vorgegebene Zeitspanne für die Arbeitsplan-Exporte",
+        "description": "Zahlwert in Tagen."
+      },
+      "public_workingplan_html_timespan": {
+        "name": "Zeitspanne für den öffentlichen Arbeitsplan (HTML)",
+        "description": "Zahlwert in Tagen."
+      },
+      "public_workingplan_ics_timespan": {
+        "name": "Zeitspanne für den öffentlichen Arbeitsplan (iCal)",
+        "description": "Zahlwert in Tagen."
+      },
+      "default_event_location": {
+        "name": "Ortsvorgabe für neue Termine",
+        "description": "Das Feld \"Ort\" im Formular für neue Termine wird mit diesem Wert vorausgefüllt."
+      },
+      "user_change_notification_email": {
+        "name": "E-Mail-Adresse für Benachrichtigungen",
+        "description": "E-Mail Adresse, an die der Bericht über die Datenänderung gesendet wird, wenn die Daten eines Br. verändert worden sind. Mehrere E-Mail Adressen sind durch Semikolon zu trennen."
+      },
+      "default_from_email": {
+        "name": "Default-Absender-Adresse für System-Mails",
+        "description": "Absender aller E-Mails die die Anwendung versendet."
+      },
+      "technical_contact_email": {
+        "name": "Technischer Kontakt",
+        "description": "Als technischer Kontakt wird überall diese E-Mail Adresse ausgegeben."
+      },
+      "mvst_email": {
+        "name": "Kontakt-Adresse des MvSt.",
+        "description": "Kann im Impressum ausgegeben werden."
+      },
+      "zip": {
+        "name": "PLZ",
+        "description": "Wird (u.a.) im Impressum verwendet."
+      },
+      "location": {
+        "name": "Ort",
+        "description": "Wird (u.a.) im Impressum verwendet."
+      },
+      "max_db_mem_size": {
+        "name": "maximaler Datenbankspeicherplatz",
+        "description": "maximaler Speicherverbrauch in Megabyte bevor Warnung angezeigt wird."
+      },
+      "max_db_mem_size_demo_locked": "In der Demo-Umgebung nicht änderbar.",
+      "max_upload_file_size": {
+        "name": "Maximale Dateigröße beim Upload",
+        "description": "Maximale Größe (in Megabyte) für eine einzelne hochgeladene Datei. Kann die serverseitig konfigurierte Obergrenze nicht überschreiten."
+      },
+      "workingplan_footer": {
+        "name": "Footer Arbeitsplan",
+        "description": "Der hier angegebene Text wird als Footer unter den Arbeitsplan geschrieben."
+      },
+      "impressum": {
+        "name": "Impressums-Text",
+        "description": "HTML-Formatierung. E-Mail-Adressen werden dabei obfuskiert."
+      },
+      "help": {
+        "name": "Hilfe-Inhalt",
+        "description": "Wird auf der Hilfe-Seite angezeigt (verlinkt aus der Kopfzeile)."
+      },
+      "robots_txt": {
+        "name": "Inhalt der robots.txt",
+        "description": "Angaben zur Indexierung der Website für Suchmaschinen."
+      },
+      "mfa_mode": {
+        "name": "Zwei-Faktor-Authentifizierung",
+        "description": "Legt fest, ob die Zwei-Faktor-Authentifizierung optional oder für alle Mitglieder verpflichtend ist.",
+        "values": { "optional": "Optional", "mandatory": "Verpflichtend" }
+      },
+      "mfa_enforce_for_officers": {
+        "name": "Verpflichtend für Ratsmitglieder",
+        "description": "Wenn aktiviert, müssen Ratsmitglieder und höhere Rollen die Zwei-Faktor-Authentifizierung unabhängig vom allgemeinen Modus einrichten."
+      },
+      "mfa_grace_period_days": {
+        "name": "Übergangsfrist (Tage)",
+        "description": "Anzahl der Tage, die Mitgliedern nach Umstellung auf verpflichtend zur Einrichtung der Zwei-Faktor-Authentifizierung eingeräumt werden."
+      },
+      "mfa_trusted_device_days": {
+        "name": "Vertrauensdauer für Geräte (Tage)",
+        "description": "Anzahl der Tage, für die ein Gerät nach erfolgreicher Zwei-Faktor-Authentifizierung als vertrauenswürdig gilt (maximal 90)."
+      }
+    }
+  },
+  "account": {
+    "navLabel": "Mein Konto",
+    "title": "Konto",
+    "changePassword": "Passwort ändern",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "newPasswordConfirmation": "Neues Passwort bestätigen",
+    "save": "Speichern",
+    "success": "Passwort erfolgreich geändert.",
+    "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+    "profileHeader": "Profil",
+    "profileSuccess": "Profil erfolgreich aktualisiert.",
+    "manageSecurityLink": "Sicherheit verwalten"
+  },
+  "mfa": {
+    "setup": {
+      "title": "Zwei-Faktor-Authentifizierung einrichten",
+      "chooseMethod": "Wähle eine Methode für die Zwei-Faktor-Authentifizierung",
+      "authenticatorApp": "Authenticator App (TOTP)",
+      "email": "E-Mail",
+      "passkey": "Passkey",
+      "qrAlt": "QR-Code zum Scannen mit deiner Authenticator-App",
+      "codeLabel": "Code",
+      "emailSent": "Wir haben dir einen Code per E-Mail geschickt.",
+      "done": "Fertig!",
+      "continue": "Weiter zum Dashboard",
+      "passkeyFailed": "Passkey-Registrierung fehlgeschlagen."
+    },
+    "backupCodes": {
+      "warning": "Speichere diese Codes jetzt - sie sind der einzige Weg, wieder Zugriff auf dein Konto zu erhalten, falls du dein Gerät verlierst."
+    },
+    "challenge": {
+      "title": "Zwei-Faktor-Authentifizierung",
+      "method": "Methode",
+      "codeLabel": "Code",
+      "rememberDevice": "Dieses Gerät merken"
+    },
+    "method": {
+      "totp": "Authenticator App",
+      "email": "E-Mail",
+      "backup_code": "Backup-Code"
+    },
+    "dashboard": {
+      "banner": "Du hast noch keine Zwei-Faktor-Authentifizierung eingerichtet.",
+      "bannerCountdown": "Noch {{days}} Tage, um die Zwei-Faktor-Authentifizierung einzurichten - danach ist sie für dein Konto verpflichtend.",
+      "setupCta": "Jetzt einrichten"
+    },
+    "demoUnavailable": "MFA ist in der Demo-Umgebung nicht verfügbar.",
+    "security": {
+      "proofDialogTitle": "Bestätige deine Identität",
+      "methodsHeader": "Deine Methoden",
+      "remove": "Entfernen",
+      "lastMethodTooltip": "Die letzte Methode kann nicht entfernt werden, solange Zwei-Faktor-Authentifizierung verpflichtend ist.",
+      "proofFailed": "Bestätigung fehlgeschlagen. Bitte versuche es erneut.",
+      "title": "Sicherheit verwalten",
+      "backupCodesHeader": "Backup-Codes",
+      "regenerateBackupCodes": "Neue Backup-Codes erzeugen",
+      "trustedDevicesHeader": "Vertraute Geräte",
+      "noTrustedDevices": "Keine vertrauten Geräte.",
+      "unknownDevice": "Unbekanntes Gerät",
+      "revoke": "Entfernen"
+    }
+  },
+  "files": {
+    "filename": "Dateiname",
+    "roles": "Sichtbar für",
+    "size": "Größe",
+    "filetype": "Dateityp",
+    "uploadedBy": "Hochgeladen von",
+    "uploadedAt": "Hochgeladen am",
+    "downloadCount": "Downloads",
+    "info": "Info",
+    "infoTitle": "Dateiinformationen",
+    "download": "Herunterladen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "deleteConfirm": "Wirklich löschen?",
+    "save": "Speichern",
+    "noFiles": "Keine Dateien vorhanden.",
+    "filesHeading": "Dateien",
+    "dropZoneLabel": "Dateien hierher ziehen oder klicken zum Auswählen"
+  },
+  "statistics": {
+    "indexTitle": "Statistiken",
+    "forbidden": "Sie haben keine Berechtigung, diese Statistik einzusehen.",
+    "categoryMembers": "Mitglieder",
+    "categoryFiles": "Dateien",
+    "categoryMeta": "Meta",
+    "userStats": "Anmeldeaktivität",
+    "downloads": "Downloads",
+    "fileStats": "Downloads pro Datei",
+    "userFileStats": "Downloads pro Mitglied",
+    "memStats": "Speichernutzung",
+    "avgAge": "Aktuelles Durchschnittsalter",
+    "matriculationNumber": "Matrikelnummer",
+    "lastname": "Nachname",
+    "firstname": "Vorname",
+    "signInCount": "Anmeldungen",
+    "lastSignIn": "Letzte Anmeldung",
+    "signInIp": "IP-Adresse",
+    "filename": "Dateiname",
+    "downloadedBy": "Heruntergeladen von",
+    "remoteIp": "IP-Adresse",
+    "downloadedAt": "Zeitpunkt",
+    "downloadCount": "Anzahl Downloads",
+    "userCount": "Im System sind zur Zeit {{count}} Benutzer registriert.",
+    "eventCount": "Zur Zeit sind {{count}} Veranstaltungen hinterlegt.",
+    "memoryUsed": "Alle Dateien zusammen belegen zur Zeit einen Speicher von {{size}} in der Datenbank.",
+    "memoryAvailable": "Es sind noch {{size}} Datenbankspeicher verfügbar.",
+    "memoryFull": "Es ist kein Speicher mehr frei.",
+    "memoryUsedInclArchived": "Alle Dateien, inklusive der bereits archivierten Dateien, zusammen belegen zur Zeit einen Speicher von {{size}}."
+  },
+  "publicCalendar": {
+    "heading": "Öffentlicher Terminplan",
+    "noEvents": "Aktuell keine Termine.",
+    "icsSubscribe": "Diesen Kalender abonnieren (.ics)",
+    "exportPdf": "Als PDF herunterladen"
+  },
+  "publicLayout": {
+    "loginLink": "Anmelden",
+    "calendarLink": "Öffentlicher Terminplan",
+    "impressumLink": "Impressum"
+  },
+  "topNav": {
+    "helpLink": "Hilfe"
+  },
+  "notFound": {
+    "heading": "Seite nicht gefunden",
+    "body": "Die aufgerufene Seite existiert nicht oder wurde verschoben.",
+    "backToDashboard": "Zurück zum Dashboard"
+  }
+}

@@ -1,0 +1,108 @@
+/*
+ * Shared stylesheet for the static error pages (404/500/502).
+ *
+ * Design tokens copied from app/src/theme.ts's "moderne Variante" MUI theme —
+ * kept in sync manually since these files are plain static HTML served
+ * directly by nginx (this app's own nginx.conf.template AND, per the
+ * host-nginx instructions given alongside this file, the deploy host's
+ * nginx too), not part of the Vite build. If theme.ts's palette changes,
+ * update the hex values below to match.
+ *
+ * Font: the app self-hosts @fontsource-variable/inter via the Vite build
+ * (hashed asset path, not reliably referenceable from a static file outside
+ * that build), so these pages fall back to a websafe stack instead.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f8fa; /* theme.palette.background.default */
+  color: #1c1f26; /* theme.palette.text.primary */
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  padding: 24px;
+}
+
+.card {
+  background: #ffffff; /* theme.palette.background.paper */
+  border-radius: 14px; /* MuiPaper's own borderRadius override */
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 1px 3px rgba(16, 24, 40, 0.06); /* MuiPaper's own boxShadow override — shadow-only, no border */
+  width: 100%;
+  max-width: 420px;
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.logo {
+  width: 88px;
+  height: 92px;
+  margin-bottom: 16px;
+}
+
+.caption {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280; /* theme.palette.text.secondary */
+  margin: 0 0 8px;
+}
+
+.caption.error-tone {
+  color: #dc2626; /* theme.palette.error.main */
+}
+
+h1 {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #122b52; /* theme.typography.h1.color */
+  margin: 0 0 12px;
+}
+
+p {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #1c1f26;
+  margin: 0 0 20px;
+}
+
+p:last-of-type {
+  margin-bottom: 0;
+}
+
+.countdown {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 20px 0 0;
+}
+
+a.button {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 10px 20px;
+  background: #1e56b0; /* theme.palette.primary.main */
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14.5px;
+  border-radius: 10px;
+}
+
+a.button:hover {
+  background: #17408f; /* theme.palette.primary.dark */
+}

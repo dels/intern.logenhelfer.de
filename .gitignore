@@ -1,0 +1,36 @@
+docs/superpowers
+.env
+.env.deploy
+.env.*
+!.env.example
+*.bak
+tmp/
+*~
+#*
+.#*
+*#
+.DS_Store
+TODO*
+*.xml
+node_modules
+.pnpm-store/
+bin/webpack*
+.postcssrc.yml
+.babelrc
+# un-ignore our compose wrapper (ignored by some global gitignores)
+!bin/compose
+# bin/deploy-to's advisory, host-local marker of the last live-verified
+# blue/green slot (see CLAUDE.md's edge-recreate footgun bullet) - written
+# into each deploy host's checkout, never meant to be tracked
+.active-app-slot
+
+# Defensive: never track certs/keys, coverage output, or local-only Claude state
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+coverage/
+.remember/
+.claude/*.local.json
+.claude/scheduled_tasks.lock

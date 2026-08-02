@@ -1,0 +1,51 @@
+name: CI
+# Disabled: workflow_dispatch only (was push/pull_request). Re-enable by
+# restoring those triggers when CI should run automatically again.
+on:
+  workflow_dispatch:
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # version comes from package.json's packageManager field
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter app lint
+      - run: pnpm --filter app typecheck
+      - run: pnpm --filter app test
+      - run: pnpm --filter app build
+
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx --yes @stoplight/spectral-cli lint openapi/openapi.yaml
+
+  api:
+    runs-on: ubuntu-latest
+    services:
+      # POSTGRES_DB deliberately equals POSTGRES_USER - the postgres image only
+      # auto-creates a database matching POSTGRES_USER, and `prisma migrate
+      # deploy` (unlike Rails' db:prepare) never creates it itself.
+      postgres:
+        image: postgres:18.1-trixie
+        env: { POSTGRES_PASSWORD: ci, POSTGRES_USER: ci, POSTGRES_DB: ci }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      JWT_SECRET: ci-only-jwt-secret-not-for-production-use
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # version comes from package.json's packageManager field
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter api exec prisma migrate deploy
+      - run: pnpm --filter api build
+      - run: pnpm --filter api typecheck
+      - run: pnpm --filter api test

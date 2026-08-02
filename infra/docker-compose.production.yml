@@ -1,0 +1,196 @@
+services:
+  # Service key "api" matches the api/ folder; container name/port env vars
+  # below are read from .env.<env> on the deploy host.
+  api:
+    build:
+      context: ..
+      dockerfile: api/Dockerfile
+      args:
+        GIT_HASH: ${GIT_HASH:-unknown}
+    image: ${API_CONTAINER_NAME:-logenhelfer-api}:${DEPLOY_TAG:-latest}
+    container_name: ${API_CONTAINER_NAME:-logenhelfer-api}
+    restart: unless-stopped
+    # No host-published port: app's nginx (app/nginx.conf.template) reaches
+    # this over the compose network by service name ("api"), and host nginx
+    # only ever forwards to the app container (see README.md's Deployment
+    # section). Every sibling project on this host follows the same pattern
+    # (their api containers publish no host port either).
+    environment:
+      NODE_ENV: production
+      PORT: "9876"
+      DATABASE_URL: ${DB_URL:?set DB_URL in .env}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      # Found 2026-08-01 on next: bin/deploy-to's local .env.<env> already had
+      # this (auto-provisioned, pushed to the remote file correctly) but the
+      # key was still absent from every deployed container's real process
+      # env - `docker exec ... printenv MFA_ENCRYPTION_KEY` came back empty,
+      # confirmed via `docker inspect .Config.Env` too. Root cause: Compose's
+      # `--env-file` only feeds `${VAR}` substitution *inside this file* -
+      # it does not inject the .env's vars into the container directly. A
+      # var missing from this `environment:` block never reaches the
+      # container no matter how correct .env.<env> is. This line was simply
+      # never added when the MFA feature introduced the var, so every real
+      # deploy (including this feature's own Task 19 remote checkpoint) has
+      # been running with TOTP encrypt/decrypt (api/src/lib/mfaEncryption.ts)
+      # throwing "MFA_ENCRYPTION_KEY is not set" - invisible to bin/test-gate
+      # because its e2e step only runs `app`'s Playwright suite
+      # (`cd app && pnpm e2e`), never api/e2e/securityBoundaries.spec.ts's
+      # real TOTP-enrollment coverage. Verify any future change to this line
+      # via `docker inspect <container> --format '{{.Config.Env}}'` after a
+      # real deploy, not just by checking .env.<env>'s own content - the file
+      # being correct proves nothing about the container.
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?set MFA_ENCRYPTION_KEY in .env}
+      RATE_LIMIT_LOGIN_MAX: ${RATE_LIMIT_LOGIN_MAX:-10}
+      RATE_LIMIT_LOGIN_WINDOW_MS: ${RATE_LIMIT_LOGIN_WINDOW_MS:-60000}
+      MAX_UPLOAD_FILE_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB:-20}
+      MAIL_TRANSPORT: ${MAIL_TRANSPORT:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      # Keeps V8's heap ceiling under mem_limit below so Node gets a chance to
+      # GC under memory pressure instead of the kernel OOM-killing the whole
+      # container outright.
+      NODE_OPTIONS: --max-old-space-size=576
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9876/healthz || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    # cap_drop: [ALL] needs no add-back here — Node runs as the non-root
+    # `node` user (api/Dockerfile's USER node) and doesn't touch disk at
+    # runtime (uploads are in-memory, no temp files).
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: "2.0"
+
+  # Service key "app" matches the app/ folder. No longer publishes a host
+  # port — edge service (below) is now the only container publishing to the
+  # host, and app is reachable only over the compose network.
+  app:
+    build:
+      context: ..
+      dockerfile: app/Dockerfile
+      args:
+        GIT_HASH: ${GIT_HASH:-unknown}
+        VITE_IDLE_TIMEOUT_MINUTES: ${VITE_IDLE_TIMEOUT_MINUTES:-30}
+    image: ${APP_CONTAINER_NAME:-logenhelfer-app}:${DEPLOY_TAG:-latest}
+    container_name: ${APP_CONTAINER_NAME:-logenhelfer-app}
+    restart: unless-stopped
+    # bin/deploy-to never runs this service via plain `docker compose up` in
+    # production (it starts each blue/green slot with `dc run -d --name
+    # <container> -e API_UPSTREAM_HOST=... app`, see CLAUDE.md) - but compose
+    # still applies a service's own `environment:` block as the baseline for
+    # `dc run`, with `-e` flags from the command line layered on top. So this
+    # reaches each slot's app container without any bin/deploy-to changes.
+    environment:
+      NGINX_CLIENT_MAX_BODY_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB:-20}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/version.json || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    # cap_drop: [ALL] needs no add-back here — app/Dockerfile's runtime stage
+    # is nginxinc/nginx-unprivileged, which already runs fully as uid 101,
+    # no root privilege-drop step to support.
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 256m
+    cpus: "1.0"
+
+  # Always-on edge reverse proxy. Sole container publishing a host port,
+  # positioned between host nginx and the active app/api slots (for true
+  # blue-green zero-downtime deploys). On swap, the rendered nginx config is
+  # rewritten on disk and `nginx -s reload` is issued — no container restart
+  # or env var change.
+  edge:
+    # Same nginx-unprivileged rationale as app/Dockerfile's runtime stage —
+    # already listens on 8080 as uid 101, no root privilege-drop step, so
+    # cap_drop: [ALL] below needs no add-back. Also fixes the stock
+    # nginx:1.27-alpine tag being several stable releases behind (missed
+    # several real nginx CVE fixes shipped since).
+    image: nginxinc/nginx-unprivileged:1.30-alpine
+    container_name: ${EDGE_CONTAINER_NAME:-logenhelfer-edge}
+    restart: unless-stopped
+    ports:
+      # host nginx proxies (possibly via a WireGuard tunnel if the TLS host
+      # differs from this deploy host — see README's Deployment section)
+      - "${APP_LISTEN_IP:-127.0.0.1}:${APP_PORT:-9881}:8080"
+    volumes:
+      # Relative bind-mount sources resolve against THIS compose file's own
+      # directory (infra/), not the repo root or the CWD `docker compose` is
+      # invoked from — a prior `./infra/edge/...` here silently resolved to
+      # the nonexistent infra/infra/edge/nginx.conf.template, so nginx fell
+      # back to its own bundled stock template with no error (found via a
+      # live `next` deploy: `docker compose ... config edge` showed the
+      # doubled path outright). Verify with that same `config` command
+      # (inspect the resolved `source:` under `volumes:`) if this ever moves
+      # again.
+      #
+      # DIRECTORY mount, not a single-file mount — deliberate, and load-bearing
+      # for bin/deploy-to's zero-downtime template edits. Found 2026-07-28:
+      # a single-file bind mount (`./edge/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro`)
+      # is inode-pinned — `git pull` rewrites a changed file via unlink+create
+      # (a new inode), and the mount keeps serving the OLD, now-unlinked
+      # inode's content forever after, even across `nginx -s reload` (verified
+      # directly: a throwaway alpine container's single-file mount still
+      # returned the pre-edit content after the same atomic-replace git uses;
+      # a directory mount re-resolves the name on each lookup and returned the
+      # new content immediately). This is exactly why a live deploy of the
+      # nginx 413 fix (client_max_body_size) never took effect until the edge
+      # container was manually recreated. Mounting the directory instead means
+      # names inside it are re-resolved on every lookup, so a template edit
+      # takes effect on the next `envsubst && nginx -s reload` cutover like
+      # any other change — no detection logic or forced recreate needed in
+      # bin/deploy-to.
+      - ./edge:/etc/nginx/templates:ro
+    environment:
+      # Found 2026-08-01 on prod: a real, severe production outage. Something
+      # (not bin/deploy-to's own swap - that always supplies both these vars
+      # fresh via `docker exec -e ...` on every cutover, regardless of what's
+      # baked into the container - see this same repo's own CLAUDE.md on that
+      # point) caused edge-prod's *container itself* to restart, re-running
+      # its entrypoint's envsubst against THIS environment: block using
+      # whatever `docker compose up`/`--force-recreate` resolves at that
+      # moment. With the old `${ACTIVE_APP_UPSTREAM:-app}` default, an
+      # operator recreating edge without explicitly passing
+      # `ACTIVE_APP_UPSTREAM=<real-slot-name>` (there is no way to guess this
+      # correctly without already knowing it - see the marker file below)
+      # silently got the literal, never-valid container name "app" baked in,
+      # producing a "host not found in upstream 'app'" crash-loop with no
+      # actionable hint at all about what the *right* value would have been.
+      # `:?` converts that into an immediate, loud `docker compose` failure
+      # at invocation time instead - exactly the same tier as DATABASE_URL/
+      # JWT_SECRET above, and for the same reason: there is no universally
+      # safe default for this value, so failing loud beats guessing wrong.
+      # See ${DEPLOY_PATH}/.active-app-slot (written by bin/deploy-to on
+      # every successful cutover - see that script's own comment) for the
+      # value to supply during a manual recovery recreate.
+      ACTIVE_APP_UPSTREAM: ${ACTIVE_APP_UPSTREAM:?set ACTIVE_APP_UPSTREAM to the currently-active slot container name (see DEPLOY_PATH/.active-app-slot) before recreating edge by hand - there is no safe default}
+      NGINX_CLIENT_MAX_BODY_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB:-20}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/version.json || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 128m
+    cpus: "0.5"
+
+networks:
+  default:
+    enable_ipv6: true

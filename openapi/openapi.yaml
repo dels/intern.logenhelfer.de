@@ -1,0 +1,4008 @@
+openapi: 3.0.3
+info:
+  title: Logenhelfer API
+  version: 1.0.0
+  description: Backend-agnostic contract. Rails serves it today, Express later.
+paths:
+  /api/v1/health:
+    get:
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+  /api/v1/session:
+    post:
+      operationId: createSession
+      description: >-
+        In addition to the per-IP rate limit (see the shared 429 response),
+        repeated consecutive failed attempts against the same email lock
+        that email out for a period that grows with each further failure,
+        independent of source IP. A locked-out attempt returns the identical
+        401 `invalid_credentials` body as an ordinary wrong-password
+        response - this endpoint never reveals lockout state to the caller.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: >-
+            Password verified. The exact body depends on the account's MFA
+            state (see mfaLoginResult): a full login (refresh cookie set,
+            `access_token`+`user` present) when no MFA method is enrolled
+            (or the enrolled-but-unconfigured mandatory-mode grace period
+            hasn't ended, or the request carries a trusted-device cookie
+            already covering this account); `{ setup_required: true }`
+            with no cookie/tokens when MFA is mandatory, the grace period
+            has ended, and the user has no method enrolled yet; or
+            `{ mfa_pending_token }` with no cookie when a verified method
+            exists and must be challenged via
+            `/api/v1/mfa/challenge/verify` before a real session is
+            issued. The server sets a `refresh_token` cookie scoped to
+            path `/api/v1/session`, marked `HttpOnly`, `Secure` (in
+            production), `SameSite=Strict`, with a 30-day expiry, only for
+            the full-login variant. Any reimplementation of this endpoint
+            (e.g. an Express port) must reproduce this cookie contract
+            exactly, or the frontend's refresh flow will break silently.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaLoginResult' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      operationId: deleteSession
+      security: []
+      responses:
+        '204': { description: Logged out; refresh family revoked }
+  /api/v1/session/refresh:
+    post:
+      operationId: refreshSession
+      security: []
+      responses:
+        '200':
+          description: >-
+            Rotated; new access token. Reads the `refresh_token` cookie
+            (name `refresh_token`, path `/api/v1/session`, `HttpOnly`,
+            `Secure` in production, `SameSite=Strict`, 30-day TTL) and
+            re-sets it with the same attributes on rotation. This cookie
+            contract is the backend-coupled seam of the auth flow and must
+            be preserved byte-for-byte by any alternative backend
+            implementation.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionPayload' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/session/passkey/options:
+    post:
+      operationId: getPasskeyLoginOptions
+      description: >-
+        Passwordless-login step 1: mints a WebAuthn authentication challenge
+        (kept in an in-process, TTL-bounded map - see session.ts's
+        passkeyLoginChallenges) for the browser's
+        navigator.credentials.get(...) call. No account context yet -
+        `allowCredentials` is deliberately empty, letting the platform
+        authenticator pick from any resident passkey, so this endpoint alone
+        never reveals which accounts have passkeys enrolled.
+      security: []
+      responses:
+        '200':
+          description: WebAuthn authentication options for the browser
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaWebauthnAuthenticationOptions' }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/session/passkey/verify:
+    post:
+      operationId: verifyPasskeyLogin
+      description: >-
+        Passwordless-login step 2: verifies the browser's
+        navigator.credentials.get(...) assertion against the challenge
+        minted by getPasskeyLoginOptions and the stored credential's public
+        key, then issues a full session exactly like a successful
+        password login (refresh cookie set). Every failure mode (missing/
+        unknown credential, expired/reused/mismatched challenge, failed
+        cryptographic verification) returns the identical 401 body -
+        deliberately non-enumerating, matching createSession's own
+        contract - so `response` is intentionally left unconstrained here
+        rather than `required`, to avoid a contract-validation 400 acting
+        as a second, more precise oracle for a malformed vs. merely-wrong
+        assertion.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # Opaque WebAuthn AuthenticationResponseJSON from
+                # navigator.credentials.get(...) - forwarded as-is to
+                # @simplewebauthn/server's verifyAuthenticationResponse.
+                response: { type: object }
+      responses:
+        '200':
+          description: Logged in; refresh cookie set (see createSession's cookie contract)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionPayload' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/password/forgot:
+    post:
+      operationId: forgotPassword
+      description: >-
+        Always responds 200 with an empty body, whether or not `email`
+        matches a real (non-deleted, password-having) account - this
+        endpoint never reveals account existence. If it matches, a reset
+        link is emailed to that address. If it doesn't, and the
+        `notify_technical_contact_on_unknown_password_reset` AppConfig
+        toggle is enabled, the technical contact is emailed the address
+        that was entered instead.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200':
+          description: Request accepted (see description - body carries no information).
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: false }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/password/reset:
+    post:
+      operationId: resetPassword
+      description: >-
+        Consumes a single-use reset token (see `forgotPassword`) minted no
+        more than `RESET_PASSWORD_TOKEN_TTL` seconds ago (default 3600 - 60
+        min). Invalid, expired, and already-used tokens all return the same
+        422 body, non-enumerating in the same spirit as `createSession`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, new_password, new_password_confirmation]
+              properties:
+                token: { type: string }
+                new_password: { type: string }
+                new_password_confirmation: { type: string }
+      responses:
+        '200':
+          description: Password updated; all outstanding refresh-token families revoked.
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: false }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/mfa/setup/start:
+    post:
+      operationId: startMfaSetup
+      description: >-
+        Starts enrollment of one MFA method. `totp` returns a QR code /
+        otpauth URI to scan; `email` sends a one-time code to the caller's
+        own address and returns an empty body; `passkey` returns WebAuthn
+        registration options for navigator.credentials.create(...). If the
+        caller already has ANY verified MFA method, starting a `totp` or
+        `passkey` (re-)enrollment additionally requires `proof` of an
+        existing method (a fresh TOTP code or a backup code) - `email`
+        setup never requires this, since completing it already requires
+        inbox access. Requires a full (non-pending) bearer token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method]
+              properties:
+                method: { type: string, enum: [totp, email, passkey] }
+                proof:
+                  type: object
+                  description: Only required when the caller already has a verified method and method is totp or passkey.
+                  properties:
+                    method: { type: string, enum: [totp, backup_code] }
+                    code: { type: string }
+      responses:
+        '200':
+          description: >-
+            Shape depends on `method`: MfaSetupStartResult for totp
+            (otpauth_uri/qr_code_data_url) and email (empty object), or
+            MfaWebauthnRegistrationOptions for passkey.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - { $ref: '#/components/schemas/MfaSetupStartResult' }
+                  - { $ref: '#/components/schemas/MfaWebauthnRegistrationOptions' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/mfa/setup/totp/verify:
+    post:
+      operationId: verifyMfaTotpSetup
+      description: >-
+        Confirms a pending TOTP enrollment (from setup/start) with a live
+        code. On success, backup codes are generated if the caller doesn't
+        already have any (see ensureBackupCodesExist) - `backup_codes` is
+        empty on this response when the caller already had codes from an
+        earlier method's enrollment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string }
+      responses:
+        '200':
+          description: TOTP verified and enabled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaSetupVerifyResult' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/mfa/setup/email/verify:
+    post:
+      operationId: verifyMfaEmailSetup
+      description: Confirms a pending email-OTP enrollment (from setup/start) with the code just emailed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string }
+      responses:
+        '200':
+          description: Email OTP verified and enabled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaSetupVerifyResult' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/mfa/setup/passkey/verify:
+    post:
+      operationId: verifyMfaPasskeySetup
+      description: Confirms a pending passkey registration (challenge from setup/start) with the browser's navigator.credentials.create(...) response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [response]
+              properties:
+                name: { type: string, description: 'User-facing label for the credential; defaults to "Passkey" server-side.' }
+                # Opaque WebAuthn RegistrationResponseJSON, forwarded as-is
+                # to @simplewebauthn/server's verifyRegistrationResponse.
+                response: { type: object }
+      responses:
+        '200':
+          description: Passkey registered and enabled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaSetupVerifyResult' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/mfa/status:
+    get:
+      operationId: getMfaStatus
+      description: Lists the caller's own currently-verified MFA methods.
+      responses:
+        '200':
+          description: Verified methods for the current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaMethodsList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/mfa/backup-codes/regenerate:
+    post:
+      operationId: regenerateMfaBackupCodes
+      description: >-
+        Invalidates the caller's existing backup codes and issues a fresh
+        set. Requires proof of an existing method - a fresh TOTP code, a
+        backup code, or (unlike setup/start's proof gate) a login-purpose-
+        adjacent email OTP, since regenerate's threat model is griefing an
+        already-verified account, not account persistence.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method: { type: string, enum: [totp, backup_code, email] }
+                code: { type: string }
+      responses:
+        '200':
+          description: New backup codes issued; old ones invalidated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaSetupVerifyResult' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/mfa/methods/passkey/{credentialId}:
+    parameters:
+      - name: credentialId
+        in: path
+        required: true
+        schema: { type: string }
+    delete:
+      operationId: removeMfaPasskeyCredential
+      description: >-
+        Removes one of the caller's own passkey credentials by its WebAuthn
+        credential id. 404s if the credential doesn't exist or belongs to
+        another user (not distinguished, to avoid leaking existence). Same
+        proof + last-method-mandatory-block rules as removeMfaMethod.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [proof]
+              properties:
+                proof:
+                  type: object
+                  required: [method, code]
+                  properties:
+                    method: { type: string, enum: [totp, backup_code] }
+                    code: { type: string }
+      responses:
+        '204': { description: Passkey credential removed }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/mfa/methods/{type}:
+    parameters:
+      - name: type
+        in: path
+        required: true
+        schema: { type: string, enum: [totp, email] }
+    delete:
+      operationId: removeMfaMethod
+      description: >-
+        Removes the caller's own totp or email MFA method. Requires proof of
+        an existing verified method (a fresh TOTP code or a backup code),
+        via the same verifyExistingMfaProof gate setup/start uses - removal
+        is at least as security-sensitive as adding a method. Rejected with
+        422 if this would leave the caller with zero methods while mandatory
+        MFA's grace period has already passed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [proof]
+              properties:
+                proof:
+                  type: object
+                  required: [method, code]
+                  properties:
+                    method: { type: string, enum: [totp, backup_code] }
+                    code: { type: string }
+      responses:
+        '204': { description: Method removed }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/mfa/passkeys:
+    get:
+      operationId: listMfaPasskeyCredentials
+      description: >-
+        Lists the caller's own enrolled passkey credentials. Unlike totp/email
+        (one row per user), a user may have more than one passkey, so this is
+        a list rather than a boolean flag on MfaMethodsList.
+      responses:
+        '200':
+          description: Enrolled passkey credentials for the current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaPasskeyCredentialsList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/mfa/trusted-devices:
+    get:
+      operationId: listMfaTrustedDevices
+      description: Lists the caller's own remembered ("skip MFA challenge on login") devices.
+      responses:
+        '200':
+          description: Trusted devices for the current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaTrustedDevicesList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/mfa/trusted-devices/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    delete:
+      operationId: revokeMfaTrustedDevice
+      description: Revokes one of the caller's own trusted devices, forcing a full MFA challenge on that device's next login.
+      responses:
+        '204': { description: Trusted device revoked }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/mfa/challenge/methods:
+    get:
+      operationId: getMfaChallengeMethods
+      description: >-
+        Lists the methods available to satisfy an in-progress login
+        challenge. Requires the `mfa_pending_token` from createSession's
+        200 response (a distinct, narrower-scoped bearer token type - see
+        mfaChallenge.ts's requireMfaPendingToken), not a full access token.
+      responses:
+        '200':
+          description: Verified methods available to satisfy this challenge
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaMethodsList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/mfa/challenge/verify:
+    post:
+      operationId: verifyMfaChallenge
+      description: >-
+        Completes an in-progress login challenge (see getMfaChallengeMethods)
+        with a code for one verified method, issuing a full session on
+        success (refresh cookie set) - identical cookie contract to
+        createSession. Every failure mode returns the identical 401 body,
+        matching createSession's own non-enumerating contract, so `method`/
+        `code` are intentionally left unconstrained here rather than
+        `required`. Optionally marks the current device as trusted
+        (`remember_device: true`), skipping this challenge on that device's
+        future logins for a configurable number of days.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method: { type: string, enum: [totp, email, backup_code] }
+                code: { type: string }
+                remember_device: { type: boolean }
+      responses:
+        '200':
+          description: Logged in; refresh cookie (and, if requested, trusted-device cookie) set
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionPayload' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/me:
+    get:
+      operationId: getMe
+      responses:
+        '200':
+          description: Current user and abilities
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [user, abilities, mfa_setup_required]
+                properties:
+                  user: { $ref: '#/components/schemas/MeUser' }
+                  abilities:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
+                  mfa_setup_required: { type: boolean }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/v1/events:
+    get:
+      operationId: listEvents
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: date }
+        - name: from
+          in: query
+          description: Inclusive lower bound on event date (YYYY-MM-DD).
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          description: Inclusive upper bound on event date (YYYY-MM-DD).
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Paginated event list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Event' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/events/{uuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getEvent
+      responses:
+        '200':
+          description: Event with participants
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventWithParticipants' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Event' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteEvent
+      responses:
+        '204': { description: Soft-deleted }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/events/{uuid}/participants:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: registerEventParticipant
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                user_uuid: { type: string }
+                festive_board: { type: boolean }
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventParticipant' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/events/{uuid}/participants/{userUuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+      - name: userUuid
+        in: path
+        required: true
+        schema: { type: string }
+    delete:
+      operationId: removeEventParticipant
+      responses:
+        '204': { description: Removed }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/events/record_export:
+    post:
+      operationId: eventsRecordExport
+      summary: Record a FileDownload audit row for a PDF-equivalent export
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind]
+              properties:
+                kind: { type: string, enum: [workingplan_internal] }
+      responses:
+        '204':
+          description: Recorded
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/events/defaults:
+    get:
+      operationId: getEventDefaults
+      responses:
+        '200':
+          description: Defaults for creating a new event
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventDefaults' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/external_events:
+    get:
+      operationId: listExternalEvents
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: from
+          in: query
+          description: Inclusive lower bound on event date (YYYY-MM-DD). When omitted, defaults to "yesterday onward".
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          description: Inclusive upper bound on event date (YYYY-MM-DD).
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Paginated external event list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createExternalEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExternalEventInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEvent' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/external_events/defaults:
+    get:
+      operationId: getExternalEventDefaults
+      responses:
+        '200':
+          description: Defaults for creating a new external event
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventDefaults' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/external_events/{uuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getExternalEvent
+      responses:
+        '200':
+          description: External event with participants
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventWithParticipants' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateExternalEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExternalEventInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEvent' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteExternalEvent
+      responses:
+        '204': { description: Soft-deleted }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/external_events/{uuid}/participants:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: registerExternalEventParticipant
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                user_uuid: { type: string }
+                festive_board: { type: boolean }
+      responses:
+        '201':
+          description: Registered
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventParticipant' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/external_events/{uuid}/participants/{userUuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+      - name: userUuid
+        in: path
+        required: true
+        schema: { type: string }
+    delete:
+      operationId: removeExternalEventParticipant
+      responses:
+        '204': { description: Removed }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/external_events/{uuid}/participants/{userUuid}/confirm:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+      - name: userUuid
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: confirmExternalEventParticipant
+      responses:
+        '200':
+          description: Confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventParticipant' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/external_event_ics_sources:
+    get:
+      operationId: listExternalEventIcsSources
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: name }
+      responses:
+        '200':
+          description: Paginated ICS source list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventIcsSourceList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createExternalEventIcsSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExternalEventIcsSourceInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventIcsSource' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/external_event_ics_sources/options:
+    get:
+      operationId: listExternalEventIcsSourceOptions
+      description: >-
+        Members-readable {uuid, name} list (no url) for the calendar filter
+        dropdown - gated on `index ExternalEvent`, which every authenticated
+        user holds, unlike GET /external_event_ics_sources above which is
+        gated on `manage ExternalEvent`.
+      responses:
+        '200':
+          description: Unpaginated list of non-deleted ICS source options
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventIcsSourceOptionList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/external_event_ics_sources/{uuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      operationId: updateExternalEventIcsSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExternalEventIcsSourceUpdate' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventIcsSource' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteExternalEventIcsSource
+      responses:
+        '204': { description: Soft-deleted }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/external_event_ics_sources/{uuid}/sync:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      operationId: syncExternalEventIcsSourceNow
+      responses:
+        '200':
+          description: Sync result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalEventIcsSyncResult' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/members:
+    get:
+      operationId: listMembers
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: lastname }
+        - name: search
+          in: query
+          allowEmptyValue: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Paginated, admin-visibility-filtered member list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemberList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemberInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/members/{uuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getMember
+      responses:
+        '200':
+          description: Member detail with addresses and roles
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemberInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteMember
+      responses:
+        '204': { description: Soft-deleted }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/members/{uuid}/impersonate:
+    post:
+      operationId: impersonateMember
+      summary: Issue an access token for the target member and log the impersonation
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Impersonation token issued; audit row recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionPayload' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/members/{uuid}/mfa/reset:
+    post:
+      operationId: resetMemberMfa
+      summary: Admin-driven MFA reset - wipes every enrolled method, revokes sessions
+      description: >-
+        Deletes all of the target's MFA credential rows (TOTP, email,
+        passkey, backup codes, trusted devices), mints (but does not email)
+        a password-reset token, revokes every outstanding refresh-token
+        family for the target, and writes a server-side mfa_reset_events
+        audit row attributing the reset to the calling admin. Rejected
+        outright - before any target lookup - whenever the caller is
+        impersonating (regardless of target), and whenever the target is
+        the caller's own account, closing two distinct ways a hijacked
+        Admin session could otherwise wipe its own or its real actor's MFA
+        under cover of this endpoint (see members.ts's own doc comment on
+        this handler for the full threat model).
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: MFA reset; refresh-token families revoked }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/members/phone_list:
+    get:
+      operationId: getMemberPhoneList
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: lastname }
+      responses:
+        '200':
+          description: Members' contact numbers, sorted by lastname/firstname
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PhoneList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/members/birthday_list:
+    get:
+      operationId: getMemberBirthdayList
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: date_of_birth }
+      responses:
+        '200':
+          description: Members' birthdays and degree-anniversary jubilees, sorted by soonest-upcoming birthday by default
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BirthdayList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/members/members_of_council:
+    get:
+      operationId: getMembersOfCouncil
+      responses:
+        '200':
+          description: Council/officer positions with a current holder, ordered by role ordering_number
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CouncilList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/members/export_data:
+    get:
+      operationId: membersExportData
+      summary: Full member directory data (for client-side PDF export)
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        '200':
+          description: Members' full export data, sorted by lastname/firstname/matriculation_number
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExportData' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/members/csv_export_data:
+    get:
+      operationId: membersCsvExportData
+      summary: Member data for client-side CSV/vCard export
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        '200':
+          description: Members' CSV/vCard export data, sorted by lastname/firstname/matriculation_number
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CsvExportData' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/members/record_export:
+    post:
+      operationId: membersRecordExport
+      summary: Record a FileDownload audit row for a PDF-equivalent export
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind]
+              properties:
+                kind: { type: string, enum: [members_list, birthday_list, phone_list] }
+      responses:
+        '204':
+          description: Recorded
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/members/next_matriculation_number:
+    get:
+      operationId: getNextMatriculationNumber
+      summary: Suggested next matriculation number (max existing + 1), for prefilling the create-member form
+      responses:
+        '200':
+          description: Suggested next matriculation number
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NextMatriculationNumber' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/seekers:
+    get:
+      operationId: listSeekers
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: lastname }
+        - name: filter
+          in: query
+          schema: { type: string, enum: [active, accepted, inactive, declined], default: active }
+      responses:
+        '200':
+          description: Paginated seeker list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SeekerList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createSeeker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SeekerInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Seeker' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/seekers/names:
+    get:
+      operationId: listSeekerNames
+      responses:
+        '200':
+          description: >-
+            Names-only list of active seekers - no status/contact/address/notes -
+            gated by the show_seeker_names_to_brothers AppConfig flag. Only
+            available to callers who don't already hold full Seeker read
+            access (Admin/WorshipfulMaster/MemberOfCouncil); those roles use
+            GET /api/v1/seekers instead.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SeekerNameList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/seekers/{uuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getSeeker
+      responses:
+        '200':
+          description: Seeker detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Seeker' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateSeeker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SeekerInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Seeker' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteSeeker
+      responses:
+        '204': { description: Soft-deleted }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/roles:
+    get:
+      operationId: listRoles
+      parameters:
+        - name: scope
+          in: query
+          schema: { type: string, enum: [positions, administrational] }
+      responses:
+        '200':
+          description: All roles (small, unpaginated reference list), or only officer-eligible positions when scope=positions
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RoleList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/roles/{id}:
+    patch:
+      operationId: updateRole
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties:
+                email: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RoleSummary' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/categories:
+    get:
+      operationId: listCategories
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: name }
+      responses:
+        '200':
+          description: Paginated category list, filtered to categories visible to the caller
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CategoryList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/categories/{slug}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getCategory
+      responses:
+        '200':
+          description: Category detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CategoryInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteCategory
+      responses:
+        '204': { description: Soft-deleted (cascades to its directories) }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/directories:
+    get:
+      operationId: listDirectories
+      parameters:
+        - name: category_slug
+          in: query
+          required: true
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        '200':
+          description: Paginated directory list for one category, filtered to directories visible to the caller
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DirectoryList' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createDirectory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DirectoryInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Directory' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: category_slug did not match any category
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/directories/{slug}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getDirectory
+      responses:
+        '200':
+          description: Directory detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Directory' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateDirectory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DirectoryInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Directory' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteDirectory
+      responses:
+        '204': { description: Soft-deleted }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/attached_files:
+    get:
+      operationId: listAttachedFiles
+      parameters:
+        - name: directory_slug
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Files in a directory the caller is permitted to see
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttachedFileList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createAttachedFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, directory_slug]
+              properties:
+                file: { type: string, format: binary }
+                directory_slug: { type: string }
+                # Deliberately untyped (no `type: array`), unlike the PATCH
+                # endpoint's JSON-body role_ids below. FileForm/api.ts sends
+                # selected roles as repeated `role_ids[]` multipart fields;
+                # multer (via append-field) turns even a single occurrence
+                # into a one-element array. express-openapi-validator's own
+                # multipart handling (openapi.request.validator.js's
+                # multipartNested) JSON.parses any multipart field whose
+                # declared type is array/object - which for a one-element
+                # array coerces to its string join first (['5'] -> '5'), then
+                # parses that as the bare number 5, silently replacing the
+                # array with a scalar and failing "role_ids must be array"
+                # for exactly one selected role. Leaving this untyped skips
+                # that coercion entirely; attachedFiles.ts's
+                # extractMultipartRequest already validates/coerces whatever
+                # shape multer hands it (array of numeric strings) by hand.
+                role_ids: {}
+      responses:
+        '201':
+          description: Uploaded file
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttachedFile' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/attached_files/{uuid}:
+    get:
+      operationId: getAttachedFile
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: A single file's metadata
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttachedFile' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateAttachedFile
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                filename: { type: string }
+                role_ids:
+                  type: array
+                  items: { type: integer }
+      responses:
+        '200':
+          description: Updated file metadata
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttachedFile' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteAttachedFile
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Soft-deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/attached_files/{uuid}/download:
+    get:
+      operationId: downloadAttachedFile
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The file's raw bytes
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/districts:
+    get:
+      operationId: listDistricts
+      responses:
+        '200':
+          description: All districts (small, unpaginated reference list)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DistrictList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createDistrict
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DistrictInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DistrictSummary' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/districts/{id}:
+    patch:
+      operationId: updateDistrict
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DistrictInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DistrictSummary' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteDistrict
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Soft-deleted (cascades to its Lodges) }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/academic_titles:
+    get:
+      operationId: listAcademicTitles
+      responses:
+        '200':
+          description: All academic titles (small, unpaginated reference list)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AcademicTitleList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createAcademicTitle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AcademicTitleInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AcademicTitleSummary' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/academic_titles/{id}:
+    patch:
+      operationId: updateAcademicTitle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AcademicTitleInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AcademicTitleSummary' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteAcademicTitle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Cannot delete a title still assigned to users
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error, detail]
+                properties:
+                  error: { type: string }
+                  detail: { type: string }
+  /api/v1/lodges:
+    get:
+      operationId: listLodges
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: name }
+      responses:
+        '200':
+          description: Paginated lodge list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LodgeList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createLodge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LodgeInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Lodge' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/lodges/{slug}:
+    parameters:
+      - name: slug
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getLodge
+      responses:
+        '200':
+          description: Lodge detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Lodge' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateLodge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LodgeInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Lodge' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteLodge
+      responses:
+        '204': { description: Soft-deleted (cascades to its officers) }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/officers:
+    get:
+      operationId: listOfficers
+      parameters:
+        - name: lodge_slug
+          in: query
+          required: true
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+      responses:
+        '200':
+          description: Paginated officer list for one lodge
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OfficerList' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createOfficer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OfficerInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Officer' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: lodge_slug did not match any lodge
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/officers/{uuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getOfficer
+      responses:
+        '200':
+          description: Officer detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Officer' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateOfficer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OfficerInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Officer' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteOfficer
+      responses:
+        '204': { description: Soft-deleted }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/announcements:
+    get:
+      operationId: listAnnouncements
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: '-created_at' }
+      responses:
+        '200':
+          description: Paginated announcement list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnnouncementList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createAnnouncement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnnouncementInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Announcement' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/announcements/{uuid}:
+    parameters:
+      - name: uuid
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      operationId: getAnnouncement
+      responses:
+        '200':
+          description: Announcement detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Announcement' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateAnnouncement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnnouncementInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Announcement' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: deleteAnnouncement
+      responses:
+        '204': { description: Soft-deleted }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/statistics/user_stats:
+    get:
+      operationId: getUserStats
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: '-current_sign_in_at' }
+      responses:
+        '200':
+          description: Average member age plus a paginated login-activity table
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserStatsList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/statistics/downloads:
+    get:
+      operationId: getDownloadStats
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: '-created_at' }
+      responses:
+        '200':
+          description: Paginated file-download log
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DownloadList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/statistics/file_stats:
+    get:
+      operationId: getFileStats
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: '-count' }
+      responses:
+        '200':
+          description: Download count per file, most-downloaded first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FileStatsList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/statistics/user_file_stats:
+    get:
+      operationId: getUserFileStats
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: per_page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+        - name: sort
+          in: query
+          schema: { type: string, default: '-count' }
+      responses:
+        '200':
+          description: Download count per user, most downloads first
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserFileStatsList' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/statistics/mem_stats:
+    get:
+      operationId: getMemStats
+      responses:
+        '200':
+          description: User/event counts and storage usage snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemStats' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/me/announcement_subscription:
+    patch:
+      operationId: updateAnnouncementSubscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AnnouncementSubscriptionInput' }
+      responses:
+        '200':
+          description: Current user and abilities, with the updated subscription state
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [user, abilities, mfa_setup_required]
+                properties:
+                  user: { $ref: '#/components/schemas/MeUser' }
+                  abilities:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
+                  mfa_setup_required: { type: boolean }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/me/gdpr_acceptance:
+    patch:
+      operationId: acceptGdpr
+      responses:
+        '200':
+          description: Current user and abilities, with gdpr_accepted set to true
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [user, abilities, mfa_setup_required]
+                properties:
+                  user: { $ref: '#/components/schemas/MeUser' }
+                  abilities:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
+                  mfa_setup_required: { type: boolean }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/me/password:
+    patch:
+      operationId: updateMyPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [current_password, new_password, new_password_confirmation]
+              properties:
+                current_password: { type: string }
+                new_password: { type: string }
+                new_password_confirmation: { type: string }
+      responses:
+        '200':
+          description: Current user and abilities, after the password change
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [user, abilities, mfa_setup_required]
+                properties:
+                  user: { $ref: '#/components/schemas/MeUser' }
+                  abilities:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
+                  mfa_setup_required: { type: boolean }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Wrong current password or invalid new password
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error, detail]
+                properties:
+                  error: { type: string }
+                  detail: { type: string }
+  /api/v1/public/workingplan:
+    get:
+      operationId: getPublicWorkingplan
+      security: []
+      responses:
+        '200':
+          description: Upcoming public events within the configured window
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicWorkingplan' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/public/workingplan.ics:
+    get:
+      operationId: getPublicWorkingplanIcs
+      security: []
+      responses:
+        '200':
+          description: iCalendar (.ics) feed of upcoming public events
+          content:
+            text/calendar:
+              schema: { type: string }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/public/workingplan.pdf:
+    get:
+      operationId: getPublicWorkingplanPdf
+      security: []
+      responses:
+        '200':
+          description: PDF export of upcoming public events
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/public/landing:
+    get:
+      operationId: getPublicLanding
+      security: []
+      responses:
+        '200':
+          description: Whether anonymous visitors should land on the public calendar or the login page
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicLandingConfig' }
+  /api/v1/public/impressum:
+    get:
+      operationId: getPublicImpressum
+      security: []
+      responses:
+        '200':
+          description: Fully admin-configurable impressum content, rendered server-side
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicImpressum' }
+  /api/v1/public/help:
+    get:
+      operationId: getPublicHelp
+      security: []
+      responses:
+        '200':
+          description: Fully admin-configurable help content, rendered server-side
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicHelp' }
+  /api/v1/public/demo-accounts:
+    get:
+      operationId: getPublicDemoAccounts
+      security: []
+      responses:
+        '200':
+          description: Every seeded demo login (email + role), only present when this environment is running in demo mode
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DemoAccountsList' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/app_config:
+    get:
+      operationId: getAppConfig
+      responses:
+        '200':
+          description: Every known AppConfig setting and its current value
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppConfigValues' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      operationId: updateAppConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppConfigValues' }
+      responses:
+        '200':
+          description: The full, updated set of AppConfig settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AppConfigValues' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: { type: string }
+    BadRequest:
+      description: Malformed or missing request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, detail]
+            properties:
+              error: { type: string }
+              detail: { type: string }
+    Forbidden:
+      description: Authenticated but not permitted
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: { type: string }
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: { type: string }
+    NotFound:
+      description: No record with that identifier
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error: { type: string }
+    UnprocessableEntity:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, detail]
+            properties:
+              error: { type: string }
+              detail: { type: string }
+  schemas:
+    User:
+      type: object
+      additionalProperties: false
+      required: [id, email, firstname, lastname, subscribed_to_announcements, gdpr_accepted]
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        firstname: { type: string, nullable: true }
+        lastname: { type: string, nullable: true }
+        subscribed_to_announcements: { type: boolean }
+        gdpr_accepted: { type: boolean }
+    # Flattened rather than `allOf: [User, {...}]` (same reasoning as
+    # Member/Event's own "flattened, not allOf" comments elsewhere in this
+    # file) - only the /api/v1/me family of endpoints (getMe,
+    # updateAnnouncementSubscription, acceptGdpr, updateMyPassword) returns
+    # `uuid`, since only those are backed by me.ts's `authJsonFor`, which
+    # loads the full `users` row. `SessionPayload.user` (session.ts's login
+    # response) deliberately keeps using the plain `User` schema above - its
+    # own `authJsonFor` doesn't return `uuid`, and session.ts is out of this
+    # task's file boundary, so `User` itself is left unchanged to avoid
+    # breaking that contract.
+    MeUser:
+      type: object
+      additionalProperties: false
+      required: [id, uuid, email, firstname, lastname, subscribed_to_announcements, gdpr_accepted]
+      properties:
+        id: { type: integer }
+        uuid: { type: string }
+        email: { type: string }
+        firstname: { type: string, nullable: true }
+        lastname: { type: string, nullable: true }
+        subscribed_to_announcements: { type: boolean }
+        gdpr_accepted: { type: boolean }
+    SessionPayload:
+      type: object
+      additionalProperties: false
+      required: [access_token, user]
+      properties:
+        access_token: { type: string }
+        user: { $ref: '#/components/schemas/User' }
+    MfaMethodsList:
+      type: object
+      additionalProperties: false
+      required: [methods, mode, grace_period_ends_at]
+      properties:
+        methods:
+          type: array
+          items: { type: string, enum: [totp, email, passkey] }
+        mode: { type: string, enum: [optional, mandatory] }
+        grace_period_ends_at: { type: string, format: date-time, nullable: true }
+    MfaSetupStartResult:
+      type: object
+      additionalProperties: false
+      properties:
+        otpauth_uri: { type: string }
+        qr_code_data_url: { type: string }
+    # Raw @simplewebauthn/server `generateRegistrationOptions()` output
+    # (POST /mfa/setup/start with method=passkey - see mfaPasskeys.ts's
+    # buildRegistrationOptions), passed straight through to the browser's
+    # navigator.credentials.create(...) call unmodified. Deliberately NOT
+    # `additionalProperties: false` like every other schema in this file -
+    # this shape is owned by the @simplewebauthn/server library, not this
+    # API, and a future library upgrade adding a field (it already added
+    # `hints`/`attestationFormats` across versions) must not break contract
+    # validation on a field this API never reads or writes.
+    MfaWebauthnRegistrationOptions:
+      type: object
+      required: [challenge, rp, user, pubKeyCredParams]
+      properties:
+        challenge: { type: string }
+        rp:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+        user:
+          type: object
+          properties:
+            id: { type: string }
+            name: { type: string }
+            displayName: { type: string }
+        pubKeyCredParams:
+          type: array
+          items:
+            type: object
+            properties:
+              alg: { type: integer }
+              type: { type: string }
+        timeout: { type: integer }
+        attestation: { type: string }
+        excludeCredentials:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              type: { type: string }
+              transports:
+                type: array
+                items: { type: string }
+        authenticatorSelection:
+          type: object
+          properties:
+            residentKey: { type: string }
+            requireResidentKey: { type: boolean }
+            userVerification: { type: string }
+            authenticatorAttachment: { type: string }
+        extensions: { type: object }
+        hints:
+          type: array
+          items: { type: string }
+    # Raw @simplewebauthn/server `generateAuthenticationOptions()` output
+    # (POST /session/passkey/options - see mfaPasskeys.ts's
+    # buildAuthenticationOptions). Same "not additionalProperties: false"
+    # reasoning as MfaWebauthnRegistrationOptions above.
+    MfaWebauthnAuthenticationOptions:
+      type: object
+      required: [challenge, allowCredentials]
+      properties:
+        challenge: { type: string }
+        rpId: { type: string }
+        allowCredentials:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              type: { type: string }
+              transports:
+                type: array
+                items: { type: string }
+        timeout: { type: integer }
+        userVerification: { type: string }
+        extensions: { type: object }
+    MfaSetupVerifyResult:
+      type: object
+      additionalProperties: false
+      required: [backup_codes]
+      properties:
+        backup_codes:
+          type: array
+          items: { type: string }
+    MfaTrustedDevice:
+      type: object
+      additionalProperties: false
+      required: [id, created_at, expires_at]
+      properties:
+        id: { type: integer }
+        user_agent: { type: string, nullable: true }
+        last_ip: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+    MfaTrustedDevicesList:
+      type: object
+      additionalProperties: false
+      required: [devices]
+      properties:
+        devices:
+          type: array
+          items: { $ref: '#/components/schemas/MfaTrustedDevice' }
+    MfaPasskeyCredentialsList:
+      type: object
+      additionalProperties: false
+      required: [credentials]
+      properties:
+        credentials:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [credential_id, name, created_at, last_used_at]
+            properties:
+              credential_id: { type: string }
+              name: { type: string }
+              created_at: { type: string, format: date-time }
+              last_used_at: { type: string, format: date-time, nullable: true }
+    MfaLoginResult:
+      type: object
+      additionalProperties: false
+      properties:
+        mfa_pending_token: { type: string }
+        setup_required: { type: boolean }
+        access_token: { type: string }
+        user: { $ref: '#/components/schemas/User' }
+    Event:
+      type: object
+      additionalProperties: false
+      required: [uuid, title, date, whole_day, location, created_by_id, created_at, updated_at]
+      properties:
+        uuid: { type: string }
+        title: { type: string }
+        date: { type: string, format: date }
+        time: { type: string, nullable: true, example: '19:00' }
+        end_time: { type: string, nullable: true, example: '22:00' }
+        whole_day: { type: boolean }
+        location: { type: string, nullable: true }
+        public_description: { type: string, nullable: true }
+        private_description: { type: string, nullable: true }
+        created_by_id: { type: integer }
+        updated_by_id: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    EventParticipantSummary:
+      type: object
+      additionalProperties: false
+      required: [uuid, fullname]
+      properties:
+        uuid: { type: string }
+        fullname: { type: string }
+    EventParticipant:
+      # Distinct from EventParticipantSummary (a different, read-only
+      # {uuid, fullname} shape embedded in EventWithParticipants) - this is
+      # the write-route response for registerEventParticipant, keyed on
+      # user_uuid and with no subscription_confirmed (internal events have
+      # no confirm concept, unlike ExternalEventParticipant).
+      type: object
+      additionalProperties: false
+      required: [user_uuid, fullname, festive_board]
+      properties:
+        user_uuid: { type: string }
+        fullname: { type: string }
+        festive_board: { type: boolean }
+    EventWithParticipants:
+      # Flattened rather than `allOf: [Event, {participants}]` - openapi_parser does
+      # not enforce a composed schema's top-level `additionalProperties: false`, so
+      # an allOf here would silently stop catching a stray top-level field.
+      type: object
+      additionalProperties: false
+      required: [uuid, title, date, whole_day, location, created_by_id, created_at, updated_at, participants]
+      properties:
+        uuid: { type: string }
+        title: { type: string }
+        date: { type: string, format: date }
+        time: { type: string, nullable: true, example: '19:00' }
+        end_time: { type: string, nullable: true, example: '22:00' }
+        whole_day: { type: boolean }
+        location: { type: string, nullable: true }
+        public_description: { type: string, nullable: true }
+        private_description: { type: string, nullable: true }
+        created_by_id: { type: integer }
+        updated_by_id: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        participants:
+          type: array
+          items: { $ref: '#/components/schemas/EventParticipantSummary' }
+    EventList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/Event' }
+        row_count: { type: integer }
+    PublicEventSummary:
+      type: object
+      additionalProperties: false
+      required: [title, date, whole_day]
+      properties:
+        title: { type: string }
+        location: { type: string, nullable: true }
+        public_description: { type: string, nullable: true }
+        date: { type: string, format: date }
+        whole_day: { type: boolean }
+        time: { type: string, nullable: true }
+    PublicWorkingplan:
+      type: object
+      additionalProperties: false
+      required: [from, to, rows]
+      properties:
+        from: { type: string, format: date }
+        to: { type: string, format: date }
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/PublicEventSummary' }
+    PublicLandingConfig:
+      type: object
+      additionalProperties: false
+      required: [calendar_as_landing_page, lodge, language]
+      properties:
+        calendar_as_landing_page: { type: boolean }
+        lodge: { type: string }
+        language: { type: string }
+    HealthStatus:
+      type: object
+      additionalProperties: false
+      required: [status, demo]
+      properties:
+        status: { type: string, enum: [ok] }
+        revision: { type: string, nullable: true }
+        demo: { type: boolean }
+    PublicImpressum:
+      type: object
+      additionalProperties: false
+      required: [html]
+      properties:
+        html: { type: string }
+    PublicHelp:
+      type: object
+      additionalProperties: false
+      required: [html]
+      properties:
+        html: { type: string }
+    DemoAccountsList:
+      type: object
+      additionalProperties: false
+      required: [accounts]
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [email, role]
+            properties:
+              email: { type: string }
+              role: { type: string }
+    EventInput:
+      type: object
+      additionalProperties: false
+      required: [title, date]
+      properties:
+        title: { type: string }
+        date: { type: string, format: date }
+        time: { type: string, nullable: true }
+        end_time: { type: string, nullable: true }
+        whole_day: { type: boolean }
+        location: { type: string, nullable: true }
+        public_description: { type: string, nullable: true }
+        private_description: { type: string, nullable: true }
+    EventDefaults:
+      type: object
+      additionalProperties: false
+      required: [location, duration_minutes]
+      properties:
+        location: { type: string, nullable: true }
+        duration_minutes: { type: integer }
+    ExternalEventParticipant:
+      type: object
+      additionalProperties: false
+      required: [user_uuid, fullname, festive_board, subscription_confirmed]
+      properties:
+        user_uuid: { type: string }
+        fullname: { type: string }
+        festive_board: { type: boolean }
+        subscription_confirmed: { type: boolean }
+    ExternalEvent:
+      type: object
+      additionalProperties: false
+      required: [uuid, title, host, location, date, created_by_id, updated_by_id, created_at, updated_at, ics_source_id, ics_source_uuid]
+      properties:
+        uuid: { type: string }
+        title: { type: string }
+        host: { type: string, nullable: true }
+        location: { type: string }
+        description: { type: string, nullable: true }
+        date: { type: string, format: date }
+        time: { type: string, nullable: true, example: '19:00' }
+        end_time: { type: string, nullable: true, example: '22:00' }
+        ics_source_id: { type: integer, nullable: true }
+        ics_source_uuid: { type: string, nullable: true, description: 'Resolved from ics_source_id — the public identifier of the ExternalEventIcsSource this event was synced from, or null for a manually-created event.' }
+        created_by_id: { type: integer }
+        updated_by_id: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ExternalEventWithParticipants:
+      type: object
+      additionalProperties: false
+      required: [uuid, title, host, location, date, created_by_id, updated_by_id, created_at, updated_at, ics_source_id, ics_source_uuid, participants]
+      properties:
+        uuid: { type: string }
+        title: { type: string }
+        host: { type: string, nullable: true }
+        location: { type: string }
+        description: { type: string, nullable: true }
+        date: { type: string, format: date }
+        time: { type: string, nullable: true, example: '19:00' }
+        end_time: { type: string, nullable: true, example: '22:00' }
+        ics_source_id: { type: integer, nullable: true }
+        ics_source_uuid: { type: string, nullable: true, description: 'Resolved from ics_source_id — the public identifier of the ExternalEventIcsSource this event was synced from, or null for a manually-created event.' }
+        created_by_id: { type: integer }
+        updated_by_id: { type: integer, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        participants:
+          type: array
+          items: { $ref: '#/components/schemas/ExternalEventParticipant' }
+    ExternalEventList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/ExternalEvent' }
+        row_count: { type: integer }
+    ExternalEventInput:
+      type: object
+      additionalProperties: false
+      properties:
+        title: { type: string }
+        host: { type: string }
+        location: { type: string }
+        description: { type: string, nullable: true }
+        date: { type: string, format: date }
+        time: { type: string }
+        end_time: { type: string }
+    ExternalEventDefaults:
+      type: object
+      additionalProperties: false
+      required: [location, duration_minutes]
+      properties:
+        location: { type: string, nullable: true }
+        duration_minutes: { type: integer }
+    ExternalEventIcsSource:
+      type: object
+      additionalProperties: false
+      required: [uuid, name, url, created_at]
+      properties:
+        uuid: { type: string }
+        name: { type: string }
+        url: { type: string }
+        created_at: { type: string, format: date-time }
+    ExternalEventIcsSourceList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/ExternalEventIcsSource' }
+        row_count: { type: integer }
+    ExternalEventIcsSourceInput:
+      type: object
+      additionalProperties: false
+      required: [name, url]
+      properties:
+        name: { type: string }
+        url: { type: string }
+    ExternalEventIcsSourceUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, maxLength: 255 }
+        url: { type: string, maxLength: 255 }
+    ExternalEventIcsSourceOption:
+      type: object
+      additionalProperties: false
+      required: [uuid, name]
+      properties:
+        uuid: { type: string }
+        name: { type: string }
+    ExternalEventIcsSourceOptionList:
+      type: object
+      additionalProperties: false
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/ExternalEventIcsSourceOption' }
+    ExternalEventIcsSyncResult:
+      type: object
+      additionalProperties: false
+      required: [created, updated, removed]
+      properties:
+        created: { type: integer }
+        updated: { type: integer }
+        removed: { type: integer }
+    AddressSummary:
+      type: object
+      additionalProperties: false
+      required: [id, type_of_address, purpose, street, zip, city, phone, fax, mobile, email]
+      properties:
+        id: { type: integer }
+        type_of_address: { type: integer }
+        purpose: { type: string }
+        street: { type: string }
+        zip: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        fax: { type: string, nullable: true }
+        mobile: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+    MemberRole:
+      # kind mirrors the same administrational_role split GET /api/v1/roles's
+      # ?scope=positions|administrational already uses (Role#positions vs
+      # Role#administrational_roles) - 'positions' is lodge-office/degree
+      # roles ("Ämter" in MemberForm's role_ids editor), 'administrational'
+      # is admin/permission roles ("Verwaltungsrollen" there). Kept in sync
+      # with that terminology so the same role never shows under a
+      # different group label on the show page vs. the edit form.
+      type: object
+      additionalProperties: false
+      required: [display_name, kind]
+      properties:
+        display_name: { type: string }
+        kind: { type: string, enum: [positions, administrational] }
+    MemberSummary:
+      type: object
+      additionalProperties: false
+      required: [uuid, email, firstname, lastname, matriculation_number, job_title, mobile, can_edit, can_destroy, can_impersonate, mfa_enabled]
+      properties:
+        uuid: { type: string, nullable: true }
+        email: { type: string }
+        firstname: { type: string, nullable: true }
+        lastname: { type: string, nullable: true }
+        matriculation_number: { type: integer, nullable: true }
+        job_title: { type: string, nullable: true }
+        # Derived, not a column on `users` - the first non-empty `mobile`
+        # value from the member's addresses (ordered by id asc), falling
+        # back to the second address, else "". See memberListRowJson/
+        # firstMobile in members.ts.
+        mobile: { type: string }
+        can_edit: { type: boolean }
+        can_destroy: { type: boolean }
+        can_impersonate: { type: boolean }
+        # Whether the member has at least one verified MFA method - see
+        # members.ts's memberSummaryJson/userHasVerifiedMfa (Task 18).
+        mfa_enabled: { type: boolean }
+    Member:
+      # Flattened rather than `allOf: [MemberSummary, {...}]` - openapi_parser
+      # does not enforce a composed schema's top-level `additionalProperties:
+      # false`, so an allOf here would silently stop catching a stray
+      # top-level field (same reasoning as Event/EventWithParticipants).
+      type: object
+      additionalProperties: false
+      required:
+        - uuid
+        - email
+        - firstname
+        - lastname
+        - matriculation_number
+        - job_title
+        - date_of_birth
+        - created_at
+        - updated_at
+        - addresses
+        - roles
+        - can_edit
+        - can_destroy
+        - can_impersonate
+        - editable_fields
+        - mother_lodge
+        - accepted_at
+        - role_ids
+        - mfa_enabled
+      properties:
+        uuid: { type: string, nullable: true }
+        email: { type: string }
+        firstname: { type: string, nullable: true }
+        lastname: { type: string, nullable: true }
+        matriculation_number: { type: integer, nullable: true }
+        job_title: { type: string, nullable: true }
+        date_of_birth: { type: string, format: date, nullable: true }
+        entered_apprentice_since: { type: string, format: date, nullable: true }
+        fellow_craft_since: { type: string, format: date, nullable: true }
+        master_mason_since: { type: string, format: date, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        addresses:
+          type: array
+          items: { $ref: '#/components/schemas/AddressSummary' }
+        roles:
+          type: array
+          items: { $ref: '#/components/schemas/MemberRole' }
+        can_edit: { type: boolean }
+        can_destroy: { type: boolean }
+        can_impersonate: { type: boolean }
+        editable_fields:
+          type: array
+          items: { type: string }
+        mother_lodge: { type: string, nullable: true }
+        accepted_at: { type: string, format: date, nullable: true }
+        role_ids:
+          type: array
+          items: { type: integer }
+        # Whether the member has at least one verified MFA method - see
+        # members.ts's memberDetailJson/userHasVerifiedMfa (Task 18).
+        mfa_enabled: { type: boolean }
+    MemberList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/MemberSummary' }
+        row_count: { type: integer }
+    NextMatriculationNumber:
+      type: object
+      required: [next_matriculation_number]
+      properties:
+        next_matriculation_number: { type: integer }
+    ExportAddress:
+      type: object
+      additionalProperties: false
+      required: [type_of_address, vcf_type, street1, street2, street3, street, zip, city, phone, fax, mobile, email, remarks]
+      properties:
+        type_of_address: { type: integer }
+        vcf_type: { type: string }
+        street1: { type: string, nullable: true }
+        street2: { type: string, nullable: true }
+        street3: { type: string, nullable: true }
+        street: { type: string }
+        zip: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        fax: { type: string, nullable: true }
+        mobile: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        remarks: { type: string, nullable: true }
+    DirectoryPdfAddress:
+      type: object
+      additionalProperties: false
+      required: [street, zip, city, phone, fax, mobile, email]
+      properties:
+        street: { type: string }
+        zip: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        fax: { type: string, nullable: true }
+        mobile: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+    ExportRow:
+      type: object
+      additionalProperties: false
+      required: [uuid, matriculation_number, fullname_with_title, job_title, num_degree, entered_apprentice_since, accepted_at, date_of_birth, business_address, private_address, positions]
+      properties:
+        uuid: { type: string }
+        matriculation_number: { type: integer, nullable: true }
+        fullname_with_title: { type: string }
+        job_title: { type: string, nullable: true }
+        num_degree: { type: integer }
+        entered_apprentice_since: { type: string, format: date, nullable: true }
+        accepted_at: { type: string, format: date, nullable: true }
+        date_of_birth: { type: string, format: date, nullable: true }
+        # Not a bare $ref/allOf/oneOf onto DirectoryPdfAddress: express-openapi-validator's
+        # nullable handling only rewrites a schema's own `type` into an
+        # object-or-null union when nullable sits directly alongside `type` -
+        # wrapped in allOf or oneOf (even a single-member oneOf), the
+        # referenced schema's own non-nullable `type: object` still applies
+        # unconditionally and a null value fails it (verified empirically:
+        # both forms 500'd on `/response/rows/0/business_address must be
+        # object` for a member with no business address). Inlining
+        # DirectoryPdfAddress's properties directly here (same nullable-scalar
+        # shape that already works throughout this file) sidesteps that.
+        business_address:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [street, zip, city, phone, fax, mobile, email]
+          properties:
+            street: { type: string }
+            zip: { type: string, nullable: true }
+            city: { type: string, nullable: true }
+            phone: { type: string, nullable: true }
+            fax: { type: string, nullable: true }
+            mobile: { type: string, nullable: true }
+            email: { type: string, nullable: true }
+        private_address:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [street, zip, city, phone, fax, mobile, email]
+          properties:
+            street: { type: string }
+            zip: { type: string, nullable: true }
+            city: { type: string, nullable: true }
+            phone: { type: string, nullable: true }
+            fax: { type: string, nullable: true }
+            mobile: { type: string, nullable: true }
+            email: { type: string, nullable: true }
+        positions:
+          type: array
+          items: { type: string }
+    ExportData:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/ExportRow' }
+        row_count: { type: integer }
+    CsvExportRow:
+      type: object
+      additionalProperties: false
+      required: [uuid, lastname, firstname, fullname, email, date_of_birth, addresses]
+      properties:
+        uuid: { type: string }
+        lastname: { type: string, nullable: true }
+        firstname: { type: string, nullable: true }
+        fullname: { type: string }
+        email: { type: string }
+        date_of_birth: { type: string, format: date, nullable: true }
+        addresses:
+          type: array
+          items: { $ref: '#/components/schemas/ExportAddress' }
+    CsvExportData:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/CsvExportRow' }
+        row_count: { type: integer }
+    PhoneListRow:
+      type: object
+      additionalProperties: false
+      required: [uuid, lastname, firstname, phone, fax, mobile]
+      properties:
+        uuid: { type: string, nullable: true }
+        lastname: { type: string, nullable: true }
+        firstname: { type: string, nullable: true }
+        phone: { type: string }
+        fax: { type: string }
+        mobile: { type: string }
+    PhoneList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/PhoneListRow' }
+        row_count: { type: integer }
+    BirthdayListRow:
+      type: object
+      additionalProperties: false
+      required: [uuid, lastname, firstname, date_of_birth, age, twentyfifth_jubilee, fortieth_jubilee]
+      properties:
+        uuid: { type: string, nullable: true }
+        lastname: { type: string, nullable: true }
+        firstname: { type: string, nullable: true }
+        date_of_birth: { type: string, format: date, nullable: true }
+        age: { type: integer, nullable: true }
+        twentyfifth_jubilee: { type: string, format: date, nullable: true }
+        fortieth_jubilee: { type: string, format: date, nullable: true }
+    BirthdayList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/BirthdayListRow' }
+        row_count: { type: integer }
+    CouncilRow:
+      type: object
+      additionalProperties: false
+      required: [role_display_name, role_email, holder_uuid, holder_fullname, holder_phone, holder_mobile]
+      properties:
+        role_display_name: { type: string }
+        role_email: { type: string, nullable: true }
+        holder_uuid: { type: string }
+        holder_fullname: { type: string }
+        holder_phone: { type: string }
+        holder_mobile: { type: string }
+    CouncilList:
+      type: object
+      additionalProperties: false
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/CouncilRow' }
+    UserStatsRow:
+      type: object
+      additionalProperties: false
+      required: [uuid, matriculation_number, lastname, firstname, sign_in_count, current_sign_in_at, current_sign_in_ip]
+      properties:
+        uuid: { type: string, nullable: true }
+        matriculation_number: { type: integer, nullable: true }
+        lastname: { type: string, nullable: true }
+        firstname: { type: string, nullable: true }
+        sign_in_count: { type: integer }
+        current_sign_in_at: { type: string, format: date-time, nullable: true }
+        current_sign_in_ip: { type: string, nullable: true }
+    UserStatsList:
+      type: object
+      additionalProperties: false
+      required: [avg_age, rows, row_count]
+      properties:
+        avg_age: { type: integer }
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/UserStatsRow' }
+        row_count: { type: integer }
+    DownloadRow:
+      type: object
+      additionalProperties: false
+      required: [id, filename, user_fullname, remote_ip, created_at]
+      properties:
+        id: { type: integer }
+        filename: { type: string, nullable: true }
+        user_fullname: { type: string, nullable: true }
+        remote_ip: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    DownloadList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/DownloadRow' }
+        row_count: { type: integer }
+    FileStatsRow:
+      type: object
+      additionalProperties: false
+      required: [row_id, filename, count, attached_file_uuid]
+      properties:
+        row_id: { type: string }
+        filename: { type: string, nullable: true }
+        count: { type: integer }
+        attached_file_uuid: { type: string, nullable: true }
+    FileStatsList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/FileStatsRow' }
+        row_count: { type: integer }
+    UserFileStatsRow:
+      type: object
+      additionalProperties: false
+      required: [uuid, matriculation_number, lastname, firstname, count]
+      properties:
+        uuid: { type: string, nullable: true }
+        matriculation_number: { type: integer, nullable: true }
+        lastname: { type: string, nullable: true }
+        firstname: { type: string, nullable: true }
+        count: { type: integer }
+    UserFileStatsList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/UserFileStatsRow' }
+        row_count: { type: integer }
+    MemStats:
+      type: object
+      additionalProperties: false
+      required: [user_count, event_count, memory_used_bytes, memory_used_incl_archived_bytes, max_db_mem_size_bytes]
+      properties:
+        user_count: { type: integer }
+        event_count: { type: integer }
+        memory_used_bytes: { type: integer }
+        memory_used_incl_archived_bytes: { type: integer }
+        max_db_mem_size_bytes: { type: integer }
+    MemberInput:
+      # No top-level `required` - a self-service PATCH sends only
+      # `job_title`, while a create needs `firstname`/`lastname`/
+      # `date_of_birth`/`matriculation_number` too. The contract layer only
+      # validates shape; `User`'s own model validations produce the 422 with
+      # a real message when a required field is actually missing for the
+      # operation being performed.
+      type: object
+      additionalProperties: false
+      properties:
+        email: { type: string }
+        firstname: { type: string }
+        lastname: { type: string }
+        date_of_birth: { type: string, format: date }
+        matriculation_number: { type: integer }
+        job_title: { type: string, nullable: true }
+        entered_apprentice_since: { type: string, format: date, nullable: true }
+        fellow_craft_since: { type: string, format: date, nullable: true }
+        master_mason_since: { type: string, format: date, nullable: true }
+        mother_lodge: { type: string, nullable: true }
+        accepted_at: { type: string, format: date, nullable: true }
+        role_ids:
+          type: array
+          items: { type: integer }
+        addresses:
+          type: array
+          items: { $ref: '#/components/schemas/MemberAddressInput' }
+    SeekerAddressInput:
+      type: object
+      additionalProperties: false
+      properties:
+        type_of_address: { type: integer }
+        purpose: { type: string }
+        street1: { type: string, nullable: true }
+        street2: { type: string, nullable: true }
+        street3: { type: string, nullable: true }
+        zip: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        fax: { type: string, nullable: true }
+        mobile: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        remarks: { type: string, nullable: true }
+    MemberAddressInput:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: integer }
+        type_of_address: { type: integer }
+        purpose: { type: string }
+        street1: { type: string, nullable: true }
+        street2: { type: string, nullable: true }
+        street3: { type: string, nullable: true }
+        zip: { type: string, nullable: true }
+        city: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        fax: { type: string, nullable: true }
+        mobile: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        remarks: { type: string, nullable: true }
+        _destroy: { type: boolean }
+    SeekerSummary:
+      type: object
+      additionalProperties: false
+      required: [uuid, firstname, lastname, source, status, status_label, contact_value, updated_at]
+      properties:
+        uuid: { type: string }
+        firstname: { type: string }
+        lastname: { type: string }
+        source: { type: string, nullable: true }
+        status: { type: integer }
+        status_label: { type: string }
+        contact_value: { type: string, nullable: true }
+        updated_at: { type: string, format: date-time }
+    Seeker:
+      # Flattened, same reasoning as Event/EventWithParticipants and
+      # Member: an allOf here would silently stop enforcing top-level
+      # additionalProperties: false under this codebase's openapi_parser.
+      type: object
+      additionalProperties: false
+      required:
+        - uuid
+        - firstname
+        - lastname
+        - source
+        - invite
+        - status
+        - status_label
+        - preferred_way_of_contact
+        - contact_value
+        - address
+        - created_at
+        - updated_at
+      properties:
+        uuid: { type: string }
+        firstname: { type: string }
+        lastname: { type: string }
+        source: { type: string, nullable: true }
+        invite: { type: boolean }
+        status: { type: integer }
+        status_label: { type: string }
+        preferred_way_of_contact: { type: integer, nullable: true }
+        contact_value: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+        address: { $ref: '#/components/schemas/AddressSummary' }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    SeekerList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/SeekerSummary' }
+        row_count: { type: integer }
+    SeekerNameSummary:
+      type: object
+      additionalProperties: false
+      required: [firstname, lastname]
+      properties:
+        # Nullability matches SeekerSummary's firstname/lastname above -
+        # same underlying (nullable) columns, same pass-through shaping.
+        firstname: { type: string }
+        lastname: { type: string }
+    SeekerNameList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/SeekerNameSummary' }
+        row_count: { type: integer }
+    SeekerInput:
+      # No top-level `required` - same reasoning as MemberInput: the model's
+      # own presence validations produce the 422 detail message.
+      type: object
+      additionalProperties: false
+      properties:
+        firstname: { type: string }
+        lastname: { type: string }
+        source: { type: string, nullable: true }
+        invite: { type: boolean }
+        status: { type: integer }
+        preferred_way_of_contact: { type: integer, nullable: true }
+        notes: { type: string, nullable: true }
+        address: { $ref: '#/components/schemas/SeekerAddressInput' }
+    RoleSummary:
+      type: object
+      additionalProperties: false
+      required: [id, name, display_name, email]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        display_name: { type: string }
+        email: { type: string, nullable: true }
+    RoleList:
+      type: object
+      additionalProperties: false
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/RoleSummary' }
+    CategorySummary:
+      type: object
+      additionalProperties: false
+      required: [slug, name, description]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+    Category:
+      type: object
+      additionalProperties: false
+      required: [slug, name, description, role_ids]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        role_ids:
+          type: array
+          items: { type: integer }
+    CategoryList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/CategorySummary' }
+        row_count: { type: integer }
+    CategoryInput:
+      # No top-level `required` - same reasoning as SeekerInput/MemberInput:
+      # the model's own presence/uniqueness validations produce the 422
+      # detail message.
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        role_ids:
+          type: array
+          items: { type: integer }
+    DirectorySummary:
+      type: object
+      additionalProperties: false
+      required: [slug, name, description]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+    Directory:
+      type: object
+      additionalProperties: false
+      required: [slug, name, description, category_slug, category_name, role_ids]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        category_slug: { type: string, nullable: true }
+        category_name: { type: string, nullable: true }
+        role_ids:
+          type: array
+          items: { type: integer }
+    DirectoryList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/DirectorySummary' }
+        row_count: { type: integer }
+    AttachedFileSummary:
+      type: object
+      additionalProperties: false
+      required: [uuid, filename, content_type, content_length]
+      properties:
+        uuid: { type: string }
+        filename: { type: string }
+        content_type: { type: string }
+        content_length: { type: integer }
+    AttachedFile:
+      type: object
+      additionalProperties: false
+      required: [uuid, filename, content_type, content_length, directory_slug, directory_name, category_slug, category_name, uploader_email, role_ids, created_at, download_count]
+      properties:
+        uuid: { type: string }
+        filename: { type: string }
+        content_type: { type: string }
+        content_length: { type: integer }
+        directory_slug: { type: string, nullable: true }
+        directory_name: { type: string, nullable: true }
+        category_slug: { type: string, nullable: true }
+        category_name: { type: string, nullable: true }
+        uploader_email: { type: string, nullable: true }
+        role_ids:
+          type: array
+          items: { type: integer }
+        created_at: { type: string, format: date-time }
+        download_count: { type: integer }
+    AttachedFileList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/AttachedFileSummary' }
+        row_count: { type: integer }
+    DirectoryInput:
+      # category_slug is required for CREATE (the frontend always sends it,
+      # pre-filled from the route) but is silently ignored on UPDATE - see
+      # this plan's Global Constraints for why (matches legacy behavior:
+      # a directory's category is fixed at creation).
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        category_slug: { type: string }
+        role_ids:
+          type: array
+          items: { type: integer }
+    DistrictSummary:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+    DistrictList:
+      type: object
+      additionalProperties: false
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/DistrictSummary' }
+    DistrictInput:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: { type: string }
+    AcademicTitleSummary:
+      type: object
+      additionalProperties: false
+      required: [id, short]
+      properties:
+        id: { type: integer }
+        short: { type: string }
+    AcademicTitleList:
+      type: object
+      additionalProperties: false
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/AcademicTitleSummary' }
+    AcademicTitleInput:
+      type: object
+      additionalProperties: false
+      required: [short]
+      properties:
+        short: { type: string }
+    LodgeSummary:
+      type: object
+      additionalProperties: false
+      required: [slug, name, description, district_name]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        district_name: { type: string }
+    Lodge:
+      type: object
+      additionalProperties: false
+      required: [slug, name, description, district_id, district_name]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        district_id: { type: integer }
+        district_name: { type: string }
+    LodgeList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/LodgeSummary' }
+        row_count: { type: integer }
+    LodgeInput:
+      # No top-level `required` - same reasoning as CategoryInput/
+      # SeekerInput: the model's own presence validations (name,
+      # district_id) produce the 422 detail message. district_id is
+      # accepted on BOTH create and update - unlike Directory's
+      # category_slug, Lodge's district assignment is NOT immutable
+      # after creation (see Global Constraints).
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        district_id: { type: integer }
+    OfficerSummary:
+      type: object
+      additionalProperties: false
+      required: [uuid, firstname, lastname, role_display_name]
+      properties:
+        uuid: { type: string }
+        firstname: { type: string }
+        lastname: { type: string }
+        role_display_name: { type: string }
+    Officer:
+      type: object
+      additionalProperties: false
+      required: [uuid, firstname, lastname, role_id, role_display_name, role_email, lodge_slug, lodge_name]
+      properties:
+        uuid: { type: string }
+        firstname: { type: string }
+        lastname: { type: string }
+        role_id: { type: integer }
+        role_display_name: { type: string }
+        role_email: { type: string, nullable: true }
+        lodge_slug: { type: string }
+        lodge_name: { type: string }
+    OfficerList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/OfficerSummary' }
+        row_count: { type: integer }
+    OfficerInput:
+      # lodge_slug is required for CREATE (frontend always sends it,
+      # pre-filled from the route) but is silently ignored on UPDATE -
+      # an officer's lodge is fixed at creation (see Global Constraints,
+      # this is the OPPOSITE of LodgeInput's district_id above - read
+      # both comments, they intentionally differ).
+      type: object
+      additionalProperties: false
+      properties:
+        firstname: { type: string }
+        lastname: { type: string }
+        role_id: { type: integer }
+        role_email: { type: string, nullable: true }
+        lodge_slug: { type: string }
+    AnnouncementSummary:
+      type: object
+      additionalProperties: false
+      required: [uuid, title, created_at]
+      properties:
+        uuid: { type: string }
+        title: { type: string }
+        created_at: { type: string, format: date-time }
+    Announcement:
+      type: object
+      additionalProperties: false
+      required: [uuid, title, message_body, created_by_name, created_at, updated_at]
+      properties:
+        uuid: { type: string }
+        title: { type: string }
+        message_body: { type: string }
+        created_by_name: { type: string }
+        updated_by_name: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    AnnouncementList:
+      type: object
+      additionalProperties: false
+      required: [rows, row_count]
+      properties:
+        rows:
+          type: array
+          items: { $ref: '#/components/schemas/AnnouncementSummary' }
+        row_count: { type: integer }
+    AnnouncementInput:
+      # No top-level `required` - same reasoning as CategoryInput/LodgeInput:
+      # the model's own presence validations (title, message_body) produce
+      # the 422 detail message.
+      type: object
+      additionalProperties: false
+      properties:
+        title: { type: string }
+        message_body: { type: string }
+    AnnouncementSubscriptionInput:
+      type: object
+      additionalProperties: false
+      required: [subscribed]
+      properties:
+        subscribed: { type: boolean }
+    AppConfigValues:
+      type: object
+      additionalProperties: false
+      properties:
+        public_wp_available_to_anon_users: { type: boolean, nullable: true }
+        working_plan_as_start_page: { type: boolean, nullable: true }
+        archive: { type: boolean, nullable: true }
+        show_admins: { type: boolean, nullable: true }
+        users_can_view_statistics: { type: boolean, nullable: true }
+        show_seeker_names_to_brothers: { type: boolean, nullable: true }
+        notify_technical_contact_on_unknown_password_reset: { type: boolean, nullable: true }
+        domain: { type: string, nullable: true }
+        organisation: { type: string, nullable: true }
+        lodge: { type: string, nullable: true }
+        lodge_short: { type: string, nullable: true }
+        language: { type: string, nullable: true }
+        default_workingplan_timespan: { type: integer, nullable: true }
+        default_event_location: { type: string, nullable: true }
+        default_event_duration_minutes: { type: integer, nullable: true }
+        user_change_notification_email: { type: string, nullable: true }
+        default_from_email: { type: string, nullable: true }
+        technical_contact_email: { type: string, nullable: true }
+        mvst_email: { type: string, nullable: true }
+        zip: { type: string, nullable: true }
+        location: { type: string, nullable: true }
+        max_db_mem_size: { type: string, nullable: true }
+        max_upload_file_size: { type: string, nullable: true }
+        workingplan_footer: { type: string, nullable: true }
+        impressum: { type: string, nullable: true }
+        help: { type: string, nullable: true }
+        robots_txt: { type: string, nullable: true }
+        public_workingplan_html_timespan: { type: integer, nullable: true }
+        public_workingplan_ics_timespan: { type: integer, nullable: true }
+        mfa_mode: { type: string, nullable: true }
+        mfa_enforce_for_officers: { type: boolean, nullable: true }
+        mfa_grace_period_days: { type: integer, nullable: true }
+        mfa_trusted_device_days: { type: integer, nullable: true }
+security:
+  - bearerAuth: []
