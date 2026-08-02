@@ -3,8 +3,14 @@ import { test, expect } from '@playwright/test';
 
 test('admin can create, view, and delete a member', async ({ page }) => {
   // Generated inside the test body (not module scope) so a Playwright retry
-  // of this same test gets a fresh value instead of colliding with whatever
-  // this test's own previous attempt left behind on the shared e2e DB.
+  // of this same test gets fresh values instead of colliding with whatever
+  // this test's own previous attempt left behind on the shared e2e DB - a
+  // hardcoded lastname would leave a same-named row behind if this attempt's
+  // own cleanup below fails to complete, making the final absence-check
+  // below fail on the retry's own successful cleanup because of an
+  // unrelated stale leftover (same class of bug as 424d1c6/34e24db6's
+  // matriculation-number/category-name/login-password fixtures).
+  const lastname = `Testmitglied${randomBytes(4).toString('hex')}`;
   const email = `e2e-new-member-${randomBytes(4).toString('hex')}@example.org`;
   const matriculationNumber = `${randomInt(100000, 999999)}`;
 
@@ -16,13 +22,13 @@ test('admin can create, view, and delete a member', async ({ page }) => {
 
   await page.goto('/members/new');
   await page.getByLabel(/Vorname/).fill('E2E');
-  await page.getByLabel(/Nachname/).fill('Testmitglied');
+  await page.getByLabel(/Nachname/).fill(lastname);
   await page.getByLabel(/E-Mail/).fill(email);
   await page.getByLabel(/Geburtsdatum/).fill('1990-01-01');
   await page.getByLabel(/Matrikelnummer/).fill(matriculationNumber);
   await page.getByRole('button', { name: 'Speichern' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Br. E2E Testmitglied' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `Br. E2E ${lastname}` })).toBeVisible();
 
   await page.getByRole('button', { name: 'Bearbeiten' }).click();
   await page.getByRole('button', { name: 'Adresse hinzufügen' }).click();
@@ -46,5 +52,5 @@ test('admin can create, view, and delete a member', async ({ page }) => {
   // only ever appear once (as a DataGrid cell) - keeping this able to catch
   // a delete that silently no-opped, without the transient race.
   await expect(page.getByRole('heading', { name: 'Mitglieder' })).toBeVisible();
-  await expect(page.getByText('E2E Testmitglied')).not.toBeVisible();
+  await expect(page.getByText(`E2E ${lastname}`)).not.toBeVisible();
 });
