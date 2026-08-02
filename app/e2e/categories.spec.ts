@@ -38,6 +38,13 @@ test('admin can create a category, add a directory to it, and delete both', asyn
   await page.getByRole('button', { name: 'Löschen' }).click();
   await page.getByRole('button', { name: /wirklich löschen/i }).click();
   await expect(page).toHaveURL(/\/categories\/[^/]+$/);
+  // Wait for the category page's own heading before deleting it - the URL
+  // commits synchronously on navigate() but the route's Outlet can still be
+  // mid-transition for a render tick, during which the just-deleted
+  // directory page's own "Löschen" button can still be in the DOM alongside
+  // the category page's, same race class as the member specs' "wait for the
+  // list page's own heading" fix.
+  await expect(page.getByRole('heading', { name: categoryName })).toBeVisible();
 
   await page.getByRole('button', { name: 'Löschen' }).click();
   await page.getByRole('button', { name: /wirklich löschen/i }).click();

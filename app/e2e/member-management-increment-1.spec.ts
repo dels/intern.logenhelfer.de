@@ -9,23 +9,30 @@ test('admin sets mother_lodge/accepted_at, assigns a position role, and director
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
 
   // Create a fresh member, then edit it to set the fields/role this
-  // increment added. Email/matriculation_number are generated inside the
-  // test body (not module scope) so a Playwright retry of this same test
-  // gets fresh values instead of colliding with whatever this test's own
-  // previous attempt left behind on the shared, non-transactional e2e DB.
+  // increment added. Email/matriculation_number/lastname are all generated
+  // inside the test body (not module scope) so a Playwright retry of this
+  // same test gets fresh values instead of colliding with whatever this
+  // test's own previous attempt left behind on the shared, non-transactional
+  // e2e DB - a hardcoded lastname here would leave a same-named row behind
+  // if this attempt's own cleanup below fails to complete (e.g. the
+  // confirm-delete button detaching mid-click under a CPU-starved gate),
+  // turning one transient hiccup into a permanent failure (same class of bug
+  // as 424d1c6/34e24db6's matriculation-number/category-name/login-password
+  // fixtures).
   const expectedAcceptedAt = new Date('2020-05-01T00:00:00').toLocaleString('de', { dateStyle: 'medium' });
+  const lastname = `Increment1${randomBytes(4).toString('hex')}`;
   const email = `e2e-increment1-${randomBytes(4).toString('hex')}@example.org`;
   const matriculationNumber = `${randomInt(100000, 999999)}`;
 
   await page.goto('/members/new');
   await page.getByLabel(/Vorname/).fill('E2E');
-  await page.getByLabel(/Nachname/).fill('Increment1');
+  await page.getByLabel(/Nachname/).fill(lastname);
   await page.getByLabel(/E-Mail/).fill(email);
   await page.getByLabel(/Geburtsdatum/).fill('1990-01-01');
   await page.getByLabel(/Matrikelnummer/).fill(matriculationNumber);
   await page.getByRole('button', { name: 'Speichern' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Br. E2E Increment1' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `Br. E2E ${lastname}` })).toBeVisible();
 
   await page.getByRole('button', { name: 'Bearbeiten' }).click();
   await page.getByLabel('Mutterloge').fill('Zur Morgenröte');
@@ -41,7 +48,7 @@ test('admin sets mother_lodge/accepted_at, assigns a position role, and director
   await page.getByRole('button', { name: 'Speichern' }).click();
 
   // Verify persistence on the detail page after save.
-  await expect(page.getByRole('heading', { name: 'Br. E2E Increment1' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `Br. E2E ${lastname}` })).toBeVisible();
   await expect(page.getByText('Mutterloge: Zur Morgenröte')).toBeVisible();
   await expect(page.getByText(`Angenommen am: ${expectedAcceptedAt}`)).toBeVisible();
   await expect(page.getByText('1. Aufseher')).toBeVisible();
@@ -65,8 +72,20 @@ test('admin sets mother_lodge/accepted_at, assigns a position role, and director
   // isn't on. Use the search box (MembersListPage.tsx's `search` field)
   // to narrow to just this member first.
   await page.goto('/members');
+  // Wait for the search-filtered fetch to actually land before clicking the
+  // row - fill() only updates MembersListPage's `search` state, and the
+  // resulting refetch (useMembers()) re-renders the DataGrid's rows async;
+  // clicking too early can target a row that DataGrid is mid-swap on
+  // (observed as "element is not attached to the DOM"/detaching mid-click),
+  // same race class as be4d897's reload()/goto() fixes. Match on the
+  // encoded search param, not just the endpoint, so this doesn't resolve on
+  // the page's initial (unfiltered) load instead.
+  const searchResponsePromise = page.waitForResponse(
+    (res) => res.url().includes(`search=${encodeURIComponent(email)}`) && res.request().method() === 'GET',
+  );
   await page.getByLabel('Suche').fill(email);
-  await page.getByText('E2E Increment1').click();
+  await searchResponsePromise;
+  await page.getByText(`E2E ${lastname}`).click();
   await page.getByRole('button', { name: 'Löschen' }).click();
   await page.getByRole('button', { name: /wirklich löschen/ }).click();
   await expect(page).toHaveURL(/\/members$/);
@@ -82,5 +101,5 @@ test('admin sets mother_lodge/accepted_at, assigns a position role, and director
   // only ever appear once (as a DataGrid cell) - keeping this able to catch
   // a delete that silently no-opped, without the transient race.
   await expect(page.getByRole('heading', { name: 'Mitglieder' })).toBeVisible();
-  await expect(page.getByText('E2E Increment1')).not.toBeVisible();
+  await expect(page.getByText(`E2E ${lastname}`)).not.toBeVisible();
 });

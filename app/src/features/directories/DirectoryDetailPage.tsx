@@ -4,11 +4,13 @@ import { Alert, Box, Button, CircularProgress, Link, List, ListItem, ListItemBut
 import EditIcon from '@mui/icons-material/Edit';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import CheckIcon from '@mui/icons-material/Check';
 import DownloadIcon from '@mui/icons-material/DownloadRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useTranslation } from 'react-i18next';
 import { useDirectory, useDeleteDirectory } from './api';
-import { useFiles, downloadFile } from '../files/api';
+import { useFiles, useDeleteFile, downloadFile } from '../files/api';
 import FileInfoDialog from '../files/FileInfoDialog';
 import FileDropZone from '../files/FileDropZone';
 import VisibleToRoles from '../../components/VisibleToRoles';
@@ -78,18 +80,21 @@ export default function DirectoryDetailPage() {
         roleIds={directory.role_ids ?? []}
         canUpload={abilities.attached_file?.includes('create') ?? false}
         canEdit={abilities.attached_file?.includes('update') ?? false}
+        canDelete={abilities.attached_file?.includes('destroy') ?? false}
       />
     </Box>
   );
 }
 
-function FilesSection({ categorySlug, directorySlug, roleIds, canUpload, canEdit }: { categorySlug: string; directorySlug: string; roleIds: number[]; canUpload: boolean; canEdit: boolean }) {
+function FilesSection({ categorySlug, directorySlug, roleIds, canUpload, canEdit, canDelete }: { categorySlug: string; directorySlug: string; roleIds: number[]; canUpload: boolean; canEdit: boolean; canDelete: boolean }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: files, isLoading } = useFiles(directorySlug);
   const [downloadingUuid, setDownloadingUuid] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [infoUuid, setInfoUuid] = useState<string | null>(null);
+  const { mutate: deleteFile, isPending: deletingFile, error: deleteFileError } = useDeleteFile();
+  const [confirmDeleteUuid, setConfirmDeleteUuid] = useState<string | null>(null);
 
   async function handleDownload(uuid: string, filename: string) {
     setDownloadingUuid(uuid);
@@ -110,6 +115,7 @@ function FilesSection({ categorySlug, directorySlug, roleIds, canUpload, canEdit
       {isLoading && <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }}><CircularProgress size={28} /></Box>}
       {!isLoading && files?.rows.length === 0 && <Typography color="text.secondary" sx={{ mt: 2 }}>{t('files.noFiles')}</Typography>}
       {downloadError && <Alert severity="error" sx={{ mt: 2 }}>{downloadError}</Alert>}
+      {deleteFileError && <Alert severity="error" sx={{ mt: 2 }}>{apiErrorMessage(deleteFileError)}</Alert>}
       <List>
         {(files?.rows ?? []).map((file) => (
           <ListItem
@@ -141,6 +147,27 @@ function FilesSection({ categorySlug, directorySlug, roleIds, canUpload, canEdit
                 >
                   {downloadingUuid === file.uuid ? <CircularProgress size={20} /> : <DownloadIcon />}
                 </IconButton>
+                {canDelete && (
+                  confirmDeleteUuid === file.uuid ? (
+                    <Tooltip title={t('files.deleteConfirm')}>
+                      <IconButton
+                        edge="end"
+                        color="error"
+                        aria-label={t('files.deleteConfirm')}
+                        disabled={deletingFile}
+                        onClick={() => deleteFile({ uuid: file.uuid, directorySlug }, { onSuccess: () => setConfirmDeleteUuid(null) })}
+                      >
+                        <CheckIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title={t('files.delete')}>
+                      <IconButton edge="end" aria-label={t('files.delete')} onClick={() => setConfirmDeleteUuid(file.uuid)}>
+                        <DeleteOutlineIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )
+                )}
               </Stack>
             }
           >

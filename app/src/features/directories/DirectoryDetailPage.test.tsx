@@ -332,6 +332,79 @@ describe('DirectoryDetailPage', () => {
     expect(screen.queryByRole('button', { name: 'Bearbeiten' })).not.toBeInTheDocument();
   });
 
+  it('shows a row delete icon that deletes the file after confirming, when abilities.attached_file allows destroy', async () => {
+    server.use(
+      http.get('/api/v1/me', () =>
+        HttpResponse.json({
+          user: { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster' },
+          abilities: { directory: ['read'], attached_file: ['destroy'] },
+        }),
+      ),
+    );
+    let deleted = false;
+    server.use(
+      http.get('/api/v1/attached_files', () => HttpResponse.json({
+        rows: deleted ? [] : [{ uuid: 'file-1', filename: 'protokoll.pdf', content_type: 'application/pdf', content_length: 2048 }],
+        row_count: deleted ? 0 : 1,
+      })),
+      http.delete('/api/v1/attached_files/file-1', () => {
+        deleted = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderPage();
+    await waitFor(() => expect(screen.getByText('protokoll.pdf')).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Löschen' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Wirklich löschen?' }));
+
+    await waitFor(() => expect(screen.queryByText('protokoll.pdf')).not.toBeInTheDocument());
+    expect(screen.getByText('Keine Dateien vorhanden.')).toBeInTheDocument();
+  });
+
+  it('hides the row delete icon when abilities.attached_file does not allow destroy', async () => {
+    server.use(
+      http.get('/api/v1/me', () =>
+        HttpResponse.json({
+          user: { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster' },
+          abilities: { directory: ['read'], attached_file: ['read'] },
+        }),
+      ),
+      http.get('/api/v1/attached_files', () => HttpResponse.json({
+        rows: [{ uuid: 'file-1', filename: 'protokoll.pdf', content_type: 'application/pdf', content_length: 2048 }],
+        row_count: 1,
+      })),
+    );
+    renderPage();
+    await waitFor(() => expect(screen.getByText('protokoll.pdf')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Löschen' })).not.toBeInTheDocument();
+  });
+
+  it('shows a visible error instead of silently doing nothing when a row delete fails', async () => {
+    server.use(
+      http.get('/api/v1/me', () =>
+        HttpResponse.json({
+          user: { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster' },
+          abilities: { directory: ['read'], attached_file: ['destroy'] },
+        }),
+      ),
+      http.get('/api/v1/attached_files', () => HttpResponse.json({
+        rows: [{ uuid: 'file-1', filename: 'protokoll.pdf', content_type: 'application/pdf', content_length: 2048 }],
+        row_count: 1,
+      })),
+      http.delete('/api/v1/attached_files/file-1', () => HttpResponse.json({ error: 'forbidden' }, { status: 403 })),
+    );
+    renderPage();
+    await waitFor(() => expect(screen.getByText('protokoll.pdf')).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Löschen' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Wirklich löschen?' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    // The row must still be there - a rejected delete must not look like it succeeded.
+    expect(screen.getByText('protokoll.pdf')).toBeInTheDocument();
+  });
+
   it('opens the file info dialog from the row info icon', async () => {
     server.use(
       http.get('/api/v1/attached_files', () => HttpResponse.json({
