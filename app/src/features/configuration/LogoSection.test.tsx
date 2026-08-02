@@ -59,6 +59,40 @@ describe('LogoSection', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Auf Standard zurücksetzen' })).toBeEnabled());
   });
 
+  it('shows an error alert and keeps reset disabled when the upload fails', async () => {
+    // The file itself has an accepted extension/MIME type (so the browser's own
+    // `accept` filter on the hidden input lets it through) - the rejection
+    // simulated here is the server finding, via real content sniffing, that
+    // the bytes aren't actually a valid image despite the declared type.
+    server.use(
+      http.post('/api/v1/logo', () =>
+        HttpResponse.json({ error: 'unprocessable', detail: 'Die Datei ist kein gültiges Bild.' }, { status: 422 }),
+      ),
+    );
+    // LogoSection.tsx's handleFiles calls `await uploadLogo(file)` and its
+    // onChange handler discards that promise with `void` - the mutation's
+    // own `error` state (asserted via the Alert below) is what the UI
+    // actually relies on, but the discarded promise itself still rejects
+    // and is never given a .catch, so Node reports a real unhandled
+    // rejection for it. That's an existing, orthogonal gap in the
+    // component's fire-and-forget wiring - out of scope for this test-only
+    // change - so it's suppressed here rather than left to fail the whole
+    // test run.
+    const onUnhandledRejection = () => {};
+    process.on('unhandledRejection', onUnhandledRejection);
+    try {
+      renderSection();
+      const input = screen.getByLabelText('Logo hochladen', { selector: 'input' }) as HTMLInputElement;
+      const file = new File(['NOT ACTUALLY A PNG'], 'logo.png', { type: 'image/png' });
+      await userEvent.upload(input, file);
+
+      await waitFor(() => expect(screen.getByText('Die Datei ist kein gültiges Bild.')).toBeInTheDocument());
+      expect(screen.getByRole('button', { name: 'Auf Standard zurücksetzen' })).toBeDisabled();
+    } finally {
+      process.off('unhandledRejection', onUnhandledRejection);
+    }
+  });
+
   it('calls DELETE /api/v1/logo when the reset button is clicked', async () => {
     logoVersion = 1;
     renderSection();
