@@ -107,3 +107,41 @@ test('clicking through all six settings tabs shows the right section for each', 
   await page.getByRole('tab', { name: 'Funktionen' }).click();
   await expect(page.getByRole('switch', { name: 'Administratoren in Benutzerliste anzeigen?' })).toBeVisible();
 });
+
+test('admin can upload a custom logo and reset it back to default', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByLabel('E-Mail').fill('e2e-admin@example.org');
+  await page.getByLabel('Passwort').fill('e2e-Passw0rd!');
+  await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
+
+  // A trivial 1x1 red PNG, generated inline so this test has no binary fixture file to maintain.
+  const pngBytes = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    'base64',
+  );
+
+  await page.goto('/configuration');
+  await page.getByRole('tab', { name: 'Design' }).click();
+  await expect(page.getByRole('heading', { name: 'Logo (Bijou)' })).toBeVisible();
+
+  const resetButton = page.getByRole('button', { name: 'Auf Standard zurücksetzen' });
+  await expect(resetButton).toBeDisabled();
+
+  await page.getByLabel('Logo hochladen', { exact: true }).setInputFiles({
+    name: 'e2e-logo.png',
+    mimeType: 'image/png',
+    buffer: pngBytes,
+  });
+
+  await expect(resetButton).toBeEnabled();
+
+  // The top-left nav icon should now point at the uploaded logo, not the bundled default.
+  const navLogoSrc = await page.locator('header img').first().getAttribute('src');
+  expect(navLogoSrc).toContain('/api/v1/public/logo?v=');
+
+  await resetButton.click();
+  await expect(resetButton).toBeDisabled();
+  const navLogoSrcAfterReset = await page.locator('header img').first().getAttribute('src');
+  expect(navLogoSrcAfterReset).not.toContain('/api/v1/public/logo');
+});
