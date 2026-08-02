@@ -69,28 +69,13 @@ describe('LogoSection', () => {
         HttpResponse.json({ error: 'unprocessable', detail: 'Die Datei ist kein gültiges Bild.' }, { status: 422 }),
       ),
     );
-    // LogoSection.tsx's handleFiles calls `await uploadLogo(file)` and its
-    // onChange handler discards that promise with `void` - the mutation's
-    // own `error` state (asserted via the Alert below) is what the UI
-    // actually relies on, but the discarded promise itself still rejects
-    // and is never given a .catch, so Node reports a real unhandled
-    // rejection for it. That's an existing, orthogonal gap in the
-    // component's fire-and-forget wiring - out of scope for this test-only
-    // change - so it's suppressed here rather than left to fail the whole
-    // test run.
-    const onUnhandledRejection = () => {};
-    process.on('unhandledRejection', onUnhandledRejection);
-    try {
-      renderSection();
-      const input = screen.getByLabelText('Logo hochladen', { selector: 'input' }) as HTMLInputElement;
-      const file = new File(['NOT ACTUALLY A PNG'], 'logo.png', { type: 'image/png' });
-      await userEvent.upload(input, file);
+    renderSection();
+    const input = screen.getByLabelText('Logo hochladen', { selector: 'input' }) as HTMLInputElement;
+    const file = new File(['NOT ACTUALLY A PNG'], 'logo.png', { type: 'image/png' });
+    await userEvent.upload(input, file);
 
-      await waitFor(() => expect(screen.getByText('Die Datei ist kein gültiges Bild.')).toBeInTheDocument());
-      expect(screen.getByRole('button', { name: 'Auf Standard zurücksetzen' })).toBeDisabled();
-    } finally {
-      process.off('unhandledRejection', onUnhandledRejection);
-    }
+    await waitFor(() => expect(screen.getByText('Die Datei ist kein gültiges Bild.')).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Auf Standard zurücksetzen' })).toBeDisabled();
   });
 
   it('calls DELETE /api/v1/logo when the reset button is clicked', async () => {

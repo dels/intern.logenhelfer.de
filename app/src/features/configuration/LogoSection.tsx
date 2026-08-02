@@ -20,7 +20,13 @@ export default function LogoSection() {
   async function handleFiles(fileList: FileList | null) {
     const file = fileList?.[0];
     if (!file) return;
-    await uploadLogo(file);
+    try {
+      await uploadLogo(file);
+    } catch {
+      // Swallow: useUploadLogo's `error` (uploadError) already reactively
+      // tracks and renders the failure below. This catch exists only so
+      // the rejection doesn't surface as an unhandled promise rejection.
+    }
   }
 
   const hasCustomLogo = Boolean(landingConfig?.logo_version);
