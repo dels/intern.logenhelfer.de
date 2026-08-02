@@ -2034,6 +2034,43 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/logo:
+    post:
+      operationId: uploadLogo
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '201':
+          description: The stored custom logo's metadata
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomLogoMeta' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: resetLogo
+      responses:
+        '204':
+          description: Custom logo removed - the bundled default is used again
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/lodges/{slug}:
     parameters:
       - name: slug
@@ -2528,6 +2565,17 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PublicLandingConfig' }
+  /api/v1/public/logo:
+    get:
+      operationId: getPublicLogo
+      security: []
+      responses:
+        '200':
+          description: The active custom logo's raw bytes, if one has been uploaded
+          content:
+            image/png: {}
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/public/impressum:
     get:
       operationId: getPublicImpressum
@@ -2644,6 +2692,16 @@ components:
               error: { type: string }
     UnprocessableEntity:
       description: Validation failed
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error, detail]
+            properties:
+              error: { type: string }
+              detail: { type: string }
+    PayloadTooLarge:
+      description: Request body exceeds the allowed size
       content:
         application/json:
           schema:
@@ -2932,11 +2990,19 @@ components:
     PublicLandingConfig:
       type: object
       additionalProperties: false
-      required: [calendar_as_landing_page, lodge, language]
+      required: [calendar_as_landing_page, lodge, language, logo_version]
       properties:
         calendar_as_landing_page: { type: boolean }
         lodge: { type: string }
         language: { type: string }
+        logo_version: { type: integer, nullable: true }
+    CustomLogoMeta:
+      type: object
+      additionalProperties: false
+      required: [content_type, updated_at]
+      properties:
+        content_type: { type: string }
+        updated_at: { type: string }
     HealthStatus:
       type: object
       additionalProperties: false

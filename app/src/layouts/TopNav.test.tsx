@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
@@ -74,5 +74,17 @@ describe('TopNav', () => {
     server.use(http.get('/api/v1/public/landing', () => new HttpResponse(null, { status: 500 })));
     renderTopNav('public');
     expect(await screen.findByText('Logenhelfer')).toBeInTheDocument();
+  });
+
+  it('renders the custom logo when one is configured', async () => {
+    server.use(
+      http.get('/api/v1/public/landing', () =>
+        HttpResponse.json({ calendar_as_landing_page: false, lodge: 'Zur Morgenröte', logo_version: 99 }),
+      ),
+    );
+    const { container } = renderTopNav('public');
+    await waitFor(() =>
+      expect(container.querySelector('img')).toHaveAttribute('src', '/api/v1/public/logo?v=99'),
+    );
   });
 });

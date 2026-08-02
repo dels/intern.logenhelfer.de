@@ -4,6 +4,7 @@ import { describe, expect, it, beforeAll, afterEach, afterAll } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ResetPasswordPage from './ResetPasswordPage';
 import '../i18n';
 
@@ -23,10 +24,13 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 function renderPage(token = 'valid-token') {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter initialEntries={[`/reset-password?token=${token}`]}>
-      <ResetPasswordPage />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[`/reset-password?token=${token}`]}>
+        <ResetPasswordPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

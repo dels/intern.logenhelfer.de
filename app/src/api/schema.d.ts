@@ -223,6 +223,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mfa/methods/passkey/{credentialId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Removes one of the caller's own passkey credentials by its WebAuthn credential id. 404s if the credential doesn't exist or belongs to another user (not distinguished, to avoid leaking existence). Same proof + last-method-mandatory-block rules as removeMfaMethod. */
+        delete: operations["removeMfaPasskeyCredential"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/methods/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: "totp" | "email";
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Removes the caller's own totp or email MFA method. Requires proof of an existing verified method (a fresh TOTP code or a backup code), via the same verifyExistingMfaProof gate setup/start uses - removal is at least as security-sensitive as adding a method. Rejected with 422 if this would leave the caller with zero methods while mandatory MFA's grace period has already passed. */
+        delete: operations["removeMfaMethod"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/passkeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Lists the caller's own enrolled passkey credentials. Unlike totp/email (one row per user), a user may have more than one passkey, so this is a list rather than a boolean flag on MfaMethodsList. */
+        get: operations["listMfaPasskeyCredentials"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/mfa/trusted-devices": {
         parameters: {
             query?: never;
@@ -1053,6 +1108,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["uploadLogo"];
+        delete: operations["resetLogo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lodges/{slug}": {
         parameters: {
             query?: never;
@@ -1331,6 +1402,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicLogo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/impressum": {
         parameters: {
             query?: never;
@@ -1489,6 +1576,16 @@ export interface components {
         MfaTrustedDevicesList: {
             devices: components["schemas"]["MfaTrustedDevice"][];
         };
+        MfaPasskeyCredentialsList: {
+            credentials: {
+                credential_id: string;
+                name: string;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                last_used_at: string | null;
+            }[];
+        };
         MfaLoginResult: {
             mfa_pending_token?: string;
             setup_required?: boolean;
@@ -1569,6 +1666,11 @@ export interface components {
             calendar_as_landing_page: boolean;
             lodge: string;
             language: string;
+            logo_version: number | null;
+        };
+        CustomLogoMeta: {
+            content_type: string;
+            updated_at: string;
         };
         HealthStatus: {
             /** @enum {string} */
@@ -2318,6 +2420,18 @@ export interface components {
                 };
             };
         };
+        /** @description Request body exceeds the allowed size */
+        PayloadTooLarge: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    error: string;
+                    detail: string;
+                };
+            };
+        };
     };
     parameters: never;
     requestBodies: never;
@@ -2699,6 +2813,93 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    removeMfaPasskeyCredential: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    proof: {
+                        /** @enum {string} */
+                        method: "totp" | "backup_code";
+                        code: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Passkey credential removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    removeMfaMethod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: "totp" | "email";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    proof: {
+                        /** @enum {string} */
+                        method: "totp" | "backup_code";
+                        code: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Method removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    listMfaPasskeyCredentials: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Enrolled passkey credentials for the current user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaPasskeyCredentialsList"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listMfaTrustedDevices: {
@@ -4720,6 +4921,58 @@ export interface operations {
             422: components["responses"]["UnprocessableEntity"];
         };
     };
+    uploadLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The stored custom logo's metadata */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomLogoMeta"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            413: components["responses"]["PayloadTooLarge"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    resetLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Custom logo removed - the bundled default is used again */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     getLodge: {
         parameters: {
             query?: never;
@@ -5384,6 +5637,27 @@ export interface operations {
                     "application/json": components["schemas"]["PublicLandingConfig"];
                 };
             };
+        };
+    };
+    getPublicLogo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The active custom logo's raw bytes, if one has been uploaded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
+                };
+            };
+            404: components["responses"]["NotFound"];
         };
     };
     getPublicImpressum: {

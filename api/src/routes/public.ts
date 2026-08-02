@@ -72,6 +72,17 @@ async function anonAccessEnabled(): Promise<boolean> {
   return getBoolean('public_wp_available_to_anon_users');
 }
 
+/**
+ * The singleton `custom_logos` row's `updated_at` epoch, if a custom logo has
+ * been uploaded (Task 3's `POST`/`DELETE /api/v1/logo`) - `null` if none has.
+ * Consumed as a cache-busting version token by the frontend's `<BijouLogo>`
+ * (Task 5), not rendered directly.
+ */
+async function currentLogoVersion(): Promise<number | null> {
+  const row = await prisma.custom_logos.findUnique({ where: { id: 1 }, select: { updated_at: true } });
+  return row ? row.updated_at.getTime() : null;
+}
+
 // -- date helpers -----------------------------------------------------------
 
 /** UTC midnight for "today" - matches events.ts's date-only conventions (formatDateOnly/parseDateOnlyParam). */
@@ -202,14 +213,34 @@ function publicEventJson(event: { title: string | null; location: string | null;
 // GET /api/v1/public/landing
 router.get('/landing', async (_req, res, next) => {
   try {
-    const [startPage, anonEnabled, lodge, language] = await Promise.all([
+    const [startPage, anonEnabled, lodge, language, logoVersion] = await Promise.all([
       getBoolean('working_plan_as_start_page'),
       getBoolean('public_wp_available_to_anon_users'),
       getConfigString('lodge'),
       getConfigString('language'),
+      currentLogoVersion(),
     ]);
 
-    res.status(200).json({ calendar_as_landing_page: startPage && anonEnabled, lodge: lodge ?? '', language: language ?? 'de' });
+    res.status(200).json({
+      calendar_as_landing_page: startPage && anonEnabled,
+      lodge: lodge ?? '',
+      language: language ?? 'de',
+      logo_version: logoVersion,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/public/logo
+router.get('/logo', async (_req, res, next) => {
+  try {
+    const row = await prisma.custom_logos.findUnique({ where: { id: 1 } });
+    if (!row) {
+      throw ApiError.notFound();
+    }
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    res.status(200).type(row.content_type).send(Buffer.from(row.content));
   } catch (err) {
     next(err);
   }

@@ -125,6 +125,13 @@ model category_roles {
   @@index([role_id], map: "index_category_roles_on_role_id")
 }
 
+model custom_logos {
+  id           Int      @id
+  content      Bytes
+  content_type String   @db.VarChar(255)
+  updated_at   DateTime @default(now()) @updatedAt @db.Timestamp(6)
+}
+
 model directories {
   id          Int      @id @default(autoincrement())
   name        String?  @db.VarChar(255)

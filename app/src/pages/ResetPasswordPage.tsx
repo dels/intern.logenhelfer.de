@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Box, Paper, TextField, Button, Typography, Alert, Link } from '@mui/material';
 import { apiFetch, ApiError, apiErrorMessage } from '../api/client';
 import bijou from '../assets/bijou-large.png';
+import BijouLogo from '../components/BijouLogo';
 
 const schema = z.object({
   new_password: z.string().min(8),
@@ -39,7 +40,7 @@ export default function ResetPasswordPage() {
     <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', bgcolor: 'background.default' }}>
       <Paper sx={{ p: 4, width: 380, borderRadius: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 3 }}>
-          <img src={bijou} alt="" width={88} height={92} />
+          <BijouLogo defaultSrc={bijou} width={88} height={92} />
           <Typography variant="h3" component="h1">{t('auth.resetPasswordTitle')}</Typography>
         </Box>
         {success ? (

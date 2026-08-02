@@ -28,6 +28,36 @@ export function useUpdateAppConfig() {
   });
 }
 
+export function useUploadLogo() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return apiFetch<{ content_type: string; updated_at: string }>('/api/v1/logo', { method: 'POST', body: formData });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['public-landing-config'] });
+      toast.success(t('common.toast.updated'));
+    },
+  });
+}
+
+export function useResetLogo() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: () => apiFetch<void>('/api/v1/logo', { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['public-landing-config'] });
+      toast.success(t('common.toast.updated'));
+    },
+  });
+}
+
 export function useCreateDistrict() {
   const queryClient = useQueryClient();
   const toast = useToast();

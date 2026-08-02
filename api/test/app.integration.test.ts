@@ -542,6 +542,48 @@ describe('app.ts integration', () => {
     });
   });
 
+  // Regression guard: logo.ts throws ApiError.payloadTooLarge (413) for a
+  // file over its own in-handler 5MB cap, but that 413 only reaches the
+  // client as a real 413 if openapi/openapi.yaml's POST /api/v1/logo
+  // operation actually declares a 413 response. Without that declaration,
+  // express-openapi-validator's response validator
+  // (dist/middlewares/openapi.response.validator.js's `_validate()`) throws
+  // its own InternalServerError for an undeclared status code, and
+  // apiErrorHandler (lib/errors.ts) only maps openapi-validator errors with
+  // status 400/401/404/413 to their matching JSON shape - anything else
+  // (including this InternalServerError, whose own `.status` is 500) falls
+  // through to a generic 500. logo.test.ts's own "over 5MB" test mounts
+  // logoRouter standalone with no contract-validation middleware in front,
+  // so it can never exercise this - only a test through the real, fully-
+  // wired `app` (this file) can. The upload here (6MB) is deliberately
+  // between logo.ts's 5MB in-handler cap and the ~20MB
+  // MULTIPART_FILE_SIZE_LIMIT_BYTES ceiling, so it reaches the in-handler
+  // check rather than being rejected earlier by the multer-layer limit
+  // exercised in the block above.
+  describe('logo upload size limit (contract validation)', () => {
+    async function applicationAdminAuthHeader(): Promise<{ Authorization: string }> {
+      const now = new Date();
+      const role = await prisma.roles.create({
+        data: { name: 'ApplicationAdmin', display_name: 'Kann Anwendung konfigurieren', created_at: now, updated_at: now },
+      });
+      const user = await createUser();
+      await prisma.user_roles.create({ data: { user_id: user.id, role_id: role.id, created_at: now, updated_at: now, role_added_at: now } });
+      return { Authorization: `Bearer ${issueAccessToken(user.id)}` };
+    }
+
+    it('rejects a logo upload over the in-handler 5MB cap with 413, not a 500 from response validation', async () => {
+      const oversizedLogo = Buffer.alloc(6 * 1024 * 1024, 'a'); // 6MB > logo.ts's 5MB cap, well under the 20MB multer-layer ceiling
+
+      const res = await request(app)
+        .post('/api/v1/logo')
+        .set(await applicationAdminAuthHeader())
+        .attach('file', oversizedLogo, { filename: 'big.png', contentType: 'image/png' });
+
+      expect(res.status).toBe(413);
+      expect(res.body).toEqual({ error: 'payload_too_large', detail: expect.any(String) });
+    });
+  });
+
   // Regression guard: FileCreatePage's real upload (app/src/features/files/api.ts)
   // sends selected roles as repeated `role_ids[]` multipart fields, not a
   // single JSON-encoded `role_ids` field. Only a test going through the real

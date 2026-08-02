@@ -4,6 +4,7 @@ import { describe, expect, it, beforeAll, afterEach, afterAll, vi } from 'vitest
 import { MemoryRouter } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ForgotPasswordPage from './ForgotPasswordPage';
 import '../i18n';
 
@@ -19,10 +20,13 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 function renderPage() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter>
-      <ForgotPasswordPage />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

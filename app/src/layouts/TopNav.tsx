@@ -9,6 +9,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircleRounded';
 import LoginIcon from '@mui/icons-material/LoginRounded';
 import LogoutIcon from '@mui/icons-material/LogoutRounded';
 import bijou from '../assets/bijou.png';
+import BijouLogo from '../components/BijouLogo';
 import { useAuth } from '../auth/AuthProvider';
 import { useLandingConfig } from '../features/public-landing/api';
 
@@ -41,7 +42,7 @@ export default function TopNav({ variant, onMenuClick }: { variant: 'authenticat
           </IconButton>
         )}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <img src={bijou} alt="" width={28} height={37} />
+          <BijouLogo defaultSrc={bijou} width={28} height={37} />
           <Typography variant="h2" sx={{ fontSize: 18 }}>{landingConfig?.lodge || 'Logenhelfer'}</Typography>
         </Box>
         <Box sx={{ flex: 1 }} />

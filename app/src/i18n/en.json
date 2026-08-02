@@ -340,7 +340,8 @@
       "funktionen": "Features",
       "konfiguration": "Configuration",
       "impressum": "Legal notice (Impressum)",
-      "sicherheit": "Security"
+      "sicherheit": "Security",
+      "design": "Design"
     },
     "generalHeader": "General settings",
     "districtsHeader": "Districts",
@@ -355,6 +356,10 @@
     "rolesHeader": "Roles (email addresses)",
     "roleEmail": "Email address",
     "roleEditEmail": "Edit email",
+    "logoHeader": "Logo (Bijou)",
+    "logoDescription": "Upload a custom logo to replace the default Bijou in the navigation, login pages, and favicon. Allowed: PNG, JPG, SVG, max 5 MB.",
+    "logoUpload": "Upload logo",
+    "logoReset": "Reset to default",
     "cancel": "Cancel",
     "save": "Save",
     "forbidden": "You do not have permission to edit the configuration.",

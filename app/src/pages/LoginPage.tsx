@@ -11,6 +11,7 @@ import { useLandingConfig } from '../features/public-landing/api';
 import { ApiError, apiErrorMessage, getMfaChallengeMethods } from '../api/client';
 import MfaChallengeForm from '../features/mfa/MfaChallengeForm';
 import bijou from '../assets/bijou-large.png';
+import BijouLogo from '../components/BijouLogo';
 
 const schema = z.object({
   email: z.string().email(),
@@ -104,7 +105,7 @@ export default function LoginPage() {
     <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', bgcolor: 'background.default' }}>
       <Paper sx={{ p: 4, width: 380, borderRadius: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 3 }}>
-          <img src={bijou} alt="" width={88} height={92} />
+          <BijouLogo defaultSrc={bijou} width={88} height={92} />
           <Typography variant="h3" component="h1">{landingConfig?.lodge || 'Logenhelfer'}</Typography>
         </Box>
         {failedMessage && <Alert severity="error" sx={{ mb: 2 }}>{failedMessage}</Alert>}
