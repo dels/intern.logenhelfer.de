@@ -42,7 +42,7 @@ function renderPage() {
       <MemoryRouter initialEntries={['/categories/kassenwesen/directories/finanzen/files/file-1/edit']}>
         <Routes>
           <Route path="/categories/:categorySlug/directories/:directorySlug/files/:uuid/edit" element={<FileEditPage />} />
-          <Route path="/categories/:categorySlug/directories/:directorySlug/files/:uuid" element={<div>File detail page</div>} />
+          <Route path="/categories/:categorySlug/directories/:directorySlug" element={<div>Directory page</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -59,7 +59,7 @@ describe('FileEditPage', () => {
     await user.type(filenameInput, 'renamed.pdf');
     await user.click(screen.getByRole('button', { name: 'Speichern' }));
 
-    await waitFor(() => expect(screen.getByText('File detail page')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Directory page')).toBeInTheDocument());
     expect(updatedBody).toEqual({ filename: 'renamed.pdf', role_ids: [] });
   });
 });

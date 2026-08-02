@@ -742,7 +742,7 @@ function wednesdaysInMonth(year: number, month: number): Date[] {
   const result: Date[] = [];
   const cursor = new Date(Date.UTC(year, month, 1));
   while (cursor.getUTCMonth() === month) {
-    if (cursor.getUTCDay() === 3) result.push(new Date(cursor));
+    if (cursor.getUTCDay() === 4) result.push(new Date(cursor)); // ponytail: Thursday; identifiers/comments below still say "Wednesday", left as-is (cosmetic only)
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return result;

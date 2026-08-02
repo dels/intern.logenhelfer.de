@@ -21,11 +21,11 @@ function daysBetween(a: Date, b: Date): number {
 describe.each(SEED_DATES)('buildDemoEventSchedule(%s)', (seedDate) => {
   const schedule = buildDemoEventSchedule(seedDate);
 
-  it('only ever schedules Wednesdays at 20:00, one event per date', () => {
+  it('only ever schedules Thursdays at 20:00, one event per date', () => {
     expect(schedule.length).toBeGreaterThan(0);
     const dateKeys = new Set<string>();
     for (const event of schedule) {
-      expect(event.date.getUTCDay()).toBe(3);
+      expect(event.date.getUTCDay()).toBe(4);
       expect(event.time.getUTCHours()).toBe(20);
       expect(event.time.getUTCMinutes()).toBe(0);
       const key = event.date.toISOString().slice(0, 10);

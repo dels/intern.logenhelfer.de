@@ -22,7 +22,7 @@ export default function FileEditPage() {
         defaultValues={{ filename: file.filename, role_ids: file.role_ids }}
         submitting={isPending}
         submitError={apiErrorMessage(error)}
-        onSubmit={(values) => mutate(values, { onSuccess: () => navigate(`/categories/${file.category_slug}/directories/${file.directory_slug}/files/${uuid}`) })}
+        onSubmit={(values) => mutate(values, { onSuccess: () => navigate(`/categories/${file.category_slug}/directories/${file.directory_slug}`) })}
       />
     </>
   );
