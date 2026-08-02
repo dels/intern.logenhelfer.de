@@ -14,6 +14,16 @@ export default function SiteMetaSync() {
     if (i18n.language !== language) {
       void i18n.changeLanguage(language);
     }
+
+    if (data.logo_version) {
+      let favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+      if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+      }
+      favicon.href = `/api/v1/public/logo?v=${data.logo_version}`;
+    }
   }, [data]);
 
   return null;
