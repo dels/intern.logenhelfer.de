@@ -82,7 +82,9 @@ describe('TopNav', () => {
         HttpResponse.json({ calendar_as_landing_page: false, lodge: 'Zur Morgenröte', logo_version: 99 }),
       ),
     );
-    renderTopNav('public');
-    await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('src', '/api/v1/public/logo?v=99'));
+    const { container } = renderTopNav('public');
+    await waitFor(() =>
+      expect(container.querySelector('img')).toHaveAttribute('src', '/api/v1/public/logo?v=99'),
+    );
   });
 });

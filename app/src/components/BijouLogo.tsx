@@ -18,5 +18,5 @@ export interface BijouLogoProps {
 export default function BijouLogo({ defaultSrc, width, height }: BijouLogoProps) {
   const { data } = useLandingConfig();
   const src = data?.logo_version ? `/api/v1/public/logo?v=${data.logo_version}` : defaultSrc;
-  return <Box component="img" role="img" src={src} alt="" sx={{ width, height, objectFit: 'contain' }} />;
+  return <Box component="img" src={src} alt="" sx={{ width, height, objectFit: 'contain' }} />;
 }
