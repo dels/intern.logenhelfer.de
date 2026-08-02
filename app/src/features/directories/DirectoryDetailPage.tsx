@@ -144,7 +144,10 @@ function FilesSection({ categorySlug, directorySlug, roleIds, canUpload, canEdit
               </Stack>
             }
           >
-            <ListItemButton onClick={() => navigate(`/categories/${categorySlug}/directories/${directorySlug}/files/${file.uuid}`)}>
+            <ListItemButton
+              disabled={downloadingUuid === file.uuid}
+              onClick={() => void handleDownload(file.uuid, file.filename)}
+            >
               <ListItemText primary={file.filename} secondary={formatBytes(file.content_length)} />
             </ListItemButton>
           </ListItem>

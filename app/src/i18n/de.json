@@ -377,11 +377,11 @@
       },
       "users_can_view_statistics": {
         "name": "Statistiken für alle Mitglieder sichtbar",
-        "description": "Wenn deaktiviert, können nur Ratsmitglieder und höhere Rollen die Statistik-Übersicht (Downloads, Downloads pro Datei, Speichernutzung) sehen. Ratsmitglieder und höhere Rollen sind von dieser Einstellung nicht betroffen."
+        "description": "Wenn deaktiviert, können nur Mitglieder des Beamtenrats und höhere Rollen die Statistik-Übersicht (Downloads, Downloads pro Datei, Speichernutzung) sehen. Mitglieder des Beamtenrats und höhere Rollen sind von dieser Einstellung nicht betroffen."
       },
       "show_seeker_names_to_brothers": {
         "name": "Namen der Suchenden für alle Brüder sichtbar",
-        "description": "Wenn aktiviert, sehen Brüder ohne eigene Suchenden-Berechtigung eine reine Namensliste der aktiven Suchenden (Kachel auf der Übersicht + eigene Seite). Betrifft nicht den Meister vom Stuhl und Ratsmitglieder - die haben bereits vollen Zugriff auf die Suchenden-Verwaltung."
+        "description": "Wenn aktiviert, sehen Brüder ohne eigene Suchenden-Berechtigung eine reine Namensliste der aktiven Suchenden (Kachel auf der Übersicht + eigene Seite). Betrifft nicht den Meister vom Stuhl und Mitglieder des Beamtenrats - die haben bereits vollen Zugriff auf die Suchenden-Verwaltung."
       },
       "notify_technical_contact_on_unknown_password_reset": {
         "name": "Benachrichtigung bei Passwortreset unbekannter E-Mail Addressen",
@@ -479,8 +479,8 @@
         "values": { "optional": "Optional", "mandatory": "Verpflichtend" }
       },
       "mfa_enforce_for_officers": {
-        "name": "Verpflichtend für Ratsmitglieder",
-        "description": "Wenn aktiviert, müssen Ratsmitglieder und höhere Rollen die Zwei-Faktor-Authentifizierung unabhängig vom allgemeinen Modus einrichten."
+        "name": "Verpflichtend für Mitglieder des Beamtenrats",
+        "description": "Wenn aktiviert, müssen Mitglieder des Beamtenrats und höhere Rollen die Zwei-Faktor-Authentifizierung unabhängig vom allgemeinen Modus einrichten."
       },
       "mfa_grace_period_days": {
         "name": "Übergangsfrist (Tage)",

@@ -118,33 +118,32 @@ describe('DirectoryDetailPage', () => {
     await waitFor(() => expect(screen.getByText('Keine Dateien vorhanden.')).toBeInTheDocument());
   });
 
-  it('lists files with their size and navigates to the file detail page on click', async () => {
+  it('lists files with their size and downloads the file when the row is clicked', async () => {
     server.use(
       http.get('/api/v1/attached_files', () => HttpResponse.json({
         rows: [{ uuid: 'file-1', filename: 'protokoll.pdf', content_type: 'application/pdf', content_length: 2048 }],
         row_count: 1,
       })),
+      http.get('/api/v1/attached_files/file-1/download', () => new HttpResponse('file contents', {
+        headers: { 'Content-Type': 'application/pdf' },
+      })),
     );
-    render(
-      <QueryClientProvider client={new QueryClient()}>
-        <AuthProvider>
-          <MemoryRouter initialEntries={['/categories/finanzen/directories/protokolle']}>
-            <BreadcrumbProvider>
-              <Routes>
-                <Route path="/categories/:categorySlug/directories/:slug" element={<DirectoryDetailPage />} />
-                <Route path="/categories/:categorySlug/directories/:directorySlug/files/:uuid" element={<div>File detail page</div>} />
-              </Routes>
-            </BreadcrumbProvider>
-          </MemoryRouter>
-        </AuthProvider>
-      </QueryClientProvider>,
-    );
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    renderPage();
 
     await waitFor(() => expect(screen.getByText('protokoll.pdf')).toBeInTheDocument());
     expect(screen.getByText('2.0 KB')).toBeInTheDocument();
 
     await userEvent.click(screen.getByText('protokoll.pdf'));
-    await waitFor(() => expect(screen.getByText('File detail page')).toBeInTheDocument());
+
+    await waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1));
+    const clickedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement;
+    expect(clickedAnchor.download).toBe('protokoll.pdf');
+    // There is no file detail page any more - the row itself stays put.
+    expect(screen.getByText('protokoll.pdf')).toBeInTheDocument();
   });
 
   it('shows the drop zone when abilities.attached_file allows create', async () => {
@@ -238,8 +237,6 @@ describe('DirectoryDetailPage', () => {
     expect(clickedAnchor.download).toBe('protokoll.pdf');
     expect(createObjectURLSpy).toHaveBeenCalledTimes(1);
     expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:mock-url');
-    // Downloading must not act like a row click - the page stays put rather
-    // than navigating to the file detail route.
     expect(screen.getByText('protokoll.pdf')).toBeInTheDocument();
   });
 

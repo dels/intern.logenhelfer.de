@@ -40,7 +40,6 @@ import CategoryDetailPage from './features/categories/CategoryDetailPage';
 import DirectoryCreatePage from './features/directories/DirectoryCreatePage';
 import DirectoryEditPage from './features/directories/DirectoryEditPage';
 import DirectoryDetailPage from './features/directories/DirectoryDetailPage';
-import FileDetailPage from './features/files/FileDetailPage';
 import FileEditPage from './features/files/FileEditPage';
 import LodgesListPage from './features/lodges/LodgesListPage';
 import LodgeCreatePage from './features/lodges/LodgeCreatePage';
@@ -115,7 +114,6 @@ export const routes: RouteObject[] = [
           { path: '/categories/:categorySlug/directories/new', element: <DirectoryCreatePage /> },
           { path: '/categories/:categorySlug/directories/:slug/edit', element: <DirectoryEditPage /> },
           { path: '/categories/:categorySlug/directories/:directorySlug/files/:uuid/edit', element: <FileEditPage /> },
-          { path: '/categories/:categorySlug/directories/:directorySlug/files/:uuid', element: <FileDetailPage /> },
           { path: '/categories/:slug', element: <CategoryDetailPage /> },
           { path: '/categories', element: <CategoriesListPage /> },
           { path: '/categories/:categorySlug/directories/:slug', element: <DirectoryDetailPage /> },

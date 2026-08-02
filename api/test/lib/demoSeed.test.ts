@@ -123,11 +123,11 @@ describe('resetAndSeedDemoData', () => {
     expect(lodge!.district_id).toBe(district!.id);
 
     const events = await prisma.events.findMany();
-    // ~4 Wednesdays/month across 12 months, minus the blacked-out weeks.
+    // ~4 Thursdays/month across 12 months, minus the blacked-out weeks.
     expect(events.length).toBeGreaterThanOrEqual(35);
     expect(events.length).toBeLessThanOrEqual(52);
     for (const event of events) {
-      expect(event.date.getUTCDay()).toBe(3); // every event is a Wednesday
+      expect(event.date.getUTCDay()).toBe(4); // every event is a Thursday
       expect(event.time?.getUTCHours()).toBe(20);
       expect(event.location).toBe('Demo-Logenhaus');
     }
