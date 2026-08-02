@@ -11,10 +11,19 @@ export interface RelyingPartyConfig {
   origin: string;
 }
 
-/** RP ID is this environment's own configured domain (AppConfig[:domain]) - matches WebAuthn's requirement that rpID equals (or is a registrable suffix of) the page's origin hostname, and keeps passkeys correctly scoped per environment (prod/next/beta/dev never share credentials). */
+/**
+ * RP ID is this environment's own configured domain (AppConfig[:domain]) - matches WebAuthn's requirement that rpID equals (or is a registrable suffix of) the page's origin hostname, and keeps passkeys correctly scoped per environment (prod/next/beta/dev never share credentials).
+ *
+ * Normalized (trimmed + lowercased) because `verifyRegistrationResponse`
+ * compares `expectedOrigin` against the browser's origin with a plain
+ * `!==` - the browser's origin is always lowercase, so any stray
+ * whitespace or capitalization in the stored AppConfig value (an
+ * admin-typed setting) would make every passkey registration fail with no
+ * indication why.
+ */
 export async function getRelyingPartyConfig(): Promise<RelyingPartyConfig> {
   const domain = (await appConfig.get('domain')) as string | null;
-  const rpID = domain ?? 'localhost';
+  const rpID = (domain?.trim().toLowerCase() || null) ?? 'localhost';
   return { rpID, rpName: RP_NAME, origin: `https://${rpID}` };
 }
 
