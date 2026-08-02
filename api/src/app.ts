@@ -16,6 +16,7 @@ import eventsRouter from './routes/events.js';
 import externalEventIcsSourcesRouter from './routes/externalEventIcsSources.js';
 import externalEventsRouter from './routes/externalEvents.js';
 import lodgesRouter from './routes/lodges.js';
+import logoRouter from './routes/logo.js';
 import meRouter from './routes/me.js';
 import membersRouter from './routes/members.js';
 import mfaRouter from './routes/mfa.js';
@@ -126,6 +127,7 @@ export const ROUTE_MOUNTS: ReadonlyArray<{ readonly name: string; readonly path:
   { name: 'districts', path: '/api/v1/districts', router: districtsRouter },
   { name: 'academic_titles', path: '/api/v1/academic_titles', router: academicTitlesRouter },
   { name: 'lodges', path: '/api/v1/lodges', router: lodgesRouter },
+  { name: 'logo', path: '/api/v1/logo', router: logoRouter },
   { name: 'officers', path: '/api/v1/officers', router: officersRouter },
   { name: 'announcements', path: '/api/v1/announcements', router: announcementsRouter },
   { name: 'statistics', path: '/api/v1/statistics', router: statisticsRouter },

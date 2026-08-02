@@ -2034,6 +2034,41 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/logo:
+    post:
+      operationId: uploadLogo
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '201':
+          description: The stored custom logo's metadata
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomLogoMeta' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      operationId: resetLogo
+      responses:
+        '204':
+          description: Custom logo removed - the bundled default is used again
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/lodges/{slug}:
     parameters:
       - name: slug
@@ -2937,6 +2972,13 @@ components:
         calendar_as_landing_page: { type: boolean }
         lodge: { type: string }
         language: { type: string }
+    CustomLogoMeta:
+      type: object
+      additionalProperties: false
+      required: [content_type, updated_at]
+      properties:
+        content_type: { type: string }
+        updated_at: { type: string }
     HealthStatus:
       type: object
       additionalProperties: false
