@@ -61,9 +61,12 @@ describe('LogoSection', () => {
 
   it('shows an error alert and keeps reset disabled when the upload fails', async () => {
     // The file itself has an accepted extension/MIME type (so the browser's own
-    // `accept` filter on the hidden input lets it through) - the rejection
-    // simulated here is the server finding, via real content sniffing, that
-    // the bytes aren't actually a valid image despite the declared type.
+    // `accept` filter on the hidden input lets it through). The server only
+    // validates the multipart part's declared Content-Type - it does not sniff
+    // the actual bytes - so this is a pure frontend test: it mocks a 422
+    // response to verify the upload UI surfaces the server's rejection
+    // (error shown, reset stays disabled), not a real server-side rejection
+    // of this specific file.
     server.use(
       http.post('/api/v1/logo', () =>
         HttpResponse.json({ error: 'unprocessable', detail: 'Die Datei ist kein gültiges Bild.' }, { status: 422 }),

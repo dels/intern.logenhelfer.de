@@ -239,6 +239,7 @@ router.get('/logo', async (_req, res, next) => {
     if (!row) {
       throw ApiError.notFound();
     }
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
     res.status(200).type(row.content_type).send(Buffer.from(row.content));
   } catch (err) {
     next(err);

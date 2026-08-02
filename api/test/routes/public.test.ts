@@ -185,6 +185,13 @@ describe('GET /api/v1/public/logo', () => {
     expect(Buffer.isBuffer(res.body) ? res.body.toString() : res.text).toBe('PNGDATA');
   });
 
+  it('sets a long-lived, immutable Cache-Control header (safe since the URL is version-querystring-busted)', async () => {
+    await prisma.custom_logos.create({ data: { id: 1, content: Buffer.from('PNGDATA'), content_type: 'image/png' } });
+    const res = await request(app).get('/api/v1/public/logo');
+    expect(res.status).toBe(200);
+    expect(res.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+  });
+
   it('returns 404 again after the logo has been reset', async () => {
     await prisma.custom_logos.create({ data: { id: 1, content: Buffer.from('X'), content_type: 'image/png' } });
     await prisma.custom_logos.deleteMany({ where: { id: 1 } });

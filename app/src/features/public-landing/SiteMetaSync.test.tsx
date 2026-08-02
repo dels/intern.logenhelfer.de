@@ -84,4 +84,28 @@ describe('SiteMetaSync', () => {
     await waitFor(() => expect(document.title).toBe('Logenhelfer'));
     expect(document.querySelector('link[rel="icon"]')).toBeNull();
   });
+
+  it('reverts the favicon back to /favicon.ico when a custom logo is reset within a live session', async () => {
+    server.use(
+      http.get('/api/v1/public/landing', () =>
+        HttpResponse.json({ calendar_as_landing_page: false, lodge: '', language: 'de', logo_version: 42 }),
+      ),
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <SiteMetaSync />
+      </QueryClientProvider>,
+    );
+    await waitFor(() => expect(document.querySelector('link[rel="icon"]')?.getAttribute('href')).toBe('/api/v1/public/logo?v=42'));
+
+    server.use(
+      http.get('/api/v1/public/landing', () =>
+        HttpResponse.json({ calendar_as_landing_page: false, lodge: '', language: 'de', logo_version: null }),
+      ),
+    );
+    await queryClient.invalidateQueries({ queryKey: ['public-landing-config'] });
+
+    await waitFor(() => expect(document.querySelector('link[rel="icon"]')?.getAttribute('href')).toBe('/favicon.ico'));
+  });
 });

@@ -23,6 +23,11 @@ export default function SiteMetaSync() {
         document.head.appendChild(favicon);
       }
       favicon.href = `/api/v1/public/logo?v=${data.logo_version}`;
+    } else {
+      const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+      if (favicon && favicon.getAttribute('href')?.startsWith('/api/v1/public/logo?v=')) {
+        favicon.href = '/favicon.ico';
+      }
     }
   }, [data]);
 
