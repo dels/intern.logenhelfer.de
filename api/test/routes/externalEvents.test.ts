@@ -65,7 +65,11 @@ async function createExternalEvent(overrides: Partial<{ title: string; host: str
       host: 'Loge X',
       location: 'Musterstadt',
       description: null,
-      date: new Date(Date.UTC(2026, 7, 1)),
+      // Today's date, not a hardcoded one - GET /api/v1/external_events
+      // defaults to "from yesterday onward" (see externalEvents.ts), so a
+      // fixed past date eventually drifts stale and starts failing these
+      // default-query tests for reasons unrelated to what they're testing.
+      date: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())),
       time: new Date(Date.UTC(1970, 0, 1, 19, 0, 0)),
       created_by_id: overrides.created_by_id ?? 1,
       deleted: false,
