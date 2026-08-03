@@ -18,7 +18,7 @@ export default function MfaProofDialog({
 }) {
   const { t } = useTranslation();
   const toast = useToast();
-  const [method, setMethod] = useState<ProofMethod>(availableMethods[0]);
+  const [method, setMethod] = useState<ProofMethod>(availableMethods[0] ?? 'backup_code');
   const [code, setCode] = useState('');
   const [verifyingPasskey, setVerifyingPasskey] = useState(false);
   const getPasskeyOptions = useMfaProofPasskeyOptions();
@@ -28,7 +28,7 @@ export default function MfaProofDialog({
   // open. Reset on the closed->open transition, not on every render.
   useEffect(() => {
     if (open) {
-      setMethod(availableMethods[0]);
+      setMethod(availableMethods[0] ?? 'backup_code');
       setCode('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
