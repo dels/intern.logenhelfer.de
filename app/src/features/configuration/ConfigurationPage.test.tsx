@@ -205,6 +205,28 @@ describe('ConfigurationPage', () => {
     expect(screen.getAllByRole('alert')).toHaveLength(1);
   });
 
+  it('surfaces a max_upload_file_size-above-ceiling rejection as a toast, not an alert requiring scroll past the form', async () => {
+    const ceilingMessage = "max_upload_file_size (50 MB) exceeds the 20 MB ceiling configured for this "
+      + "environment. Raise MAX_UPLOAD_FILE_SIZE_MB in this environment's .env.<env> file and redeploy before "
+      + "saving a larger value here.";
+    server.use(
+      http.patch('/api/v1/app_config', () => HttpResponse.json({ detail: ceilingMessage }, { status: 422 })),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('tab', { name: 'Konfiguration' }));
+    const field = await screen.findByRole('spinbutton', { name: 'Maximale Dateigröße beim Upload' });
+    await user.clear(field);
+    await user.type(field, '50');
+    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(ceilingMessage);
+    // Regression guard: the failing mutation must not also render a second,
+    // independent inline Alert above the form fields - only the toast.
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+  });
+
   it('renders the language field as a select with German/English options, and saves a change', async () => {
     const user = userEvent.setup();
     renderPage();
