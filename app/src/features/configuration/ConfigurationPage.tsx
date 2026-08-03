@@ -15,6 +15,7 @@ import { useDistricts } from '../lodges/api';
 import { useRoles } from '../categories/api';
 import DistrictForm from './DistrictForm';
 import AcademicTitleForm from './AcademicTitleForm';
+import LogoUploadWidget from './LogoUploadWidget';
 import { apiErrorMessage } from '../../api/client';
 import { useDemoMode } from '../../api/useDemoMode';
 import { useAuth } from '../../auth/AuthProvider';
@@ -86,6 +87,7 @@ function AppConfigSection({ activeTab }: { activeTab: number }) {
       {error && activeCategory && <Alert severity="error" sx={{ mb: 2 }}>{apiErrorMessage(error)}</Alert>}
       {(['funktionen', 'konfiguration', 'impressum', 'sicherheit'] as const).map((category) => (
         <TabPanel key={category} active={activeCategory === category}>
+          {category === 'konfiguration' && <LogoUploadWidget />}
           <Stack spacing={2} sx={{ maxWidth: 640 }}>
             {FIELDS.filter((field) => field.category === category).map(({ key, type, options, unit }) => (
               <ConfigField
