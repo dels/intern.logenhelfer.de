@@ -11,7 +11,11 @@ test('a member can change their own password and log in with the new one', { tag
   await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Mein Konto' }).click();
+  // Both the top-nav account icon and the sidebar now render a "Mein Konto"
+  // link (same destination, /account) - scope to the sidebar's own
+  // landmark (matching AppShell.test.tsx's identical "Hauptnavigation"
+  // convention) so this doesn't hit Playwright's strict-mode ambiguity.
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Mein Konto' }).click();
   await expect(page.getByRole('heading', { name: 'Konto' })).toBeVisible();
 
   await page.getByLabel('Aktuelles Passwort').fill('e2e-Passw0rd!');
@@ -36,7 +40,7 @@ test('a member can change their own password and log in with the new one', { tag
   // announcements.spec.ts) log in as e2e@example.org with the original
   // e2e-Passw0rd!, and the e2e stack seeds the DB once for the whole
   // suite (no per-file reseed) — leave shared fixture state as found.
-  await page.getByRole('link', { name: 'Mein Konto' }).click();
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Mein Konto' }).click();
   await expect(page.getByRole('heading', { name: 'Konto' })).toBeVisible();
   await page.getByLabel('Aktuelles Passwort').fill('e2e-Passw0rd!-neu');
   await page.getByLabel('Neues Passwort', { exact: true }).fill('e2e-Passw0rd!');

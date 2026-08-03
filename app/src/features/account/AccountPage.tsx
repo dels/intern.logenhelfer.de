@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Box, Paper, TextField, Button, Typography, Alert, Link } from '@mui/material';
-import { Link as RouterLink } from 'react-router';
+import { Box, Paper, TextField, Button, Typography, Alert } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useUpdatePassword } from './api';
 import { apiErrorMessage } from '../../api/client';
 import { useAuth } from '../../auth/AuthProvider';
 import { useMember, useUpdateMember } from '../members/api';
 import MemberForm from '../members/MemberForm';
+import MfaAccountSection from '../mfa/MfaAccountSection';
 import type { MemberInput } from '../../api/types';
 
 const schema = z.object({
@@ -90,29 +90,40 @@ export default function AccountPage() {
   return (
     <Box>
       <Typography variant="h1" sx={{ mb: 2 }}>{t('account.title')}</Typography>
-      <ProfileSection />
-      <Paper sx={{ p: 3, maxWidth: 420, mb: 3 }}>
-        <Typography variant="h2" sx={{ mb: 2 }}>{t('mfa.security.title')}</Typography>
-        <Link component={RouterLink} to="/account/security">{t('account.manageSecurityLink')}</Link>
-      </Paper>
-      <Paper sx={{ p: 3, maxWidth: 420 }}>
-        <Typography variant="h2" sx={{ mb: 2 }}>{t('account.changePassword')}</Typography>
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{t('account.success')}</Alert>}
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{apiErrorMessage(error)}</Alert>}
-        <form onSubmit={onSubmit} noValidate>
-          <TextField {...register('current_password')} label={t('account.currentPassword')} type="password" fullWidth margin="normal"
-            error={!!formState.errors.current_password} autoComplete="current-password" />
-          <TextField {...register('new_password')} label={t('account.newPassword')} type="password" fullWidth margin="normal"
-            error={!!formState.errors.new_password}
-            helperText={formState.errors.new_password ? t('account.passwordTooShort') : undefined}
-            autoComplete="new-password" />
-          <TextField {...register('new_password_confirmation')} label={t('account.newPasswordConfirmation')} type="password" fullWidth margin="normal"
-            error={!!formState.errors.new_password_confirmation}
-            helperText={formState.errors.new_password_confirmation ? t('account.passwordMismatch') : undefined}
-            autoComplete="new-password" />
-          <Button type="submit" variant="contained" sx={{ mt: 2 }} disabled={isPending}>{t('account.save')}</Button>
-        </form>
-      </Paper>
+      <Box sx={{
+        display: 'grid',
+        gap: 3,
+        gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+        gridTemplateAreas: { xs: '"profile" "mfa" "password"', md: '"profile mfa" "password mfa"' },
+      }}
+      >
+        <Box sx={{ gridArea: 'profile' }}>
+          <ProfileSection />
+        </Box>
+        <Box sx={{ gridArea: 'mfa' }}>
+          <MfaAccountSection />
+        </Box>
+        <Box sx={{ gridArea: 'password' }}>
+          <Paper sx={{ p: 3, maxWidth: 420 }}>
+            <Typography variant="h2" sx={{ mb: 2 }}>{t('account.changePassword')}</Typography>
+            {success && <Alert severity="success" sx={{ mb: 2 }}>{t('account.success')}</Alert>}
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{apiErrorMessage(error)}</Alert>}
+            <form onSubmit={onSubmit} noValidate>
+              <TextField {...register('current_password')} label={t('account.currentPassword')} type="password" fullWidth margin="normal"
+                error={!!formState.errors.current_password} autoComplete="current-password" />
+              <TextField {...register('new_password')} label={t('account.newPassword')} type="password" fullWidth margin="normal"
+                error={!!formState.errors.new_password}
+                helperText={formState.errors.new_password ? t('account.passwordTooShort') : undefined}
+                autoComplete="new-password" />
+              <TextField {...register('new_password_confirmation')} label={t('account.newPasswordConfirmation')} type="password" fullWidth margin="normal"
+                error={!!formState.errors.new_password_confirmation}
+                helperText={formState.errors.new_password_confirmation ? t('account.passwordMismatch') : undefined}
+                autoComplete="new-password" />
+              <Button type="submit" variant="contained" sx={{ mt: 2 }} disabled={isPending}>{t('account.save')}</Button>
+            </form>
+          </Paper>
+        </Box>
+      </Box>
     </Box>
   );
 }

@@ -509,8 +509,7 @@
     "passwordTooShort": "Password must be at least 8 characters.",
     "passwordMismatch": "Passwords do not match.",
     "profileHeader": "Profile",
-    "profileSuccess": "Profile updated successfully.",
-    "manageSecurityLink": "Manage security"
+    "profileSuccess": "Profile updated successfully."
   },
   "mfa": {
     "setup": {
@@ -524,7 +523,8 @@
       "emailSent": "We sent you a code by email.",
       "done": "Done!",
       "continue": "Continue to dashboard",
-      "passkeyFailed": "Passkey registration failed."
+      "passkeyFailed": "Passkey registration failed.",
+      "passkeyRegistering": "Registering passkey …"
     },
     "backupCodes": {
       "warning": "Save these codes now - they're the only way to regain access to your account if you lose your device."
@@ -538,6 +538,7 @@
     "method": {
       "totp": "Authenticator app",
       "email": "Email",
+      "passkey": "Passkey",
       "backup_code": "Backup code"
     },
     "dashboard": {
@@ -552,7 +553,7 @@
       "remove": "Remove",
       "lastMethodTooltip": "The last method can't be removed while two-factor authentication is mandatory.",
       "proofFailed": "Verification failed. Please try again.",
-      "title": "Manage security",
+      "title": "Manage MFA",
       "backupCodesHeader": "Backup codes",
       "regenerateBackupCodes": "Regenerate backup codes",
       "trustedDevicesHeader": "Trusted devices",

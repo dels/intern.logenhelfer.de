@@ -19,6 +19,7 @@ import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import ExpandLessIcon from '@mui/icons-material/ExpandLessRounded';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import SyncIcon from '@mui/icons-material/Sync';
+import AccountCircleIcon from '@mui/icons-material/AccountCircleRounded';
 import { useAuth } from '../auth/AuthProvider';
 import { apiErrorMessage } from '../api/client';
 import { useCategories } from '../features/categories/api';
@@ -159,6 +160,7 @@ export default function AppShell() {
     { key: 'nav.users', to: '/members', icon: <PeopleIcon /> },
     ...(abilities.seeker?.includes('read') ? [{ key: 'nav.seekers', to: '/seekers', icon: <PersonSearchIcon /> }] : []),
     ...(abilities.statistic?.includes('index') ? [{ key: 'nav.statistics', to: '/statistics', icon: <BarChartIcon /> }] : []),
+    { key: 'account.navLabel', to: '/account', icon: <AccountCircleIcon /> },
   ];
 
   const configItems: NavItem[] = [

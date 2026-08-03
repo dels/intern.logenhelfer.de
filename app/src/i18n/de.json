@@ -509,8 +509,7 @@
     "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
     "passwordMismatch": "Die Passwörter stimmen nicht überein.",
     "profileHeader": "Profil",
-    "profileSuccess": "Profil erfolgreich aktualisiert.",
-    "manageSecurityLink": "Sicherheit verwalten"
+    "profileSuccess": "Profil erfolgreich aktualisiert."
   },
   "mfa": {
     "setup": {
@@ -524,7 +523,8 @@
       "emailSent": "Wir haben dir einen Code per E-Mail geschickt.",
       "done": "Fertig!",
       "continue": "Weiter zum Dashboard",
-      "passkeyFailed": "Passkey-Registrierung fehlgeschlagen."
+      "passkeyFailed": "Passkey-Registrierung fehlgeschlagen.",
+      "passkeyRegistering": "Passkey wird registriert …"
     },
     "backupCodes": {
       "warning": "Speichere diese Codes jetzt - sie sind der einzige Weg, wieder Zugriff auf dein Konto zu erhalten, falls du dein Gerät verlierst."
@@ -538,6 +538,7 @@
     "method": {
       "totp": "Authenticator App",
       "email": "E-Mail",
+      "passkey": "Passkey",
       "backup_code": "Backup-Code"
     },
     "dashboard": {
@@ -552,7 +553,8 @@
       "remove": "Entfernen",
       "lastMethodTooltip": "Die letzte Methode kann nicht entfernt werden, solange Zwei-Faktor-Authentifizierung verpflichtend ist.",
       "proofFailed": "Bestätigung fehlgeschlagen. Bitte versuche es erneut.",
-      "title": "Sicherheit verwalten",
+      "verifyWithPasskey": "Mit Passkey bestätigen",
+      "title": "MFA verwalten",
       "backupCodesHeader": "Backup-Codes",
       "regenerateBackupCodes": "Neue Backup-Codes erzeugen",
       "trustedDevicesHeader": "Vertraute Geräte",
