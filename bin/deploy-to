@@ -36,12 +36,16 @@ done
 cd "$(dirname "$0")/.."
 BRANCH=${BRANCH:-$(git rev-parse --abbrev-ref HEAD)}
 
-# ─── Load global local config (REPO_URL only - everything else is per-env) ───
+# ─── Load global local config (everything else is per-env) ───────────────────
 LOCAL_ENV_FILE=.env
 [[ -f "$LOCAL_ENV_FILE" ]] || { echo "Error: $LOCAL_ENV_FILE not found. Copy .env.example and fill in your values." >&2; exit 1; }
 # shellcheck source=.env
 source "$LOCAL_ENV_FILE"
-: "${REPO_URL:?REPO_URL is required in $LOCAL_ENV_FILE}"
+
+# REPO_URL comes from this checkout's own git config, not .env - it's already
+# known (this script only runs from inside a clone) and keeping it in .env too
+# invited drift between the two.
+REPO_URL="$(git config --get remote.origin.url)" || { echo "Error: no 'origin' remote configured in this checkout. Set one with 'git remote add origin <url>'." >&2; exit 1; }
 
 # ─── Load this environment's own self-contained config ───────────────────────
 # .env.<env> is the SOURCE OF TRUTH for this environment - both deploy
