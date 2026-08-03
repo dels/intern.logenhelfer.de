@@ -114,14 +114,23 @@ export default function LoginPage() {
     // installed @simplewebauthn/browser version - the cleanup function
     // below must stay synchronous, so the async check is chained via
     // .then() rather than making this effect callback itself async.
+    // `cancelled` guards against acting on a stale resolution after this
+    // component has unmounted - e.g. a fast typist who submits the password
+    // form and navigates away before this availability check resolves. Same
+    // pattern as AuthProvider's own bootstrap effect.
+    let cancelled = false;
     browserSupportsWebAuthnAutofill().then((supported) => {
+      if (cancelled) return;
       if (!supported) {
         console.info('Passkey autofill not supported in this browser');
         return;
       }
       void attemptPasskeyLogin({ useBrowserAutofill: true });
     });
-    return () => WebAuthnAbortService.cancelCeremony();
+    return () => {
+      cancelled = true;
+      WebAuthnAbortService.cancelCeremony();
+    };
     // Deliberately mount-only: this offers autofill once per page load,
     // same lifetime as the browser's own suggestion.
     // eslint-disable-next-line react-hooks/exhaustive-deps

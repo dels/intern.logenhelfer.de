@@ -425,5 +425,26 @@ describe('LoginPage', () => {
       expect(cancelSpy).toHaveBeenCalled();
       cancelSpy.mockRestore();
     });
+
+    it('never attempts a passkey ceremony if the component unmounts before the availability check resolves', async () => {
+      // Simulates a fast typist who submits the password form and navigates
+      // away (unmounting LoginPage) before browserSupportsWebAuthnAutofill()
+      // has resolved. We control resolution ourselves and only resolve it
+      // (as "supported") after the component is already gone, to prove the
+      // stale .then() callback is a no-op post-unmount.
+      let resolveSupported: (value: boolean) => void = () => {};
+      vi.mocked(browserSupportsWebAuthnAutofill).mockImplementation(
+        () => new Promise((resolve) => { resolveSupported = resolve; }),
+      );
+
+      const { unmount } = renderLoginPage();
+      unmount();
+
+      resolveSupported(true);
+      // Flush the microtask queue so the (guarded) .then() callback runs.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(startAuthentication).not.toHaveBeenCalled();
+    });
   });
 });
