@@ -12,7 +12,7 @@ import { useIdleTimeout } from './useIdleTimeout';
 
 vi.mock('./useIdleTimeout', () => ({ useIdleTimeout: vi.fn() }));
 
-import { WebAuthnError, startAuthentication } from '@simplewebauthn/browser';
+import { startAuthentication } from '@simplewebauthn/browser';
 
 vi.mock('@simplewebauthn/browser', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@simplewebauthn/browser')>();
@@ -154,7 +154,7 @@ test('unmounting before the bootstrap /api/v1/me fetch resolves does not throw o
   });
 });
 
-test('loginWithPasskey forwards useBrowserAutofill and an abort signal through to startAuthentication', async () => {
+test('loginWithPasskey forwards useBrowserAutofill through to startAuthentication', async () => {
   server.use(
     http.post('/api/v1/session/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })),
     http.post('/api/v1/session/passkey/verify', () => HttpResponse.json({ access_token: 'passkey-tok', user })),
@@ -174,11 +174,10 @@ test('loginWithPasskey forwards useBrowserAutofill and an abort signal through t
   render(<AuthProvider><Probe /></AuthProvider>);
   await waitFor(() => expect(auth?.status).toBe('anonymous'));
 
-  const controller = new AbortController();
-  await act(() => auth!.loginWithPasskey({ useBrowserAutofill: true, signal: controller.signal }));
+  await act(() => auth!.loginWithPasskey({ useBrowserAutofill: true }));
 
   expect(startAuthentication).toHaveBeenCalledWith(
-    expect.objectContaining({ useBrowserAutofill: true, signal: controller.signal }),
+    expect.objectContaining({ useBrowserAutofill: true }),
   );
   await waitFor(() => expect(auth?.status).toBe('authenticated'));
 });

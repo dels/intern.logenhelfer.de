@@ -18,7 +18,7 @@ interface AuthContextValue {
   mfaSetupRequired: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   completeMfaChallenge: (mfaPendingToken: string, input: { method: string; code: string; remember_device: boolean }) => Promise<void>;
-  loginWithPasskey: (options?: { useBrowserAutofill?: boolean; signal?: AbortSignal }) => Promise<void>;
+  loginWithPasskey: (options?: { useBrowserAutofill?: boolean }) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: MeUser) => void;
   refreshUser: () => Promise<void>;
@@ -123,7 +123,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const assertion = await startAuthentication({
         optionsJSON: options,
         useBrowserAutofill: opts?.useBrowserAutofill,
-        signal: opts?.signal,
       });
       const session = await apiFetch<SessionPayload>('/api/v1/session/passkey/verify', {
         method: 'POST',
