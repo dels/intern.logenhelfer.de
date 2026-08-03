@@ -432,6 +432,14 @@ describe('LoginPage', () => {
       // has resolved. We control resolution ourselves and only resolve it
       // (as "supported") after the component is already gone, to prove the
       // stale .then() callback is a no-op post-unmount.
+      //
+      // The passkey options endpoint is mocked (like the other tests in this
+      // block) so that, absent the unmount guard, attemptPasskeyLogin would
+      // actually reach startAuthentication rather than failing earlier for
+      // an unrelated reason (an unmocked request) - that would make this
+      // test pass "by accident" instead of actually exercising the guard.
+      server.use(http.post('/api/v1/session/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })));
+      vi.mocked(startAuthentication).mockImplementation(() => new Promise(() => {}));
       let resolveSupported: (value: boolean) => void = () => {};
       vi.mocked(browserSupportsWebAuthnAutofill).mockImplementation(
         () => new Promise((resolve) => { resolveSupported = resolve; }),
@@ -441,7 +449,9 @@ describe('LoginPage', () => {
       unmount();
 
       resolveSupported(true);
-      // Flush the microtask queue so the (guarded) .then() callback runs.
+      // Flush the microtask queue (and the options fetch's own promise chain)
+      // so the (guarded) .then() callback, and anything it would have
+      // triggered, gets a chance to run.
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(startAuthentication).not.toHaveBeenCalled();
