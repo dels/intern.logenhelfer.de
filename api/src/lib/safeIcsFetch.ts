@@ -179,15 +179,20 @@ function pinnedLookup(addresses: string[]) {
  * certificate hostname verification keep working normally - only the actual
  * DNS resolution step is overridden.
  *
- * Typed as `unknown` at the boundary passed to `fetch()` below: Node's global
- * `fetch` types its `dispatcher` option against the lightweight `undici-types`
- * package bundled with `@types/node`, not against the real `undici` package's
- * own (structurally near-identical but not assignable) `Dispatcher` type.
- * They're the same shape at runtime - this is a real, documented interop gap
- * between the two type packages, not a correctness issue - verified
- * end-to-end (custom `connect.lookup` actually overriding the connection
- * target for Node's built-in fetch) with a standalone script against this
- * exact Node/undici version before writing this.
+ * The `dispatcher` it returns is passed as-is to the ambient global
+ * `fetch()` below (not undici's own exported `fetch`, which
+ * safeIcsFetch.test.ts's `vi.stubGlobal('fetch', ...)` mocking can't
+ * intercept). Cast through `unknown` at that call site: @types/node's
+ * global fetch typing no longer exposes a `dispatcher` option on
+ * `RequestInit` at all (it now models only the WHATWG fetch spec's
+ * standard surface, not Node/undici-specific extensions), while this
+ * `Agent`'s real shape is exactly what Node's built-in fetch (itself
+ * undici under the hood) expects at runtime - this is a real, verified
+ * interop gap between the ambient type and the runtime behavior, not a
+ * correctness issue - verified end-to-end (custom `connect.lookup`
+ * actually overriding the connection target for Node's built-in fetch)
+ * with a standalone script against this exact Node/undici version before
+ * writing this.
  *
  * Exported (only) so `safeIcsFetch.integration.test.ts` can drive it against
  * a real local server with the real global `fetch` - see that file for why
@@ -214,14 +219,22 @@ export async function fetchIcsUrlSafely(url: string): Promise<string> {
   for (let redirectCount = 0; ; redirectCount += 1) {
     const dispatcher = createPinnedDispatcher(target.addresses);
     try {
+      // Deliberately the ambient global `fetch` (not undici's own exported
+      // one) - safeIcsFetch.test.ts mocks network behavior via
+      // vi.stubGlobal('fetch', ...), which only intercepts this global,
+      // not a separately-imported undici fetch reference. @types/node's
+      // global fetch typing no longer exposes a `dispatcher` option on
+      // RequestInit at all (it now models only the WHATWG fetch spec's
+      // standard surface, not Node/undici-specific extensions), so the
+      // whole options object is cast through `unknown` rather than the
+      // (now-nonexistent) `RequestInit['dispatcher']` property - same real
+      // shape at runtime, undici's own Agent (see createPinnedDispatcher's
+      // comment above).
       // eslint-disable-next-line no-await-in-loop -- each hop's target depends on the previous response's Location header.
       const response = await fetch(target.url, {
         redirect: 'manual',
-        // See createPinnedDispatcher's comment: undici's Agent vs. the
-        // undici-types Dispatcher that @types/node's fetch typing expects
-        // are the same shape at runtime, not mutually assignable in TS.
-        dispatcher: dispatcher as unknown as NonNullable<RequestInit['dispatcher']>,
-      });
+        dispatcher,
+      } as unknown as RequestInit);
 
       if (response.status >= 300 && response.status < 400) {
         if (redirectCount >= MAX_REDIRECTS) {
