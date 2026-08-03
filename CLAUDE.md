@@ -16,6 +16,12 @@ correctly.
 
 Key facts to hold onto while working on or around this mechanism:
 
+- Never change the .env file in the local main branch. always copy .env file to
+  current worktree and edit the copy.
+- When using a local postgres instance, you should create an own instance
+  per worktree with a random port to avoid data pollution by another worktree.
+  Remote the worktree specific postgres instance, when done or cleaning up the
+  worktree.
 - **`infra/docker-compose.production.yml` uses `image: ${CONTAINER_NAME}:${DEPLOY_TAG:-latest}`,
   not `build:`.** Building and running are separate steps (`docker compose
   build` tags an image; `docker compose up` runs whatever `DEPLOY_TAG` points
@@ -476,8 +482,6 @@ logging every non-2xx response and its timestamp — zero non-2xx responses
 outside the one-time port-migration transition window is the actual bar;
 reasoning about the `nginx -s reload` semantics alone is not sufficient
 proof, this has to be observed.
-When using a local postgres instance, you should create an own instance
-per worktree with a random port to avoid data pollution by another worktree.
 
 ## Security requirements
 
