@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { apiFetch } from '../../api/client';
+import { apiErrorMessage, apiFetch } from '../../api/client';
 import { useToast } from '../../notifications/useToast';
 import type {
   AppConfigValues, DistrictInput, DistrictSummary,
@@ -25,6 +25,7 @@ export function useUpdateAppConfig() {
       queryClient.invalidateQueries({ queryKey: ['app-config'] });
       toast.success(t('common.toast.updated'));
     },
+    onError: (error) => toast.error(apiErrorMessage(error) ?? t('common.toast.error')),
   });
 }
 

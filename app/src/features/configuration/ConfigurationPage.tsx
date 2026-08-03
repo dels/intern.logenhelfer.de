@@ -73,7 +73,7 @@ function categoryForTab(index: number): FieldCategory | null {
 function AppConfigSection({ activeTab }: { activeTab: number }) {
   const { t } = useTranslation();
   const { data, isLoading } = useAppConfig();
-  const { mutate: update, isPending, error } = useUpdateAppConfig();
+  const { mutate: update, isPending } = useUpdateAppConfig();
   const [values, setValues] = useState<AppConfigValues>({});
   const demo = useDemoMode();
 
@@ -86,7 +86,6 @@ function AppConfigSection({ activeTab }: { activeTab: number }) {
 
   return (
     <Box component="form" sx={{ mb: 4 }} onSubmit={(e) => { e.preventDefault(); update(values); }}>
-      {error && activeCategory && <Alert severity="error" sx={{ mb: 2 }}>{apiErrorMessage(error)}</Alert>}
       {(['funktionen', 'konfiguration', 'impressum', 'sicherheit'] as const).map((category) => (
         <TabPanel key={category} active={activeCategory === category}>
           <Stack spacing={2} sx={{ maxWidth: 640 }}>
