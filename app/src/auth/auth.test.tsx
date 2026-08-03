@@ -12,13 +12,20 @@ import { useIdleTimeout } from './useIdleTimeout';
 
 vi.mock('./useIdleTimeout', () => ({ useIdleTimeout: vi.fn() }));
 
+import { WebAuthnError, startAuthentication } from '@simplewebauthn/browser';
+
+vi.mock('@simplewebauthn/browser', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@simplewebauthn/browser')>();
+  return { ...actual, startAuthentication: vi.fn() };
+});
+
 const user = { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster', subscribed_to_announcements: false, gdpr_accepted: true };
 const server = setupServer(
   http.post('/api/v1/session/refresh', () => new HttpResponse(null, { status: 401 })),
   http.get('/api/v1/public/landing', () => HttpResponse.json({ calendar_as_landing_page: false })),
 );
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => { server.resetHandlers(); setAccessToken(null); });
+afterEach(() => { server.resetHandlers(); setAccessToken(null); vi.mocked(startAuthentication).mockReset(); });
 afterAll(() => server.close());
 
 function renderApp(path: string) {
@@ -145,4 +152,33 @@ test('unmounting before the bootstrap /api/v1/me fetch resolves does not throw o
     resolveMe!({ user, abilities: { event: ['read'] } });
     await Promise.resolve();
   });
+});
+
+test('loginWithPasskey forwards useBrowserAutofill and an abort signal through to startAuthentication', async () => {
+  server.use(
+    http.post('/api/v1/session/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })),
+    http.post('/api/v1/session/passkey/verify', () => HttpResponse.json({ access_token: 'passkey-tok', user })),
+    http.get('/api/v1/me', ({ request }) => {
+      if (request.headers.get('Authorization') === 'Bearer passkey-tok') return HttpResponse.json({ user, abilities: {} });
+      return new HttpResponse(null, { status: 401 });
+    }),
+  );
+  vi.mocked(startAuthentication).mockResolvedValueOnce({
+    id: 'cred-1', rawId: 'cred-1', type: 'public-key',
+    response: { clientDataJSON: '', authenticatorData: '', signature: '' },
+    clientExtensionResults: {},
+  } as never);
+
+  let auth: ReturnType<typeof useAuth> | undefined;
+  function Probe() { auth = useAuth(); return null; }
+  render(<AuthProvider><Probe /></AuthProvider>);
+  await waitFor(() => expect(auth?.status).toBe('anonymous'));
+
+  const controller = new AbortController();
+  await act(() => auth!.loginWithPasskey({ useBrowserAutofill: true, signal: controller.signal }));
+
+  expect(startAuthentication).toHaveBeenCalledWith(
+    expect.objectContaining({ useBrowserAutofill: true, signal: controller.signal }),
+  );
+  await waitFor(() => expect(auth?.status).toBe('authenticated'));
 });
