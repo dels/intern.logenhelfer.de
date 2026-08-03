@@ -62,10 +62,17 @@ describe('createPinnedDispatcher (real fetch, real local server, no mocks)', () 
   it('real fetch() connects to the pinned address, not real DNS, for a hostname real DNS can never resolve', async () => {
     const dispatcher = createPinnedDispatcher(['127.0.0.1']);
     try {
+      // Deliberately the ambient global `fetch`, not undici's own exported
+      // one - see this file's own top comment. @types/node's global fetch
+      // typing no longer exposes `dispatcher` on RequestInit at all (a
+      // Node/undici-specific extension, not part of the WHATWG fetch spec
+      // it now models), so the whole options object is cast through
+      // `unknown` rather than the (now-nonexistent) `RequestInit['dispatcher']`
+      // property - same real shape at runtime, undici's own Agent.
       const response = await fetch(`http://pinned-test.invalid:${port}/`, {
         redirect: 'manual',
-        dispatcher: dispatcher as unknown as NonNullable<RequestInit['dispatcher']>,
-      });
+        dispatcher,
+      } as unknown as RequestInit);
       expect(response.status).toBe(200);
       await expect(response.text()).resolves.toBe('PINNED-OK');
     } finally {
