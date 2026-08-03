@@ -6,14 +6,22 @@ import BackupCodesDisplay from './BackupCodesDisplay';
 import MfaProofDialog from './MfaProofDialog';
 import { useToast } from '../../notifications/useToast';
 import { formatDate } from '../../utils/formatDate';
-import { useRegenerateBackupCodes, useTrustedDevices, useRevokeTrustedDevice } from './api';
+import { useMfaStatus, useMfaPasskeyCredentials, useRegenerateBackupCodes, useTrustedDevices, useRevokeTrustedDevice } from './api';
 import type { MfaSetupProof } from './api';
 
 function BackupCodesSection() {
   const { t } = useTranslation();
   const toast = useToast();
   const regenerate = useRegenerateBackupCodes();
+  const status = useMfaStatus();
+  const passkeys = useMfaPasskeyCredentials({ enabled: true });
   const [proofOpen, setProofOpen] = useState(false);
+
+  const availableProofMethods = [
+    ...(status.data?.methods.includes('totp') ? (['totp'] as const) : []),
+    ...((passkeys.data?.credentials.length ?? 0) > 0 ? (['passkey'] as const) : []),
+    'backup_code' as const,
+  ];
 
   async function handleConfirmProof(proof: MfaSetupProof) {
     setProofOpen(false);
@@ -32,7 +40,7 @@ function BackupCodesSection() {
       ) : (
         <Button variant="outlined" onClick={() => setProofOpen(true)}>{t('mfa.security.regenerateBackupCodes')}</Button>
       )}
-      <MfaProofDialog open={proofOpen} onClose={() => setProofOpen(false)} onSubmit={handleConfirmProof} />
+      <MfaProofDialog open={proofOpen} onClose={() => setProofOpen(false)} onSubmit={handleConfirmProof} availableMethods={availableProofMethods} />
     </Paper>
   );
 }
@@ -62,11 +70,11 @@ function TrustedDevicesSection() {
   );
 }
 
-export default function MfaSecurityPage() {
+export default function MfaAccountSection() {
   const { t } = useTranslation();
   return (
     <Box>
-      <Typography variant="h1" sx={{ mb: 2 }}>{t('mfa.security.title')}</Typography>
+      <Typography variant="h2" sx={{ mb: 2 }}>{t('mfa.security.title')}</Typography>
       <Paper sx={{ p: 3, maxWidth: 480, mb: 3 }}>
         <MfaSetupWizard mode="manage" />
       </Paper>

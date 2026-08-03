@@ -9,7 +9,8 @@ import { sendEmailOtp, verifyEmailOtp } from '../lib/mfaEmailOtp.js';
 import { generateBackupCodes, consumeBackupCode } from '../lib/mfaBackupCodes.js';
 import { getUserMfaMethods, computeGracePeriodEndsAt } from '../lib/mfaStatus.js';
 import { getMfaSettings } from '../lib/mfaSettings.js';
-import { buildRegistrationOptions, verifyRegistration } from '../lib/mfaPasskeys.js';
+import { buildRegistrationOptions, verifyRegistration, buildAuthenticationOptions, verifyAuthentication } from '../lib/mfaPasskeys.js';
+import type { AuthenticationResponseJSON } from '@simplewebauthn/server';
 import { isMfaLockedOut, recordFailedMfaAttempt, resetMfaLockout } from '../auth/mfaLockout.js';
 
 const router = Router();
@@ -39,6 +40,13 @@ router.use((req, res, next) => {
 // restarts - see mfaChallenge.ts's persisted device-trust cookie instead).
 const pendingRegistrationChallenges = new Map<number, string>();
 
+// Same in-memory, per-user, single-use-ceremony pattern as
+// pendingRegistrationChallenges above, but kept in a separate map: a user
+// could otherwise be mid-registration (adding a new passkey) and
+// mid-proof (re-verifying to add/remove a different method) at the same
+// time, and the two ceremonies must not overwrite each other's challenge.
+const pendingProofChallenges = new Map<number, string>();
+
 /**
  * Security gate (added after automated review flagged an account-persistence
  * hole): a stolen/hijacked bearer token alone can complete TOTP setup or
@@ -64,13 +72,14 @@ async function verifyExistingMfaProof(userId: number, proof: unknown): Promise<b
     return false;
   }
 
-  const p = proof as { method?: string; code?: string } | undefined;
+  const p = proof as { method?: string; code?: string; response?: AuthenticationResponseJSON } | undefined;
   let proven = false;
-  // Only a real totp/backup_code verification attempt should move the
-  // lockout counter - any other/missing method (e.g. 'email', checked via a
-  // completely separate verifyEmailOtp call by callers like
-  // /backup-codes/regenerate) never touches mfa_totp_credentials or
-  // consumeBackupCode, so it must not count as a failed guess here.
+  // Only a real totp/backup_code/passkey verification attempt should move
+  // the lockout counter - any other/missing method (e.g. 'email', checked
+  // via a completely separate verifyEmailOtp call by callers like
+  // /backup-codes/regenerate) never touches mfa_totp_credentials,
+  // consumeBackupCode, or mfa_passkey_credentials, so it must not count as
+  // a failed guess here.
   let attempted = false;
   if (p?.method === 'totp') {
     attempted = true;
@@ -83,6 +92,37 @@ async function verifyExistingMfaProof(userId: number, proof: unknown): Promise<b
     // `false` here is treated as a failed proof attempt, same as a wrong
     // TOTP code.
     proven = await consumeBackupCode(userId, String(p.code ?? ''));
+  } else if (p?.method === 'passkey') {
+    attempted = true;
+    // One-time consumption regardless of outcome (unlike backup codes,
+    // which have many distinct codes) - a WebAuthn challenge must never be
+    // replayed, so a failed/missing attempt still burns it; the caller has
+    // to re-request /proof/passkey/options before trying again.
+    const challenge = pendingProofChallenges.get(userId);
+    pendingProofChallenges.delete(userId);
+    const response = p.response;
+    if (challenge && response) {
+      // Security: scope the credential lookup to THIS user, not just the
+      // credential id from the response - unlike login (session.ts), which
+      // legitimately discovers the user from the credential, a proof check
+      // for an already-authenticated user must never accept a passkey
+      // belonging to someone else's account.
+      const credential = await prisma.mfa_passkey_credentials.findUnique({ where: { credential_id: response.id } });
+      if (credential && credential.user_id === userId) {
+        const verification = await verifyAuthentication(response, challenge, {
+          id: credential.credential_id,
+          publicKey: Buffer.from(credential.public_key, 'base64url'),
+          counter: credential.sign_count,
+        });
+        if (verification.verified) {
+          proven = true;
+          await prisma.mfa_passkey_credentials.update({
+            where: { id: credential.id },
+            data: { sign_count: verification.authenticationInfo.newCounter, last_used_at: new Date() },
+          });
+        }
+      }
+    }
   }
 
   if (attempted) {
@@ -346,6 +386,23 @@ router.get('/passkeys', async (req, res, next) => {
         last_used_at: c.last_used_at ? c.last_used_at.toISOString() : null,
       })),
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/proof/passkey/options', async (req, res, next) => {
+  try {
+    const user = req.currentUser!;
+    const credentials = await prisma.mfa_passkey_credentials.findMany({
+      where: { user_id: user.id },
+      select: { credential_id: true },
+    });
+    if (credentials.length === 0) throw ApiError.notFound();
+
+    const options = await buildAuthenticationOptions({ allowCredentialIds: credentials.map((c) => c.credential_id) });
+    pendingProofChallenges.set(user.id, options.challenge);
+    res.status(200).json(options);
   } catch (err) {
     next(err);
   }

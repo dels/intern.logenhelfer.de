@@ -26,13 +26,12 @@ export default function DashboardPage() {
       {user && <Typography sx={{ mt: 1 }}>{t('dashboard.welcome', { name: `${user.firstname} ${user.lastname}` })}</Typography>}
       {abilities.attached_file?.includes('manage') && <StorageBanner />}
       <MfaSetupBanner />
-      <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-start' }}>
-        <Box sx={{ flex: '1 1 320px' }}>
-          <RecentAnnouncements />
-        </Box>
-        <Box sx={{ flex: '1 1 320px' }}>
-          <UpcomingEventsCard eventsData={eventsData} isLoading={eventsLoading} />
-        </Box>
+      <Box sx={{
+        mt: 2, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 2, maxWidth: 800, mx: 'auto',
+      }}
+      >
+        <RecentAnnouncements />
+        <UpcomingEventsCard eventsData={eventsData} isLoading={eventsLoading} />
         <MembersStatCard />
         {(abilities.seeker?.includes('read') || abilities.seeker?.includes('names_list')) && <SeekersStatCard />}
       </Box>

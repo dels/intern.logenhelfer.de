@@ -16,6 +16,16 @@ import { decryptSecret, encryptSecret } from '../../src/lib/mfaEncryption.js';
 import { appConfig, KNOWN_KEYS } from '../../src/lib/appConfig.js';
 import * as mail from '../../src/lib/mail.js';
 
+// Mirrors session.test.ts's identical mocking rationale: verifyAuthentication
+// requires a real signature from a real authenticator private key, which no
+// test fixture here has, so only it is mocked - buildAuthenticationOptions
+// (a pure, real @simplewebauthn/server computation) stays genuine.
+vi.mock('../../src/lib/mfaPasskeys.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/lib/mfaPasskeys.js')>();
+  return { ...actual, verifyAuthentication: vi.fn() };
+});
+import { verifyAuthentication } from '../../src/lib/mfaPasskeys.js';
+
 function buildApp() {
   const app = express();
   app.use(express.json());
@@ -860,5 +870,201 @@ describe('DELETE /api/v1/mfa/methods/passkey/:credentialId', () => {
 
     expect(res.status).toBe(204);
     expect(await prisma.mfa_passkey_credentials.findUnique({ where: { credential_id: 'cred-b' } })).not.toBeNull();
+  });
+});
+
+describe('POST /api/v1/mfa/proof/passkey/options', () => {
+  beforeEach(async () => {
+    await resetDb();
+    vi.mocked(verifyAuthentication).mockReset();
+  });
+
+  it('404s for a user with no passkey credentials', async () => {
+    const user = await createUser();
+    const token = issueAccessToken(user.id);
+
+    const res = await request(app).post('/api/v1/mfa/proof/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+    expect(res.status).toBe(404);
+  });
+
+  it('scopes allowCredentials to the caller\'s own passkeys, not another user\'s', async () => {
+    const user = await createUser();
+    const otherUser = await createUser();
+    await createPasskeyCredential(user.id, 'mine');
+    await createPasskeyCredential(otherUser.id, 'not-mine');
+    const token = issueAccessToken(user.id);
+
+    const res = await request(app).post('/api/v1/mfa/proof/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+
+    expect(res.status).toBe(200);
+    expect(res.body.challenge).toBeTruthy();
+    expect(res.body.allowCredentials.map((c: { id: string }) => c.id)).toEqual(['mine']);
+  });
+});
+
+// Regression coverage for the passkey branch added to verifyExistingMfaProof
+// (Task: "allow re-verification via any enrolled method, not just totp/
+// backup_code" - a user whose only method is a passkey previously had no way
+// to re-verify at all). Reuses DELETE /methods/totp as the call site under
+// test, since verifyExistingMfaProof is the single shared chokepoint - the
+// same coverage applies identically to /setup/start, /backup-codes/regenerate,
+// and DELETE /methods/passkey/:credentialId.
+describe('passkey as MFA re-verification proof (verifyExistingMfaProof)', () => {
+  beforeEach(async () => {
+    await resetDb();
+    process.env.MFA_ENCRYPTION_KEY = 'a'.repeat(64);
+    vi.mocked(verifyAuthentication).mockReset();
+  });
+
+  async function getPasskeyProofOptions(token: string) {
+    const res = await request(app).post('/api/v1/mfa/proof/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+    return res.body.challenge as string;
+  }
+
+  it('allows proving via passkey to remove a different existing method (allow case)', async () => {
+    const user = await createUser();
+    const secret = authenticator.generateSecret();
+    await createTotpCredential(user.id, secret, true);
+    await createPasskeyCredential(user.id, 'cred-a');
+    const token = issueAccessToken(user.id);
+    await getPasskeyProofOptions(token);
+
+    vi.mocked(verifyAuthentication).mockResolvedValueOnce({
+      verified: true,
+      authenticationInfo: { newCounter: 7 },
+    } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+    const res = await request(app)
+      .delete('/api/v1/mfa/methods/totp')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
+
+    expect(res.status).toBe(204);
+    expect(await prisma.mfa_totp_credentials.findUnique({ where: { user_id: user.id } })).toBeNull();
+    const credential = await prisma.mfa_passkey_credentials.findUnique({ where: { credential_id: 'cred-a' } });
+    expect(credential?.sign_count).toBe(7);
+    expect(credential?.last_used_at).not.toBeNull();
+  });
+
+  it('denies proof via a passkey credential that belongs to another user, even if verification would succeed (deny case)', async () => {
+    const user = await createUser();
+    const otherUser = await createUser();
+    const secret = authenticator.generateSecret();
+    await createTotpCredential(user.id, secret, true);
+    await createPasskeyCredential(user.id, 'mine'); // so /proof/passkey/options succeeds and a challenge exists for `user`
+    await createPasskeyCredential(otherUser.id, 'not-mine');
+    const token = issueAccessToken(user.id);
+    await getPasskeyProofOptions(token);
+
+    // Even though verification would report success, the credential
+    // belongs to a different user than the one presenting it as proof - the
+    // route must reject this without ever calling verifyAuthentication.
+    vi.mocked(verifyAuthentication).mockResolvedValueOnce({
+      verified: true,
+      authenticationInfo: { newCounter: 1 },
+    } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+    const res = await request(app)
+      .delete('/api/v1/mfa/methods/totp')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ proof: { method: 'passkey', response: { id: 'not-mine' } } });
+
+    expect(res.status).toBe(422);
+    expect(verifyAuthentication).not.toHaveBeenCalled();
+    expect(await prisma.mfa_totp_credentials.findUnique({ where: { user_id: user.id } })).not.toBeNull();
+  });
+
+  it('denies proof when no challenge was ever requested (deny case)', async () => {
+    const user = await createUser();
+    const secret = authenticator.generateSecret();
+    await createTotpCredential(user.id, secret, true);
+    await createPasskeyCredential(user.id, 'cred-a');
+    const token = issueAccessToken(user.id);
+
+    const res = await request(app)
+      .delete('/api/v1/mfa/methods/totp')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
+
+    expect(res.status).toBe(422);
+    expect(verifyAuthentication).not.toHaveBeenCalled();
+  });
+
+  it('consumes the challenge on first use - a second attempt without a fresh challenge is denied', async () => {
+    const user = await createUser();
+    const secret = authenticator.generateSecret();
+    await createTotpCredential(user.id, secret, true);
+    await createPasskeyCredential(user.id, 'cred-a');
+    const token = issueAccessToken(user.id);
+    await getPasskeyProofOptions(token);
+
+    vi.mocked(verifyAuthentication).mockResolvedValue({
+      verified: true,
+      authenticationInfo: { newCounter: 1 },
+    } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+    const first = await request(app)
+      .delete('/api/v1/mfa/methods/email')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
+    // No verified email credential exists, so this 404s before the proof
+    // gate even runs - what matters here is only that it consumed nothing.
+    expect(first.status).toBe(404);
+
+    const secondOptionsChallenge = await getPasskeyProofOptions(token);
+    expect(secondOptionsChallenge).toBeTruthy();
+
+    // Now actually consume the (second) challenge with a real proof attempt.
+    const consumeRes = await request(app)
+      .delete('/api/v1/mfa/methods/totp')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
+    expect(consumeRes.status).toBe(204);
+
+    // Retrying without requesting a new challenge must fail - the previous
+    // one was already deleted on that first read.
+    await createTotpCredential(user.id, secret, true);
+    const replayRes = await request(app)
+      .delete('/api/v1/mfa/methods/totp')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
+    expect(replayRes.status).toBe(422);
+  });
+
+  // Mirrors the existing TOTP lockout regression test above for the passkey
+  // branch: failed passkey-proof attempts must count toward the same
+  // mfa-proof:${userId} lockout as totp/backup_code, not bypass it.
+  it('locks out further proof attempts after 5 consecutive failed passkey proofs', async () => {
+    const user = await createUser();
+    const secret = authenticator.generateSecret();
+    await createTotpCredential(user.id, secret, true);
+    await createPasskeyCredential(user.id, 'cred-a');
+    const token = issueAccessToken(user.id);
+
+    vi.mocked(verifyAuthentication).mockResolvedValue({
+      verified: false,
+    } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+    for (let i = 0; i < 5; i++) {
+      await getPasskeyProofOptions(token);
+      const res = await request(app)
+        .delete('/api/v1/mfa/methods/totp')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
+      expect(res.status).toBe(422);
+    }
+
+    vi.mocked(verifyAuthentication).mockResolvedValueOnce({
+      verified: true,
+      authenticationInfo: { newCounter: 1 },
+    } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+    await getPasskeyProofOptions(token);
+
+    const lockedOutRes = await request(app)
+      .delete('/api/v1/mfa/methods/totp')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
+    expect(lockedOutRes.status).toBe(422);
+    expect(await prisma.mfa_totp_credentials.findUnique({ where: { user_id: user.id } })).not.toBeNull();
   });
 });

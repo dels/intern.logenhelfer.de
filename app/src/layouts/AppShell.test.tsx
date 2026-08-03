@@ -284,7 +284,7 @@ describe('AppShell sidebar sections', () => {
     // exactly the general-nav links - no category link, no Konfiguration
     // section, nothing extra rendered by an "empty" categories section.
     const linkNames = within(nav).getAllByRole('link').map((link) => link.textContent);
-    expect(linkNames).toEqual(['Übersicht', 'Aktuelles', 'Arbeitsplan', 'Externe Termine', 'Mitglieder']);
+    expect(linkNames).toEqual(['Übersicht', 'Aktuelles', 'Arbeitsplan', 'Externe Termine', 'Mitglieder', 'Mein Konto']);
     expect(within(nav).queryByText('Konfiguration')).not.toBeInTheDocument();
   });
 

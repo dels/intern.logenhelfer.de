@@ -153,8 +153,8 @@ test.fixme(
     await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
 
-    await page.goto('/account/security');
-    await expect(page.getByRole('heading', { name: 'Sicherheit verwalten' })).toBeVisible();
+    await page.goto('/account');
+    await expect(page.getByRole('heading', { name: 'MFA verwalten' })).toBeVisible();
 
     // Step 1: no seeded fixture in api/e2e/seedFrontendE2e.ts ever enrolls
     // MFA for any user (confirmed by inspection - it seeds users/roles/
@@ -340,8 +340,8 @@ test.fixme(
     await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
 
-    await page.goto('/account/security');
-    await expect(page.getByRole('heading', { name: 'Sicherheit verwalten' })).toBeVisible();
+    await page.goto('/account');
+    await expect(page.getByRole('heading', { name: 'MFA verwalten' })).toBeVisible();
 
     // Step 1: enroll TOTP as the first method (identical to the passkey
     // fixme test above - real, working reference code, kept here so this
@@ -415,8 +415,8 @@ test('a member enrolls TOTP and can remove it again with a fresh code, ending at
   await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
 
-  await page.goto('/account/security');
-  await expect(page.getByRole('heading', { name: 'Sicherheit verwalten' })).toBeVisible();
+  await page.goto('/account');
+  await expect(page.getByRole('heading', { name: 'MFA verwalten' })).toBeVisible();
 
   // Enroll TOTP (identical pattern to the fixme tests above - real,
   // verified reference code): capture the real otpauth secret off the real
@@ -518,15 +518,16 @@ test('removing the only enrolled method is blocked once mandatory MFA\'s grace p
   // demo-banner test) - it logs in with a plain, single-step password
   // login, with no real MFA challenge to also account for here. The mocked
   // GET /mfa/status above is what makes MfaSetupWizard believe otherwise
-  // once it loads /account/security.
+  // once it loads /account (MFA management is now an inline section there,
+  // not a separate page).
   await page.goto('/login');
   await page.getByLabel('E-Mail').fill('e2e@example.org');
   await page.getByLabel('Passwort').fill('e2e-Passw0rd!');
   await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
 
-  await page.goto('/account/security');
-  await expect(page.getByRole('heading', { name: 'Sicherheit verwalten' })).toBeVisible();
+  await page.goto('/account');
+  await expect(page.getByRole('heading', { name: 'MFA verwalten' })).toBeVisible();
 
   const totpRow = page.getByRole('listitem').filter({ hasText: 'Authenticator App' });
   await expect(totpRow).toBeVisible();

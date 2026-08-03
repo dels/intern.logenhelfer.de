@@ -45,6 +45,10 @@ const server = setupServer(
     const body = await request.json() as Record<string, unknown>;
     return HttpResponse.json({ ...memberFixture, ...body });
   }),
+  // MfaAccountSection (now mounted inline on this page) queries these.
+  http.get('/api/v1/mfa/status', () => HttpResponse.json({ methods: [], mode: 'optional', grace_period_ends_at: null })),
+  http.get('/api/v1/mfa/passkeys', () => HttpResponse.json({ credentials: [] })),
+  http.get('/api/v1/mfa/trusted-devices', () => HttpResponse.json({ devices: [] })),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
@@ -156,8 +160,10 @@ describe('AccountPage', () => {
     await waitFor(() => expect(screen.getByText('E-Mail ist bereits vergeben')).toBeInTheDocument());
   });
 
-  it('links to the security management page', async () => {
+  it('renders the MFA management section inline, not as a link to a separate page', async () => {
     renderPage();
-    expect(await screen.findByRole('link', { name: /sicherheit verwalten|manage security/i })).toHaveAttribute('href', '/account/security');
+
+    expect(await screen.findByRole('heading', { name: /mfa verwalten|manage mfa/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /sicherheit verwalten|mfa verwalten|manage security|manage mfa/i })).not.toBeInTheDocument();
   });
 });

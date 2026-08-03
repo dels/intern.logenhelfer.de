@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Button, Stack, TextField, Typography, List, ListItem, ListItemText, Tooltip } from '@mui/material';
+import { Box, Button, CircularProgress, Stack, TextField, Typography, List, ListItem, ListItemText, Tooltip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { startRegistration, WebAuthnError } from '@simplewebauthn/browser';
 import { useDemoMode } from '../../api/useDemoMode';
@@ -23,6 +23,7 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [pendingProofFor, setPendingProofFor] = useState<'totp' | 'passkey' | null>(null);
   const [removingMethod, setRemovingMethod] = useState<{ kind: 'totp' | 'email' } | { kind: 'passkey'; credentialId: string } | null>(null);
+  const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
   const start = useStartMfaSetup();
   const verifyTotp = useVerifyTotpSetup();
   const verifyEmail = useVerifyEmailSetup();
@@ -51,6 +52,15 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
   // only pre-empts a doomed request with an explanatory tooltip instead of
   // a round-trip error.
   const totalMethodCount = existingMethods.filter((m) => m !== 'passkey').length + (passkeys.data?.credentials.length ?? 0);
+  // Re-verification must offer every method the user actually has enrolled,
+  // not a fixed totp/backup_code pair - a passkey-only user otherwise has no
+  // way to prove their identity at all. backup_code is always available once
+  // any method is enrolled (see ensureBackupCodesExist server-side).
+  const availableProofMethods = [
+    ...(existingMethods.includes('totp') ? (['totp'] as const) : []),
+    ...((passkeys.data?.credentials.length ?? 0) > 0 ? (['passkey'] as const) : []),
+    'backup_code' as const,
+  ];
   const gracePeriodPassed =
     status.data?.mode === 'mandatory' &&
     (!status.data.grace_period_ends_at || new Date(status.data.grace_period_ends_at).getTime() < Date.now());
@@ -83,6 +93,10 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
       toast.error(t(proof ? 'mfa.security.proofFailed' : 'mfa.setup.passkeyFailed'));
       return;
     }
+    // Covers both the browser's own passkey prompt and the subsequent verify
+    // round-trip, so the choose-method screen doesn't just sit there with no
+    // feedback until the backup codes suddenly appear.
+    setIsRegisteringPasskey(true);
     try {
       const response = await startRegistration({ optionsJSON: options as never });
       const result = await verifyPasskey.mutateAsync({ response });
@@ -97,6 +111,8 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
         return;
       }
       toast.error(t('mfa.setup.passkeyFailed'));
+    } finally {
+      setIsRegisteringPasskey(false);
     }
   }
 
@@ -161,6 +177,15 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
     setStep('done');
   }
 
+  if (isRegisteringPasskey) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 4 }}>
+        <CircularProgress />
+        <Typography>{t('mfa.setup.passkeyRegistering')}</Typography>
+      </Box>
+    );
+  }
+
   if (step === 'choose') {
     return (
       <Box>
@@ -199,8 +224,8 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
           <Button variant="outlined" onClick={() => choose('email')}>{t('mfa.setup.email')}</Button>
           <Button variant="outlined" onClick={() => choose('passkey')}>{t('mfa.setup.passkey')}</Button>
         </Stack>
-        <MfaProofDialog open={pendingProofFor !== null} onClose={() => setPendingProofFor(null)} onSubmit={confirmAddProof} />
-        <MfaProofDialog open={removingMethod !== null} onClose={() => setRemovingMethod(null)} onSubmit={confirmRemoveProof} />
+        <MfaProofDialog open={pendingProofFor !== null} onClose={() => setPendingProofFor(null)} onSubmit={confirmAddProof} availableMethods={availableProofMethods} />
+        <MfaProofDialog open={removingMethod !== null} onClose={() => setRemovingMethod(null)} onSubmit={confirmRemoveProof} availableMethods={availableProofMethods} />
       </Box>
     );
   }

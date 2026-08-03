@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { RegistrationResponseJSON } from '@simplewebauthn/browser';
+import type { AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON } from '@simplewebauthn/browser';
 import { apiFetch } from '../../api/client';
 
 export interface MfaMethodsList {
@@ -34,10 +34,9 @@ export interface MfaPasskeyCredential {
 // one - otherwise the backend returns 422. Note this uses a different method enum
 // than the top-level `method` being set up (it names *how the existing method was
 // proven*, e.g. a backup code).
-export interface MfaSetupProof {
-  method: 'totp' | 'backup_code';
-  code: string;
-}
+export type MfaSetupProof =
+  | { method: 'totp' | 'backup_code'; code: string }
+  | { method: 'passkey'; response: AuthenticationResponseJSON };
 
 export function useMfaStatus(options?: { enabled?: boolean }) {
   return useQuery({ queryKey: ['mfa-status'], queryFn: () => apiFetch<MfaMethodsList>('/api/v1/mfa/status'), enabled: options?.enabled });
@@ -78,6 +77,12 @@ export function useVerifyPasskeySetup() {
       // added passkey wouldn't appear there until an unrelated refetch.
       queryClient.invalidateQueries({ queryKey: ['mfa-passkeys'] });
     },
+  });
+}
+
+export function useMfaProofPasskeyOptions() {
+  return useMutation({
+    mutationFn: () => apiFetch<PublicKeyCredentialRequestOptionsJSON>('/api/v1/mfa/proof/passkey/options', { method: 'POST' }),
   });
 }
 

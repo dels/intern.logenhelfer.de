@@ -234,11 +234,9 @@ paths:
               properties:
                 method: { type: string, enum: [totp, email, passkey] }
                 proof:
-                  type: object
+                  allOf:
+                    - $ref: '#/components/schemas/MfaProof'
                   description: Only required when the caller already has a verified method and method is totp or passkey.
-                  properties:
-                    method: { type: string, enum: [totp, backup_code] }
-                    code: { type: string }
       responses:
         '200':
           description: >-
@@ -364,8 +362,9 @@ paths:
             schema:
               type: object
               properties:
-                method: { type: string, enum: [totp, backup_code, email] }
+                method: { type: string, enum: [totp, backup_code, email, passkey] }
                 code: { type: string }
+                response: { type: object }
       responses:
         '200':
           description: New backup codes issued; old ones invalidated
@@ -398,11 +397,7 @@ paths:
               required: [proof]
               properties:
                 proof:
-                  type: object
-                  required: [method, code]
-                  properties:
-                    method: { type: string, enum: [totp, backup_code] }
-                    code: { type: string }
+                  $ref: '#/components/schemas/MfaProof'
       responses:
         '204': { description: Passkey credential removed }
         '401':
@@ -435,11 +430,7 @@ paths:
               required: [proof]
               properties:
                 proof:
-                  type: object
-                  required: [method, code]
-                  properties:
-                    method: { type: string, enum: [totp, backup_code] }
-                    code: { type: string }
+                  $ref: '#/components/schemas/MfaProof'
       responses:
         '204': { description: Method removed }
         '401':
@@ -463,6 +454,25 @@ paths:
               schema: { $ref: '#/components/schemas/MfaPasskeyCredentialsList' }
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /api/v1/mfa/proof/passkey/options:
+    post:
+      operationId: getMfaProofPasskeyOptions
+      description: >-
+        Mints a WebAuthn authentication challenge (kept in an in-process,
+        per-user map - see mfa.ts's pendingProofChallenges) scoped to the
+        caller's own enrolled passkey credentials, for use as `proof` when
+        adding/removing another MFA method or regenerating backup codes.
+        404s if the caller has no passkey credentials to prove with.
+      responses:
+        '200':
+          description: WebAuthn authentication options, allowCredentials scoped to the caller's own passkeys
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaWebauthnAuthenticationOptions' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/mfa/trusted-devices:
     get:
       operationId: listMfaTrustedDevices
@@ -2761,6 +2771,21 @@ components:
           items: { type: string, enum: [totp, email, passkey] }
         mode: { type: string, enum: [optional, mandatory] }
         grace_period_ends_at: { type: string, format: date-time, nullable: true }
+    # Proof of control of an already-verified MFA method, required by
+    # setup/start (totp/passkey re-enrollment) and the methods-removal
+    # routes - see mfa.ts's verifyExistingMfaProof. `code` is used for
+    # totp/backup_code; `response` (an opaque WebAuthn
+    # AuthenticationResponseJSON from navigator.credentials.get(...)) is
+    # used for passkey. Only `method` is `required` here since the other
+    # two are mutually exclusive depending on it - verifyExistingMfaProof
+    # itself is the actual authority on which combination is valid.
+    MfaProof:
+      type: object
+      required: [method]
+      properties:
+        method: { type: string, enum: [totp, backup_code, passkey] }
+        code: { type: string }
+        response: { type: object }
     MfaSetupStartResult:
       type: object
       additionalProperties: false

@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import AppShell from './layouts/AppShell';
 import PublicLayout from './layouts/PublicLayout';
 import ImpressumHelpLayout from './layouts/ImpressumHelpLayout';
@@ -61,7 +61,6 @@ import UserFileStatsPage from './features/statistics/UserFileStatsPage';
 import MemStatsPage from './features/statistics/MemStatsPage';
 import AccountPage from './features/account/AccountPage';
 import MfaSetupPage from './features/mfa/MfaSetupPage';
-import MfaSecurityPage from './features/mfa/MfaSecurityPage';
 
 export const routes: RouteObject[] = [
   { path: '/', element: <LandingResolver /> },
@@ -137,7 +136,10 @@ export const routes: RouteObject[] = [
           { path: '/configuration', element: <ConfigurationPage /> },
           { path: '/account', element: <AccountPage /> },
           { path: '/mfa/setup', element: <MfaSetupPage /> },
-          { path: '/account/security', element: <MfaSecurityPage /> },
+          // MFA management now lives inline on /account (MfaAccountSection) -
+          // redirect rather than remove outright, since this URL was
+          // previously linked/bookmarked.
+          { path: '/account/security', element: <Navigate to="/account" replace /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },
