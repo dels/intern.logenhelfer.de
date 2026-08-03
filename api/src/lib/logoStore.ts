@@ -10,13 +10,6 @@ const DEFAULT_LOGO_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.ur
 
 export type LogoVariantName = 'icon-192' | 'icon-512' | 'icon-512-maskable' | 'apple-touch-icon';
 
-const COLUMN_BY_VARIANT = {
-  'icon-192': 'icon_192',
-  'icon-512': 'icon_512',
-  'icon-512-maskable': 'icon_512_maskable',
-  'apple-touch-icon': 'apple_touch_icon',
-} as const;
-
 /** Replaces the singleton logo row, deriving every icon variant from `buffer`. Returns the new `updated_at`. */
 export async function upsertLogo(buffer: Buffer, mimeType: string): Promise<Date> {
   const variants = await deriveLogoVariants(buffer);
@@ -47,9 +40,36 @@ export async function ensureLogoSeeded(): Promise<void> {
 }
 
 export async function getLogoVariant(variant: LogoVariantName): Promise<Buffer | null> {
-  const row = await prisma.app_logo.findUnique({ where: { id: SINGLETON_ID } });
-  if (!row) return null;
-  return Buffer.from(row[COLUMN_BY_VARIANT[variant]]);
+  switch (variant) {
+    case 'icon-192': {
+      const row = await prisma.app_logo.findUnique({
+        where: { id: SINGLETON_ID },
+        select: { icon_192: true },
+      });
+      return row ? Buffer.from(row.icon_192) : null;
+    }
+    case 'icon-512': {
+      const row = await prisma.app_logo.findUnique({
+        where: { id: SINGLETON_ID },
+        select: { icon_512: true },
+      });
+      return row ? Buffer.from(row.icon_512) : null;
+    }
+    case 'icon-512-maskable': {
+      const row = await prisma.app_logo.findUnique({
+        where: { id: SINGLETON_ID },
+        select: { icon_512_maskable: true },
+      });
+      return row ? Buffer.from(row.icon_512_maskable) : null;
+    }
+    case 'apple-touch-icon': {
+      const row = await prisma.app_logo.findUnique({
+        where: { id: SINGLETON_ID },
+        select: { apple_touch_icon: true },
+      });
+      return row ? Buffer.from(row.apple_touch_icon) : null;
+    }
+  }
 }
 
 export async function getLogoUpdatedAt(): Promise<Date | null> {
