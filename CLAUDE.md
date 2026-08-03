@@ -476,6 +476,8 @@ logging every non-2xx response and its timestamp — zero non-2xx responses
 outside the one-time port-migration transition window is the actual bar;
 reasoning about the `nginx -s reload` semantics alone is not sufficient
 proof, this has to be observed.
+When using a local postgres instance, you should create an own instance
+per worktree with a random port to avoid data pollution by another worktree.
 
 ## Security requirements
 
