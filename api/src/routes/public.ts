@@ -1,3 +1,7 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import ical, { ICalEventTransparency } from 'ical-generator';
 import { Router } from 'express';
 import { jsPDF } from 'jspdf';
@@ -7,7 +11,7 @@ import { prisma } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
-import { getLogoUpdatedAt, getLogoVariant, type LogoVariantName } from '../lib/logoStore.js';
+import { deriveLogoVariants, type LogoVariants } from '../lib/logoVariants.js';
 
 /**
  * Port of:
@@ -72,6 +76,47 @@ async function getTimespanDays(key: string): Promise<number> {
 async function anonAccessEnabled(): Promise<boolean> {
   return getBoolean('public_wp_available_to_anon_users');
 }
+
+// -- logo / PWA icons -----------------------------------------------------
+
+/**
+ * The singleton `custom_logos` row's `updated_at` epoch, if a custom logo
+ * has been uploaded (main's `POST /api/v1/logo` - see this file's own
+ * manifest/icon routes below for the read side this branch owns), `null` if
+ * none has. Consumed purely as a cache-busting version token for the
+ * manifest's icon URLs - mirrors main's own `currentLogoVersion()` helper
+ * (same table, same shape), kept as a separate private helper here rather
+ * than imported since this branch doesn't have main's `/landing` changes
+ * that also consume it.
+ */
+async function currentLogoVersion(): Promise<number | null> {
+  const row = await prisma.custom_logos.findUnique({ where: { id: 1 }, select: { updated_at: true } });
+  return row ? row.updated_at.getTime() : null;
+}
+
+const DEFAULT_LOGO_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../assets/bijou-large.png');
+
+/**
+ * Derives every PWA icon variant on the fly from whichever image is
+ * currently authoritative: the admin-uploaded `custom_logos` row if one
+ * exists, otherwise the same bundled default crest the frontend's own
+ * `<BijouLogo>` falls back to (`app/src/assets/bijou-large.png`, bundled
+ * here as `api/assets/bijou-large.png` for visual consistency between the
+ * in-app fallback and the installed PWA's icon) - see this route's own
+ * comment for why there's no caching/storage of the derived bytes.
+ */
+async function currentLogoSource(): Promise<Buffer> {
+  const row = await prisma.custom_logos.findUnique({ where: { id: 1 } });
+  if (row) return Buffer.from(row.content);
+  return readFile(DEFAULT_LOGO_PATH);
+}
+
+const LOGO_VARIANT_NAMES: Record<string, keyof LogoVariants> = {
+  'icon-192.png': 'icon192',
+  'icon-512.png': 'icon512',
+  'icon-512-maskable.png': 'icon512Maskable',
+  'apple-touch-icon.png': 'appleTouchIcon',
+};
 
 // -- date helpers -----------------------------------------------------------
 
@@ -398,21 +443,18 @@ router.get('/workingplan.pdf', async (_req, res, next) => {
   }
 });
 
-const LOGO_VARIANT_FILENAMES: Record<string, LogoVariantName> = {
-  'icon-192.png': 'icon-192',
-  'icon-512.png': 'icon-512',
-  'icon-512-maskable.png': 'icon-512-maskable',
-  'apple-touch-icon.png': 'apple-touch-icon',
-};
-
 // GET /api/v1/public/manifest.webmanifest
 router.get('/manifest.webmanifest', async (_req, res, next) => {
   try {
     const lodge = (await getConfigString('lodge')) ?? 'Logenhelfer';
     const lodgeShort = (await getConfigString('lodge_short')) ?? lodge;
     const language = (await getConfigString('language')) ?? 'de';
-    const updatedAt = await getLogoUpdatedAt();
-    const version = updatedAt ? updatedAt.getTime() : 0;
+    const logoVersion = await currentLogoVersion();
+    // Always resolve to a real, always-valid icon URL - a fixed '0' when no
+    // custom_logos row exists yet (rather than omitting the version or
+    // crashing), since the icon route itself always has a bundled default
+    // to derive from regardless of whether a row exists.
+    const version = logoVersion ?? 0;
 
     res.status(200).type('application/manifest+json').json({
       name: lodge,
@@ -434,17 +476,23 @@ router.get('/manifest.webmanifest', async (_req, res, next) => {
 });
 
 // GET /api/v1/public/logo/:file
+//
+// Derives the requested PWA icon variant on the fly from whatever is
+// currently authoritative (the uploaded custom_logos row, or the bundled
+// default) on every request - no derived-variant caching/storage. Deliberate:
+// small dev-scale traffic, and the long-lived immutable Cache-Control below
+// (keyed by the manifest's own `?v=` cache-busting param) absorbs repeat
+// requests client-side instead.
 router.get('/logo/:file', async (req, res, next) => {
   try {
-    const variant = LOGO_VARIANT_FILENAMES[req.params.file];
+    const variant = LOGO_VARIANT_NAMES[req.params.file];
     if (!variant) {
       throw ApiError.notFound();
     }
-    const bytes = await getLogoVariant(variant);
-    if (!bytes) {
-      throw ApiError.notFound();
-    }
-    res.status(200).type('image/png').send(bytes);
+    const source = await currentLogoSource();
+    const variants = await deriveLogoVariants(source);
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    res.status(200).type('image/png').send(variants[variant]);
   } catch (err) {
     next(err);
   }

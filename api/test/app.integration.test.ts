@@ -612,70 +612,32 @@ describe('app.ts integration', () => {
     });
   });
 
-  describe('app_logo upload (contract validation)', () => {
-    async function adminAuthHeader(): Promise<{ Authorization: string }> {
-      const now = new Date();
-      const role = await prisma.roles.create({
-        data: { name: 'ApplicationAdmin', display_name: 'Admin', created_at: now, updated_at: now },
-      });
-      const user = await createUser();
-      await prisma.user_roles.create({ data: { user_id: user.id, role_id: role.id, created_at: now, updated_at: now, role_added_at: now } });
-      return { Authorization: `Bearer ${issueAccessToken(user.id)}` };
-    }
-
-    async function samplePng(): Promise<Buffer> {
+  // custom_logos (id=1) is written by main's POST /api/v1/logo
+  // (api/src/routes/logo.ts on main) - not part of this branch (see
+  // public.ts's own header comment). This branch owns only the read side:
+  // deriving PWA icon variants from whatever row is there. So this
+  // integration test seeds the row directly via Prisma (mirroring how
+  // test/routes/logo.test.ts on main asserts storage - `prisma.custom_logos`
+  // - rather than going through a POST /api/v1/logo this worktree doesn't
+  // have) and confirms the real, fully-wired `app` derives and serves the
+  // correct icon variant from it end-to-end.
+  describe('public icon derivation reflects a stored custom_logos row (contract validation)', () => {
+    async function sampleLogo(): Promise<Buffer> {
       return sharp({ create: { width: 300, height: 300, channels: 3, background: '#123456' } }).png().toBuffer();
     }
 
-    it('accepts a valid image upload and returns a fresh updated_at', async () => {
-      const res = await request(app)
-        .post('/api/v1/app_logo')
-        .set(await adminAuthHeader())
-        .attach('file', await samplePng(), 'logo.png');
-
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual({ updated_at: expect.any(String) });
-    });
-
-    it('rejects a non-admin caller with 403', async () => {
-      const user = await createUser();
-
-      const res = await request(app)
-        .post('/api/v1/app_logo')
-        .set({ Authorization: `Bearer ${issueAccessToken(user.id)}` })
-        .attach('file', await samplePng(), 'logo.png');
-
-      expect(res.status).toBe(403);
-    });
-
-    it('rejects a non-image content type with 422', async () => {
-      const res = await request(app)
-        .post('/api/v1/app_logo')
-        .set(await adminAuthHeader())
-        .attach('file', Buffer.from('plain text'), 'logo.txt');
-
-      expect(res.status).toBe(422);
-    });
-
-    it('rejects an undecodable file with an allowed content type with 422', async () => {
-      const res = await request(app)
-        .post('/api/v1/app_logo')
-        .set(await adminAuthHeader())
-        .attach('file', Buffer.from('not actually a png'), 'logo.png');
-
-      expect(res.status).toBe(422);
-    });
-
-    it('serves the newly-uploaded logo through the public icon endpoint', async () => {
-      const res = await request(app)
-        .post('/api/v1/app_logo')
-        .set(await adminAuthHeader())
-        .attach('file', await samplePng(), 'logo.png');
-      expect(res.status).toBe(200);
+    it('derives and serves the correct icon variant for the currently stored logo', async () => {
+      const content = await sampleLogo();
+      await prisma.custom_logos.upsert({
+        where: { id: 1 },
+        create: { id: 1, content: new Uint8Array(content), content_type: 'image/png' },
+        update: { content: new Uint8Array(content), content_type: 'image/png' },
+      });
 
       const icon = await request(app).get('/api/v1/public/logo/icon-512.png');
       expect(icon.status).toBe(200);
       expect(icon.headers['content-type']).toContain('image/png');
+      await expect(sharp(icon.body).metadata()).resolves.toMatchObject({ width: 512, height: 512 });
     });
   });
 

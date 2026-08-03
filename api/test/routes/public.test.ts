@@ -11,7 +11,6 @@ import { prisma } from '../../src/db.js';
 import { apiErrorHandler } from '../../src/lib/errors.js';
 import { appConfig, KNOWN_KEYS } from '../../src/lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../../src/lib/demoSeed.js';
-import { ensureLogoSeeded } from '../../src/lib/logoStore.js';
 import publicRouter from '../../src/routes/public.js';
 import { resetDb } from '../helpers/db.js';
 import { createUser } from '../helpers/factories.js';
@@ -398,17 +397,38 @@ describe('GET /api/v1/public/manifest.webmanifest', () => {
   });
 });
 
+// custom_logos (id=1) is written by main's POST /api/v1/logo
+// (api/src/routes/logo.ts on main, not part of this branch - see
+// public.ts's own header comment on the route below). These tests exercise
+// only the read side this branch owns: on-the-fly derivation of PWA icon
+// variants from whatever's in that table, seeding the row directly via
+// Prisma the same way main's own test/routes/logo.test.ts asserts storage.
 describe('GET /api/v1/public/logo/:file', () => {
-  beforeEach(async () => {
-    await ensureLogoSeeded();
-  });
+  async function storeCustomLogo(): Promise<void> {
+    const content = await sharp({ create: { width: 300, height: 300, channels: 3, background: '#123456' } }).png().toBuffer();
+    await prisma.custom_logos.upsert({
+      where: { id: 1 },
+      create: { id: 1, content: new Uint8Array(content), content_type: 'image/png' },
+      update: { content: new Uint8Array(content), content_type: 'image/png' },
+    });
+  }
 
-  it('serves the requested icon variant as a PNG at the correct size', async () => {
+  it('derives the requested icon variant from a stored custom_logos row at the correct size', async () => {
+    await storeCustomLogo();
+
     const res = await request(app).get('/api/v1/public/logo/icon-512.png');
 
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('image/png');
     await expect(sharp(res.body).metadata()).resolves.toMatchObject({ width: 512, height: 512 });
+  });
+
+  it('falls back to the bundled default logo when no custom_logos row exists', async () => {
+    const res = await request(app).get('/api/v1/public/logo/icon-192.png');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('image/png');
+    await expect(sharp(res.body).metadata()).resolves.toMatchObject({ width: 192, height: 192 });
   });
 
   it('404s for an unknown variant filename', async () => {
