@@ -345,8 +345,12 @@ router.patch('/', async (req, res, next) => {
         throw ApiError.unprocessable(`invalid max_upload_file_size: ${String(body.max_upload_file_size)}`);
       }
       if (submitted > MULTIPART_FILE_SIZE_LIMIT_BYTES) {
+        const submittedMb = submitted / (1024 * 1024);
+        const ceilingMb = MULTIPART_FILE_SIZE_LIMIT_BYTES / (1024 * 1024);
         throw ApiError.unprocessable(
-          `max_upload_file_size (${submitted}) exceeds the configured ceiling of ${MULTIPART_FILE_SIZE_LIMIT_BYTES} bytes`,
+          `max_upload_file_size (${submittedMb} MB) exceeds the ${ceilingMb} MB ceiling configured for this `
+          + `environment. Raise MAX_UPLOAD_FILE_SIZE_MB in this environment's .env.<env> file and redeploy before `
+          + `saving a larger value here.`,
         );
       }
     }

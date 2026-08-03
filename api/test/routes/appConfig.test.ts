@@ -329,6 +329,11 @@ describe('App Config API', () => {
 
       expect(res.status).toBe(422);
       expect(res.body.error).toBe('unprocessable');
+      // Message must be readable in MB (what the settings UI shows) and name
+      // the .env.<env> var an admin needs to raise - not just raw byte counts.
+      expect(res.body.detail).toContain('MAX_UPLOAD_FILE_SIZE_MB');
+      expect(res.body.detail).toContain(`${(MULTIPART_FILE_SIZE_LIMIT_BYTES + 1) / (1024 * 1024)} MB`);
+      expect(res.body.detail).toContain(`${MULTIPART_FILE_SIZE_LIMIT_BYTES / (1024 * 1024)} MB`);
       // Rejected write must not have clobbered the previously stored value.
       expect(await getConfigValue('max_upload_file_size')).toBe(String(5 * 1024 * 1024));
     });
