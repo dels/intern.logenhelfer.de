@@ -108,6 +108,19 @@ test('clicking through all six settings tabs shows the right section for each', 
   await expect(page.getByRole('switch', { name: 'Administratoren in Benutzerliste anzeigen?' })).toBeVisible();
 });
 
+// Drives main's own logo upload control (the "Design" tab / LogoSection.tsx -
+// see docs/superpowers/specs/2026-08-02-custom-logo-upload-design.md on
+// main), the one-and-only "upload the lodge logo" control post-reconciliation
+// - this branch's own now-deleted LogoUploadWidget used to be exercised here
+// instead. NOTE: this worktree doesn't itself have main's Design tab/
+// LogoSection/BijouLogo frontend changes or the POST /api/v1/logo route yet
+// (bringing those in is the eventual merge's job, not this reconciliation's -
+// see .superpowers/sdd/reconcile-custom-logo/brief.md) - this test is
+// written to the shape the post-merge app will have (tab label 'Design',
+// index 4, per main's ConfigurationPage.tsx; aria-label 'Logo hochladen' per
+// main's de.json `configuration.logoUpload` key, read via LogoSection.tsx)
+// and is not runnable against this worktree's current frontend in isolation.
+// See the reconciliation report for how this gap was handled.
 test('admin can upload a new lodge logo and see the manifest reflect it', async ({ page, request }) => {
   await page.goto('/login');
   await page.getByLabel('E-Mail').fill('e2e-admin@example.org');
@@ -116,7 +129,7 @@ test('admin can upload a new lodge logo and see the manifest reflect it', async 
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
 
   await page.goto('/configuration');
-  await page.getByRole('tab', { name: 'Konfiguration' }).click();
+  await page.getByRole('tab', { name: 'Design' }).click();
 
   const before = await request.get('/api/v1/public/manifest.webmanifest');
   const beforeIconUrl = (await before.json()).icons[0].src;
