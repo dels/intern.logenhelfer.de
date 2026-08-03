@@ -342,10 +342,6 @@
       "impressum": "Legal notice (Impressum)",
       "sicherheit": "Security"
     },
-    "logo": {
-      "header": "Logo",
-      "upload": "Upload logo"
-    },
     "generalHeader": "General settings",
     "districtsHeader": "Districts",
     "districtCreate": "New district",

@@ -64,17 +64,6 @@ model app_config_adapters {
   value String?
 }
 
-model app_logo {
-  id                Int      @id @default(1)
-  original          Bytes
-  original_mime     String   @db.VarChar(255)
-  icon_192          Bytes
-  icon_512          Bytes
-  icon_512_maskable Bytes
-  apple_touch_icon  Bytes
-  updated_at        DateTime @db.Timestamp(6)
-}
-
 model ar_internal_metadata {
   key        String   @id @db.VarChar
   value      String?  @db.VarChar
@@ -134,6 +123,13 @@ model category_roles {
 
   @@index([category_id], map: "index_category_roles_on_category_id")
   @@index([role_id], map: "index_category_roles_on_role_id")
+}
+
+model custom_logos {
+  id           Int      @id
+  content      Bytes
+  content_type String   @db.VarChar(255)
+  updated_at   DateTime @default(now()) @updatedAt @db.Timestamp(6)
 }
 
 model directories {

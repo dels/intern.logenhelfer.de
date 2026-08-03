@@ -28,21 +28,6 @@ export function useUpdateAppConfig() {
   });
 }
 
-export function useUploadLogo() {
-  const toast = useToast();
-  const { t } = useTranslation();
-  return useMutation({
-    mutationFn: (file: File) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      return apiFetch<{ updated_at: string }>('/api/v1/app_logo', { method: 'POST', body: formData });
-    },
-    onSuccess: () => {
-      toast.success(t('common.toast.updated'));
-    },
-  });
-}
-
 export function useCreateDistrict() {
   const queryClient = useQueryClient();
   const toast = useToast();

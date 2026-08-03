@@ -342,10 +342,6 @@
       "impressum": "Impressum",
       "sicherheit": "Sicherheit"
     },
-    "logo": {
-      "header": "Logo",
-      "upload": "Logo hochladen"
-    },
     "generalHeader": "Allgemeine Einstellungen",
     "districtsHeader": "Distrikte",
     "districtCreate": "Neuer Distrikt",

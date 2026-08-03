@@ -19,7 +19,6 @@ const ALLOWED_MOUNT_NAMES = [
   'academic_titles',
   'announcements',
   'app_config',
-  'app_logo',
   'attached_files',
   'categories',
   'directories',
@@ -75,7 +74,6 @@ describe('routable surface', () => {
       statistics: '/api/v1/statistics',
       public: '/api/v1/public',
       app_config: '/api/v1/app_config',
-      app_logo: '/api/v1/app_logo',
       mfa_challenge: '/api/v1/mfa/challenge',
       mfa: '/api/v1/mfa',
     });
