@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { WebAuthnError, browserSupportsWebAuthnAutofill, WebAuthnAbortService } from '@simplewebauthn/browser';
 import { Box, Paper, TextField, Button, Typography, Alert, Link, Divider } from '@mui/material';
-import { useAuth } from '../auth/AuthProvider';
+import { useAuth, PasskeyOptionsFetchError } from '../auth/AuthProvider';
 import { useLandingConfig } from '../features/public-landing/api';
 import { ApiError, apiErrorMessage, getMfaChallengeMethods } from '../api/client';
 import MfaChallengeForm from '../features/mfa/MfaChallengeForm';
@@ -92,6 +92,17 @@ export default function LoginPage() {
       // below) - not a real failure worth alarming them with an error banner.
       if (err instanceof WebAuthnError && err.code === 'ERROR_CEREMONY_ABORTED') {
         // no-op
+      } else if (opts?.useBrowserAutofill && err instanceof PasskeyOptionsFetchError) {
+        // The autofill path's options-fetch fires automatically on every
+        // page load, before any user action - a background failure here
+        // (network blip, rate limit) isn't something the user did
+        // anything to cause, so don't alarm them with a banner for it.
+        console.info('Passkey autofill unavailable (options fetch failed)', err);
+      } else if (err instanceof PasskeyOptionsFetchError) {
+        // Explicit button path: the user did take an action, so an
+        // options-fetch failure here is exactly as error-worthy as it was
+        // before this error type existed.
+        setFailedMessage(t('auth.passkeyLoginFailed'));
       } else if (err instanceof ApiError) {
         setFailedMessage(t('auth.passkeyLoginFailed'));
       } else {

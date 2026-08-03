@@ -300,6 +300,17 @@ describe('LoginPage', () => {
       await userEvent.click(screen.getByRole('button', { name: /passkey/i }));
       expect(await screen.findByText('Die Anmeldung mit dem Passkey ist fehlgeschlagen.')).toBeInTheDocument();
     });
+
+    it('still shows the passkey-specific error message when the button\'s own options-fetch fails (regression guard)', async () => {
+      // Companion to the autofill-path silencing test below - proves the
+      // fix is scoped to the autofill path only, not a blanket suppression
+      // of PasskeyOptionsFetchError. The explicit button is a deliberate
+      // user action, so an options-fetch failure here must still surface.
+      server.use(http.post('/api/v1/session/passkey/options', () => new HttpResponse(null, { status: 500 })));
+      renderLoginPage();
+      await userEvent.click(screen.getByRole('button', { name: /passkey/i }));
+      expect(await screen.findByText('Die Anmeldung mit dem Passkey ist fehlgeschlagen.')).toBeInTheDocument();
+    });
   });
 
   describe('passkey conditional autofill', () => {
@@ -455,6 +466,26 @@ describe('LoginPage', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(startAuthentication).not.toHaveBeenCalled();
+    });
+
+    it('does not show an error banner when the options-fetch fails during autofill (silent by design)', async () => {
+      vi.mocked(browserSupportsWebAuthnAutofill).mockResolvedValue(true);
+      server.use(http.post('/api/v1/session/passkey/options', () => new HttpResponse(null, { status: 500 })));
+      const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+      renderLoginPage();
+
+      // Wait for the autofill effect's options-fetch to reject and be
+      // handled (the console.info swallow is the only observable effect).
+      await waitFor(() => expect(infoSpy).toHaveBeenCalledWith(
+        'Passkey autofill unavailable (options fetch failed)', expect.anything(),
+      ));
+      expect(startAuthentication).not.toHaveBeenCalled();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('E-Mail')).toBeInTheDocument();
+      expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
+
+      infoSpy.mockRestore();
     });
   });
 });
