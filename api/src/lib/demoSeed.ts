@@ -111,6 +111,7 @@ async function createDemoAccounts(encryptedPassword: string): Promise<Map<string
         accepted_gdpr: true,
         accepted_at: now,
         matriculation_number: matriculationNumberFor(seedIndex),
+        date_of_birth: dateOfBirthFor(seedIndex),
         uuid: randomUUID(),
         created_at: now,
         updated_at: now,
@@ -231,6 +232,18 @@ function enteredApprenticeSinceFor(seedIndex: number): Date {
   const now = new Date();
   const yearsAgo = 5 + ((seedIndex * 7) % 36);
   return new Date(Date.UTC(now.getUTCFullYear() - yearsAgo, seedIndex % 12, 1 + (seedIndex % 28)));
+}
+
+// date_of_birth is required on every real member (members.ts's POST/PATCH
+// 422s without one, porting Rails' validates_presence_of) and statistics.ts's
+// avg_age calc assumes every undeleted user has one - a demo user with a null
+// date_of_birth 500s GET /api/v1/statistics/user_stats. Scattered 25-84 years
+// old; multiplier 11 (vs enteredApprenticeSinceFor's 7) so the two don't move
+// in lockstep across seedIndex.
+function dateOfBirthFor(seedIndex: number): Date {
+  const now = new Date();
+  const age = 25 + ((seedIndex * 11) % 60);
+  return new Date(Date.UTC(now.getUTCFullYear() - age, (seedIndex + 3) % 12, 1 + ((seedIndex * 5) % 28)));
 }
 
 // Builds the stacked user_roles rows (with role_added_at) for every degree a
@@ -374,6 +387,7 @@ async function seedBrothers(encryptedPassword: string): Promise<void> {
       accepted_gdpr: true,
       accepted_at: now,
       matriculation_number: matriculationNumberFor(index),
+      date_of_birth: dateOfBirthFor(index),
       uuid: randomUUID(),
       created_at: now,
       updated_at: now,
@@ -665,6 +679,7 @@ async function seedSeekers(): Promise<void> {
       data: {
         addressable_type: 'Seeker',
         addressable_id: seeker.id,
+        type_of_address: ADDRESS_TYPE_PRIVATE,
         email: emailFor(spec.firstname, spec.lastname),
         phone: demoPhoneNumber(1000 + index),
         created_at: now,

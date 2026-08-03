@@ -273,6 +273,11 @@ describe('resetAndSeedDemoData', () => {
       expect(brother.encrypted_password).toBe(admin!.encrypted_password);
       expect(brother.matriculation_number).toBeGreaterThanOrEqual(800);
       expect(brother.matriculation_number).toBeLessThanOrEqual(1000);
+      // statistics.ts's avg_age calc assumes every undeleted user has a
+      // date_of_birth (validates_presence_of at the real app layer) and
+      // crashes on a null one - a demo brother with no birth date 500s
+      // GET /api/v1/statistics/user_stats for any admin viewing it.
+      expect(brother.date_of_birth).not.toBeNull();
 
       const priv = privateByUserId.get(brother.id);
       expect(priv).not.toBeUndefined();
@@ -406,6 +411,7 @@ describe('resetAndSeedDemoData', () => {
       const user = await prisma.users.findUniqueOrThrow({ where: { email: account.email } });
       expect(user.matriculation_number).toBeGreaterThanOrEqual(800);
       expect(user.matriculation_number).toBeLessThanOrEqual(1000);
+      expect(user.date_of_birth).not.toBeNull();
 
       const address = await prisma.addresses.findFirst({ where: { addressable_type: 'User', addressable_id: user.id } });
       expect(address).not.toBeNull();
@@ -479,6 +485,10 @@ describe('resetAndSeedDemoData', () => {
       expect(address).not.toBeNull();
       expect(address!.email).toMatch(/^[a-z]+\.[a-z]+@logenhelfer\.de$/);
       expect(address!.phone).toBeTruthy();
+      // type_of_address must be a real integer, not null - GET /api/v1/seekers/:uuid's
+      // response schema requires it (see openapi.yaml's AddressSummary), so a null
+      // value here 500s the seeker detail page in the demo environment.
+      expect(address!.type_of_address).toBe(0);
     }
   });
 
