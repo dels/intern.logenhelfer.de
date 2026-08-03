@@ -84,6 +84,10 @@ COPY --from=build --chown=node:node /work/api/prisma.config.ts /app/api/prisma.c
 # request to any route, a 500 with no useful message unless apiErrorHandler
 # happens to log it (see errors.ts).
 COPY --chown=node:node openapi /app/openapi
+# Bundled default lodge logo, used to seed app_logo on first boot (see
+# lib/logoStore.ts's ensureLogoSeeded) - a plain repo-root copy, not built
+# from the build stage, same as the openapi/ copy above.
+COPY --chown=node:node api/assets /app/api/assets
 
 USER node
 WORKDIR /app/api
