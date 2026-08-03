@@ -40,9 +40,10 @@ production environment — the first of what may eventually be one per lodge).
 
 `<env>` is any name matching `^[a-z0-9-]+$` with a local `.env.<env>` file —
 there is no fixed list of allowed names; this project runs one environment
-per lodge. Adding a new one is: a one-time manual `git clone $REPO_URL` into
-a fresh directory on its deploy host, `bin/init-env <name>` locally to
-scaffold `.env.<name>` (auto-generates secrets, prompts for the rest), then
+per lodge. Adding a new one is: a one-time manual `git clone` of this repo's
+own origin remote into a fresh directory on its deploy host, `bin/init-env
+<name>` locally to scaffold `.env.<name>` (auto-generates secrets, prompts
+for the rest), then
 `bin/deploy-to <name>`. Before that first deploy, the Postgres role and
 database named in the generated `DB_URL` (defaults: role/database both
 `logenhelfer_<name>`) must already exist on `DB_HOST` — `bin/deploy-to`'s
