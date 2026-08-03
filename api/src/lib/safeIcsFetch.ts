@@ -182,12 +182,18 @@ function pinnedLookup(addresses: string[]) {
  * Typed as `unknown` at the boundary passed to `fetch()` below: Node's global
  * `fetch` types its `dispatcher` option against the lightweight `undici-types`
  * package bundled with `@types/node`, not against the real `undici` package's
- * own (structurally near-identical but not assignable) `Dispatcher` type.
- * They're the same shape at runtime - this is a real, documented interop gap
- * between the two type packages, not a correctness issue - verified
- * end-to-end (custom `connect.lookup` actually overriding the connection
- * target for Node's built-in fetch) with a standalone script against this
- * exact Node/undici version before writing this.
+ * own (structurally near-identical but not assignable) `Dispatcher` type -
+ * and some `@types/node` versions don't declare `dispatcher` on `RequestInit`
+ * at all (it's an undocumented Node fetch extension, not part of the WHATWG
+ * spec `RequestInit` types against), so indexing into `RequestInit['dispatcher']`
+ * itself is version-fragile. `FetchInitWithDispatcher` below sidesteps both
+ * problems by declaring the option's shape ourselves rather than relying on
+ * whatever `@types/node` happens to ambiently declare. They're the same shape
+ * at runtime - this is a real, documented interop gap between the two type
+ * packages, not a correctness issue - verified end-to-end (custom
+ * `connect.lookup` actually overriding the connection target for Node's
+ * built-in fetch) with a standalone script against this exact Node/undici
+ * version before writing this.
  *
  * Exported (only) so `safeIcsFetch.integration.test.ts` can drive it against
  * a real local server with the real global `fetch` - see that file for why
@@ -198,6 +204,11 @@ function pinnedLookup(addresses: string[]) {
 export function createPinnedDispatcher(addresses: string[]): Agent {
   return new Agent({ connect: { lookup: pinnedLookup(addresses) } });
 }
+
+// See createPinnedDispatcher's comment above: declared ourselves rather than
+// indexed off RequestInit['dispatcher'], since that key isn't declared on
+// every @types/node version's RequestInit.
+type FetchInitWithDispatcher = RequestInit & { dispatcher: unknown };
 
 /**
  * Fetches `url` as ICS text, guarding against SSRF both up front and across
@@ -220,8 +231,8 @@ export async function fetchIcsUrlSafely(url: string): Promise<string> {
         // See createPinnedDispatcher's comment: undici's Agent vs. the
         // undici-types Dispatcher that @types/node's fetch typing expects
         // are the same shape at runtime, not mutually assignable in TS.
-        dispatcher: dispatcher as unknown as NonNullable<RequestInit['dispatcher']>,
-      });
+        dispatcher,
+      } as FetchInitWithDispatcher);
 
       if (response.status >= 300 && response.status < 400) {
         if (redirectCount >= MAX_REDIRECTS) {
