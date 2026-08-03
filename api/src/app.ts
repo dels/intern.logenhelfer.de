@@ -8,6 +8,7 @@ import { createContractValidationMiddleware } from './middleware/contractValidat
 import academicTitlesRouter from './routes/academicTitles.js';
 import announcementsRouter from './routes/announcements.js';
 import appConfigRouter from './routes/appConfig.js';
+import appLogoRouter from './routes/appLogo.js';
 import attachedFilesRouter from './routes/attachedFiles.js';
 import categoriesRouter from './routes/categories.js';
 import directoriesRouter from './routes/directories.js';
@@ -131,6 +132,7 @@ export const ROUTE_MOUNTS: ReadonlyArray<{ readonly name: string; readonly path:
   { name: 'statistics', path: '/api/v1/statistics', router: statisticsRouter },
   { name: 'public', path: '/api/v1/public', router: publicRouter },
   { name: 'app_config', path: '/api/v1/app_config', router: appConfigRouter },
+  { name: 'app_logo', path: '/api/v1/app_logo', router: appLogoRouter },
   // mfa_challenge MUST be registered before mfa: mfa's own router.use(authenticateApiUser)
   // matches every sub-path under /api/v1/mfa (including /api/v1/mfa/challenge/*), and
   // authenticateApiUser deliberately rejects (401, no next()) any mfa_pending token - the

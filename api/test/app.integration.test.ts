@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { authenticator } from 'otplib';
+import sharp from 'sharp';
 
 // The external-event-ICS-source create route validates its URL via
 // assertSafeIcsUrl (SSRF guard - see safeIcsFetch.ts), which resolves the
@@ -608,6 +609,61 @@ describe('app.ts integration', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.role_ids.sort()).toEqual([roleA.id, roleB.id].sort());
+    });
+  });
+
+  describe('app_logo upload (contract validation)', () => {
+    async function adminAuthHeader(): Promise<{ Authorization: string }> {
+      const now = new Date();
+      const role = await prisma.roles.create({
+        data: { name: 'ApplicationAdmin', display_name: 'Admin', created_at: now, updated_at: now },
+      });
+      const user = await createUser();
+      await prisma.user_roles.create({ data: { user_id: user.id, role_id: role.id, created_at: now, updated_at: now, role_added_at: now } });
+      return { Authorization: `Bearer ${issueAccessToken(user.id)}` };
+    }
+
+    async function samplePng(): Promise<Buffer> {
+      return sharp({ create: { width: 300, height: 300, channels: 3, background: '#123456' } }).png().toBuffer();
+    }
+
+    it('accepts a valid image upload and returns a fresh updated_at', async () => {
+      const res = await request(app)
+        .post('/api/v1/app_logo')
+        .set(await adminAuthHeader())
+        .attach('file', await samplePng(), 'logo.png');
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ updated_at: expect.any(String) });
+    });
+
+    it('rejects a non-admin caller with 403', async () => {
+      const user = await createUser();
+
+      const res = await request(app)
+        .post('/api/v1/app_logo')
+        .set({ Authorization: `Bearer ${issueAccessToken(user.id)}` })
+        .attach('file', await samplePng(), 'logo.png');
+
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects a non-image content type with 422', async () => {
+      const res = await request(app)
+        .post('/api/v1/app_logo')
+        .set(await adminAuthHeader())
+        .attach('file', Buffer.from('plain text'), 'logo.txt');
+
+      expect(res.status).toBe(422);
+    });
+
+    it('rejects an undecodable file with an allowed content type with 422', async () => {
+      const res = await request(app)
+        .post('/api/v1/app_logo')
+        .set(await adminAuthHeader())
+        .attach('file', Buffer.from('not actually a png'), 'logo.png');
+
+      expect(res.status).toBe(422);
     });
   });
 
