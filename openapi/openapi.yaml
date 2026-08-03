@@ -2560,6 +2560,33 @@ paths:
               schema: { $ref: '#/components/schemas/DemoAccountsList' }
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/public/manifest.webmanifest:
+    get:
+      operationId: getPublicManifest
+      security: []
+      responses:
+        '200':
+          description: Web app manifest for PWA installability, built live from AppConfig and the current uploaded logo
+          content:
+            application/manifest+json:
+              schema: { type: object }
+  /api/v1/public/logo/{file}:
+    get:
+      operationId: getPublicLogoVariant
+      security: []
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: One derived PWA icon variant (icon-192.png, icon-512.png, icon-512-maskable.png, or apple-touch-icon.png)
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/app_config:
     get:
       operationId: getAppConfig

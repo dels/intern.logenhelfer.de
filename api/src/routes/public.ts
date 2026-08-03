@@ -7,6 +7,7 @@ import { prisma } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
+import { getLogoUpdatedAt, getLogoVariant, type LogoVariantName } from '../lib/logoStore.js';
 
 /**
  * Port of:
@@ -392,6 +393,58 @@ router.get('/workingplan.pdf', async (_req, res, next) => {
     const pdf = buildWorkingplanPdf(rows, language);
 
     res.status(200).type('application/pdf').send(pdf);
+  } catch (err) {
+    next(err);
+  }
+});
+
+const LOGO_VARIANT_FILENAMES: Record<string, LogoVariantName> = {
+  'icon-192.png': 'icon-192',
+  'icon-512.png': 'icon-512',
+  'icon-512-maskable.png': 'icon-512-maskable',
+  'apple-touch-icon.png': 'apple-touch-icon',
+};
+
+// GET /api/v1/public/manifest.webmanifest
+router.get('/manifest.webmanifest', async (_req, res, next) => {
+  try {
+    const lodge = (await getConfigString('lodge')) ?? 'Logenhelfer';
+    const lodgeShort = (await getConfigString('lodge_short')) ?? lodge;
+    const language = (await getConfigString('language')) ?? 'de';
+    const updatedAt = await getLogoUpdatedAt();
+    const version = updatedAt ? updatedAt.getTime() : 0;
+
+    res.status(200).type('application/manifest+json').json({
+      name: lodge,
+      short_name: lodgeShort,
+      lang: language,
+      start_url: '/',
+      display: 'standalone',
+      theme_color: '#1E56B0',
+      background_color: '#F7F8FA',
+      icons: [
+        { src: `/api/v1/public/logo/icon-192.png?v=${version}`, sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: `/api/v1/public/logo/icon-512.png?v=${version}`, sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: `/api/v1/public/logo/icon-512-maskable.png?v=${version}`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/public/logo/:file
+router.get('/logo/:file', async (req, res, next) => {
+  try {
+    const variant = LOGO_VARIANT_FILENAMES[req.params.file];
+    if (!variant) {
+      throw ApiError.notFound();
+    }
+    const bytes = await getLogoVariant(variant);
+    if (!bytes) {
+      throw ApiError.notFound();
+    }
+    res.status(200).type('image/png').send(bytes);
   } catch (err) {
     next(err);
   }

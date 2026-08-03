@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { events } from '../../src/generated/prisma/client.js';
 import express from 'express';
 import request from 'supertest';
+import sharp from 'sharp';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { issueAccessToken } from '../../src/auth/jwt.js';
@@ -10,6 +11,7 @@ import { prisma } from '../../src/db.js';
 import { apiErrorHandler } from '../../src/lib/errors.js';
 import { appConfig, KNOWN_KEYS } from '../../src/lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../../src/lib/demoSeed.js';
+import { ensureLogoSeeded } from '../../src/lib/logoStore.js';
 import publicRouter from '../../src/routes/public.js';
 import { resetDb } from '../helpers/db.js';
 import { createUser } from '../helpers/factories.js';
@@ -373,6 +375,45 @@ describe('GET /api/v1/public/demo-accounts', () => {
     const res = await request(app).get('/api/v1/public/demo-accounts');
     expect(res.status).toBe(200);
     expect(res.body.accounts).toEqual(DEMO_ACCOUNTS.map(({ email, role }) => ({ email, role })));
+  });
+});
+
+describe('GET /api/v1/public/manifest.webmanifest', () => {
+  it('reflects the current lodge/lodge_short/language AppConfig values', async () => {
+    await setAppConfig('lodge', 'Zur Morgenröte');
+    await setAppConfig('lodge_short', 'ZM');
+    await setAppConfig('language', 'en');
+
+    const res = await request(app).get('/api/v1/public/manifest.webmanifest');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      name: 'Zur Morgenröte',
+      short_name: 'ZM',
+      lang: 'en',
+      start_url: '/',
+      display: 'standalone',
+    });
+    expect(res.body.icons).toHaveLength(3);
+  });
+});
+
+describe('GET /api/v1/public/logo/:file', () => {
+  beforeEach(async () => {
+    await ensureLogoSeeded();
+  });
+
+  it('serves the requested icon variant as a PNG at the correct size', async () => {
+    const res = await request(app).get('/api/v1/public/logo/icon-512.png');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('image/png');
+    await expect(sharp(res.body).metadata()).resolves.toMatchObject({ width: 512, height: 512 });
+  });
+
+  it('404s for an unknown variant filename', async () => {
+    const res = await request(app).get('/api/v1/public/logo/not-a-real-variant.png');
+    expect(res.status).toBe(404);
   });
 });
 

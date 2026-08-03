@@ -665,6 +665,18 @@ describe('app.ts integration', () => {
 
       expect(res.status).toBe(422);
     });
+
+    it('serves the newly-uploaded logo through the public icon endpoint', async () => {
+      const res = await request(app)
+        .post('/api/v1/app_logo')
+        .set(await adminAuthHeader())
+        .attach('file', await samplePng(), 'logo.png');
+      expect(res.status).toBe(200);
+
+      const icon = await request(app).get('/api/v1/public/logo/icon-512.png');
+      expect(icon.status).toBe(200);
+      expect(icon.headers['content-type']).toContain('image/png');
+    });
   });
 
   // Regression guard for a security-audit finding: app.ts never called
