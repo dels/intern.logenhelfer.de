@@ -175,6 +175,12 @@ test('admin can upload a new lodge logo and see the manifest reflect it', async 
   );
   await page.getByLabel('Logo hochladen').setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png });
 
+  // toHaveCount(0) on an absent alert is vacuously true before the upload
+  // finishes too, so it doesn't actually wait for completion - wait for the
+  // real post-upload signal instead (nav crest src reflecting the new logo,
+  // driven by the same query invalidation the sibling upload/reset test
+  // above already relies on).
+  await expect(page.locator('header img').first()).toHaveAttribute('src', /\/api\/v1\/public\/logo\?v=/);
   await expect(page.getByRole('alert')).toHaveCount(0);
 
   const after = await request.get('/api/v1/public/manifest.webmanifest');
