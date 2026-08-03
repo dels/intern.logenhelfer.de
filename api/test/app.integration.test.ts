@@ -622,6 +622,10 @@ describe('app.ts integration', () => {
   // have) and confirms the real, fully-wired `app` derives and serves the
   // correct icon variant from it end-to-end.
   describe('public icon derivation reflects a stored custom_logos row (contract validation)', () => {
+    // A distinctive solid fill, not anything resembling the bundled default
+    // crest - so a regression that silently ignores the stored row and
+    // always serves the default would fail on pixel color even though a
+    // dimensions-only assertion would still pass.
     async function sampleLogo(): Promise<Buffer> {
       return sharp({ create: { width: 300, height: 300, channels: 3, background: '#123456' } }).png().toBuffer();
     }
@@ -638,6 +642,11 @@ describe('app.ts integration', () => {
       expect(icon.status).toBe(200);
       expect(icon.headers['content-type']).toContain('image/png');
       await expect(sharp(icon.body).metadata()).resolves.toMatchObject({ width: 512, height: 512 });
+
+      // Proves the icon was actually derived FROM the stored row, not just
+      // correctly-sized-but-wrong-content.
+      const { data } = await sharp(icon.body).raw().toBuffer({ resolveWithObject: true });
+      expect([data[0], data[1], data[2]]).toEqual([0x12, 0x34, 0x56]);
     });
   });
 
