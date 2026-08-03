@@ -142,6 +142,9 @@ test('admin can upload a custom logo and reset it back to default', async ({ pag
 
   await resetButton.click();
   await expect(resetButton).toBeDisabled();
-  const navLogoSrcAfterReset = await page.locator('header img').first().getAttribute('src');
-  expect(navLogoSrcAfterReset).not.toContain('/api/v1/public/logo');
+  // Auto-retrying (not a one-shot getAttribute+expect): resetButton flips
+  // back to disabled as soon as the DELETE mutation itself settles, which can
+  // be before its onSuccess invalidation has finished refetching and
+  // re-rendering BijouLogo with the new (no-custom-logo) src.
+  await expect(page.locator('header img').first()).not.toHaveAttribute('src', /\/api\/v1\/public\/logo/);
 });
