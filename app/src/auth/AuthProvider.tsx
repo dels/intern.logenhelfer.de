@@ -18,7 +18,7 @@ interface AuthContextValue {
   mfaSetupRequired: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   completeMfaChallenge: (mfaPendingToken: string, input: { method: string; code: string; remember_device: boolean }) => Promise<void>;
-  loginWithPasskey: () => Promise<void>;
+  loginWithPasskey: (options?: { useBrowserAutofill?: boolean }) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: MeUser) => void;
   refreshUser: () => Promise<void>;
@@ -27,6 +27,13 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+// Thrown by loginWithPasskey specifically when the options-fetch (step 1)
+// fails, so callers can distinguish "the browser-driven autofill options
+// request failed in the background" from other failure points in the same
+// flow (see LoginPage.tsx's attemptPasskeyLogin, which only swallows this
+// for the autofill path - the explicit button still surfaces it).
+export class PasskeyOptionsFetchError extends Error {}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<Status>('loading');
@@ -113,14 +120,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       applyMe(me);
       setStatus('authenticated');
     },
-    async loginWithPasskey() {
+    async loginWithPasskey(opts) {
       // Passwordless login (Task 15's routes): unlike password login, this
       // never yields `mfa_pending_token`/`setup_required` - the passkey
       // itself already IS the verified second factor (see session.ts's
       // verifyPasskeyLogin), so a successful assertion always produces a
       // full session directly.
-      const options = await apiFetch<PublicKeyCredentialRequestOptionsJSON>('/api/v1/session/passkey/options', { method: 'POST' });
-      const assertion = await startAuthentication({ optionsJSON: options });
+      let options: PublicKeyCredentialRequestOptionsJSON;
+      try {
+        options = await apiFetch<PublicKeyCredentialRequestOptionsJSON>('/api/v1/session/passkey/options', { method: 'POST' });
+      } catch (err) {
+        throw new PasskeyOptionsFetchError('Failed to fetch passkey options', { cause: err });
+      }
+      const assertion = await startAuthentication({
+        optionsJSON: options,
+        useBrowserAutofill: opts?.useBrowserAutofill,
+      });
       const session = await apiFetch<SessionPayload>('/api/v1/session/passkey/verify', {
         method: 'POST',
         body: JSON.stringify({ response: assertion }),
