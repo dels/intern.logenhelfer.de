@@ -1466,6 +1466,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/manifest.webmanifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicManifest"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/logo/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicLogoVariant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/app_config": {
         parameters: {
             query?: never;
@@ -5716,6 +5748,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DemoAccountsList"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicManifest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Web app manifest for PWA installability, built live from AppConfig and the current uploaded logo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/manifest+json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getPublicLogoVariant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One derived PWA icon variant (icon-192.png, icon-512.png, icon-512-maskable.png, or apple-touch-icon.png) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
                 };
             };
             404: components["responses"]["NotFound"];

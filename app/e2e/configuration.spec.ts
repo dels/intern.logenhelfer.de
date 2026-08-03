@@ -148,3 +148,36 @@ test('admin can upload a custom logo and reset it back to default', async ({ pag
   // re-rendering BijouLogo with the new (no-custom-logo) src.
   await expect(page.locator('header img').first()).not.toHaveAttribute('src', /\/api\/v1\/public\/logo/);
 });
+
+// Complementary to the reset-roundtrip test above: that one checks the
+// in-app crest (<BijouLogo>); this one checks the PWA manifest's icon URLs
+// (a separate consumer of the same custom_logos row, added by the PWA
+// installability feature) also reflect a newly-uploaded logo. Uploads via
+// the same real Design-tab control, no reset - the crest test above already
+// covers reset/restore-to-default.
+test('admin can upload a new lodge logo and see the manifest reflect it', async ({ page, request }) => {
+  await page.goto('/login');
+  await page.getByLabel('E-Mail').fill('e2e-admin@example.org');
+  await page.getByLabel('Passwort').fill('e2e-Passw0rd!');
+  await page.getByRole('button', { name: 'Anmelden', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
+
+  await page.goto('/configuration');
+  await page.getByRole('tab', { name: 'Design' }).click();
+
+  const before = await request.get('/api/v1/public/manifest.webmanifest');
+  const beforeIconUrl = (await before.json()).icons[0].src;
+
+  // A 1x1 transparent PNG - the smallest valid PNG sharp can decode.
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    'base64',
+  );
+  await page.getByLabel('Logo hochladen').setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png });
+
+  await expect(page.getByRole('alert')).toHaveCount(0);
+
+  const after = await request.get('/api/v1/public/manifest.webmanifest');
+  const afterIconUrl = (await after.json()).icons[0].src;
+  expect(afterIconUrl).not.toBe(beforeIconUrl);
+});

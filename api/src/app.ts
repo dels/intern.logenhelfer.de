@@ -87,7 +87,13 @@ app.get('/api/v1/health', (_req, res) => {
 app.use(
   '/api/v1',
   createContractValidationMiddleware({
-    excludeResponseValidationPaths: [/\/attached_files\/[^/]+\/download$/, /\/public\/workingplan\.pdf$/, /\/public\/logo$/],
+    excludeResponseValidationPaths: [
+      /\/attached_files\/[^/]+\/download$/,
+      /\/public\/workingplan\.pdf$/,
+      /\/public\/logo$/,
+      /\/public\/manifest\.webmanifest$/,
+      /\/public\/logo\/[^/]+$/,
+    ],
   }),
 );
 

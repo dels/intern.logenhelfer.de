@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { events } from '../../src/generated/prisma/client.js';
 import express from 'express';
 import request from 'supertest';
+import sharp from 'sharp';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { issueAccessToken } from '../../src/auth/jwt.js';
@@ -421,6 +422,99 @@ describe('GET /api/v1/public/demo-accounts', () => {
     const res = await request(app).get('/api/v1/public/demo-accounts');
     expect(res.status).toBe(200);
     expect(res.body.accounts).toEqual(DEMO_ACCOUNTS.map(({ email, role }) => ({ email, role })));
+  });
+});
+
+describe('GET /api/v1/public/manifest.webmanifest', () => {
+  it('reflects the current lodge/lodge_short/language AppConfig values', async () => {
+    await setAppConfig('lodge', 'Zur Morgenröte');
+    await setAppConfig('lodge_short', 'ZM');
+    await setAppConfig('language', 'en');
+
+    const res = await request(app).get('/api/v1/public/manifest.webmanifest');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      name: 'Zur Morgenröte',
+      short_name: 'ZM',
+      lang: 'en',
+      start_url: '/',
+      display: 'standalone',
+    });
+    expect(res.body.icons).toHaveLength(3);
+  });
+
+  it("uses a fixed '0' version when no custom_logos row exists", async () => {
+    const res = await request(app).get('/api/v1/public/manifest.webmanifest');
+
+    expect(res.status).toBe(200);
+    for (const icon of res.body.icons) {
+      expect(icon.src).toMatch(/\?v=0$/);
+    }
+  });
+
+  it("reflects custom_logos.updated_at as every icon's cache-busting version once a logo is stored", async () => {
+    const content = await sharp({ create: { width: 10, height: 10, channels: 3, background: '#000000' } }).png().toBuffer();
+    const row = await prisma.custom_logos.create({ data: { id: 1, content: new Uint8Array(content), content_type: 'image/png' } });
+
+    const res = await request(app).get('/api/v1/public/manifest.webmanifest');
+
+    expect(res.status).toBe(200);
+    const expectedVersion = row.updated_at.getTime();
+    expect(res.body.icons).toHaveLength(3);
+    for (const icon of res.body.icons) {
+      expect(icon.src).toMatch(new RegExp(`\\?v=${expectedVersion}$`));
+    }
+  });
+});
+
+// custom_logos (id=1) is written by main's POST /api/v1/logo
+// (api/src/routes/logo.ts on main, not part of this branch - see
+// public.ts's own header comment on the route below). These tests exercise
+// only the read side this branch owns: on-the-fly derivation of PWA icon
+// variants from whatever's in that table, seeding the row directly via
+// Prisma the same way main's own test/routes/logo.test.ts asserts storage.
+describe('GET /api/v1/public/logo/:file', () => {
+  // A distinctive solid fill (#123456 -> [18, 52, 86]) rather than anything
+  // resembling the bundled default crest, so a regression that silently
+  // ignores the stored row and always serves the default would fail on
+  // pixel color even though dimensions alone would still match.
+  async function storeCustomLogo(): Promise<void> {
+    const content = await sharp({ create: { width: 300, height: 300, channels: 3, background: '#123456' } }).png().toBuffer();
+    await prisma.custom_logos.upsert({
+      where: { id: 1 },
+      create: { id: 1, content: new Uint8Array(content), content_type: 'image/png' },
+      update: { content: new Uint8Array(content), content_type: 'image/png' },
+    });
+  }
+
+  it('derives the requested icon variant from a stored custom_logos row at the correct size and color', async () => {
+    await storeCustomLogo();
+
+    const res = await request(app).get('/api/v1/public/logo/icon-512.png');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('image/png');
+    await expect(sharp(res.body).metadata()).resolves.toMatchObject({ width: 512, height: 512 });
+
+    // Proves the icon was actually derived FROM the stored row, not just
+    // correctly-sized-but-wrong-content (e.g. a regression that silently
+    // fell back to the bundled default despite a row existing).
+    const { data } = await sharp(res.body).raw().toBuffer({ resolveWithObject: true });
+    expect([data[0], data[1], data[2]]).toEqual([0x12, 0x34, 0x56]);
+  });
+
+  it('falls back to the bundled default logo when no custom_logos row exists', async () => {
+    const res = await request(app).get('/api/v1/public/logo/icon-192.png');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('image/png');
+    await expect(sharp(res.body).metadata()).resolves.toMatchObject({ width: 192, height: 192 });
+  });
+
+  it('404s for an unknown variant filename', async () => {
+    const res = await request(app).get('/api/v1/public/logo/not-a-real-variant.png');
+    expect(res.status).toBe(404);
   });
 });
 

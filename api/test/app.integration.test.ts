@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { authenticator } from 'otplib';
+import sharp from 'sharp';
 
 // The external-event-ICS-source create route validates its URL via
 // assertSafeIcsUrl (SSRF guard - see safeIcsFetch.ts), which resolves the
@@ -650,6 +651,44 @@ describe('app.ts integration', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.role_ids.sort()).toEqual([roleA.id, roleB.id].sort());
+    });
+  });
+
+  // custom_logos (id=1) is written by main's POST /api/v1/logo
+  // (api/src/routes/logo.ts on main) - not part of this branch (see
+  // public.ts's own header comment). This branch owns only the read side:
+  // deriving PWA icon variants from whatever row is there. So this
+  // integration test seeds the row directly via Prisma (mirroring how
+  // test/routes/logo.test.ts on main asserts storage - `prisma.custom_logos`
+  // - rather than going through a POST /api/v1/logo this worktree doesn't
+  // have) and confirms the real, fully-wired `app` derives and serves the
+  // correct icon variant from it end-to-end.
+  describe('public icon derivation reflects a stored custom_logos row (contract validation)', () => {
+    // A distinctive solid fill, not anything resembling the bundled default
+    // crest - so a regression that silently ignores the stored row and
+    // always serves the default would fail on pixel color even though a
+    // dimensions-only assertion would still pass.
+    async function sampleLogo(): Promise<Buffer> {
+      return sharp({ create: { width: 300, height: 300, channels: 3, background: '#123456' } }).png().toBuffer();
+    }
+
+    it('derives and serves the correct icon variant for the currently stored logo', async () => {
+      const content = await sampleLogo();
+      await prisma.custom_logos.upsert({
+        where: { id: 1 },
+        create: { id: 1, content: new Uint8Array(content), content_type: 'image/png' },
+        update: { content: new Uint8Array(content), content_type: 'image/png' },
+      });
+
+      const icon = await request(app).get('/api/v1/public/logo/icon-512.png');
+      expect(icon.status).toBe(200);
+      expect(icon.headers['content-type']).toContain('image/png');
+      await expect(sharp(icon.body).metadata()).resolves.toMatchObject({ width: 512, height: 512 });
+
+      // Proves the icon was actually derived FROM the stored row, not just
+      // correctly-sized-but-wrong-content.
+      const { data } = await sharp(icon.body).raw().toBuffer({ resolveWithObject: true });
+      expect([data[0], data[1], data[2]]).toEqual([0x12, 0x34, 0x56]);
     });
   });
 

@@ -1,8 +1,25 @@
 import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // manifest: false - the manifest is served dynamically by the API
+    // (GET /api/v1/public/manifest.webmanifest, see api/src/routes/public.ts),
+    // built live from AppConfig + the current uploaded logo, not a
+    // build-time snapshot. This plugin is used purely for service-worker
+    // generation/registration. No runtimeCaching entries are configured -
+    // the SW must never cache /api/* responses (member/roster data).
+    VitePWA({
+      manifest: false,
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      workbox: {
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB to accommodate the large bundle
+      },
+    }),
+  ],
   server: {
     proxy: {
       '/api': { target: process.env.API_PROXY ?? 'http://localhost:3000', changeOrigin: true },
