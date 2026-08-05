@@ -332,7 +332,16 @@ router.get('/landing', async (_req, res, next) => {
       lodge: lodge ?? '',
       language: language ?? 'de',
       logo_version: logoVersion,
-      birthday_calendar_ics_url: birthdayIcsUrl,
+      // Security fix: this endpoint is fully unauthenticated - only surface
+      // the birthday-feed secret URL here when the org has already decided
+      // its calendar can be seen anonymously at all (same anonEnabled gate
+      // as calendar_as_landing_page above), never unconditionally just
+      // because birthday_calendar_available is on. Otherwise this endpoint
+      // hands the "secret" URL to literally any anonymous caller regardless
+      // of the org's own anon-access decision - and since this repo is
+      // public, the fact that this field exists at all is discoverable by
+      // anyone, so the secret would protect nothing once the feature is on.
+      birthday_calendar_ics_url: anonEnabled ? birthdayIcsUrl : null,
     });
   } catch (err) {
     next(err);

@@ -177,6 +177,15 @@ describe('GET /api/v1/public/landing', () => {
     expect(feedRes.status).toBe(200);
     expect(feedRes.text).toContain('BEGIN:VCALENDAR');
   });
+
+  it('returns birthday_calendar_ics_url as null when anon access is disabled, even if the birthday feature itself is enabled', async () => {
+    await setAppConfig('birthday_calendar_available', true);
+    await setAppConfig('public_wp_available_to_anon_users', false);
+
+    const res = await request(app).get('/api/v1/public/landing');
+
+    expect(res.body.birthday_calendar_ics_url).toBeNull();
+  });
 });
 
 // -- GET /api/v1/public/logo -----------------------------------------------
