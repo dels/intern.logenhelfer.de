@@ -35,7 +35,9 @@ export interface CalendarRangeData {
  * visible" so the two views can never disagree with each other. The range
  * is the full Monday-start month grid (buildMonthGrid), including a few
  * adjacent-month padding days - both views share this exact range, so
- * toggling between them never changes the visible item set.
+ * toggling between them never changes the visible item set, except on
+ * mobile, where EventsCalendarView's agenda skips adjacent-month padding
+ * days that EventsListTable still renders.
  */
 export function useCalendarRangeData(anchor: Date, selectedFilters: Set<string>): CalendarRangeData {
   const grid = useMemo(() => buildMonthGrid(anchor), [anchor]);
@@ -70,7 +72,7 @@ export function useCalendarRangeData(anchor: Date, selectedFilters: Set<string>)
 
   const showBirthdays = selectedFilters.has('birthdays');
   const showExternalEvents = selectedFilters.has('external-events');
-  const icsSources = icsSourcesResult?.sources ?? [];
+  const icsSources = useMemo(() => icsSourcesResult?.sources ?? [], [icsSourcesResult]);
   const selectedSourceUuids = useMemo(
     () => new Set(icsSources.map((s) => s.uuid).filter((uuid) => selectedFilters.has(uuid))),
     [icsSources, selectedFilters],

@@ -83,18 +83,50 @@ describe('EventsListTable', () => {
     expect(await screen.findByText('External event detail page')).toBeInTheDocument();
   });
 
+  // Regression coverage: the row itself is a plain `<tr onClick>`, which is
+  // not keyboard-reachable on its own. Every row kind needs a real focusable
+  // control in its title cell - a RouterLink for event/external-event (same
+  // pattern the now-deleted ExternalEventsListPage.tsx used), a real
+  // <button>-like element for birthday (opens a dialog, not a navigation) -
+  // regardless of canUpdate/canDestroy, since a plain member (both false)
+  // still needs a keyboard path into each row.
+  it('renders the internal-event title as a focusable link to the detail page', () => {
+    renderTable({ events: [eventRow] });
+    const link = screen.getByRole('link', { name: 'Stiftungsfest' });
+    expect(link).toHaveAttribute('href', '/events/e1');
+  });
+
+  it('renders the external-event title as a focusable link to the detail page', () => {
+    renderTable({ externalEvents: [externalEventRow] });
+    const link = screen.getByRole('link', { name: 'Nachbarbesuch' });
+    expect(link).toHaveAttribute('href', '/external-events/x1');
+  });
+
+  it('renders the birthday title as a focusable button that opens the contact dialog', async () => {
+    renderTable({ birthdays: [birthdayRow] });
+    const button = screen.getByRole('button', { name: 'Max Muster' });
+    await userEvent.click(button);
+    expect(await screen.findByText('max@example.test')).toBeInTheDocument();
+  });
+
+  it('clicking the internal-event title link does not also trigger the row-level click handler (no double navigation)', async () => {
+    renderTable({ events: [eventRow] });
+    await userEvent.click(screen.getByRole('link', { name: 'Stiftungsfest' }));
+    expect(await screen.findByText('Event detail page')).toBeInTheDocument();
+  });
+
   it('opens the birthday contact dialog when a birthday row is clicked, without navigating away', async () => {
     renderTable({ birthdays: [birthdayRow] });
     await userEvent.click(screen.getByText('Max Muster'));
     expect(await screen.findByText('max@example.test')).toBeInTheDocument();
-    // Scoped to the row's own <td> (rather than a bare screen.getByText,
-    // which would now ambiguously match both the still-present row and the
-    // dialog's own <h2> title) - this is what actually proves the row
-    // survived the click, i.e. that no navigation happened. Can't scope via
-    // getByRole('table') instead: MUI's Dialog marks the rest of the page
-    // aria-hidden while open, which role-based queries respect but
-    // getByText/selector queries don't.
-    expect(screen.getByText('Max Muster', { selector: 'td' })).toBeInTheDocument();
+    // Scoped to the row's own title <button> (rather than a bare
+    // screen.getByText, which would now ambiguously match both the
+    // still-present row's button and the dialog's own <h2> title) - this is
+    // what actually proves the row survived the click, i.e. that no
+    // navigation happened. Can't scope via getByRole('button', ...) instead:
+    // MUI's Dialog marks the rest of the page aria-hidden while open, which
+    // role-based queries respect but getByText/selector queries don't.
+    expect(screen.getByText('Max Muster', { selector: 'button' })).toBeInTheDocument();
   });
 
   it('shows row-level edit/delete actions on internal-event rows only, when abilities allow it', () => {

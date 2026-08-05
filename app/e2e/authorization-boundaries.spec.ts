@@ -62,9 +62,30 @@ test('Konfiguration section is absent for a plain member and present for an admi
 test('a plain member sees no external-events create control, and direct navigation to /external-events/new does not allow a working create flow', async ({ page }) => {
   await login(page, 'e2e@example.org');
 
+  // The standalone /external-events list page (and its "Neuer externer
+  // Termin" create button) was removed once the Arbeitsplan header/filter
+  // restructure merged the external-events list into EventsListTable on
+  // /events - this deny-side check now targets that page's replacement
+  // control, "Neuer Termin außer Haus". The old bare /external-events route
+  // falls through to the app's catch-all 404 now, worth asserting too so
+  // this test also catches the route ever silently coming back.
   await page.goto('/external-events');
-  await expect(page.getByRole('heading', { name: 'Externe Termine' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Neuer externer Termin' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Seite nicht gefunden' })).toBeVisible();
+
+  // Wait for a real render marker (the page's own h1) before the
+  // toHaveCount(0) check below, not just the bare navigation - toHaveCount(0)
+  // resolves immediately (vacuously true) on a still-loading or blank page,
+  // so without an explicit positive wait first, this goto's session-refresh
+  // round-trip (each page.goto here is a full page reload, so AuthProvider
+  // re-mounts and re-derives the session from the refresh cookie every
+  // time) can still be in flight when the very next goto below fires and
+  // aborts it - the refresh token had already rotated server-side by then,
+  // so the following attempt 401s and RequireAuth bounces to /login,
+  // breaking the next step non-deterministically (found by actually
+  // reproducing this flake, not guessed).
+  await page.goto('/events');
+  await expect(page.getByRole('heading', { name: 'Arbeitsplan' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Neuer Termin außer Haus' })).toHaveCount(0);
 
   // ExternalEventCreatePage has no client-side ability gate - same shape as
   // EventCreatePage.tsx/AnnouncementCreatePage.tsx (both also ungated, the

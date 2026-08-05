@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { Box, Chip, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Link as RouterLink, useNavigate } from 'react-router';
+import { Box, Chip, Link, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import RowActions from '../../components/RowActions';
 import BirthdayContactDialog from '../members/BirthdayContactDialog';
@@ -73,9 +73,15 @@ export default function EventsListTable({ events, externalEvents, birthdays, fro
   const kindColor = { event: 'primary', 'external-event': 'default', birthday: 'secondary' } as const;
   const kindLabel = { event: t('nav.events'), 'external-event': t('events.calendar.filterExternalEvents'), birthday: t('events.calendar.filterBirthdays') };
 
+  const rowHref = (row: Row): string | null => {
+    if (row.kind === 'event') return `/events/${row.uuid}`;
+    if (row.kind === 'external-event') return `/external-events/${row.uuid}`;
+    return null;
+  };
+
   const onRowClick = (row: Row) => {
-    if (row.kind === 'event') navigate(`/events/${row.uuid}`);
-    else if (row.kind === 'external-event') navigate(`/external-events/${row.uuid}`);
+    const href = rowHref(row);
+    if (href) navigate(href);
     else setContactUuid(row.uuid);
   };
 
@@ -99,7 +105,21 @@ export default function EventsListTable({ events, externalEvents, birthdays, fro
             <TableRow key={row.key} hover onClick={() => onRowClick(row)} sx={{ cursor: 'pointer' }}>
               <TableCell>{formatDate(row.date, i18n.language)}</TableCell>
               <TableCell>{row.time ?? ''}</TableCell>
-              <TableCell>{row.title}</TableCell>
+              <TableCell>
+                {row.kind === 'birthday' ? (
+                  <Link
+                    component="button"
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setContactUuid(row.uuid); }}
+                  >
+                    {row.title}
+                  </Link>
+                ) : (
+                  <Link component={RouterLink} to={rowHref(row)!} onClick={(e) => e.stopPropagation()}>
+                    {row.title}
+                  </Link>
+                )}
+              </TableCell>
               <TableCell>{row.location ?? ''}</TableCell>
               <TableCell>
                 <Chip size="small" color={kindColor[row.kind]} label={kindLabel[row.kind]} />
