@@ -24,7 +24,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-NODE_IMAGE="node:22-slim"
+NODE_IMAGE="node:24-slim"
 PLAYWRIGHT_IMAGE="mcr.microsoft.com/playwright:v1.61.1-noble"
 # PID-suffixed, not a fixed literal - found 2026-08-01: two concurrent
 # `bin/deploy-to <env> --remote` invocations for *different* environments
