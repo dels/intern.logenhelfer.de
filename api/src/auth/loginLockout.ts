@@ -34,23 +34,39 @@ export async function isLockedOut(email: string): Promise<boolean> {
   return record?.locked_until !== null && record?.locked_until !== undefined && record.locked_until.getTime() > Date.now();
 }
 
+export interface RecordFailedLoginResult {
+  /**
+   * True exactly when this call armed a new lockout window (this call's
+   * failed_count just reached LOCKOUT_THRESHOLD or beyond) - false for every
+   * failure before that. Never true again for further calls made *during* an
+   * active lock, since callers always check isLockedOut first and never call
+   * this function while the account is currently locked (see session.ts) -
+   * so every true result here is a genuinely new lockout episode, not a
+   * continuation of one already reported.
+   */
+  lockedOut: boolean;
+}
+
 /**
  * Records one failed login attempt against `email`, creating the tracking
  * row if it doesn't exist yet (see the module doc comment on why unknown
  * emails are tracked too). Arms (or extends) the lockout once the
  * consecutive-failure count reaches `LOCKOUT_THRESHOLD`.
  */
-export async function recordFailedLogin(email: string): Promise<void> {
+export async function recordFailedLogin(email: string): Promise<RecordFailedLoginResult> {
   const now = new Date();
   const existing = await prisma.login_lockouts.findUnique({ where: { email } });
   const failedCount = (existing?.failed_count ?? 0) + 1;
-  const lockedUntil = failedCount >= LOCKOUT_THRESHOLD ? new Date(now.getTime() + lockDurationMs(failedCount)) : null;
+  const lockedOut = failedCount >= LOCKOUT_THRESHOLD;
+  const lockedUntil = lockedOut ? new Date(now.getTime() + lockDurationMs(failedCount)) : null;
 
   await prisma.login_lockouts.upsert({
     where: { email },
     create: { email, failed_count: failedCount, locked_until: lockedUntil, created_at: now, updated_at: now },
     update: { failed_count: failedCount, locked_until: lockedUntil, updated_at: now },
   });
+
+  return { lockedOut };
 }
 
 /** Clears any failure count/lock for `email` after a successful login. */

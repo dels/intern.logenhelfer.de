@@ -36,4 +36,13 @@ describe('mfaLockout', () => {
     expect(await isMfaLockedOut('credential-abc')).toBe(true);
     expect(await isMfaLockedOut('credential-xyz')).toBe(false);
   });
+
+  it('reports lockedOut: false for each of the first 4 failures, true on the 5th', async () => {
+    for (let i = 0; i < 4; i++) {
+      const result = await recordFailedMfaAttempt('user2@example.com');
+      expect(result.lockedOut).toBe(false);
+    }
+    const fifth = await recordFailedMfaAttempt('user2@example.com');
+    expect(fifth.lockedOut).toBe(true);
+  });
 });
