@@ -7,7 +7,7 @@ import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { apiErrorHandler } from '../../src/lib/errors.js';
-import { appConfig } from '../../src/lib/appConfig.js';
+import { appConfig, KNOWN_KEYS } from '../../src/lib/appConfig.js';
 import { prisma } from '../../src/db.js';
 import { resetDb } from '../helpers/db.js';
 import { createUser } from '../helpers/factories.js';
@@ -25,6 +25,9 @@ vi.mock('../../src/lib/mfaPasskeys.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../src/lib/mfaPasskeys.js')>();
   return { ...actual, verifyAuthentication: vi.fn() };
 });
+
+vi.mock('../../src/lib/mail.js', () => ({ sendMail: vi.fn().mockResolvedValue(undefined) }));
+const { sendMail } = await import('../../src/lib/mail.js');
 
 const { verifyAuthentication } = await import('../../src/lib/mfaPasskeys.js');
 const sessionRouter = (await import('../../src/routes/session.js')).default;
@@ -88,6 +91,8 @@ function extractCookieValue(res: request.Response, name: string): string | undef
 describe('Session API', () => {
   beforeEach(async () => {
     await resetDb();
+    for (const key of Object.keys(KNOWN_KEYS)) appConfig.dirty(key);
+    vi.mocked(sendMail).mockClear();
   });
 
   describe('POST /api/v1/session', () => {
@@ -634,6 +639,178 @@ describe('Session API', () => {
 
       expect(res.status).toBe(401);
       expect(res.body.error).toBe('unauthorized');
+    });
+  });
+
+  describe('login notification emails', () => {
+    it('does not email on successful login when the toggle is off (default)', async () => {
+      const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
+      await request(app).post('/api/v1/session').send({ email: user.email, password: PASSWORD });
+      expect(sendMail).not.toHaveBeenCalled();
+    });
+
+    it('emails the user on successful password login when the toggle is on', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
+      const res = await request(app).post('/api/v1/session').send({ email: user.email, password: PASSWORD });
+      expect(res.status).toBe(200);
+      expect(sendMail).toHaveBeenCalledTimes(1);
+      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+    });
+
+    it('does not email on a failed password login (wrong password)', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
+      await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
+      expect(sendMail).not.toHaveBeenCalled();
+    });
+
+    it('emails a lockout notification on the 5th consecutive failed password attempt, not before', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
+      for (let i = 0; i < 4; i++) {
+        // eslint-disable-next-line no-await-in-loop -- deliberately sequential: each failure must land before the next to accumulate against the same counter.
+        await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
+      }
+      expect(sendMail).not.toHaveBeenCalled();
+      await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
+      expect(sendMail).toHaveBeenCalledTimes(1);
+      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+    });
+
+    it('does not email a lockout notification for an unknown email (no user to notify)', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      for (let i = 0; i < 5; i++) {
+        // eslint-disable-next-line no-await-in-loop -- see above.
+        await request(app).post('/api/v1/session').send({ email: 'nobody-at-all@example.test', password: 'whatever' });
+      }
+      expect(sendMail).not.toHaveBeenCalled();
+    });
+
+    it('does not email on refresh-token rotation (not a fresh login)', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
+      const loginRes = await request(app).post('/api/v1/session').send({ email: user.email, password: PASSWORD });
+      const cookie = loginRes.headers['set-cookie'];
+      vi.mocked(sendMail).mockClear();
+
+      const refreshRes = await request(app).post('/api/v1/session/refresh').set('Cookie', cookie);
+      // Asserting the refresh itself actually succeeded is load-bearing here:
+      // without it, a broken/401ing refresh would make sendMail's
+      // not-having-been-called assertion pass for the wrong reason (the
+      // request failed) instead of proving rotation deliberately skips the
+      // notification.
+      expect(refreshRes.status).toBe(200);
+      expect(sendMail).not.toHaveBeenCalled();
+    });
+
+    it('emails the user on successful login via a trusted-device MFA skip', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      const user = await createLoginableUser();
+      await prisma.mfa_totp_credentials.create({
+        data: { user_id: user.id, encrypted_secret: 'x', verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
+      });
+      const raw = 'b'.repeat(64);
+      await prisma.mfa_trusted_devices.create({
+        data: {
+          user_id: user.id,
+          device_token_hash: createHash('sha256').update(raw).digest('hex'),
+          expires_at: new Date(Date.now() + 86_400_000),
+          created_at: new Date(),
+        },
+      });
+      const res = await request(app)
+        .post('/api/v1/session')
+        .set('Cookie', [`mfa_device_token=${raw}`])
+        .send({ email: user.email, password: PASSWORD });
+      expect(res.status).toBe(200);
+      // Proves this actually took the trusted-device branch, not the
+      // zero-MFA-methods branch above it (both send a 'password' success
+      // email, so without this the assertions below would pass either way)
+      // - only the zero-methods branch's response includes setup_required.
+      expect(res.body.setup_required).toBeUndefined();
+      expect(sendMail).toHaveBeenCalledTimes(1);
+      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+    });
+
+    it('emails the user on a successful passkey login', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      const user = await createLoginableUser();
+      const credentialId = 'e2e-success-notification-credential';
+      await prisma.mfa_passkey_credentials.create({
+        data: {
+          user_id: user.id,
+          credential_id: credentialId,
+          public_key: Buffer.from('fake-public-key-bytes').toString('base64url'),
+          sign_count: 0,
+          name: 'Test passkey',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+      vi.mocked(verifyAuthentication).mockResolvedValueOnce({
+        verified: true,
+        authenticationInfo: { newCounter: 1 },
+      } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+      const optionsRes = await request(app).post('/api/v1/session/passkey/options').send({});
+      const challenge: string = optionsRes.body.challenge;
+      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+      const res = await request(app)
+        .post('/api/v1/session/passkey/verify')
+        .send({ response: { id: credentialId, response: { clientDataJSON } } });
+
+      expect(res.status).toBe(200);
+      expect(sendMail).toHaveBeenCalledTimes(1);
+      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+    });
+
+    it('emails a lockout notification on the 5th consecutive failed passkey verification', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      const user = await createLoginableUser();
+      const credentialId = 'e2e-lockout-notification-credential';
+      await prisma.mfa_passkey_credentials.create({
+        data: {
+          user_id: user.id,
+          credential_id: credentialId,
+          public_key: Buffer.from('fake-public-key-bytes').toString('base64url'),
+          sign_count: 0,
+          name: 'Test passkey',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+      vi.mocked(verifyAuthentication).mockResolvedValue({
+        verified: false,
+        authenticationInfo: { newCounter: 0 },
+      } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+      async function attempt() {
+        const optionsRes = await request(app).post('/api/v1/session/passkey/options').send({});
+        const challenge: string = optionsRes.body.challenge;
+        const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+        return request(app)
+          .post('/api/v1/session/passkey/verify')
+          .send({ response: { id: credentialId, response: { clientDataJSON } } });
+      }
+
+      for (let i = 0; i < 4; i++) {
+        // eslint-disable-next-line no-await-in-loop -- see above.
+        const res = await attempt();
+        expect(res.status).toBe(401);
+      }
+      expect(sendMail).not.toHaveBeenCalled();
+
+      const res = await attempt();
+      expect(res.status).toBe(401);
+      expect(sendMail).toHaveBeenCalledTimes(1);
+      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+
+      // This test's mock uses the persistent mockResolvedValue (all 5
+      // attempts need `verified: false`), unlike every other test in this
+      // file's mockResolvedValueOnce convention - reset it explicitly so a
+      // future test appended after this one doesn't silently inherit it.
+      vi.mocked(verifyAuthentication).mockReset();
     });
   });
 });
