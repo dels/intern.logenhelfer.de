@@ -643,9 +643,29 @@ describe('Session API', () => {
   });
 
   describe('login notification emails', () => {
+    // The route handlers now fire these notifications without awaiting them
+    // (see session.ts's `void sendLogin*Email(...)` call sites) so that a
+    // slow/failed SMTP send can't reopen the account-existence timing oracle
+    // DUMMY_PASSWORD_HASH exists to close. That means the HTTP response can
+    // land before the notification's own internal awaits (isEnabled() ->
+    // mailContext() -> sendMail()) have actually reached sendMail - every
+    // assertion on `sendMail` below must poll via vi.waitFor instead of
+    // asserting immediately after the request resolves, or it flakes.
+    // Negative assertions use an explicit short timeout: nothing here ever
+    // becomes true, so without a short override vi.waitFor's default timeout
+    // would make every one of these tests pay the full default wait on every
+    // run.
+    const NEGATIVE_WAIT = { timeout: 200, interval: 10 };
+
     it('does not email on successful login when the toggle is off (default)', async () => {
+      // Unlike the other negative assertions in this block, this path DOES
+      // fire `void sendLoginSuccessEmail(...)` - it just returns early once
+      // `isEnabled()` resolves false. A `vi.waitFor` here would pass on its
+      // first tick regardless of whether the toggle check actually works
+      // (see advisor review), so force a real settle first instead.
       const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
       await request(app).post('/api/v1/session').send({ email: user.email, password: PASSWORD });
+      await new Promise((resolve) => setTimeout(resolve, 50));
       expect(sendMail).not.toHaveBeenCalled();
     });
 
@@ -654,15 +674,19 @@ describe('Session API', () => {
       const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
       const res = await request(app).post('/api/v1/session').send({ email: user.email, password: PASSWORD });
       expect(res.status).toBe(200);
-      expect(sendMail).toHaveBeenCalledTimes(1);
-      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      await vi.waitFor(() => {
+        expect(sendMail).toHaveBeenCalledTimes(1);
+        expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      });
     });
 
     it('does not email on a failed password login (wrong password)', async () => {
       await appConfig.set('notify_user_on_login_activity', true);
       const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
       await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
-      expect(sendMail).not.toHaveBeenCalled();
+      await vi.waitFor(() => {
+        expect(sendMail).not.toHaveBeenCalled();
+      }, NEGATIVE_WAIT);
     });
 
     it('emails a lockout notification on the 5th consecutive failed password attempt, not before', async () => {
@@ -672,10 +696,14 @@ describe('Session API', () => {
         // eslint-disable-next-line no-await-in-loop -- deliberately sequential: each failure must land before the next to accumulate against the same counter.
         await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
       }
-      expect(sendMail).not.toHaveBeenCalled();
+      await vi.waitFor(() => {
+        expect(sendMail).not.toHaveBeenCalled();
+      }, NEGATIVE_WAIT);
       await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
-      expect(sendMail).toHaveBeenCalledTimes(1);
-      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      await vi.waitFor(() => {
+        expect(sendMail).toHaveBeenCalledTimes(1);
+        expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      });
     });
 
     it('does not email a lockout notification for an unknown email (no user to notify)', async () => {
@@ -684,7 +712,9 @@ describe('Session API', () => {
         // eslint-disable-next-line no-await-in-loop -- see above.
         await request(app).post('/api/v1/session').send({ email: 'nobody-at-all@example.test', password: 'whatever' });
       }
-      expect(sendMail).not.toHaveBeenCalled();
+      await vi.waitFor(() => {
+        expect(sendMail).not.toHaveBeenCalled();
+      }, NEGATIVE_WAIT);
     });
 
     it('does not email on refresh-token rotation (not a fresh login)', async () => {
@@ -692,6 +722,12 @@ describe('Session API', () => {
       const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
       const loginRes = await request(app).post('/api/v1/session').send({ email: user.email, password: PASSWORD });
       const cookie = loginRes.headers['set-cookie'];
+      // Let the login's own fire-and-forget notification actually land
+      // before clearing the mock - otherwise a slow login-success send could
+      // resolve AFTER mockClear() and get misattributed to the refresh below.
+      await vi.waitFor(() => {
+        expect(sendMail).toHaveBeenCalledTimes(1);
+      });
       vi.mocked(sendMail).mockClear();
 
       const refreshRes = await request(app).post('/api/v1/session/refresh').set('Cookie', cookie);
@@ -701,7 +737,9 @@ describe('Session API', () => {
       // request failed) instead of proving rotation deliberately skips the
       // notification.
       expect(refreshRes.status).toBe(200);
-      expect(sendMail).not.toHaveBeenCalled();
+      await vi.waitFor(() => {
+        expect(sendMail).not.toHaveBeenCalled();
+      }, NEGATIVE_WAIT);
     });
 
     it('emails the user on successful login via a trusted-device MFA skip', async () => {
@@ -729,8 +767,10 @@ describe('Session API', () => {
       // email, so without this the assertions below would pass either way)
       // - only the zero-methods branch's response includes setup_required.
       expect(res.body.setup_required).toBeUndefined();
-      expect(sendMail).toHaveBeenCalledTimes(1);
-      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      await vi.waitFor(() => {
+        expect(sendMail).toHaveBeenCalledTimes(1);
+        expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      });
     });
 
     it('emails the user on a successful passkey login', async () => {
@@ -761,8 +801,10 @@ describe('Session API', () => {
         .send({ response: { id: credentialId, response: { clientDataJSON } } });
 
       expect(res.status).toBe(200);
-      expect(sendMail).toHaveBeenCalledTimes(1);
-      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      await vi.waitFor(() => {
+        expect(sendMail).toHaveBeenCalledTimes(1);
+        expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      });
     });
 
     it('emails a lockout notification on the 5th consecutive failed passkey verification', async () => {
@@ -799,12 +841,16 @@ describe('Session API', () => {
         const res = await attempt();
         expect(res.status).toBe(401);
       }
-      expect(sendMail).not.toHaveBeenCalled();
+      await vi.waitFor(() => {
+        expect(sendMail).not.toHaveBeenCalled();
+      }, NEGATIVE_WAIT);
 
       const res = await attempt();
       expect(res.status).toBe(401);
-      expect(sendMail).toHaveBeenCalledTimes(1);
-      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      await vi.waitFor(() => {
+        expect(sendMail).toHaveBeenCalledTimes(1);
+        expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+      });
 
       // This test's mock uses the persistent mockResolvedValue (all 5
       // attempts need `verified: false`), unlike every other test in this

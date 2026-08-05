@@ -202,7 +202,7 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
     if (!user || !passwordValid) {
       const { lockedOut } = await recordFailedLogin(email);
       if (lockedOut && user) {
-        await sendLoginLockoutEmail(user, req, 'password');
+        void sendLoginLockoutEmail(user, req, 'password');
       }
       res.status(401).json({ error: 'invalid_credentials' });
       return;
@@ -232,7 +232,7 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
       const mfaSetupRequired = await isMfaSetupRequiredFor(user.id);
       const { rawToken } = await issueRefreshToken(user.id);
       setRefreshTokenCookie(res, rawToken);
-      await sendLoginSuccessEmail(user, req, 'password');
+      void sendLoginSuccessEmail(user, req, 'password');
       res.status(200).json({ ...(await sessionPayloadFor(user)), setup_required: mfaSetupRequired });
       return;
     }
@@ -241,7 +241,7 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
     if (await isDeviceTrusted(user.id, typeof deviceToken === 'string' ? deviceToken : undefined)) {
       const { rawToken } = await issueRefreshToken(user.id);
       setRefreshTokenCookie(res, rawToken);
-      await sendLoginSuccessEmail(user, req, 'password');
+      void sendLoginSuccessEmail(user, req, 'password');
       res.status(200).json(await sessionPayloadFor(user));
       return;
     }
@@ -357,7 +357,7 @@ router.post('/session/passkey/verify', loginRateLimiter, async (req: Request, re
       const { lockedOut } = await recordFailedMfaAttempt(`passkey:${credentialId}`);
       if (lockedOut) {
         const owner = await prisma.users.findUnique({ where: { id: stored.user_id } });
-        if (owner) await sendLoginLockoutEmail(owner, req, 'passkey');
+        if (owner) void sendLoginLockoutEmail(owner, req, 'passkey');
       }
       res.status(401).json({ error: 'unauthorized' });
       return;
@@ -385,7 +385,7 @@ router.post('/session/passkey/verify', loginRateLimiter, async (req: Request, re
     }
     const { rawToken } = await issueRefreshToken(user.id);
     setRefreshTokenCookie(res, rawToken);
-    await sendLoginSuccessEmail(user, req, 'passkey');
+    void sendLoginSuccessEmail(user, req, 'passkey');
     res.status(200).json(await sessionPayloadFor(user));
   } catch (err) {
     next(err);

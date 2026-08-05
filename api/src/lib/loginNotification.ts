@@ -34,45 +34,54 @@ async function mailContext(): Promise<{ language: string; lodgeShort: string; de
 }
 
 /**
- * A mail-delivery failure must never fail the login/verify request that
- * triggered it (see design doc) - errors are logged, never thrown.
+ * Fire-and-forget from every current call site - session.ts's 5 call sites
+ * never `await` these (see its `void sendLogin*Email(...)` calls) - a
+ * login/verify response must not wait on this, in time OR in outcome. That
+ * means this function must never reject: the whole body (not just the
+ * sendMail call) is wrapped in try/catch, since an un-awaited rejection
+ * would otherwise surface as an unhandled promise rejection instead of a
+ * login-blocking error - same "never fail the login" contract, enforced at
+ * the one point that actually matters now that nothing downstream awaits
+ * this. mfaChallenge.ts does not call these functions yet (the
+ * 'totp'/'email'/'backup_code'/'mfa_unknown' LoginMethod variants exist for
+ * that planned integration, not yet wired) - whoever wires it in must use
+ * the same fire-and-forget `void` pattern, not `await`, for the same
+ * timing-oracle reason documented on session.ts's DUMMY_PASSWORD_HASH.
  */
-async function safeSend(to: string, from: string, subject: string, text: string): Promise<void> {
+export async function sendLoginSuccessEmail(user: NotifiableUser, req: Request, method: LoginMethod): Promise<void> {
   try {
-    await sendMail({ to, from, subject, text });
+    if (!(await isEnabled())) return;
+    const { language, lodgeShort, defaultFromEmail } = await mailContext();
+    const strings = mailStringsFor(language);
+    const methodLabel = strings.loginMethodLabel(method);
+    const at = new Date().toISOString();
+    const ip = req.ip ?? 'unknown';
+    await sendMail({
+      to: user.email,
+      from: `"${lodgeShort}" <${defaultFromEmail ?? ''}>`,
+      subject: strings.loginNotification.subject(lodgeShort),
+      text: strings.loginNotification.body(user.firstname ?? '', at, ip, methodLabel),
+    });
   } catch (err) {
-    console.error('[loginNotification] failed to send email', err);
+    console.error('[loginNotification] failed to send login-success email', err);
   }
 }
 
-/** Sends the "you just logged in" notification, if the admin toggle is on. */
-export async function sendLoginSuccessEmail(user: NotifiableUser, req: Request, method: LoginMethod): Promise<void> {
-  if (!(await isEnabled())) return;
-  const { language, lodgeShort, defaultFromEmail } = await mailContext();
-  const strings = mailStringsFor(language);
-  const methodLabel = strings.loginMethodLabel(method);
-  const at = new Date().toISOString();
-  const ip = req.ip ?? 'unknown';
-  await safeSend(
-    user.email,
-    `"${lodgeShort}" <${defaultFromEmail ?? ''}>`,
-    strings.loginNotification.subject(lodgeShort),
-    strings.loginNotification.body(user.firstname ?? '', at, ip, methodLabel),
-  );
-}
-
-/** Sends the "repeated failed attempts locked your account" notification, if the admin toggle is on. */
 export async function sendLoginLockoutEmail(user: NotifiableUser, req: Request, method: LoginMethod): Promise<void> {
-  if (!(await isEnabled())) return;
-  const { language, lodgeShort, defaultFromEmail } = await mailContext();
-  const strings = mailStringsFor(language);
-  const methodLabel = strings.loginMethodLabel(method);
-  const at = new Date().toISOString();
-  const ip = req.ip ?? 'unknown';
-  await safeSend(
-    user.email,
-    `"${lodgeShort}" <${defaultFromEmail ?? ''}>`,
-    strings.loginLockoutNotification.subject(lodgeShort),
-    strings.loginLockoutNotification.body(user.firstname ?? '', at, ip, methodLabel),
-  );
+  try {
+    if (!(await isEnabled())) return;
+    const { language, lodgeShort, defaultFromEmail } = await mailContext();
+    const strings = mailStringsFor(language);
+    const methodLabel = strings.loginMethodLabel(method);
+    const at = new Date().toISOString();
+    const ip = req.ip ?? 'unknown';
+    await sendMail({
+      to: user.email,
+      from: `"${lodgeShort}" <${defaultFromEmail ?? ''}>`,
+      subject: strings.loginLockoutNotification.subject(lodgeShort),
+      text: strings.loginLockoutNotification.body(user.firstname ?? '', at, ip, methodLabel),
+    });
+  } catch (err) {
+    console.error('[loginNotification] failed to send lockout email', err);
+  }
 }
