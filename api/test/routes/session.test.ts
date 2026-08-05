@@ -651,11 +651,13 @@ describe('Session API', () => {
     // mailContext() -> sendMail()) have actually reached sendMail - every
     // assertion on `sendMail` below must poll via vi.waitFor instead of
     // asserting immediately after the request resolves, or it flakes.
-    // Negative assertions use an explicit short timeout: nothing here ever
-    // becomes true, so without a short override vi.waitFor's default timeout
-    // would make every one of these tests pay the full default wait on every
-    // run.
-    const NEGATIVE_WAIT = { timeout: 200, interval: 10 };
+    // Negative assertions (below, "does not email...") are the exception:
+    // on every one of those code paths no notification is ever scheduled at
+    // all (not even a fire-and-forget call that later resolves false), so
+    // there is nothing to wait for and the assertion can run immediately
+    // after the request resolves - vi.waitFor would only matter here if the
+    // assertion were ever wrong, since it resolves as soon as the callback
+    // stops throwing, not after a fixed wait.
 
     it('does not email on successful login when the toggle is off (default)', async () => {
       // Unlike the other negative assertions in this block, this path DOES
@@ -684,9 +686,7 @@ describe('Session API', () => {
       await appConfig.set('notify_user_on_login_activity', true);
       const user = await createUser({ encrypted_password: bcrypt.hashSync(PASSWORD, TEST_BCRYPT_COST) });
       await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
-      await vi.waitFor(() => {
-        expect(sendMail).not.toHaveBeenCalled();
-      }, NEGATIVE_WAIT);
+      expect(sendMail).not.toHaveBeenCalled();
     });
 
     it('emails a lockout notification on the 5th consecutive failed password attempt, not before', async () => {
@@ -696,9 +696,7 @@ describe('Session API', () => {
         // eslint-disable-next-line no-await-in-loop -- deliberately sequential: each failure must land before the next to accumulate against the same counter.
         await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
       }
-      await vi.waitFor(() => {
-        expect(sendMail).not.toHaveBeenCalled();
-      }, NEGATIVE_WAIT);
+      expect(sendMail).not.toHaveBeenCalled();
       await request(app).post('/api/v1/session').send({ email: user.email, password: 'wrong-password' });
       await vi.waitFor(() => {
         expect(sendMail).toHaveBeenCalledTimes(1);
@@ -712,9 +710,7 @@ describe('Session API', () => {
         // eslint-disable-next-line no-await-in-loop -- see above.
         await request(app).post('/api/v1/session').send({ email: 'nobody-at-all@example.test', password: 'whatever' });
       }
-      await vi.waitFor(() => {
-        expect(sendMail).not.toHaveBeenCalled();
-      }, NEGATIVE_WAIT);
+      expect(sendMail).not.toHaveBeenCalled();
     });
 
     it('does not email on refresh-token rotation (not a fresh login)', async () => {
@@ -737,9 +733,7 @@ describe('Session API', () => {
       // request failed) instead of proving rotation deliberately skips the
       // notification.
       expect(refreshRes.status).toBe(200);
-      await vi.waitFor(() => {
-        expect(sendMail).not.toHaveBeenCalled();
-      }, NEGATIVE_WAIT);
+      expect(sendMail).not.toHaveBeenCalled();
     });
 
     it('emails the user on successful login via a trusted-device MFA skip', async () => {
@@ -841,9 +835,7 @@ describe('Session API', () => {
         const res = await attempt();
         expect(res.status).toBe(401);
       }
-      await vi.waitFor(() => {
-        expect(sendMail).not.toHaveBeenCalled();
-      }, NEGATIVE_WAIT);
+      expect(sendMail).not.toHaveBeenCalled();
 
       const res = await attempt();
       expect(res.status).toBe(401);
@@ -856,6 +848,61 @@ describe('Session API', () => {
       // attempts need `verified: false`), unlike every other test in this
       // file's mockResolvedValueOnce convention - reset it explicitly so a
       // future test appended after this one doesn't silently inherit it.
+      vi.mocked(verifyAuthentication).mockReset();
+    });
+
+    // Regression test: a soft-deleted/offboarded member's passkey credential
+    // row survives offboarding (it's looked up purely by credential_id ->
+    // user_id, independent of the offboarding flow), and their email is
+    // mangled to `deleted-<ts>-<email>` at that point - sending a lockout
+    // notification to it is pointless and would leak a stale, meaningless
+    // address. Exercises the `!owner.deleted` guard added to the passkey
+    // lockout branch, which sits above the existing `user.deleted` check in
+    // the success path (line ~382).
+    it('does not email a lockout notification for a soft-deleted passkey owner', async () => {
+      await appConfig.set('notify_user_on_login_activity', true);
+      const user = await createLoginableUser({ deleted: true });
+      const credentialId = 'e2e-deleted-owner-lockout-credential';
+      await prisma.mfa_passkey_credentials.create({
+        data: {
+          user_id: user.id,
+          credential_id: credentialId,
+          public_key: Buffer.from('fake-public-key-bytes').toString('base64url'),
+          sign_count: 0,
+          name: 'Test passkey',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+      vi.mocked(verifyAuthentication).mockResolvedValue({
+        verified: false,
+        authenticationInfo: { newCounter: 0 },
+      } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+      async function attempt() {
+        const optionsRes = await request(app).post('/api/v1/session/passkey/options').send({});
+        const challenge: string = optionsRes.body.challenge;
+        const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+        return request(app)
+          .post('/api/v1/session/passkey/verify')
+          .send({ response: { id: credentialId, response: { clientDataJSON } } });
+      }
+
+      for (let i = 0; i < 5; i++) {
+        // eslint-disable-next-line no-await-in-loop -- see above.
+        const res = await attempt();
+        expect(res.status).toBe(401);
+      }
+      // Unlike the negative assertions above, this path DOES reach the
+      // lockout branch on the 5th attempt and would fire
+      // `void sendLoginLockoutEmail(...)` were it not for the
+      // `!owner.deleted` guard being tested here - an immediate assertion
+      // would pass on its first tick regardless of whether the guard
+      // actually works (mirrors the toggle-off tests' identical rationale
+      // elsewhere in this file), so force a real settle first instead.
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(sendMail).not.toHaveBeenCalled();
+
       vi.mocked(verifyAuthentication).mockReset();
     });
   });

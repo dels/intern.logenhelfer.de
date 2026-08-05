@@ -914,6 +914,7 @@ describe('passkey as MFA re-verification proof (verifyExistingMfaProof)', () => 
     await resetDb();
     process.env.MFA_ENCRYPTION_KEY = 'a'.repeat(64);
     vi.mocked(verifyAuthentication).mockReset();
+    for (const key of Object.keys(KNOWN_KEYS)) appConfig.dirty(key);
   });
 
   async function getPasskeyProofOptions(token: string) {

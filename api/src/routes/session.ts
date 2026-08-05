@@ -201,10 +201,14 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
 
     if (!user || !passwordValid) {
       const { lockedOut } = await recordFailedLogin(email);
+      // Response first, then notify - closes even the sub-millisecond
+      // synchronous-execution-up-to-first-await timing difference between
+      // "known user, locked out" and "unknown email" (belt-and-braces on top
+      // of the already-closed DUMMY_PASSWORD_HASH oracle above).
+      res.status(401).json({ error: 'invalid_credentials' });
       if (lockedOut && user) {
         void sendLoginLockoutEmail(user, req, 'password');
       }
-      res.status(401).json({ error: 'invalid_credentials' });
       return;
     }
 
@@ -355,11 +359,17 @@ router.post('/session/passkey/verify', loginRateLimiter, async (req: Request, re
 
     if (!verification.verified) {
       const { lockedOut } = await recordFailedMfaAttempt(`passkey:${credentialId}`);
-      if (lockedOut) {
-        const owner = await prisma.users.findUnique({ where: { id: stored.user_id } });
-        if (owner) void sendLoginLockoutEmail(owner, req, 'passkey');
-      }
+      // Look up the owner (if any) before responding, but send the response
+      // first and fire the notification after - response first, then notify,
+      // same principle as the password-lockout branch above. A soft-
+      // deleted/offboarded member's passkey credential row survives
+      // offboarding, and their email is mangled to
+      // `deleted-<ts>-<email>` on offboarding - sending to it is pointless,
+      // hence the `!owner.deleted` guard (matches the same check 20 lines
+      // below in the success path).
+      const owner = lockedOut ? await prisma.users.findUnique({ where: { id: stored.user_id } }) : null;
       res.status(401).json({ error: 'unauthorized' });
+      if (owner && !owner.deleted) void sendLoginLockoutEmail(owner, req, 'passkey');
       return;
     }
 

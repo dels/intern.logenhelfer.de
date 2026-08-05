@@ -114,13 +114,14 @@ router.post('/verify', async (req, res, next) => {
 
     if (!ok) {
       const { lockedOut } = await recordFailedMfaAttempt(lockoutKey);
+      // Response first, then notify - never await a real mail-send before
+      // the HTTP response, or the response timing itself becomes an oracle
+      // (same class of issue session.ts's DUMMY_PASSWORD_HASH guards
+      // against). Fire-and-forget after the response, not before.
+      res.status(401).json({ error: 'unauthorized' });
       if (lockedOut) {
-        // Fire-and-forget - never await a real mail-send before the HTTP
-        // response, or the response timing itself becomes an oracle (same
-        // class of issue session.ts's DUMMY_PASSWORD_HASH guards against).
         void sendLoginLockoutEmail(user, req, toLoginMethod(body.method));
       }
-      res.status(401).json({ error: 'unauthorized' });
       return;
     }
 

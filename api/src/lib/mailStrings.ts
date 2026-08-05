@@ -1,3 +1,5 @@
+import type { LoginMethod } from './loginNotification.js';
+
 export type MailLanguage = 'de' | 'en';
 
 export interface MailStrings {
@@ -33,7 +35,7 @@ export interface MailStrings {
     subject(lodge: string): string;
     body(firstname: string, at: string, ip: string, methodLabel: string): string;
   };
-  loginMethodLabel(method: 'password' | 'passkey' | 'totp' | 'email' | 'backup_code' | 'mfa_unknown'): string;
+  loginMethodLabel(method: LoginMethod): string;
 }
 
 /**

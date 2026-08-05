@@ -11,6 +11,8 @@ import { prisma } from '../../src/db.js';
 import { resetDb } from '../helpers/db.js';
 import { createUser } from '../helpers/factories.js';
 import { encryptSecret } from '../../src/lib/mfaEncryption.js';
+import { sendEmailOtp } from '../../src/lib/mfaEmailOtp.js';
+import { generateBackupCodes } from '../../src/lib/mfaBackupCodes.js';
 import { appConfig, KNOWN_KEYS } from '../../src/lib/appConfig.js';
 
 vi.mock('../../src/lib/mail.js', () => ({ sendMail: vi.fn().mockResolvedValue(undefined) }));
@@ -140,6 +142,47 @@ describe('MFA challenge', () => {
       .post('/api/v1/mfa/challenge/verify')
       .set('Authorization', `Bearer ${token}`)
       .send({ method: 'totp', code: authenticator.generate(secret) });
+    expect(res.status).toBe(200);
+    await vi.waitFor(() => {
+      expect(sendMail).toHaveBeenCalledTimes(1);
+      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+    });
+  });
+
+  it('emails the user on successful email-OTP verification when the toggle is on', async () => {
+    await appConfig.set('notify_user_on_login_activity', true);
+    const user = await createUser();
+    await sendEmailOtp(user.id, user.email, 'login');
+    // sendEmailOtp itself sends the OTP-delivery mail through the same
+    // mocked sendMail - extract the 6-digit code from it (mirrors
+    // mfaEmailOtp.test.ts's own convention), then clear the mock so the
+    // toHaveBeenCalledTimes(1) assertion below counts only the login-
+    // notification send, not this setup call.
+    const sentText = vi.mocked(sendMail).mock.calls[0]![0].text as string;
+    const code = /(\d{6})/.exec(sentText)![1]!;
+    vi.mocked(sendMail).mockClear();
+
+    const token = issueMfaPendingToken(user.id);
+    const res = await request(app)
+      .post('/api/v1/mfa/challenge/verify')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ method: 'email', code });
+    expect(res.status).toBe(200);
+    await vi.waitFor(() => {
+      expect(sendMail).toHaveBeenCalledTimes(1);
+      expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+    });
+  });
+
+  it('emails the user on successful backup-code verification when the toggle is on', async () => {
+    await appConfig.set('notify_user_on_login_activity', true);
+    const user = await createUser();
+    const [code] = await generateBackupCodes(user.id);
+    const token = issueMfaPendingToken(user.id);
+    const res = await request(app)
+      .post('/api/v1/mfa/challenge/verify')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ method: 'backup_code', code });
     expect(res.status).toBe(200);
     await vi.waitFor(() => {
       expect(sendMail).toHaveBeenCalledTimes(1);

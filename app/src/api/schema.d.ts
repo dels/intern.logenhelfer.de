@@ -2416,6 +2416,7 @@ export interface components {
             users_can_view_statistics?: boolean | null;
             show_seeker_names_to_brothers?: boolean | null;
             notify_technical_contact_on_unknown_password_reset?: boolean | null;
+            notify_user_on_login_activity?: boolean | null;
             domain?: string | null;
             organisation?: string | null;
             lodge?: string | null;
