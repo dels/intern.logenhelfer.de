@@ -12,10 +12,14 @@ export interface AppConfigFieldDef {
   key: keyof AppConfigValues;
   type: FieldType;
   category: FieldCategory;
-  /** Only meaningful when type === 'enum' — the exact set of values ConfigField renders as MenuItems. */
+  /** Only meaningful when type === 'enum' — the exact set of values ConfigField renders as MenuItems (or radio options, see renderAs). */
   options?: string[];
   /** Byte-valued field shown to the user in MB; ConfigField converts to/from the underlying byte string. */
   unit?: 'mb';
+  /** Only meaningful when type === 'enum' — renders as a RadioGroup instead of the default select dropdown. */
+  renderAs?: 'radio';
+  /** Hides this field unless the predicate (given the form's current, in-progress values) returns true. Absent means always visible. */
+  visibleWhen?: (values: Partial<AppConfigValues>) => boolean;
 }
 
 // Shared, data-driven field list consumed by ConfigurationPage.tsx. Adding a
@@ -30,6 +34,15 @@ export const FIELDS: AppConfigFieldDef[] = [
   { key: 'users_can_view_statistics', type: 'boolean', category: 'funktionen' },
   { key: 'show_seeker_names_to_brothers', type: 'boolean', category: 'funktionen' },
   { key: 'notify_technical_contact_on_unknown_password_reset', type: 'boolean', category: 'funktionen' },
+  { key: 'birthday_calendar_available', type: 'boolean', category: 'funktionen' },
+  {
+    key: 'birthday_calendar_consent_mode',
+    type: 'enum',
+    category: 'funktionen',
+    options: ['individual', 'blanket'],
+    renderAs: 'radio',
+    visibleWhen: (values) => values.birthday_calendar_available === true,
+  },
 
   // Konfiguration - core identity fields plus other operational config.
   { key: 'domain', type: 'string', category: 'konfiguration' },

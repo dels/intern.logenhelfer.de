@@ -16,6 +16,8 @@ function appConfigFixture(overrides: Partial<Record<string, unknown>> = {}) {
     working_plan_as_start_page: false,
     archive: false,
     show_admins: true,
+    birthday_calendar_available: false,
+    birthday_calendar_consent_mode: 'individual',
     domain: 'logenhelfer.de',
     organisation: 'ACME',
     lodge: 'Zur Standhaftigkeit',
@@ -237,6 +239,24 @@ describe('ConfigurationPage', () => {
 
     await waitFor(() => expect(lastPatchBody).not.toBeNull());
     expect((lastPatchBody as Record<string, unknown>).language).toBe('en');
+  });
+
+  it('hides the consent-mode radio until birthday_calendar_available is on, then shows and saves it', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(screen.queryByRole('radio', { name: /Mitglieder individuell/ })).not.toBeInTheDocument();
+
+    const toggle = await screen.findByRole('switch', { name: /Geburtstagskalender/ });
+    await user.click(toggle);
+
+    const blanketRadio = await screen.findByRole('radio', { name: /anderweitig eingeholt/ });
+    await user.click(blanketRadio);
+    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(lastPatchBody).not.toBeNull());
+    expect((lastPatchBody as Record<string, unknown>).birthday_calendar_available).toBe(true);
+    expect((lastPatchBody as Record<string, unknown>).birthday_calendar_consent_mode).toBe('blanket');
   });
 
   it('shows a Hilfe-Inhalt field and submits its value', async () => {
