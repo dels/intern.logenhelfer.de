@@ -19,6 +19,8 @@ function meFixture(overrides: Partial<MeUser> = {}): MeUser {
     lastname: 'Mitglied',
     subscribed_to_announcements: false,
     gdpr_accepted: true,
+    birthday_calendar_consent: false,
+    birthday_calendar_consent_requested: false,
     ...overrides,
   };
 }
