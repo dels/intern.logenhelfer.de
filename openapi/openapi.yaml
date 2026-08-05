@@ -2582,6 +2582,23 @@ paths:
               schema: { type: string }
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/public/birthdays/{secret}/calendar.ics:
+    get:
+      operationId: getPublicBirthdayCalendarIcs
+      security: []
+      parameters:
+        - name: secret
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: iCalendar (.ics) feed of pseudonymized member birthdays (initials only)
+          content:
+            text/calendar:
+              schema: { type: string }
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/public/workingplan.pdf:
     get:
       operationId: getPublicWorkingplanPdf
@@ -3073,12 +3090,13 @@ components:
     PublicLandingConfig:
       type: object
       additionalProperties: false
-      required: [calendar_as_landing_page, lodge, language, logo_version]
+      required: [calendar_as_landing_page, lodge, language, logo_version, birthday_calendar_ics_url]
       properties:
         calendar_as_landing_page: { type: boolean }
         lodge: { type: string }
         language: { type: string }
         logo_version: { type: integer, nullable: true }
+        birthday_calendar_ics_url: { type: string, nullable: true }
     CustomLogoMeta:
       type: object
       additionalProperties: false

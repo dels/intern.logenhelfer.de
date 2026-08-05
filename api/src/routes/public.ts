@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -75,6 +76,78 @@ async function getTimespanDays(key: string): Promise<number> {
 
 async function anonAccessEnabled(): Promise<boolean> {
   return getBoolean('public_wp_available_to_anon_users');
+}
+
+async function birthdayCalendarAvailable(): Promise<boolean> {
+  return getBoolean('birthday_calendar_available');
+}
+
+/**
+ * Constant-time comparison against BIRTHDAY_CALENDAR_SECRET (provisioned
+ * like MFA_ENCRYPTION_KEY - see bin/init-env/bin/deploy-to). Unlike
+ * workingplan.ics, birthday data is sensitive enough that "anyone who knows
+ * this URL path pattern exists" isn't an acceptable audience - only "anyone
+ * who was given this exact URL" - so this needs its own secret, not just the
+ * AppConfig toggle.
+ */
+function birthdayCalendarSecretMatches(candidate: string): boolean {
+  const expected = process.env.BIRTHDAY_CALENDAR_SECRET ?? '';
+  if (expected.length === 0) {
+    return false;
+  }
+  const a = Buffer.from(candidate);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+async function birthdayCalendarIcsUrl(): Promise<string | null> {
+  if (!(await birthdayCalendarAvailable())) {
+    return null;
+  }
+  const secret = process.env.BIRTHDAY_CALENDAR_SECRET;
+  if (!secret) {
+    return null;
+  }
+  return `/api/v1/public/birthdays/${secret}/calendar.ics`;
+}
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+interface BirthdayRow {
+  uuid: string | null;
+  firstname: string;
+  lastname: string;
+  date_of_birth: Date;
+}
+
+/** How many yearly occurrences to emit per member on every fetch (regenerated fresh, no RRULE - see the design spec for why). */
+const BIRTHDAY_FEED_YEARS = 3;
+
+function birthdayOccurrences(row: BirthdayRow, fromYear: number): Array<{ date: Date; age: number }> {
+  const birthMonth = row.date_of_birth.getUTCMonth();
+  const birthDay = row.date_of_birth.getUTCDate();
+  const birthYear = row.date_of_birth.getUTCFullYear();
+  // Date.UTC would otherwise silently roll Feb 29 over into March 1st in a
+  // non-leap occurrence year (JS Date normalizes out-of-range day numbers) -
+  // Feb 28 is the intended fallback per the design spec, so this is handled
+  // explicitly rather than relying on that normalization.
+  const isFeb29 = birthMonth === 1 && birthDay === 29;
+  const occurrences: Array<{ date: Date; age: number }> = [];
+  for (let i = 0; i < BIRTHDAY_FEED_YEARS; i += 1) {
+    const year = fromYear + i;
+    const day = isFeb29 && !isLeapYear(year) ? 28 : birthDay;
+    occurrences.push({ date: new Date(Date.UTC(year, birthMonth, day)), age: year - birthYear });
+  }
+  return occurrences;
+}
+
+/** Initials only, never full names - e.g. "A. B.s 57. Geburtstag". */
+function birthdaySummary(row: BirthdayRow, age: number): string {
+  const firstInitial = row.firstname.trim().charAt(0).toUpperCase();
+  const lastInitial = row.lastname.trim().charAt(0).toUpperCase();
+  return `${firstInitial}. ${lastInitial}.s ${age}. Geburtstag`;
 }
 
 // -- logo / PWA icons -----------------------------------------------------
@@ -245,12 +318,13 @@ function publicEventJson(event: { title: string | null; location: string | null;
 // GET /api/v1/public/landing
 router.get('/landing', async (_req, res, next) => {
   try {
-    const [startPage, anonEnabled, lodge, language, logoVersion] = await Promise.all([
+    const [startPage, anonEnabled, lodge, language, logoVersion, birthdayIcsUrl] = await Promise.all([
       getBoolean('working_plan_as_start_page'),
       getBoolean('public_wp_available_to_anon_users'),
       getConfigString('lodge'),
       getConfigString('language'),
       currentLogoVersion(),
+      birthdayCalendarIcsUrl(),
     ]);
 
     res.status(200).json({
@@ -258,6 +332,7 @@ router.get('/landing', async (_req, res, next) => {
       lodge: lodge ?? '',
       language: language ?? 'de',
       logo_version: logoVersion,
+      birthday_calendar_ics_url: birthdayIcsUrl,
     });
   } catch (err) {
     next(err);
@@ -376,6 +451,70 @@ router.get('/workingplan.ics', async (_req, res, next) => {
         stamp: event.created_at,
         ...(event.updated_at.getTime() !== event.created_at.getTime() ? { lastModified: event.updated_at } : {}),
       });
+    }
+
+    res.status(200).type('text/calendar').send(calendar.toString());
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/public/birthdays/:secret/calendar.ics
+//
+// Net-new, no Rails precedent (unlike the rest of this file). Gated on two
+// independent things, both required: birthday_calendar_available (an admin
+// decision, like every other flag here) AND the secret path segment,
+// constant-time-compared against BIRTHDAY_CALENDAR_SECRET - see
+// birthdayCalendarSecretMatches's own comment for why this feed needs a
+// secret and workingplan.ics doesn't.
+router.get('/birthdays/:secret/calendar.ics', async (req, res, next) => {
+  try {
+    if (!(await birthdayCalendarAvailable()) || !birthdayCalendarSecretMatches(req.params.secret)) {
+      throw ApiError.notFound();
+    }
+
+    const consentMode = (await getConfigString('birthday_calendar_consent_mode')) ?? 'individual';
+    const rows = await prisma.users.findMany({
+      where: {
+        deleted: { not: true },
+        date_of_birth: { not: null },
+        firstname: { not: null },
+        lastname: { not: null },
+        ...(consentMode === 'individual' ? { birthday_calendar_consent: true } : {}),
+      },
+      select: { uuid: true, firstname: true, lastname: true, date_of_birth: true },
+    });
+
+    const domain = (await getConfigString('domain')) ?? 'logenhelfer.de';
+    const language = ((await getConfigString('language')) ?? 'de').toUpperCase();
+    const lodge = (await getConfigString('lodge')) ?? 'Logenhelfer';
+    const calendar = ical({ timezone: 'Europe/Berlin', prodId: { company: lodge, product: 'Geburtstagskalender', language } });
+    const fromYear = todayUtc().getUTCFullYear();
+
+    for (const user of rows) {
+      // Defensive re-check even though the Prisma `where` above already
+      // filters null firstname/lastname/date_of_birth - TypeScript still
+      // sees these as nullable coming back from Prisma, and an empty-string
+      // firstname/lastname (not null, so not filtered above) would produce
+      // an empty initial, which is skipped rather than emitted.
+      if (!user.firstname?.trim() || !user.lastname?.trim() || !user.date_of_birth) {
+        continue;
+      }
+      const row: BirthdayRow = { uuid: user.uuid, firstname: user.firstname, lastname: user.lastname, date_of_birth: user.date_of_birth };
+      for (const occurrence of birthdayOccurrences(row, fromYear)) {
+        calendar.createEvent({
+          // One UID per person PER YEAR (not a single recurring UID) - each
+          // occurrence's SUMMARY has a different age, so each needs its own
+          // stable identity instead of sharing an RRULE'd UID.
+          id: `birthday-${row.uuid ?? ''}-${occurrence.date.getUTCFullYear()}@${domain}`,
+          start: occurrence.date,
+          end: addDaysUtc(occurrence.date, 1),
+          allDay: true,
+          summary: birthdaySummary(row, occurrence.age),
+          transparency: ICalEventTransparency.TRANSPARENT,
+          stamp: new Date(),
+        });
+      }
     }
 
     res.status(200).type('text/calendar').send(calendar.toString());

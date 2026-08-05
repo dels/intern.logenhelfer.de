@@ -1403,6 +1403,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/birthdays/{secret}/calendar.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicBirthdayCalendarIcs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/workingplan.pdf": {
         parameters: {
             query?: never;
@@ -1740,6 +1756,7 @@ export interface components {
             lodge: string;
             language: string;
             logo_version: number | null;
+            birthday_calendar_ics_url: string | null;
         };
         CustomLogoMeta: {
             content_type: string;
@@ -5708,6 +5725,29 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description iCalendar (.ics) feed of upcoming public events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicBirthdayCalendarIcs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                secret: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description iCalendar (.ics) feed of pseudonymized member birthdays (initials only) */
             200: {
                 headers: {
                     [name: string]: unknown;
