@@ -521,7 +521,9 @@
     "passwordTooShort": "Password must be at least 8 characters.",
     "passwordMismatch": "Passwords do not match.",
     "profileHeader": "Profile",
-    "profileSuccess": "Profile updated successfully."
+    "profileSuccess": "Profile updated successfully.",
+    "birthdayCalendarHeader": "Birthday calendar",
+    "birthdayCalendarConsent": "Show my birthday in the pseudonymized birthday calendar"
   },
   "mfa": {
     "setup": {
