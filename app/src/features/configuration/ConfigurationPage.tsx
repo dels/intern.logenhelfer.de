@@ -70,6 +70,16 @@ function categoryForTab(index: number): FieldCategory | null {
   return null;
 }
 
+// Generic per-key helper so the compiler can verify `target[key] = from[key]`
+// against a single correlated key type - assigning through a `keyof` union
+// directly (`changed[key] = values[key]` inline in a loop) is a type error,
+// since AppConfigValues' properties don't all share the same value type.
+function copyIfChanged<K extends keyof AppConfigValues>(
+  target: Partial<AppConfigValues>, key: K, from: AppConfigValues, base: AppConfigValues,
+) {
+  if (from[key] !== base[key]) target[key] = from[key];
+}
+
 function AppConfigSection({ activeTab }: { activeTab: number }) {
   const { t } = useTranslation();
   const { data, isLoading } = useAppConfig();
@@ -92,7 +102,7 @@ function AppConfigSection({ activeTab }: { activeTab: number }) {
     e.preventDefault();
     const changed: Partial<AppConfigValues> = {};
     for (const key of Object.keys(values) as (keyof AppConfigValues)[]) {
-      if (values[key] !== data[key]) changed[key] = values[key];
+      copyIfChanged(changed, key, values, data);
     }
     update(changed);
   };
