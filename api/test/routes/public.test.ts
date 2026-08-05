@@ -53,6 +53,18 @@ async function setAppConfig(key: string, value: string | boolean): Promise<void>
   });
 }
 
+async function createRole(name: string, displayName = name): Promise<{ id: number; name: string | null }> {
+  const now = new Date();
+  const existing = await prisma.roles.findFirst({ where: { name } });
+  if (existing) return existing;
+  return prisma.roles.create({ data: { name, display_name: displayName, created_at: now, updated_at: now } });
+}
+
+async function assignRole(userId: number, roleId: number): Promise<void> {
+  const now = new Date();
+  await prisma.user_roles.create({ data: { user_id: userId, role_id: roleId, created_at: now, updated_at: now, role_added_at: now } });
+}
+
 let eventCounter = 0;
 
 async function createEvent(
@@ -463,6 +475,47 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
     // Feb-29 special case were missing, ical-generator would either throw
     // or silently normalize to March 1st instead of the intended Feb 28.
     expect(res.text).not.toMatch(/DTSTART[^\r\n]*0301/);
+  });
+
+  it('excludes an admin from blanket mode when show_admins is off (matches the authenticated birthday_list roster)', async () => {
+    await setAppConfig('birthday_calendar_available', true);
+    await setAppConfig('birthday_calendar_consent_mode', 'blanket');
+    await setAppConfig('show_admins', false);
+    const adminRole = await createRole('Admin');
+    const admin = await createUser({ firstname: 'Kurt', lastname: 'Leiter', date_of_birth: new Date(Date.UTC(1975, 4, 15)) });
+    await assignRole(admin.id, adminRole.id);
+
+    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+
+    expect(res.text).not.toContain('K. L.');
+  });
+
+  it('includes an admin in blanket mode when show_admins is on', async () => {
+    await setAppConfig('birthday_calendar_available', true);
+    await setAppConfig('birthday_calendar_consent_mode', 'blanket');
+    await setAppConfig('show_admins', true);
+    const adminRole = await createRole('Admin');
+    const admin = await createUser({ firstname: 'Mona', lastname: 'Nord', date_of_birth: new Date(Date.UTC(1975, 4, 15)) });
+    await assignRole(admin.id, adminRole.id);
+
+    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+
+    expect(res.text).toMatch(/M\. N\.s \d+\. Geburtstag/);
+  });
+
+  it('still includes an admin in individual mode who personally opted in, regardless of show_admins', async () => {
+    await setAppConfig('birthday_calendar_available', true);
+    await setAppConfig('birthday_calendar_consent_mode', 'individual');
+    await setAppConfig('show_admins', false);
+    const adminRole = await createRole('Admin');
+    const admin = await createUser({
+      firstname: 'Otto', lastname: 'Peters', date_of_birth: new Date(Date.UTC(1975, 4, 15)), birthday_calendar_consent: true,
+    });
+    await assignRole(admin.id, adminRole.id);
+
+    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+
+    expect(res.text).toMatch(/O\. P\.s \d+\. Geburtstag/);
   });
 });
 

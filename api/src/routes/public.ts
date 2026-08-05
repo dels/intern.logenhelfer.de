@@ -150,6 +150,30 @@ function birthdaySummary(row: BirthdayRow, age: number): string {
   return `${firstInitial}. ${lastInitial}.s ${age}. Geburtstag`;
 }
 
+/**
+ * Batch admin-detection for the blanket-consent-mode feed (see the route's
+ * own comment on why only blanket mode needs this) - mirrors
+ * ability.ts's `isAdmin`/`canViewUserInDirectory` (the same admin-hiding
+ * rule the authenticated GET /api/v1/members/birthday_list roster already
+ * applies via canSeeAdminAccount), reproduced narrowly here rather than
+ * importing from members.ts's private helpers, since this route only needs
+ * "is this user an Admin," not the full role-row shape members.ts's
+ * memberDetailJson needs. Two queries regardless of how many userIds are
+ * passed (no N+1) - same two-step user_roles-then-roles join pattern
+ * members.ts's loadRoleRowsForUsers already uses, since user_roles/roles
+ * have no Prisma relation defined between them.
+ */
+async function adminUserIds(userIds: number[]): Promise<Set<number>> {
+  if (userIds.length === 0) return new Set();
+  const adminRole = await prisma.roles.findFirst({ where: { name: 'Admin' } });
+  if (!adminRole) return new Set();
+  const rows = await prisma.user_roles.findMany({
+    where: { user_id: { in: userIds }, role_id: adminRole.id },
+    select: { user_id: true },
+  });
+  return new Set(rows.map((r) => r.user_id).filter((id): id is number => id !== null));
+}
+
 // -- logo / PWA icons -----------------------------------------------------
 
 /**
@@ -483,7 +507,7 @@ router.get('/birthdays/:secret/calendar.ics', async (req, res, next) => {
     }
 
     const consentMode = (await getConfigString('birthday_calendar_consent_mode')) ?? 'individual';
-    const rows = await prisma.users.findMany({
+    const allRows = await prisma.users.findMany({
       where: {
         deleted: { not: true },
         date_of_birth: { not: null },
@@ -491,8 +515,21 @@ router.get('/birthdays/:secret/calendar.ics', async (req, res, next) => {
         lastname: { not: null },
         ...(consentMode === 'individual' ? { birthday_calendar_consent: true } : {}),
       },
-      select: { uuid: true, firstname: true, lastname: true, date_of_birth: true },
+      select: { id: true, uuid: true, firstname: true, lastname: true, date_of_birth: true },
     });
+
+    // Blanket mode has no per-member opt-in to rely on (unlike individual
+    // mode, where a member's own explicit consent already overrides this),
+    // so it must not bypass the same admin-visibility rule the authenticated
+    // birthday_list roster applies (ability.ts's canSeeAdminAccount /
+    // canViewUserInDirectory). An anonymous caller here is never an admin
+    // themselves, so that rule simplifies to: show_admins must be on, or
+    // this user must not be an Admin.
+    let rows = allRows;
+    if (consentMode !== 'individual' && !(await getBoolean('show_admins'))) {
+      const admins = await adminUserIds(allRows.map((u) => u.id));
+      rows = allRows.filter((u) => !admins.has(u.id));
+    }
 
     const domain = (await getConfigString('domain')) ?? 'logenhelfer.de';
     const language = ((await getConfigString('language')) ?? 'de').toUpperCase();
