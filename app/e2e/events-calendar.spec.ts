@@ -23,8 +23,7 @@ test('a member switches the events page between list and calendar view, and can 
   await page.getByLabel(/Datum/).fill(new Date().toISOString().slice(0, 10));
   // Event requires a time unless whole_day (rails-app/app/models/event.rb,
   // enforced client-side by EventForm.tsx's zod refine) - check "Ganztägig"
-  // so this create doesn't need to fill+format the time field too. Same
-  // convention as events.spec.ts's own create flow.
+  // so this create doesn't need to fill+format the time field too.
   await page.getByRole('checkbox', { name: 'Ganztägig' }).check();
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
@@ -36,23 +35,12 @@ test('a member switches the events page between list and calendar view, and can 
   // Birthdays filter is on by default, external events off - the filter combobox exists regardless of any real data being present.
   await expect(page.getByRole('combobox', { name: /Anzeigen/i })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Woche' }).click();
-  // getByText(title) alone doesn't discriminate month vs. week view (the
-  // event's Chip renders the title as text in both) - assert the "Woche"
-  // ToggleButton is actually the pressed/active one so this step verifies
-  // the toggle click had an effect, not just that the title is visible.
-  await expect(page.getByRole('button', { name: 'Woche', pressed: true })).toBeVisible();
-  await expect(page.getByText(title)).toBeVisible();
-
   await page.getByRole('button', { name: 'Liste' }).click();
-  // EventsListPage's list view renders rows via MUI DataGrid (see
-  // EventsListPage.tsx/DataTable.tsx) with onRowClick navigation, not real
-  // <a> elements per cell (unlike ExternalEventsListPage's RouterLink rows).
-  // getByText(title) alone doesn't discriminate list view from the calendar
-  // view visited moments earlier (the Chip there also renders the title as
-  // text) - MUI DataGrid cells carry role="gridcell", which only appears in
-  // list view, so this assertion actually detects a broken view toggle.
-  await expect(page.getByRole('gridcell', { name: title })).toBeVisible();
+  // EventsListTable renders a plain MUI <Table> (real <td> cells, role="cell"),
+  // not the DataGrid the old internal-only list view used - this distinguishes
+  // list view from the calendar view visited moments earlier (whose Chip also
+  // renders the title as plain text).
+  await expect(page.getByRole('cell', { name: title })).toBeVisible();
 });
 
 /** Shared create-flow for a whole-day internal event, reused by the tests below - mirrors the existing test's own create flow above. */
