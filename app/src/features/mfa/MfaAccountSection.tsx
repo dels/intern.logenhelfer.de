@@ -27,7 +27,7 @@ function BackupCodesSection() {
     setProofOpen(false);
     try {
       await regenerate.mutateAsync(proof);
-    } catch (err) {
+    } catch {
       toast.error(t('mfa.security.proofFailed'));
     }
   }

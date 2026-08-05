@@ -89,7 +89,7 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
     let options: Awaited<ReturnType<typeof start.mutateAsync>>;
     try {
       options = await start.mutateAsync({ method: 'passkey', proof });
-    } catch (err) {
+    } catch {
       toast.error(t(proof ? 'mfa.security.proofFailed' : 'mfa.setup.passkeyFailed'));
       return;
     }
@@ -143,7 +143,7 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
     if (method === 'totp') {
       try {
         await startTotpOrEmail('totp', proof);
-      } catch (err) {
+      } catch {
         toast.error(t('mfa.security.proofFailed'));
       }
     } else {
@@ -160,7 +160,7 @@ export default function MfaSetupWizard({ mode = 'initial' }: { mode?: 'initial' 
       } else {
         await removeMethod.mutateAsync({ type: target.kind, proof });
       }
-    } catch (err) {
+    } catch {
       toast.error(t('mfa.security.proofFailed'));
     }
   }

@@ -5,6 +5,7 @@ import { apiFetch, verifyMfaChallenge } from '../api/client';
 import { setAccessToken, startImpersonation, stopImpersonation, onImpersonationEnded } from '../api/token';
 import type { Me, MeUser, MfaLoginResult, SessionPayload } from '../api/types';
 import { useIdleTimeout } from './useIdleTimeout';
+import { PasskeyOptionsFetchError } from './PasskeyOptionsFetchError';
 
 type Status = 'loading' | 'anonymous' | 'authenticated';
 
@@ -27,13 +28,6 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-// Thrown by loginWithPasskey specifically when the options-fetch (step 1)
-// fails, so callers can distinguish "the browser-driven autofill options
-// request failed in the background" from other failure points in the same
-// flow (see LoginPage.tsx's attemptPasskeyLogin, which only swallows this
-// for the autofill path - the explicit button still surfaces it).
-export class PasskeyOptionsFetchError extends Error {}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<Status>('loading');

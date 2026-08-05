@@ -60,7 +60,7 @@ export default function MfaProofDialog({
           <TextField select label={t('mfa.challenge.method')} value={method} onChange={(e) => setMethod(e.target.value as ProofMethod)}>
             {availableMethods.map((m) => <MenuItem key={m} value={m}>{t(`mfa.method.${m}`)}</MenuItem>)}
           </TextField>
-          {method !== 'passkey' && <TextField label={t('mfa.challenge.codeLabel')} value={code} onChange={(e) => setCode(e.target.value)} autoFocus />}
+          {method !== 'passkey' && <TextField label={t('mfa.challenge.codeLabel')} value={code} onChange={(e) => setCode(e.target.value)} />}
         </Stack>
       </DialogContent>
       <DialogActions>
