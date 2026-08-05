@@ -178,6 +178,22 @@ test.describe('public endpoints (no Authorization header needed)', () => {
   });
 });
 
+test.describe('birthday calendar feed (secret-gated public endpoint)', () => {
+  // Deliberately does NOT flip birthday_calendar_available on for this
+  // shared e2e server (other specs run concurrently against the same
+  // instance and may assume default AppConfig) - the deeper "right secret +
+  // enabled -> correct, consent-filtered VEVENTs" coverage already lives in
+  // api/test/routes/public.test.ts, which gets its own isolated DB per test
+  // via resetDb(). This is the narrower "wrong input never 500s or leaks
+  // anything" abuse-case check appropriate for a shared, wide e2e sweep.
+  test('a wrong secret never leaks data or 500s, even if somehow enabled', async ({ request }) => {
+    const res = await request.get('/api/v1/public/birthdays/e2e-definitely-wrong-secret/calendar.ics');
+    expect(res.status()).toBe(404);
+    const body = await res.json();
+    expect(body).toEqual({ error: 'not_found' });
+  });
+});
+
 /**
  * Live TOTP enrollment over real HTTP - no direct DB/decryption access
  * exists from this e2e layer, so this mirrors what a real authenticator app
