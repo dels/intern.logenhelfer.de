@@ -104,6 +104,7 @@
     "title": "Titel",
     "location": "Ort",
     "create": "Neuer Termin",
+    "createExternal": "Neuer Termin außer Haus",
     "edit": "Bearbeiten",
     "publicDescription": "Öffentliche Beschreibung",
     "privateDescription": "Interne Beschreibung",
@@ -118,7 +119,7 @@
     "exportWorkingplanPdf": "Arbeitsplan als PDF exportieren",
     "calendar": {
       "filterBirthdays": "Geburtstage",
-      "filterExternalEvents": "Externe Termine",
+      "filterExternalEvents": "Termine außer Haus",
       "filterLabel": "Anzeigen",
       "filterPlaceholder": "Filter wählen",
       "filterSourcesTruncated": "Es werden nur die ersten 1000 ICS-Quellen angezeigt.",

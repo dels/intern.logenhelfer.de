@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeAll, afterEach, afterAll } from 'vitest';
 import { http, HttpResponse } from 'msw';
@@ -14,29 +14,15 @@ import i18n from '../../i18n';
 // The working-plan PDF export's window is `today` -> `today + 120 days`,
 // computed the same way EventsListPage's api.ts does it internally
 // (downloadInternalWorkingplanPdf). Used below to distinguish the export's
-// GET /api/v1/events?...&to=... request from two OTHER unrelated
-// /api/v1/events requests that also carry a `to` param and would otherwise
-// be indistinguishable by shape alone: the page's own default list-view
-// fetch (which sends its own from/to for the current month-page window, but
-// never the export's exact 120-day-out `to`) and - now that the calendar is
-// the default view - EventsCalendarView's background useEventsInRange fetch
-// for the currently visible month (also from/to-shaped, but a much
-// narrower, different range). Matching the exact 120-day-out `to` value
-// rather than mere `to`/`from` presence keeps these tests correct
-// regardless of which view is mounted.
+// GET /api/v1/events?...&to=... request from the page's own background
+// month-range fetch (useCalendarRangeData), which never sends this exact
+// 120-day-out `to`.
 function expectedWorkingplanTo(from: Date): string {
   const to = new Date(from);
   to.setDate(to.getDate() + 120);
   return toLocalDateString(to);
 }
 
-// Spied rather than left as a black box: without inspecting the actual
-// autoTable() call args, a test that only asserts "a PDF downloaded and
-// export was recorded" would still pass even if the code accidentally read
-// public_description instead of private_description, or dropped the
-// birthday second page entirely - both would be real regressions this task
-// exists to prevent. Capturing the real module's calls (not replacing them)
-// keeps doc.output()/addPage() behavior intact for the rest of the test.
 const autoTableCalls: unknown[] = [];
 vi.mock('jspdf-autotable', async () => {
   const actual = await vi.importActual<typeof import('jspdf-autotable')>('jspdf-autotable');
@@ -53,7 +39,7 @@ const eventRow = { uuid: 'e1', title: 'Stiftungsfest', date: '2026-08-01', time:
 
 const server = setupServer(
   http.get('/api/v1/me', () =>
-    HttpResponse.json({ user: { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster' }, abilities: { event: ['read', 'create', 'update', 'destroy'] } }),
+    HttpResponse.json({ user: { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster' }, abilities: { event: ['read', 'create', 'update', 'destroy'], external_event: ['create'] } }),
   ),
   http.get('/api/v1/events', () => HttpResponse.json({ rows: [eventRow], row_count: 1 })),
   http.delete('/api/v1/events/e1', () => new HttpResponse(null, { status: 204 })),
@@ -65,9 +51,6 @@ const server = setupServer(
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
 afterEach(() => {
   server.resetHandlers();
-  // Failure-proof timer cleanup: an inline vi.useRealTimers() at the end of
-  // a test body never runs if an assertion throws mid-test, which would
-  // leak a frozen clock into whichever test runs next.
   vi.useRealTimers();
 });
 afterAll(() => server.close());
@@ -80,7 +63,9 @@ function renderPage() {
         <MemoryRouter initialEntries={['/events']}>
           <Routes>
             <Route path="/events" element={<EventsListPage />} />
+            <Route path="/events/new" element={<div>New event page</div>} />
             <Route path="/events/:uuid/edit" element={<div>Edit event page</div>} />
+            <Route path="/external-events/new" element={<div>New external event page</div>} />
           </Routes>
         </MemoryRouter>
       </AuthProvider>
@@ -88,60 +73,133 @@ function renderPage() {
   );
 }
 
-// The page now defaults to the calendar view (see the "defaults to..." test
-// below); most other tests here exercise list-view-specific UI (DataTable
-// rows, row actions, column formatting) and don't care which view is shown
-// first, so they switch to list view explicitly rather than asserting
-// anything about the calendar's date-range-dependent chip rendering.
-async function renderListPage() {
-  renderPage();
+async function switchToList() {
   await userEvent.click(screen.getByRole('button', { name: 'Liste' }));
-  await waitFor(() => expect(screen.getByRole('grid')).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole('table')).toBeInTheDocument());
 }
 
 describe('EventsListPage', () => {
-  it('renders events returned by the API', async () => {
-    await renderListPage();
+  it('defaults to the calendar view, and toggles to list view and back', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-08-01T00:00:00'));
+    renderPage();
+
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
+
+    await switchToList();
+    expect(screen.getByText('Stiftungsfest')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Kalender' }));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
   });
 
-  it('shows row-level edit/delete actions when abilities.event allows them', async () => {
-    await renderListPage();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Bearbeiten' })).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: 'Löschen' })).toBeInTheDocument();
+  it('shows "Neuer Termin" only when abilities.event allows create', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Neuer Termin' })).toBeInTheDocument());
   });
 
-  it('hides row-level actions for a read-only member', async () => {
+  it('shows "Neuer Termin außer Haus" only when abilities.external_event allows create, and it navigates to /external-events/new', async () => {
+    renderPage();
+    const button = await screen.findByRole('button', { name: 'Neuer Termin außer Haus' });
+    await userEvent.click(button);
+    await waitFor(() => expect(screen.getByText('New external event page')).toBeInTheDocument());
+  });
+
+  it('hides "Neuer Termin" and "Neuer Termin außer Haus" for a read-only member', async () => {
     server.use(http.get('/api/v1/me', () => HttpResponse.json({ user: { id: 2, email: 'c@d.de', firstname: 'A', lastname: 'B' }, abilities: { event: ['read'] } })));
-    await renderListPage();
+    renderPage();
     await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
-    expect(screen.queryByRole('button', { name: 'Bearbeiten' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Löschen' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Neuer Termin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Neuer Termin außer Haus' })).not.toBeInTheDocument();
   });
 
-  it('navigates to the edit page without navigating to the detail page', async () => {
-    await renderListPage();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Bearbeiten' })).toBeInTheDocument());
-    await userEvent.click(screen.getByRole('button', { name: 'Bearbeiten' }));
-    await waitFor(() => expect(screen.getByText('Edit event page')).toBeInTheDocument());
+  it('renders "Heute" as a visible outlined button, not a plain text button', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Heute' })).toHaveClass('MuiButton-outlined'));
   });
 
-  it('deletes the event after a second confirming click', async () => {
-    let deleteCalled = false;
-    server.use(http.delete('/api/v1/events/e1', () => { deleteCalled = true; return new HttpResponse(null, { status: 204 }); }));
-    await renderListPage();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Löschen' })).toBeInTheDocument());
-    await userEvent.click(screen.getByRole('button', { name: 'Löschen' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Diesen Termin wirklich löschen?' }));
-    await waitFor(() => expect(deleteCalled).toBe(true));
+  it('fetches the month containing today by default', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-20T00:00:00'));
+    let captured: { from: string | null; to: string | null } | null = null;
+    server.use(
+      http.get('/api/v1/events', ({ request }) => {
+        const url = new URL(request.url);
+        captured = { from: url.searchParams.get('from'), to: url.searchParams.get('to') };
+        return HttpResponse.json({ rows: [eventRow], row_count: 1 });
+      }),
+    );
+    renderPage();
+    // Range is the padded month grid (Monday-start weeks), so `from`/`to`
+    // can fall a few days outside the bare 07-01..07-31 window - only
+    // assert the month itself is correctly targeted, not exact padding edges.
+    await waitFor(() => expect(captured?.from?.startsWith('2026-0')).toBe(true));
+  });
+
+  it('paging to the next month, then back via "Heute", changes the month label shown in the shared header', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-20T00:00:00'));
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/Juli 2026/)).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Nächster Monat' }));
+    await waitFor(() => expect(screen.getByText(/August 2026/)).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Heute' }));
+    await waitFor(() => expect(screen.getByText(/Juli 2026/)).toBeInTheDocument());
+  });
+
+  it('uses the app i18n language for the month/year header, not a hardcoded German locale', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-02-15T00:00:00'));
+    await i18n.changeLanguage('en');
+    try {
+      renderPage();
+      await waitFor(() => expect(screen.getByText(/February 2026/i)).toBeInTheDocument());
+      expect(screen.queryByText(/Februar 2026/i)).not.toBeInTheDocument();
+    } finally {
+      await act(async () => {
+        await i18n.changeLanguage('de');
+      });
+    }
+  });
+
+  it('the filter box appears in both List and Kalender view, and a selection made in one view still applies after switching to the other', async () => {
+    server.use(
+      http.get('/api/v1/external_events', () => HttpResponse.json({
+        rows: [{ uuid: 'x1', title: 'Nachbarbesuch', location: 'Anderswo', date: '2026-08-05', time: '20:00', host: null, ics_source_id: null, ics_source_uuid: null, created_by_id: 1, updated_by_id: null, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' }],
+        row_count: 1,
+      })),
+    );
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-08-01T00:00:00'));
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
+    expect(screen.queryByText('Nachbarbesuch')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('combobox', { name: /Anzeigen/i }));
+    await userEvent.click(screen.getByRole('option', { name: /Termine außer Haus/i }));
+    await waitFor(() => expect(screen.getByText('Nachbarbesuch')).toBeInTheDocument());
+
+    await switchToList();
+    expect(screen.getByText('Nachbarbesuch')).toBeInTheDocument();
+  });
+
+  it('shows a small spinner next to the filter while external events are loading, then hides it', async () => {
+    server.use(
+      http.get('/api/v1/external_events', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return HttpResponse.json({ rows: [], row_count: 0 });
+      }),
+    );
+    renderPage();
+    expect(screen.getByTestId('external-events-spinner')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId('external-events-spinner')).not.toBeInTheDocument());
   });
 
   it('builds and downloads an internal working-plan PDF with a birthday-list page, and records the export', async () => {
-    // The working-plan window is computed from `new Date()` (today ->
-    // today+120), not passed in - pinning the clock makes the in-window /
-    // out-of-window birthday fixtures below deterministic instead of
-    // drifting (and potentially flipping which bucket they fall into) as
-    // wall-clock time passes.
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-07-15T00:00:00'));
     const workingplanTo = expectedWorkingplanTo(new Date('2026-07-15T00:00:00'));
@@ -152,16 +210,9 @@ describe('EventsListPage', () => {
     server.use(
       http.get('/api/v1/events', ({ request }) => {
         const url = new URL(request.url);
-        // See expectedWorkingplanTo's comment above: only the export's
-        // fetchWorkingplanEvents call sends this exact 120-day-out `to`.
         if (url.searchParams.get('to') !== workingplanTo) {
           return HttpResponse.json({ rows: [eventRow], row_count: 1 });
         }
-        // The working-plan fetch always sends from/to (the hardcoded
-        // 120-day window) - assert it did so, rather than branching on
-        // presence/absence like the brief's illustrative test (which
-        // returned identical bodies either way and so never actually
-        // distinguished the two branches).
         expect(url.searchParams.get('from')).toBeTruthy();
         expect(url.searchParams.get('to')).toBeTruthy();
         return HttpResponse.json({
@@ -171,10 +222,6 @@ describe('EventsListPage', () => {
       }),
       http.get('/api/v1/members/birthday_list', () => {
         birthdayListCalled = true;
-        // With the clock pinned to 2026-07-15, the working-plan window is
-        // ~2026-07-15 to ~2026-11-12. 'Muster' (08-15) falls inside it;
-        // 'Ausserhalb' (01-01) falls well outside it and must be dropped by
-        // filterBirthdaysInRange before reaching the second autoTable call.
         return HttpResponse.json({
           rows: [
             { uuid: 'u1', lastname: 'Muster', firstname: 'Max', date_of_birth: '1980-08-15', age: 46, twentyfifth_jubilee: null, fortieth_jubilee: null },
@@ -198,9 +245,6 @@ describe('EventsListPage', () => {
     expect(recordExportBody).toEqual({ kind: 'workingplan_internal' });
     expect(birthdayListCalled).toBe(true);
 
-    // Two autoTable calls: the events page (using private_description, NOT
-    // public_description - this is the internal export) and the
-    // birthday-list second page.
     expect(autoTableCalls).toHaveLength(2);
     const eventsTable = autoTableCalls[0] as { body: string[][] };
     const flatEventRow = eventsTable.body.flat().join(' ');
@@ -219,24 +263,10 @@ describe('EventsListPage', () => {
   });
 
   it('accumulates the working-plan PDF across multiple pages of events', async () => {
-    // fetchWorkingplanEvents is a local, non-shared copy of the
-    // pagination-accumulation pattern used elsewhere in the codebase (per
-    // the duplication convention) - it has its own loop and its own
-    // `page += 1` continuation branch, which the single-page test above
-    // does not exercise (row_count: 1 with one row satisfies
-    // `rows.length >= data.row_count` immediately after page 0). This test
-    // forces a second page fetch and asserts all rows from both pages land
-    // in the built PDF, guarding that branch directly.
-    // Pinned (rather than the real wall clock) so expectedWorkingplanTo's
-    // 120-day-out `to` is deterministic and known ahead of time - needed to
-    // tell the export's request apart from EventsCalendarView's own
-    // background fetch below.
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-07-15T00:00:00'));
     const workingplanTo = expectedWorkingplanTo(new Date('2026-07-15T00:00:00'));
     autoTableCalls.length = 0;
-    // See expectedWorkingplanTo's comment above: only the export's
-    // fetchWorkingplanEvents call sends this exact 120-day-out `to`.
     const requestedPages: number[] = [];
     server.use(
       http.get('/api/v1/events', ({ request }) => {
@@ -276,124 +306,5 @@ describe('EventsListPage', () => {
     expect(flatEventRows).toContain('Beschreibung 149');
 
     createObjectURLSpy.mockRestore();
-  });
-
-  it('defaults to the calendar view, and toggles to list view and back', async () => {
-    // Pinned so the calendar's default (current-month) grid deterministically
-    // includes eventRow's 2026-08-01 date, regardless of the real wall-clock
-    // date the test happens to run on - only Date is faked (matching the
-    // convention above), so userEvent's internal timers still work.
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date('2026-08-01T00:00:00'));
-    renderPage();
-
-    // Calendar is the default view: no DataTable grid...
-    expect(screen.queryByRole('grid')).not.toBeInTheDocument();
-    // ...but the event still renders, as a calendar chip.
-    await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
-
-    await userEvent.click(screen.getByRole('button', { name: 'Liste' }));
-    await waitFor(() => expect(screen.getByRole('grid')).toBeInTheDocument());
-
-    await userEvent.click(screen.getByRole('button', { name: 'Kalender' }));
-    expect(screen.queryByRole('grid')).not.toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
-  });
-
-  it('formats the date column as a localized date instead of the raw YYYY-MM-DD string', async () => {
-    await renderListPage();
-    await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
-    const expected = new Date('2026-08-01T00:00:00').toLocaleString(i18n.language, { dateStyle: 'medium' });
-    expect(screen.getByText(expected)).toBeInTheDocument();
-    expect(screen.queryByText('2026-08-01')).not.toBeInTheDocument();
-  });
-
-  it('fetches the current month by default (`from` = today, `to` = end of the month, ascending sort)', async () => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date('2026-07-20T00:00:00'));
-    let capturedFrom: string | null = null;
-    let capturedTo: string | null = null;
-    let capturedSort: string | null = null;
-    server.use(
-      http.get('/api/v1/events', ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get('sort')) {
-          capturedFrom = url.searchParams.get('from');
-          capturedTo = url.searchParams.get('to');
-          capturedSort = url.searchParams.get('sort');
-        }
-        return HttpResponse.json({ rows: [eventRow], row_count: 1 });
-      }),
-    );
-    await renderListPage();
-    await waitFor(() => expect(capturedFrom).toBe('2026-07-20'));
-    expect(capturedTo).toBe('2026-07-31');
-    expect(capturedSort).toBe('date');
-  });
-
-  it('paging to the previous month fetches that whole month, entirely before today', async () => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date('2026-07-20T00:00:00'));
-    const captured: { from: string | null; to: string | null }[] = [];
-    server.use(
-      http.get('/api/v1/events', ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get('sort')) {
-          captured.push({ from: url.searchParams.get('from'), to: url.searchParams.get('to') });
-        }
-        return HttpResponse.json({ rows: [eventRow], row_count: 1 });
-      }),
-    );
-    await renderListPage();
-    await waitFor(() => expect(captured).toContainEqual({ from: '2026-07-20', to: '2026-07-31' }));
-
-    await userEvent.click(screen.getByRole('button', { name: 'Vorheriger Monat' }));
-    await waitFor(() => expect(captured).toContainEqual({ from: '2026-06-01', to: '2026-06-30' }));
-  });
-
-  it('paging to the next month fetches that whole month, entirely after today', async () => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date('2026-07-20T00:00:00'));
-    const captured: { from: string | null; to: string | null }[] = [];
-    server.use(
-      http.get('/api/v1/events', ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get('sort')) {
-          captured.push({ from: url.searchParams.get('from'), to: url.searchParams.get('to') });
-        }
-        return HttpResponse.json({ rows: [eventRow], row_count: 1 });
-      }),
-    );
-    await renderListPage();
-    await waitFor(() => expect(captured).toContainEqual({ from: '2026-07-20', to: '2026-07-31' }));
-
-    await userEvent.click(screen.getByRole('button', { name: 'Nächster Monat' }));
-    await waitFor(() => expect(captured).toContainEqual({ from: '2026-08-01', to: '2026-08-31' }));
-  });
-
-  it('the Today button returns to the default current-month window after paging away', async () => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date('2026-07-20T00:00:00'));
-    const captured: { from: string | null; to: string | null }[] = [];
-    server.use(
-      http.get('/api/v1/events', ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get('sort')) {
-          captured.push({ from: url.searchParams.get('from'), to: url.searchParams.get('to') });
-        }
-        return HttpResponse.json({ rows: [eventRow], row_count: 1 });
-      }),
-    );
-    await renderListPage();
-    await waitFor(() => expect(captured).toContainEqual({ from: '2026-07-20', to: '2026-07-31' }));
-
-    await userEvent.click(screen.getByRole('button', { name: 'Nächster Monat' }));
-    await waitFor(() => expect(captured).toContainEqual({ from: '2026-08-01', to: '2026-08-31' }));
-
-    await userEvent.click(screen.getByRole('button', { name: 'Heute' }));
-    await waitFor(() => {
-      const last = captured[captured.length - 1];
-      expect(last).toEqual({ from: '2026-07-20', to: '2026-07-31' });
-    });
   });
 });

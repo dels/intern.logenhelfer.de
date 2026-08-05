@@ -15,7 +15,7 @@ describe('CalendarFilter', () => {
     render(<CalendarFilter icsSources={icsSources} selected={new Set(['birthdays'])} onChange={onChange} />);
     await userEvent.click(screen.getByRole('combobox'));
     expect(screen.getByRole('option', { name: /Geburtstage/i })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: /Externe Termine/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Termine außer Haus/i })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Nachbarloge' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Bezirksloge' })).toBeInTheDocument();
   });

@@ -104,6 +104,7 @@
     "title": "Title",
     "location": "Location",
     "create": "New event",
+    "createExternal": "New off-site appointment",
     "edit": "Edit",
     "publicDescription": "Public description",
     "privateDescription": "Internal description",
