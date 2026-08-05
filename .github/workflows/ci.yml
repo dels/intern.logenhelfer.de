@@ -31,7 +31,7 @@ jobs:
       # auto-creates a database matching POSTGRES_USER, and `prisma migrate
       # deploy` (unlike Rails' db:prepare) never creates it itself.
       postgres:
-        image: postgres:18.1-trixie
+        image: postgres:18.4-trixie
         env: { POSTGRES_PASSWORD: ci, POSTGRES_USER: ci, POSTGRES_DB: ci }
         ports: ['5432:5432']
         options: >-

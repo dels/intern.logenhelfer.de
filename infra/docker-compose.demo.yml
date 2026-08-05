@@ -6,7 +6,7 @@
 # stack) - same image pin, healthcheck, and hardening.
 services:
   postgres-db:
-    image: postgres:18-trixie
+    image: postgres:18.4-trixie
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env.demo}

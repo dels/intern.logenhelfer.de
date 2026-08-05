@@ -3,7 +3,7 @@ services:
     # Floating minor tag (auto-picks up patch releases, e.g. the 18.1 -> 18.4
     # jump that fixed 11 CVEs) rather than pinning an exact patch we'd have
     # to remember to bump by hand.
-    image: postgres:18-trixie
+    image: postgres:18.4-trixie
     restart: unless-stopped
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-55432}:5432"
