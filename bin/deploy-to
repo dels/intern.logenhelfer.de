@@ -599,6 +599,35 @@ echo ""
 echo ">>> Building new images (GIT_HASH=\$EXPECTED_HASH)..."
 GIT_HASH="\$EXPECTED_HASH" dc build
 
+echo ""
+echo ">>> Running migrations (new image, current slot still serving)..."
+# -T (no pseudo-tty) and </dev/null are both required: without them this
+# foreground 'dc run' inherits the remote bash's stdin, which is the SAME
+# SSH stream still carrying the REST of this script — the migration command
+# silently consumes it, and everything after this line never executes
+# (discovered live: the script exited 0 having never swapped containers).
+# Migrations are roll-forward only (see CLAUDE.md): a post-cutover rollback
+# restores the previous *image*, never the schema.
+#
+# Runs BEFORE starting the inactive slot below, not after verifying it -
+# found 2026-08-05 on demo: api/src/index.ts's resetAndSeedDemoData() (gated
+# on DEMO_MODE=true, so this only ever bit the demo env) awaits its own
+# schema-dependent seed queries before app.listen(), inside the SAME
+# container this section starts and then health-checks. With migrations
+# still queued for after that health check, the inactive slot's api process
+# hit a migration that had just added a users column (birthday_calendar_consent)
+# demoSeed.ts's queries already expect from the freshly-built image, got
+# Prisma P2022 ColumnNotFound against the not-yet-migrated schema, and
+# crashed before ever binding its port - every subsequent health-check
+# request 502'd until MAX_WAIT gave up and the whole deploy rolled back
+# pre-cutover (safe, but not useful). Moving the migration here doesn't
+# weaken the "old slot still serving" invariant that comment above
+# describes - the old slot is exactly as live now as it was one section
+# down, and CLAUDE.md's expand/contract migration rule already requires the
+# old slot's code to tolerate the new schema for this whole pre-cutover
+# window regardless of exactly when within it migrate:deploy runs.
+dc run --rm -T api node --run migrate:deploy < /dev/null
+
 # ─── Start + verify the inactive slot (no published port at all) ──────────────
 # Re-assert \$ENV_FILE one more time right before 'dc run' actually reads it
 # (see reassert_env_file()'s own comment above) - the build step just above
@@ -657,17 +686,6 @@ while true; do
   [ "\$ELAPSED" -ge "\$MAX_WAIT" ] && { echo "ERROR: \$INACTIVE_SLOT API hash never matched (got '\$HASH')." >&2; docker logs "\${API_CONTAINER}-\${INACTIVE_SLOT}" --tail=30 >&2; docker logs "\${APP_CONTAINER}-\${INACTIVE_SLOT}" --tail=30 >&2; exit 1; }
   sleep 3; ELAPSED=\$((ELAPSED+3))
 done
-
-echo ""
-echo ">>> Running migrations (new image, current slot still serving)..."
-# -T (no pseudo-tty) and </dev/null are both required: without them this
-# foreground 'dc run' inherits the remote bash's stdin, which is the SAME
-# SSH stream still carrying the REST of this script — the migration command
-# silently consumes it, and everything after this line never executes
-# (discovered live: the script exited 0 having never swapped containers).
-# Migrations are roll-forward only (see CLAUDE.md): a post-cutover rollback
-# restores the previous *image*, never the schema.
-dc run --rm -T api node --run migrate:deploy < /dev/null
 
 # ─── Cutover ──────────────────────────────────────────────────────────────────
 if [ "\$EDGE_RUNNING" = "true" ]; then
