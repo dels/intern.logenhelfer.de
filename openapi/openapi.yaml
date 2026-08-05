@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Logenhelfer API
   version: 1.0.0
-  description: Backend-agnostic contract. Rails serves it today, Express later.
+  description: Backend-agnostic contract. Express serves it.
 paths:
   /api/v1/health:
     get:
