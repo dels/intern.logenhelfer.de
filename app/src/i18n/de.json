@@ -630,7 +630,8 @@
     "heading": "Öffentlicher Terminplan",
     "noEvents": "Aktuell keine Termine.",
     "icsSubscribe": "Diesen Kalender abonnieren (.ics)",
-    "exportPdf": "Als PDF herunterladen"
+    "exportPdf": "Als PDF herunterladen",
+    "birthdayCalendarSubscribe": "Geburtstagkalender"
   },
   "publicLayout": {
     "loginLink": "Anmelden",

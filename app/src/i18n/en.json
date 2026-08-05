@@ -629,7 +629,8 @@
     "heading": "Public Calendar",
     "noEvents": "No upcoming events.",
     "icsSubscribe": "Subscribe to this calendar (.ics)",
-    "exportPdf": "Download as PDF"
+    "exportPdf": "Download as PDF",
+    "birthdayCalendarSubscribe": "Birthday calendar"
   },
   "publicLayout": {
     "loginLink": "Sign in",

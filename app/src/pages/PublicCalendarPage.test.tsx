@@ -16,6 +16,9 @@ const server = setupServer(
       ],
     }),
   ),
+  http.get('/api/v1/public/landing', () =>
+    HttpResponse.json({ calendar_as_landing_page: true, lodge: 'Zur Standhaftigkeit', language: 'de', logo_version: null, birthday_calendar_ics_url: '/api/v1/public/birthdays/some-secret/calendar.ics' }),
+  ),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
@@ -66,6 +69,22 @@ describe('PublicCalendarPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Sommerfest')).toBeInTheDocument());
     expect(screen.getByRole('link', { name: 'Als PDF herunterladen' })).toHaveAttribute('href', '/arbeitsplan.pdf');
+  });
+
+  it('links to the birthday calendar feed when the backend provides a URL', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Sommerfest')).toBeInTheDocument());
+    expect(screen.getByRole('link', { name: 'Geburtstagkalender' })).toHaveAttribute('href', '/api/v1/public/birthdays/some-secret/calendar.ics');
+  });
+
+  it('does not show a birthday calendar link when the backend returns null', async () => {
+    server.use(
+      http.get('/api/v1/public/landing', () =>
+        HttpResponse.json({ calendar_as_landing_page: true, lodge: 'Zur Standhaftigkeit', language: 'de', logo_version: null, birthday_calendar_ics_url: null })),
+    );
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Sommerfest')).toBeInTheDocument());
+    expect(screen.queryByRole('link', { name: 'Geburtstagkalender' })).not.toBeInTheDocument();
   });
 
   it('vertically centers the date badge against the full row height', async () => {
