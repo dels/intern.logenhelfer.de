@@ -1,103 +1,43 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useQueryClient } from '@tanstack/react-query';
-import { Box, Button, Chip, CircularProgress, IconButton, Paper, Skeleton, Stack, ToggleButton, ToggleButtonGroup, Typography, useMediaQuery } from '@mui/material';
+import { Box, Chip, Paper, Skeleton, Stack, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CakeIcon from '@mui/icons-material/Cake';
 import { useTranslation } from 'react-i18next';
-import { addMonths, addWeeks, buildMonthGrid, buildWeekGrid, toDateKey } from './calendarGrid';
-import { useCalendarBirthdays, useCalendarExternalEvents, useCalendarIcsSources, useEventsInRange, filterBirthdaysInRange, fetchEventsInRange, eventsRangeQueryKey } from './api';
-import CalendarFilter from './CalendarFilter';
+import { buildMonthGrid, toDateKey } from './calendarGrid';
 import BirthdayContactDialog from '../members/BirthdayContactDialog';
-import { formatDate } from '../../utils/formatDate';
+import type { BirthdayListRow, Event, ExternalEvent } from '../../api/types';
 
-type ViewMode = 'month' | 'week';
-
-/** Only exposed for tests, which need a deterministic "today" instead of the real current date - production callers never pass it. */
 export interface EventsCalendarViewProps {
-  anchorDateForTest?: Date;
+  anchor: Date;
+  events: Event[];
+  externalEvents: ExternalEvent[];
+  birthdays: BirthdayListRow[];
+  isRangeLoading: boolean;
 }
 
-export default function EventsCalendarView({ anchorDateForTest }: EventsCalendarViewProps = {}) {
+export default function EventsCalendarView({ anchor, events, externalEvents, birthdays, isRangeLoading }: EventsCalendarViewProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<ViewMode>('month');
-  const [anchor, setAnchor] = useState<Date>(anchorDateForTest ?? new Date());
-  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set(['birthdays']));
   const [contactUuid, setContactUuid] = useState<string | null>(null);
 
-  const grid = useMemo(() => (mode === 'month' ? buildMonthGrid(anchor) : [buildWeekGrid(anchor)]), [mode, anchor]);
-  const rangeStart = grid[0]![0]!;
-  const rangeEnd = grid[grid.length - 1]![6]!;
-  const from = toDateKey(rangeStart);
-  const to = toDateKey(rangeEnd);
-
-  const { data: events, isLoading: eventsLoading } = useEventsInRange(from, to);
-  const { data: externalEvents, isFetching: externalEventsFetching } = useCalendarExternalEvents(from, to);
-  const { data: icsSourcesResult, isFetching: icsSourcesFetching } = useCalendarIcsSources();
-  const icsSources = icsSourcesResult?.sources ?? [];
-  const { data: birthdays, isLoading: birthdaysLoading } = useCalendarBirthdays();
-  const isRangeLoading = eventsLoading || birthdaysLoading;
-
-  // Prefetch the next 3 months' events once the current month has loaded, and
-  // again on every navigation - keeps forward navigation feeling instant
-  // without blocking the initial/current render on extra requests.
-  const queryClient = useQueryClient();
-  useEffect(() => {
-    if (isRangeLoading) return;
-    for (let i = 1; i <= 3; i++) {
-      const futureGrid = buildMonthGrid(addMonths(anchor, i));
-      const futureFrom = toDateKey(futureGrid[0]![0]!);
-      const futureTo = toDateKey(futureGrid[futureGrid.length - 1]![6]!);
-      queryClient.prefetchQuery({
-        queryKey: eventsRangeQueryKey(futureFrom, futureTo),
-        queryFn: () => fetchEventsInRange(futureFrom, futureTo),
-      });
-    }
-  }, [anchor, isRangeLoading, queryClient]);
-
-  const showBirthdays = selectedFilters.has('birthdays');
-  const showExternalEvents = selectedFilters.has('external-events');
-  const selectedSourceUuids = useMemo(
-    () => new Set((icsSourcesResult?.sources ?? []).map((s) => s.uuid).filter((uuid) => selectedFilters.has(uuid))),
-    [icsSourcesResult, selectedFilters],
-  );
-
-  const visibleBirthdays = useMemo(
-    () => (showBirthdays ? filterBirthdaysInRange(birthdays ?? [], from, to) : []),
-    [showBirthdays, birthdays, from, to],
-  );
+  const grid = useMemo(() => buildMonthGrid(anchor), [anchor]);
 
   const eventsByDate = useMemo(() => {
-    const map = new Map<string, typeof events>();
-    for (const e of events ?? []) map.set(e.date, [...(map.get(e.date) ?? []), e]);
+    const map = new Map<string, Event[]>();
+    for (const e of events) map.set(e.date, [...(map.get(e.date) ?? []), e]);
     return map;
   }, [events]);
 
   const externalEventsByDate = useMemo(() => {
-    const map = new Map<string, typeof externalEvents>();
-    for (const e of externalEvents ?? []) {
-      // Events synced from a known ICS source are gated by that specific
-      // source's own filter entry, independent of the blanket
-      // "external-events" toggle - selecting just the source (as the
-      // CalendarFilter's per-source checkboxes let you do) is enough.
-      // Only manually-created external events (no ics_source_uuid) fall
-      // back to the blanket toggle.
-      if (e.ics_source_uuid) {
-        if (!selectedSourceUuids.has(e.ics_source_uuid)) continue;
-      } else if (!showExternalEvents) {
-        continue;
-      }
-      map.set(e.date, [...(map.get(e.date) ?? []), e]);
-    }
+    const map = new Map<string, ExternalEvent[]>();
+    for (const e of externalEvents) map.set(e.date, [...(map.get(e.date) ?? []), e]);
     return map;
-  }, [externalEvents, showExternalEvents, selectedSourceUuids]);
+  }, [externalEvents]);
 
   const birthdaysByDate = useMemo(() => {
-    const map = new Map<string, typeof visibleBirthdays>();
-    for (const b of visibleBirthdays) {
+    const map = new Map<string, BirthdayListRow[]>();
+    for (const b of birthdays) {
       if (!b.date_of_birth) continue;
       // Birthdays recur annually - key them by THIS grid's year + the birthday's month/day, not the stored birth year.
       const [, mm, dd] = b.date_of_birth.split('-');
@@ -108,7 +48,7 @@ export default function EventsCalendarView({ anchorDateForTest }: EventsCalendar
       }
     }
     return map;
-  }, [visibleBirthdays, grid]);
+  }, [birthdays, grid]);
 
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
@@ -127,7 +67,7 @@ export default function EventsCalendarView({ anchorDateForTest }: EventsCalendar
     if (isDesktop) return [];
     const items: CalendarListItem[] = [];
     for (const date of grid.flat()) {
-      if (mode === 'month' && date.getMonth() !== anchor.getMonth()) continue;
+      if (date.getMonth() !== anchor.getMonth()) continue;
       const key = toDateKey(date);
       for (const e of eventsByDate.get(key) ?? []) {
         items.push({
@@ -148,41 +88,12 @@ export default function EventsCalendarView({ anchorDateForTest }: EventsCalendar
       }
     }
     return items;
-  }, [isDesktop, grid, mode, anchor, eventsByDate, externalEventsByDate, birthdaysByDate, navigate]);
+  }, [isDesktop, grid, anchor, eventsByDate, externalEventsByDate, birthdaysByDate, navigate]);
 
-  const monthLabel = formatDate(anchor, i18n.language, { month: 'long', year: 'numeric' });
   const todayKey = toDateKey(new Date());
-
-  const goPrev = () => setAnchor((a) => (mode === 'month' ? addMonths(a, -1) : addWeeks(a, -1)));
-  const goNext = () => setAnchor((a) => (mode === 'month' ? addMonths(a, 1) : addWeeks(a, 1)));
-  const goToday = () => setAnchor(new Date());
 
   return (
     <Box>
-      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-        <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
-          <IconButton aria-label={t('events.calendar.previous')} onClick={goPrev}><ChevronLeftIcon /></IconButton>
-          <Typography variant="h6" sx={{ minWidth: 180, textAlign: 'center' }}>{monthLabel}</Typography>
-          <IconButton aria-label={t('events.calendar.next')} onClick={goNext}><ChevronRightIcon /></IconButton>
-          <Button size="small" onClick={goToday}>{t('events.calendar.today')}</Button>
-        </Stack>
-        <Stack direction="row" sx={{ alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <CalendarFilter
-            icsSources={icsSources}
-            icsSourcesTruncated={icsSourcesResult?.truncated ?? false}
-            selected={selectedFilters}
-            onChange={setSelectedFilters}
-          />
-          {(externalEventsFetching || icsSourcesFetching) && (
-            <CircularProgress size={18} data-testid="external-events-spinner" />
-          )}
-          <ToggleButtonGroup value={mode} exclusive onChange={(_e, value: ViewMode | null) => value && setMode(value)} size="small">
-            <ToggleButton value="month">{t('events.calendar.month')}</ToggleButton>
-            <ToggleButton value="week">{t('events.calendar.week')}</ToggleButton>
-          </ToggleButtonGroup>
-        </Stack>
-      </Stack>
-
       {isRangeLoading ? (
         <Box data-testid="calendar-skeleton" sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
           {Array.from({ length: 28 }).map((_, i) => (
@@ -196,7 +107,7 @@ export default function EventsCalendarView({ anchorDateForTest }: EventsCalendar
           ))}
           {grid.flat().map((date) => {
             const key = toDateKey(date);
-            const isCurrentMonth = mode === 'week' || date.getMonth() === anchor.getMonth();
+            const isCurrentMonth = date.getMonth() === anchor.getMonth();
             const isPast = key < todayKey;
             const isToday = key === todayKey;
             // CSS opacity on this Box composites its whole subtree (date
@@ -217,7 +128,7 @@ export default function EventsCalendarView({ anchorDateForTest }: EventsCalendar
                   borderColor: isToday ? 'primary.main' : 'divider',
                   borderRadius: 1,
                   p: 0.5,
-                  minHeight: mode === 'week' ? 160 : 96,
+                  minHeight: 96,
                   opacity,
                   bgcolor: isPast && isCurrentMonth ? 'action.hover' : undefined,
                 }}
