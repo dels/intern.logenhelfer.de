@@ -13,6 +13,7 @@ import { verifyEmailOtp } from '../lib/mfaEmailOtp.js';
 import { consumeBackupCode } from '../lib/mfaBackupCodes.js';
 import { getUserMfaMethods, computeGracePeriodEndsAt } from '../lib/mfaStatus.js';
 import { getMfaSettings } from '../lib/mfaSettings.js';
+import { sendLoginLockoutEmail, sendLoginSuccessEmail, type LoginMethod } from '../lib/loginNotification.js';
 import type { users } from '../generated/prisma/client.js';
 
 declare global {
@@ -67,6 +68,10 @@ router.get('/methods', async (req, res, next) => {
   }
 });
 
+function toLoginMethod(method: string | undefined): LoginMethod {
+  return method === 'totp' || method === 'email' || method === 'backup_code' ? method : 'mfa_unknown';
+}
+
 async function sessionPayloadFor(user: users) {
   const { issueAccessToken } = await import('../auth/jwt.js');
   const subscriptionCount = await prisma.announcement_subscriptions.count({ where: { user_id: user.id } });
@@ -108,12 +113,20 @@ router.post('/verify', async (req, res, next) => {
     }
 
     if (!ok) {
-      await recordFailedMfaAttempt(lockoutKey);
+      const { lockedOut } = await recordFailedMfaAttempt(lockoutKey);
+      if (lockedOut) {
+        // Fire-and-forget - never await a real mail-send before the HTTP
+        // response, or the response timing itself becomes an oracle (same
+        // class of issue session.ts's DUMMY_PASSWORD_HASH guards against).
+        void sendLoginLockoutEmail(user, req, toLoginMethod(body.method));
+      }
       res.status(401).json({ error: 'unauthorized' });
       return;
     }
 
     await resetMfaLockout(lockoutKey);
+    // Fire-and-forget - see the comment on the lockout branch above.
+    void sendLoginSuccessEmail(user, req, toLoginMethod(body.method));
     const { rawToken } = await issueRefreshToken(user.id);
     setRefreshTokenCookie(res, rawToken);
 
