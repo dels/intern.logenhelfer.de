@@ -4151,6 +4151,7 @@ components:
         users_can_view_statistics: { type: boolean, nullable: true }
         show_seeker_names_to_brothers: { type: boolean, nullable: true }
         notify_technical_contact_on_unknown_password_reset: { type: boolean, nullable: true }
+        notify_user_on_login_activity: { type: boolean, nullable: true }
         domain: { type: string, nullable: true }
         organisation: { type: string, nullable: true }
         lodge: { type: string, nullable: true }

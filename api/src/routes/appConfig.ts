@@ -54,6 +54,7 @@ const KNOWN_KEYS: Record<string, ConfigType> = {
   users_can_view_statistics: 'boolean',
   show_seeker_names_to_brothers: 'boolean',
   notify_technical_contact_on_unknown_password_reset: 'boolean',
+  notify_user_on_login_activity: 'boolean',
   domain: 'string',
   organisation: 'string',
   lodge: 'string',
@@ -108,6 +109,7 @@ const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   // have zero Seeker access, so it must be opted into, not opted out of.
   show_seeker_names_to_brothers: false,
   notify_technical_contact_on_unknown_password_reset: true,
+  notify_user_on_login_activity: false,
   max_db_mem_size: String(1024 * 1024 * 100),
   // Net-new key, no Rails precedent - deliberately hardcoded independent of
   // the MAX_UPLOAD_FILE_SIZE_MB ceiling env var (contractValidation.ts) so

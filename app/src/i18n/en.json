@@ -396,6 +396,10 @@
         "name": "Notify on password reset for unknown email addresses",
         "description": "A member may have forgotten which email address is on file"
       },
+      "notify_user_on_login_activity": {
+        "name": "Email notification on login",
+        "description": "Notifies members by email of every successful login and of accounts locked after repeated failed attempts"
+      },
       "domain": {
         "name": "Domain",
         "description": "This application's domain (without protocol). Used for contact export and as an identifier in the calendar export."

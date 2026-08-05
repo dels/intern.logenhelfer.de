@@ -205,6 +205,21 @@ describe('App Config API', () => {
       expect(res.body.show_seeker_names_to_brothers).toBe(true);
     });
 
+    it('writes and reads back the notify_user_on_login_activity key, defaulting to false before any write', async () => {
+      const admin = await makeApplicationAdmin();
+
+      const beforeRes = await request(app).get('/api/v1/app_config').set(authHeaders(admin));
+      expect(beforeRes.body.notify_user_on_login_activity).toBe(false);
+
+      const res = await request(app)
+        .patch('/api/v1/app_config')
+        .send({ notify_user_on_login_activity: true })
+        .set(authHeaders(admin));
+
+      expect(res.status).toBe(200);
+      expect(res.body.notify_user_on_login_activity).toBe(true);
+    });
+
     it('stores an unset string field as empty, not the literal string "null"', async () => {
       // Regression: castForWrite's `String(value)` fallback stringified JS
       // null/undefined into "null"/"undefined" (unlike Ruby's `nil.to_s ==

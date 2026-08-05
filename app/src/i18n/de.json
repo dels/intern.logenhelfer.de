@@ -396,6 +396,10 @@
         "name": "Benachrichtigung bei Passwortreset unbekannter E-Mail Addressen",
         "description": "Evtl. hat ein Bruder seine E-Mail Adresse vergessen"
       },
+      "notify_user_on_login_activity": {
+        "name": "E-Mail-Benachrichtigung bei Anmeldungen",
+        "description": "Informiert Mitglieder per E-Mail über jede erfolgreiche Anmeldung und über gesperrte Konten nach mehreren fehlgeschlagenen Versuchen"
+      },
       "domain": {
         "name": "Domain",
         "description": "Die Domain dieser Anwendung (ohne Protokoll). Wird für den Export von Kontakten benutzt und dient als Identifikator im Kalender-Export."
