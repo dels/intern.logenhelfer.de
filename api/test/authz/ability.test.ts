@@ -159,6 +159,14 @@ describe('buildAbility', () => {
       expect(canOn(ability, 'destroy', toUserSubject(user))).toBe(false);
     });
 
+    it('can update their own birthday-calendar consent but not others\'', async () => {
+      const { ability, user } = await abilityFor('EnteredApprentice');
+      const other = await createUser();
+
+      expect(canOn(ability, 'update_birthday_calendar_consent', toUserSubject(user))).toBe(true);
+      expect(canOn(ability, 'update_birthday_calendar_consent', toUserSubject(other))).toBe(false);
+    });
+
     it('can read announcements and external events, but not manage them', async () => {
       const { ability } = await abilityFor('EnteredApprentice');
 

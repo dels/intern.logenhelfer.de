@@ -488,37 +488,38 @@ model user_roles {
 }
 
 model users {
-  id                     Int       @id @default(autoincrement())
-  email                  String    @unique(map: "index_users_on_email") @default("") @db.VarChar(255)
-  encrypted_password     String    @default("") @db.VarChar(255)
-  reset_password_token   String?   @unique(map: "index_users_on_reset_password_token") @db.VarChar(255)
-  reset_password_sent_at DateTime? @db.Timestamp(6)
-  remember_created_at    DateTime? @db.Timestamp(6)
-  sign_in_count          Int?      @default(0)
-  current_sign_in_at     DateTime? @db.Timestamp(6)
-  last_sign_in_at        DateTime? @db.Timestamp(6)
-  current_sign_in_ip     String?   @db.VarChar(255)
-  last_sign_in_ip        String?   @db.VarChar(255)
-  created_at             DateTime  @db.Timestamp(6)
-  updated_at             DateTime  @db.Timestamp(6)
-  uuid                   String?   @db.VarChar(255)
-  firstname              String?   @db.VarChar(255)
-  lastname               String?   @db.VarChar(255)
-  date_of_birth          DateTime? @db.Date
-  accepted_at            DateTime? @db.Date
-  deleted                Boolean?  @default(false)
-  matriculation_number   Int?      @unique(map: "index_users_on_matriculation_number")
-  job_title              String?   @db.VarChar(255)
-  title                  Int?
-  academic_title_id      Int?
-  mother_lodge           String?   @db.VarChar(255)
-  provider               String?   @db.VarChar(255)
-  g_uid                  String?   @db.VarChar(255)
-  g_name                 String?   @db.VarChar(255)
-  g_mail                 String?   @db.VarChar(255)
-  oauth_token            String?   @db.VarChar(255)
-  oauth_expires_at       DateTime? @db.Timestamp(6)
-  accepted_gdpr          Boolean?  @default(false)
+  id                        Int       @id @default(autoincrement())
+  email                     String    @unique(map: "index_users_on_email") @default("") @db.VarChar(255)
+  encrypted_password        String    @default("") @db.VarChar(255)
+  reset_password_token      String?   @unique(map: "index_users_on_reset_password_token") @db.VarChar(255)
+  reset_password_sent_at    DateTime? @db.Timestamp(6)
+  remember_created_at       DateTime? @db.Timestamp(6)
+  sign_in_count             Int?      @default(0)
+  current_sign_in_at        DateTime? @db.Timestamp(6)
+  last_sign_in_at           DateTime? @db.Timestamp(6)
+  current_sign_in_ip        String?   @db.VarChar(255)
+  last_sign_in_ip           String?   @db.VarChar(255)
+  created_at                DateTime  @db.Timestamp(6)
+  updated_at                DateTime  @db.Timestamp(6)
+  uuid                      String?   @db.VarChar(255)
+  firstname                 String?   @db.VarChar(255)
+  lastname                  String?   @db.VarChar(255)
+  date_of_birth             DateTime? @db.Date
+  accepted_at               DateTime? @db.Date
+  deleted                   Boolean?  @default(false)
+  matriculation_number      Int?      @unique(map: "index_users_on_matriculation_number")
+  job_title                 String?   @db.VarChar(255)
+  title                     Int?
+  academic_title_id         Int?
+  mother_lodge              String?   @db.VarChar(255)
+  provider                  String?   @db.VarChar(255)
+  g_uid                     String?   @db.VarChar(255)
+  g_name                    String?   @db.VarChar(255)
+  g_mail                    String?   @db.VarChar(255)
+  oauth_token               String?   @db.VarChar(255)
+  oauth_expires_at          DateTime? @db.Timestamp(6)
+  accepted_gdpr             Boolean?  @default(false)
+  birthday_calendar_consent Boolean   @default(false)
   // Note: impersonation_events.admin_id/user_id and refresh_tokens.user_id
   // have real FK constraints pointing at users(id), but are int8 columns
   // referencing this int4 (serial) PK. Prisma requires matching field types
