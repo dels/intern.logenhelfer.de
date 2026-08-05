@@ -1,5 +1,5 @@
 # ---------- build stage ----------
-FROM node:22-slim AS build
+FROM node:24-slim AS build
 WORKDIR /work
 
 RUN apt-get update -qq \
@@ -36,19 +36,19 @@ RUN cd api/src/generated/prisma \
   && find . -type f ! -name '*.ts' -exec install -D '{}' "/work/api/dist/generated/prisma/{}" \;
 
 # ---------- runtime stage ----------
-FROM node:22-slim
+FROM node:24-slim
 
 ARG GIT_HASH=unknown
 ENV NODE_ENV=production \
     GIT_HASH=$GIT_HASH
 
-# node:22-slim already ships a "node" user at uid/gid 1000 (the standard,
+# node:24-slim already ships a "node" user at uid/gid 1000 (the standard,
 # documented way to run these images as non-root) — reuse it rather than
 # creating a second one, which collides on gid 1000.
 
 # curl is required at runtime for the Dockerfile's own HEALTHCHECK and the
 # compose-level healthcheck (both `curl 127.0.0.1:.../healthz`) — this stage
-# is a fresh `FROM node:22-slim`, so packages installed in the build stage
+# is a fresh `FROM node:24-slim`, so packages installed in the build stage
 # above don't carry over. ca-certificates for outbound HTTPS (ICS auto-sync).
 # Regression 2026-07-24: this install was moved into the build stage only
 # (for prisma generate) without being kept here too, silently breaking every
