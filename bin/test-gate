@@ -77,6 +77,18 @@ GATE_CPUS="${GATE_CPUS:-8}"
 E2E_WORKERS="${E2E_WORKERS:-4}"
 GATE_ENV_FILE="$(mktemp)"
 
+# Fresh, random per-run secrets - never a hardcoded literal, never persisted
+# beyond this run. Generated once here (not inline where each is used) so
+# the SAME value reaches both GATE_ENV_FILE (dcg's compose services - step
+# 3's real api container) and step 2's raw 'docker run' -e list below:
+# step 2's seed:e2e seeds fixtures step 3's api container later has to read
+# back, so the two steps must agree on MFA_ENCRYPTION_KEY within one run -
+# nothing requires either value to be STABLE *across* runs, so there's no
+# reason to hardcode one.
+command -v openssl >/dev/null 2>&1 || { echo "Error: openssl not found in PATH — cannot generate MFA_ENCRYPTION_KEY/BIRTHDAY_CALENDAR_SECRET." >&2; exit 1; }
+MFA_ENCRYPTION_KEY="$(openssl rand -hex 32)"
+BIRTHDAY_CALENDAR_SECRET="$(openssl rand -hex 32)"
+
 dcg() { docker compose -f infra/docker-compose.yml -p "$GATE_PROJECT" --env-file "$GATE_ENV_FILE" "$@"; }
 
 cleanup() {
@@ -112,12 +124,12 @@ POSTGRES_PORT=$GATE_POSTGRES_PORT
 # without this, the e2e suite's ~20 sequential logins trip the 10-per-60s
 # throttle partway through and every later test fails at the login step.
 NODE_ENV=test
-# Dev-only fixed key (not a secret - same value as infra/docker-compose.yml's
-# own dev-only fallback), needed because infra/docker-compose.yml's api
-# service *requires* MFA_ENCRYPTION_KEY to be set (see that file's own
-# comment on the var) - without this, `dcg up -d --wait api` below would
-# fail outright rather than silently omit the key.
-MFA_ENCRYPTION_KEY=4a433fbe929476e8cbc24a43423b2055213c31d76e13aff562c2b169177bd9e8
+# infra/docker-compose.yml's api service *requires* MFA_ENCRYPTION_KEY to be
+# set (see that file's own comment on the var) - without this, `dcg up -d
+# --wait api` below would fail outright rather than silently omit the key.
+# Generated fresh above, not hardcoded - see that comment for why.
+MFA_ENCRYPTION_KEY=$MFA_ENCRYPTION_KEY
+BIRTHDAY_CALENDAR_SECRET=$BIRTHDAY_CALENDAR_SECRET
 EOF
 
 # Pre-flight cleanup: the EXIT trap above only fires if this script's own
@@ -216,7 +228,10 @@ dcg up -d --wait postgres-db
 # public.test.ts birthday-feed spec failed (secret compared against '',
 # producing a null feed URL / an empty-secret request path). Setting both
 # explicitly here makes this gate self-contained regardless of what a given
-# host's root .env happens to have.
+# host's root .env happens to have. Values come from the fresh
+# openssl-generated variables above (same ones GATE_ENV_FILE uses for step
+# 3's api container) - not a hardcoded literal, so there is nothing
+# secret-shaped to leak from this script itself.
 docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
   --network "${GATE_PROJECT}_default" \
   -e CI=true \
@@ -224,8 +239,8 @@ docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
   -e JWT_SECRET=gate-only-jwt-secret-not-for-production-use \
   -e NODE_ENV=test \
   -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
-  -e MFA_ENCRYPTION_KEY=4a433fbe929476e8cbc24a43423b2055213c31d76e13aff562c2b169177bd9e8 \
-  -e BIRTHDAY_CALENDAR_SECRET=dev-only-birthday-calendar-secret-not-for-production-use \
+  -e MFA_ENCRYPTION_KEY="$MFA_ENCRYPTION_KEY" \
+  -e BIRTHDAY_CALENDAR_SECRET="$BIRTHDAY_CALENDAR_SECRET" \
   "$NODE_IMAGE" bash -euc "
     # Matches api/Dockerfile's build stage exactly (curl/ca-certificates/openssl) -
     # without openssl, Prisma can't detect the real libssl version here and
