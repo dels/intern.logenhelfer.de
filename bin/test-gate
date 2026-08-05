@@ -206,6 +206,17 @@ dcg up -d --wait postgres-db
 # reads under another makes every seeded AppConfig value (lodge, impressum)
 # invisible to it - e.g. the public Impressum page silently falling back to
 # its "not yet configured" placeholder instead of the seeded content.
+#
+# MFA_ENCRYPTION_KEY/BIRTHDAY_CALENDAR_SECRET are set explicitly here for the
+# same reason JWT_SECRET is above: api/test/setup.ts also loads the
+# repo-root .env (`config()`, non-overriding) as a fallback for whatever a
+# given checkout already has there - which is exactly the footgun this hit.
+# A deploy host's root .env predating BIRTHDAY_CALENDAR_SECRET had
+# MFA_ENCRYPTION_KEY but not it, so mfaEncryption.test.ts passed while every
+# public.test.ts birthday-feed spec failed (secret compared against '',
+# producing a null feed URL / an empty-secret request path). Setting both
+# explicitly here makes this gate self-contained regardless of what a given
+# host's root .env happens to have.
 docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
   --network "${GATE_PROJECT}_default" \
   -e CI=true \
@@ -213,6 +224,8 @@ docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
   -e JWT_SECRET=gate-only-jwt-secret-not-for-production-use \
   -e NODE_ENV=test \
   -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+  -e MFA_ENCRYPTION_KEY=4a433fbe929476e8cbc24a43423b2055213c31d76e13aff562c2b169177bd9e8 \
+  -e BIRTHDAY_CALENDAR_SECRET=dev-only-birthday-calendar-secret-not-for-production-use \
   "$NODE_IMAGE" bash -euc "
     # Matches api/Dockerfile's build stage exactly (curl/ca-certificates/openssl) -
     # without openssl, Prisma can't detect the real libssl version here and
