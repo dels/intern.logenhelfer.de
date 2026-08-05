@@ -57,6 +57,8 @@ export const KNOWN_KEYS: Record<string, ConfigType> = {
   mfa_enforce_for_officers: 'boolean',
   mfa_grace_period_days: 'integer',
   mfa_trusted_device_days: 'integer',
+  birthday_calendar_available: 'boolean',
+  birthday_calendar_consent_mode: 'string',
   // Internal only - never added to routes/appConfig.ts's KNOWN_KEYS, so it's
   // never exposed/writable via PATCH /api/v1/app_config. Set exclusively by
   // routes/appConfig.ts's own PATCH handler when mfa_mode transitions to
@@ -106,6 +108,16 @@ const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   mfa_enforce_for_officers: false,
   mfa_grace_period_days: '14',
   mfa_trusted_device_days: '30',
+  // Security-sensitive default: closed by default (see this repo's CLAUDE.md
+  // "Sensitive config defaults must default to the more private option"),
+  // same rationale as show_seeker_names_to_brothers above - this gates
+  // whether member birthdays are exposed via an unauthenticated ICS feed at
+  // all, so it must be opted into.
+  birthday_calendar_available: false,
+  // Private-by-default choice within the feature too: require per-member
+  // opt-in unless an admin explicitly attests consent was obtained some
+  // other way (see docs/superpowers/specs/2026-08-05-pseudonymized-birthday-calendar-design.md).
+  birthday_calendar_consent_mode: 'individual',
 };
 
 /** Port of ActiveModel::Type::Boolean::FALSE_VALUES. */

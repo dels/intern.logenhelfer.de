@@ -4122,5 +4122,7 @@ components:
         mfa_enforce_for_officers: { type: boolean, nullable: true }
         mfa_grace_period_days: { type: integer, nullable: true }
         mfa_trusted_device_days: { type: integer, nullable: true }
+        birthday_calendar_available: { type: boolean, nullable: true }
+        birthday_calendar_consent_mode: { type: string, nullable: true }
 security:
   - bearerAuth: []

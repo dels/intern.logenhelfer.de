@@ -80,6 +80,8 @@ const KNOWN_KEYS: Record<string, ConfigType> = {
   mfa_enforce_for_officers: 'boolean',
   mfa_grace_period_days: 'integer',
   mfa_trusted_device_days: 'integer',
+  birthday_calendar_available: 'boolean',
+  birthday_calendar_consent_mode: 'string',
 };
 
 /**
@@ -121,6 +123,8 @@ const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   mfa_enforce_for_officers: false,
   mfa_grace_period_days: '14',
   mfa_trusted_device_days: '30',
+  birthday_calendar_available: false,
+  birthday_calendar_consent_mode: 'individual',
 };
 
 // Port of ActiveModel::Type::Boolean::FALSE_VALUES.
@@ -160,6 +164,8 @@ const TIMESPAN_KEYS = new Set(['default_workingplan_timespan', 'public_workingpl
 const LANGUAGE_VALUES = new Set(['de', 'en']);
 
 const MFA_MODE_VALUES = new Set(['optional', 'mandatory']);
+
+const BIRTHDAY_CALENDAR_CONSENT_MODE_VALUES = new Set(['individual', 'blanket']);
 
 /**
  * Port of `AppConfig::Adapter#getter_default_workingplan_timespan` - parses
@@ -361,6 +367,10 @@ router.patch('/', async (req, res, next) => {
 
     if (Object.hasOwn(body, 'mfa_mode') && !MFA_MODE_VALUES.has(body.mfa_mode as string)) {
       throw ApiError.unprocessable(`invalid mfa_mode: ${String(body.mfa_mode)}`);
+    }
+
+    if (Object.hasOwn(body, 'birthday_calendar_consent_mode') && !BIRTHDAY_CALENDAR_CONSENT_MODE_VALUES.has(body.birthday_calendar_consent_mode as string)) {
+      throw ApiError.unprocessable(`invalid birthday_calendar_consent_mode: ${String(body.birthday_calendar_consent_mode)}`);
     }
 
     if (Object.hasOwn(body, 'mfa_mode')) {

@@ -273,6 +273,32 @@ describe('App Config API', () => {
       expect(res.body.error).toBe('unprocessable');
     });
 
+    describe('birthday_calendar_consent_mode validation', () => {
+      it('writes and reads back a valid value', async () => {
+        const admin = await makeApplicationAdmin();
+
+        const res = await request(app)
+          .patch('/api/v1/app_config')
+          .send({ birthday_calendar_consent_mode: 'blanket' })
+          .set(authHeaders(admin));
+
+        expect(res.status).toBe(200);
+        expect(res.body.birthday_calendar_consent_mode).toBe('blanket');
+      });
+
+      it('rejects an unsupported value', async () => {
+        const admin = await makeApplicationAdmin();
+
+        const res = await request(app)
+          .patch('/api/v1/app_config')
+          .send({ birthday_calendar_consent_mode: 'nonsense' })
+          .set(authHeaders(admin));
+
+        expect(res.status).toBe(422);
+        expect(res.body.error).toBe('unprocessable');
+      });
+    });
+
     it('is forbidden for a member without the admin tier', async () => {
       const member = await makeMember();
 
