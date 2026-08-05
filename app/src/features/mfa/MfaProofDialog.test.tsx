@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
@@ -96,6 +96,14 @@ describe('MfaProofDialog', () => {
     await userEvent.click(await screen.findByRole('option', { name: /backup/i }));
     await userEvent.type(screen.getByLabelText(/code/i), 'AAAAA-BBBBB');
     expect(screen.getByLabelText(/code/i)).toHaveValue('AAAAA-BBBBB');
+
+    // Removing the code field's autoFocus (a11y fix) exposed a real jsdom
+    // blur: the code field still holds real focus from the userEvent.type()
+    // above, and the upcoming close/reopen rerenders remove that DOM node,
+    // which jsdom then blurs implicitly, outside the synchronous act() scope
+    // of the rerender() calls below. Move focus away first, wrapped in an
+    // explicit act(), so nothing focused is left to blur during removal.
+    act(() => { screen.getByLabelText(/code/i).blur(); });
 
     rerender(
       <QueryClientProvider client={client}>

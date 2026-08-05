@@ -39,14 +39,16 @@ export default function LogoSection() {
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
         <BijouLogo defaultSrc={bijou} width={56} height={74} />
         <Box
-          role="button"
-          tabIndex={0}
+          component="button"
+          type="button"
           onClick={() => inputRef.current?.click()}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
           onDragLeave={() => setIsDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setIsDragOver(false); void handleFiles(e.dataTransfer.files); }}
           sx={{
+            font: 'inherit',
+            color: 'inherit',
+            bgcolor: isDragOver ? 'action.hover' : 'transparent',
             border: '2px dashed',
             borderColor: isDragOver ? 'primary.main' : 'divider',
             borderRadius: 1,
@@ -54,7 +56,6 @@ export default function LogoSection() {
             flex: 1,
             textAlign: 'center',
             cursor: 'pointer',
-            bgcolor: isDragOver ? 'action.hover' : undefined,
           }}
         >
           <input

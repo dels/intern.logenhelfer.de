@@ -39,10 +39,9 @@ export default function FileDropZone({ directorySlug, roleIds }: FileDropZonePro
 
   return (
     <Box
-      role="button"
-      tabIndex={0}
+      component="button"
+      type="button"
       onClick={() => inputRef.current?.click()}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
       onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={(e) => {
@@ -51,6 +50,11 @@ export default function FileDropZone({ directorySlug, roleIds }: FileDropZonePro
         void uploadFiles(e.dataTransfer.files);
       }}
       sx={{
+        display: 'block',
+        width: '100%',
+        font: 'inherit',
+        color: 'inherit',
+        bgcolor: isDragOver ? 'action.hover' : 'transparent',
         border: '2px dashed',
         borderColor: isDragOver ? 'primary.main' : 'divider',
         borderRadius: 1,
@@ -58,7 +62,6 @@ export default function FileDropZone({ directorySlug, roleIds }: FileDropZonePro
         mb: 2,
         textAlign: 'center',
         cursor: 'pointer',
-        bgcolor: isDragOver ? 'action.hover' : undefined,
       }}
     >
       <input
