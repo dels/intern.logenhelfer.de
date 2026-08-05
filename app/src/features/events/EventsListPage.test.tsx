@@ -46,6 +46,7 @@ const server = setupServer(
   http.get('/api/v1/external_events', () => HttpResponse.json({ rows: [], row_count: 0 })),
   http.get('/api/v1/external_event_ics_sources/options', () => HttpResponse.json({ rows: [] })),
   http.get('/api/v1/members/birthday_list', () => HttpResponse.json({ rows: [], row_count: 0 })),
+  http.get('/api/v1/public/landing', () => HttpResponse.json({ birthday_calendar_ics_url: null })),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
@@ -306,5 +307,15 @@ describe('EventsListPage', () => {
     expect(flatEventRows).toContain('Beschreibung 149');
 
     createObjectURLSpy.mockRestore();
+  });
+
+  it('shows the birthday-calendar ICS link only when the public landing config provides one', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
+    expect(screen.queryByRole('link', { name: 'Geburtstagskalender einbinden' })).not.toBeInTheDocument();
+
+    server.use(http.get('/api/v1/public/landing', () => HttpResponse.json({ birthday_calendar_ics_url: '/api/v1/public/birthdays/secret/calendar.ics' })));
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Geburtstagskalender einbinden' })).toHaveAttribute('href', '/api/v1/public/birthdays/secret/calendar.ics'));
   });
 });

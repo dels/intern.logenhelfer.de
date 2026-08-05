@@ -117,6 +117,7 @@
     "unregister": "Unregister",
     "registeredToast": "Registered for {{name}}.",
     "exportWorkingplanPdf": "Export working plan as PDF",
+    "birthdayCalendarIncludeLink": "Add birthday calendar",
     "calendar": {
       "filterBirthdays": "Birthdays",
       "filterExternalEvents": "External events",

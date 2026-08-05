@@ -117,6 +117,7 @@
     "unregister": "Abmelden",
     "registeredToast": "Zur Veranstaltung {{name}} angemeldet.",
     "exportWorkingplanPdf": "Arbeitsplan als PDF exportieren",
+    "birthdayCalendarIncludeLink": "Geburtstagskalender einbinden",
     "calendar": {
       "filterBirthdays": "Geburtstage",
       "filterExternalEvents": "Termine außer Haus",

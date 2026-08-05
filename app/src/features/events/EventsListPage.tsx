@@ -4,8 +4,9 @@ import { Box, Button, CircularProgress, IconButton, ToggleButton, ToggleButtonGr
 import AddIcon from '@mui/icons-material/Add';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CakeIcon from '@mui/icons-material/CakeRounded';
 import { useTranslation } from 'react-i18next';
-import { useDeleteEvent, downloadInternalWorkingplanPdf } from './api';
+import { useDeleteEvent, downloadInternalWorkingplanPdf, useBirthdayCalendarIcsUrl } from './api';
 import { addMonths } from './calendarGrid';
 import { useCalendarRangeData } from './useCalendarRangeData';
 import EventsCalendarView from './EventsCalendarView';
@@ -26,6 +27,7 @@ export default function EventsListPage() {
   const { mutate: deleteEvent, isPending: deleting } = useDeleteEvent();
 
   const range = useCalendarRangeData(anchor, selectedFilters);
+  const { data: birthdayCalendarIcsUrl } = useBirthdayCalendarIcsUrl();
   const monthLabel = formatDate(anchor, i18n.language, { month: 'long', year: 'numeric' });
 
   const goPrev = () => setAnchor((a) => addMonths(a, -1));
@@ -40,6 +42,11 @@ export default function EventsListPage() {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
         <Typography variant="h1">{t('nav.events')}</Typography>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+          {birthdayCalendarIcsUrl && (
+            <Button component="a" href={birthdayCalendarIcsUrl} startIcon={<CakeIcon />}>
+              {t('events.birthdayCalendarIncludeLink')}
+            </Button>
+          )}
           <Button onClick={() => void downloadInternalWorkingplanPdf()}>{t('events.exportWorkingplanPdf')}</Button>
           {abilities.event?.includes('create') && (
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/events/new')}>
