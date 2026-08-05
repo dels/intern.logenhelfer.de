@@ -440,6 +440,95 @@ describe('Me API', () => {
     });
   });
 
+  describe('PATCH /api/v1/me/birthday_calendar_consent', () => {
+    it('sets birthday_calendar_consent to true for the current user', async () => {
+      const member = await createMember();
+
+      const res = await request(app)
+        .patch('/api/v1/me/birthday_calendar_consent')
+        .set(authHeaders(member))
+        .send({ consent: true });
+
+      expect(res.status).toBe(200);
+      expect(res.body.user.birthday_calendar_consent).toBe(true);
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.birthday_calendar_consent).toBe(true);
+    });
+
+    it('unsets birthday_calendar_consent when consent=false', async () => {
+      const member = await createMember();
+      await prisma.users.update({ where: { id: member.id }, data: { birthday_calendar_consent: true } });
+
+      const res = await request(app)
+        .patch('/api/v1/me/birthday_calendar_consent')
+        .set(authHeaders(member))
+        .send({ consent: false });
+
+      expect(res.status).toBe(200);
+      expect(res.body.user.birthday_calendar_consent).toBe(false);
+    });
+
+    it('401s without a token', async () => {
+      const res = await request(app).patch('/api/v1/me/birthday_calendar_consent').send({ consent: true });
+
+      expect(res.status).toBe(401);
+    });
+
+    it('is forbidden while impersonating (consent-fabrication regression)', async () => {
+      const member = await createMember();
+      const admin = await createUser({ email: `impersonating-admin-bday-${Date.now()}@example.org` });
+
+      const res = await request(app)
+        .patch('/api/v1/me/birthday_calendar_consent')
+        .set(impersonatingAuthHeaders(member, admin.id))
+        .send({ consent: true });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe('forbidden_while_impersonating');
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.birthday_calendar_consent).toBe(false);
+    });
+
+    it('still succeeds for a normal, non-impersonated session', async () => {
+      const member = await createMember();
+
+      const res = await request(app)
+        .patch('/api/v1/me/birthday_calendar_consent')
+        .set(authHeaders(member))
+        .send({ consent: true });
+
+      expect(res.status).toBe(200);
+    });
+  });
+
+  describe('GET /api/v1/me — birthday_calendar_consent_requested', () => {
+    it('is false when the feature is disabled', async () => {
+      const member = await createMember();
+      const res = await request(app).get('/api/v1/me').set(authHeaders(member));
+      expect(res.body.user.birthday_calendar_consent_requested).toBe(false);
+    });
+
+    it('is true when enabled and consent mode is individual', async () => {
+      await appConfig.set('birthday_calendar_available', true);
+      await appConfig.set('birthday_calendar_consent_mode', 'individual');
+      const member = await createMember();
+
+      const res = await request(app).get('/api/v1/me').set(authHeaders(member));
+
+      expect(res.body.user.birthday_calendar_consent_requested).toBe(true);
+    });
+
+    it('is false when enabled but consent mode is blanket', async () => {
+      await appConfig.set('birthday_calendar_available', true);
+      await appConfig.set('birthday_calendar_consent_mode', 'blanket');
+      const member = await createMember();
+
+      const res = await request(app).get('/api/v1/me').set(authHeaders(member));
+
+      expect(res.body.user.birthday_calendar_consent_requested).toBe(false);
+    });
+  });
+
   describe('PATCH /api/v1/me/password', () => {
     it('rejects the wrong current password', async () => {
       const member = await createMember();

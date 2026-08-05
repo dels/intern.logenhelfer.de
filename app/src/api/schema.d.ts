@@ -1339,6 +1339,22 @@ export interface paths {
         patch: operations["acceptGdpr"];
         trace?: never;
     };
+    "/api/v1/me/birthday_calendar_consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateBirthdayCalendarConsent"];
+        trace?: never;
+    };
     "/api/v1/me/password": {
         parameters: {
             query?: never;
@@ -1551,6 +1567,8 @@ export interface components {
             lastname: string | null;
             subscribed_to_announcements: boolean;
             gdpr_accepted: boolean;
+            birthday_calendar_consent: boolean;
+            birthday_calendar_consent_requested: boolean;
         };
         SessionPayload: {
             access_token: string;
@@ -2369,6 +2387,9 @@ export interface components {
         };
         AnnouncementSubscriptionInput: {
             subscribed: boolean;
+        };
+        BirthdayCalendarConsentInput: {
+            consent: boolean;
         };
         AppConfigValues: {
             public_wp_available_to_anon_users?: boolean | null;
@@ -5558,6 +5579,38 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Current user and abilities, with gdpr_accepted set to true */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: components["schemas"]["MeUser"];
+                        abilities: {
+                            [key: string]: ("read" | "create" | "update" | "destroy" | "index" | "user_stats" | "downloads" | "file_stats" | "user_file_stats" | "mem_stats" | "names_list")[];
+                        };
+                        mfa_setup_required: boolean;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    updateBirthdayCalendarConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BirthdayCalendarConsentInput"];
+            };
+        };
+        responses: {
+            /** @description Current user and abilities, with the updated birthday-calendar consent */
             200: {
                 headers: {
                     [name: string]: unknown;

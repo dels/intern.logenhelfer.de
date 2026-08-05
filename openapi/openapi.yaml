@@ -2483,6 +2483,35 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/me/birthday_calendar_consent:
+    patch:
+      operationId: updateBirthdayCalendarConsent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BirthdayCalendarConsentInput' }
+      responses:
+        '200':
+          description: Current user and abilities, with the updated birthday-calendar consent
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [user, abilities, mfa_setup_required]
+                properties:
+                  user: { $ref: '#/components/schemas/MeUser' }
+                  abilities:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
+                  mfa_setup_required: { type: boolean }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/me/password:
     patch:
       operationId: updateMyPassword
@@ -2772,7 +2801,7 @@ components:
     MeUser:
       type: object
       additionalProperties: false
-      required: [id, uuid, email, firstname, lastname, subscribed_to_announcements, gdpr_accepted]
+      required: [id, uuid, email, firstname, lastname, subscribed_to_announcements, gdpr_accepted, birthday_calendar_consent, birthday_calendar_consent_requested]
       properties:
         id: { type: integer }
         uuid: { type: string }
@@ -2781,6 +2810,8 @@ components:
         lastname: { type: string, nullable: true }
         subscribed_to_announcements: { type: boolean }
         gdpr_accepted: { type: boolean }
+        birthday_calendar_consent: { type: boolean }
+        birthday_calendar_consent_requested: { type: boolean }
     SessionPayload:
       type: object
       additionalProperties: false
@@ -4085,6 +4116,12 @@ components:
       required: [subscribed]
       properties:
         subscribed: { type: boolean }
+    BirthdayCalendarConsentInput:
+      type: object
+      additionalProperties: false
+      required: [consent]
+      properties:
+        consent: { type: boolean }
     AppConfigValues:
       type: object
       additionalProperties: false
