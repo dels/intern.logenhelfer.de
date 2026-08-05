@@ -1,748 +1,917 @@
-# Graph Report - .  (2026-08-02)
+# Graph Report - .  (2026-08-05)
 
 ## Corpus Check
-- 455 files · ~345,493 words
+- 141 files · ~547,639 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2409 nodes · 5340 edges · 186 communities (162 shown, 24 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 38 edges (avg confidence: 0.75)
-- Token cost: 136,547 input · 0 output
+- 5646 nodes · 8214 edges · 277 communities (188 shown, 89 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 21 edges (avg confidence: 0.66)
+- Token cost: 30,061 input · 1,406 output
 
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Frontend Auth & MFA Tests|Frontend Auth & MFA Tests]]
-- [[_COMMUNITY_Statistics & File Stats Types|Statistics & File Stats Types]]
-- [[_COMMUNITY_Misc Component Tests|Misc Component Tests]]
-- [[_COMMUNITY_API App Bootstrap & Errors|API App Bootstrap & Errors]]
-- [[_COMMUNITY_Directory & Route Guard Frontend|Directory & Route Guard Frontend]]
-- [[_COMMUNITY_Core Domain Types|Core Domain Types]]
-- [[_COMMUNITY_Members Route Backend|Members Route Backend]]
-- [[_COMMUNITY_Configuration Feature Frontend|Configuration Feature Frontend]]
-- [[_COMMUNITY_Seekers Route Backend|Seekers Route Backend]]
-- [[_COMMUNITY_Refresh Token Auth Backend|Refresh Token Auth Backend]]
-- [[_COMMUNITY_Detail Page Tests|Detail Page Tests]]
-- [[_COMMUNITY_Database Helpers & Reset|Database Helpers & Reset]]
-- [[_COMMUNITY_App Config Service Tests|App Config Service Tests]]
-- [[_COMMUNITY_Demo Seed Data Generator|Demo Seed Data Generator]]
-- [[_COMMUNITY_Attached Files Route Backend|Attached Files Route Backend]]
-- [[_COMMUNITY_Seekers Feature Frontend|Seekers Feature Frontend]]
-- [[_COMMUNITY_API Integration Test Helpers|API Integration Test Helpers]]
-- [[_COMMUNITY_Announcements Feature Frontend|Announcements Feature Frontend]]
-- [[_COMMUNITY_MFA Feature Frontend API|MFA Feature Frontend API]]
-- [[_COMMUNITY_Lodges Feature Frontend|Lodges Feature Frontend]]
-- [[_COMMUNITY_Login & MFA Challenge Frontend|Login & MFA Challenge Frontend]]
-- [[_COMMUNITY_External Events Feature Frontend|External Events Feature Frontend]]
-- [[_COMMUNITY_API Client & Public Types|API Client & Public Types]]
-- [[_COMMUNITY_App Shell & Idle Timeout Tests|App Shell & Idle Timeout Tests]]
-- [[_COMMUNITY_Statistics Route Backend|Statistics Route Backend]]
-- [[_COMMUNITY_Me Route & Authorization|Me Route & Authorization]]
-- [[_COMMUNITY_Account & Create Pages Frontend|Account & Create Pages Frontend]]
-- [[_COMMUNITY_Authorization Ability Rules|Authorization Ability Rules]]
-- [[_COMMUNITY_E2E Security & Auth Setup|E2E Security & Auth Setup]]
-- [[_COMMUNITY_Event Digest & Mail Strings|Event Digest & Mail Strings]]
-- [[_COMMUNITY_App Config Route & Validation|App Config Route & Validation]]
-- [[_COMMUNITY_Public Routes Backend|Public Routes Backend]]
-- [[_COMMUNITY_API TypeScript Config|API TypeScript Config]]
-- [[_COMMUNITY_Events Route Backend|Events Route Backend]]
-- [[_COMMUNITY_Members Export Frontend|Members Export Frontend]]
-- [[_COMMUNITY_Officers Feature Frontend|Officers Feature Frontend]]
-- [[_COMMUNITY_App TypeScript Config|App TypeScript Config]]
-- [[_COMMUNITY_API Package Dependencies|API Package Dependencies]]
-- [[_COMMUNITY_Session & Login Lockout Backend|Session & Login Lockout Backend]]
-- [[_COMMUNITY_Ability Role Definitions|Ability Role Definitions]]
-- [[_COMMUNITY_App Package Dependencies|App Package Dependencies]]
-- [[_COMMUNITY_Account & Toast Tests|Account & Toast Tests]]
-- [[_COMMUNITY_Calendar Grid Logic|Calendar Grid Logic]]
-- [[_COMMUNITY_MFA TOTP & Backup Codes|MFA TOTP & Backup Codes]]
-- [[_COMMUNITY_Files Feature Frontend|Files Feature Frontend]]
-- [[_COMMUNITY_Ability Route Checks (Members)|Ability Route Checks (Members)]]
-- [[_COMMUNITY_Directories Route & Errors|Directories Route & Errors]]
-- [[_COMMUNITY_App Dev Dependencies|App Dev Dependencies]]
-- [[_COMMUNITY_E2E Frontend Seed Script|E2E Frontend Seed Script]]
-- [[_COMMUNITY_Server Status & MFA Client|Server Status & MFA Client]]
-- [[_COMMUNITY_Member List Pages Frontend|Member List Pages Frontend]]
-- [[_COMMUNITY_MFA Status & Settings Backend|MFA Status & Settings Backend]]
-- [[_COMMUNITY_ICS Sources & Pagination Backend|ICS Sources & Pagination Backend]]
-- [[_COMMUNITY_External Events Route Backend|External Events Route Backend]]
-- [[_COMMUNITY_BlueGreen Deploy Documentation|Blue/Green Deploy Documentation]]
-- [[_COMMUNITY_App Node TypeScript Config|App Node TypeScript Config]]
-- [[_COMMUNITY_Lodges Route & Slug Utility|Lodges Route & Slug Utility]]
-- [[_COMMUNITY_Districts Route Backend|Districts Route Backend]]
-- [[_COMMUNITY_Council List & Contact Links Frontend|Council List & Contact Links Frontend]]
-- [[_COMMUNITY_API Dev Dependencies|API Dev Dependencies]]
-- [[_COMMUNITY_App Config Service Class|App Config Service Class]]
-- [[_COMMUNITY_Academic Titles Route Backend|Academic Titles Route Backend]]
-- [[_COMMUNITY_Member Accordion Frontend|Member Accordion Frontend]]
-- [[_COMMUNITY_ICS Sync Scheduler Backend|ICS Sync Scheduler Backend]]
-- [[_COMMUNITY_Officers Route & UUID Utility|Officers Route & UUID Utility]]
-- [[_COMMUNITY_Announcements Route Backend|Announcements Route Backend]]
-- [[_COMMUNITY_Attached Files Route Tests|Attached Files Route Tests]]
-- [[_COMMUNITY_Members List Route Tests|Members List Route Tests]]
-- [[_COMMUNITY_Events List Page Frontend|Events List Page Frontend]]
-- [[_COMMUNITY_JWT & Token Config Backend|JWT & Token Config Backend]]
-- [[_COMMUNITY_Event Form & Time Math Frontend|Event Form & Time Math Frontend]]
-- [[_COMMUNITY_SSRF-Safe ICS Fetch|SSRF-Safe ICS Fetch]]
-- [[_COMMUNITY_Categories Route Backend|Categories Route Backend]]
-- [[_COMMUNITY_App Entry & Theme|App Entry & Theme]]
-- [[_COMMUNITY_Dashboard & Stats Frontend|Dashboard & Stats Frontend]]
-- [[_COMMUNITY_Events API & Workingplan Export|Events API & Workingplan Export]]
-- [[_COMMUNITY_Configuration & Account Tests|Configuration & Account Tests]]
-- [[_COMMUNITY_API npm Scripts|API npm Scripts]]
-- [[_COMMUNITY_Demo Seed Brothers Tests|Demo Seed Brothers Tests]]
-- [[_COMMUNITY_App Config Route Tests|App Config Route Tests]]
-- [[_COMMUNITY_Events Route Tests|Events Route Tests]]
-- [[_COMMUNITY_Statistics Route Tests|Statistics Route Tests]]
-- [[_COMMUNITY_App npm Scripts|App npm Scripts]]
-- [[_COMMUNITY_Event Detail Page & API Tests|Event Detail Page & API Tests]]
-- [[_COMMUNITY_Security Invariants Documentation|Security Invariants Documentation]]
-- [[_COMMUNITY_Demo Seed Content Generator|Demo Seed Content Generator]]
-- [[_COMMUNITY_Mail & Email OTP Backend|Mail & Email OTP Backend]]
-- [[_COMMUNITY_Officers Route Tests|Officers Route Tests]]
-- [[_COMMUNITY_Styled Error Pages|Styled Error Pages]]
-- [[_COMMUNITY_Members CSV Export Tests|Members CSV Export Tests]]
-- [[_COMMUNITY_Member Detail & List Pages Frontend|Member Detail & List Pages Frontend]]
-- [[_COMMUNITY_Admin Account Provisioning Backend|Admin Account Provisioning Backend]]
-- [[_COMMUNITY_Member Degree Date Helpers|Member Degree Date Helpers]]
-- [[_COMMUNITY_Member JSON Export Helpers|Member JSON Export Helpers]]
-- [[_COMMUNITY_Directories Route Tests|Directories Route Tests]]
-- [[_COMMUNITY_Birthday Contact Dialog Frontend|Birthday Contact Dialog Frontend]]
-- [[_COMMUNITY_External Event Detail Page Tests|External Event Detail Page Tests]]
-- [[_COMMUNITY_MFA Documentation (CLAUDE.md)|MFA Documentation (CLAUDE.md)]]
-- [[_COMMUNITY_Demo Event Schedule Generator|Demo Event Schedule Generator]]
-- [[_COMMUNITY_MFA Passkeys Backend|MFA Passkeys Backend]]
-- [[_COMMUNITY_External Events Route Tests|External Events Route Tests]]
-- [[_COMMUNITY_Lodges Route Tests|Lodges Route Tests]]
-- [[_COMMUNITY_Edge & BlueGreen Documentation|Edge & Blue/Green Documentation]]
-- [[_COMMUNITY_Contributing & Security Policy Docs|Contributing & Security Policy Docs]]
-- [[_COMMUNITY_MFA Lockout Backend|MFA Lockout Backend]]
-- [[_COMMUNITY_Social Icon Sprite Sheet|Social Icon Sprite Sheet]]
-- [[_COMMUNITY_Calendar Filter Frontend|Calendar Filter Frontend]]
-- [[_COMMUNITY_Statistics Nav Tabs Tests|Statistics Nav Tabs Tests]]
-- [[_COMMUNITY_Forgot Password Page Frontend|Forgot Password Page Frontend]]
-- [[_COMMUNITY_Product Vision Documentation|Product Vision Documentation]]
-- [[_COMMUNITY_Rate Limiting Backend|Rate Limiting Backend]]
-- [[_COMMUNITY_Member Address Helpers|Member Address Helpers]]
-- [[_COMMUNITY_Member Birthday & Age Helpers|Member Birthday & Age Helpers]]
-- [[_COMMUNITY_Generated OpenAPI Schema Types|Generated OpenAPI Schema Types]]
-- [[_COMMUNITY_External Events List & Date Format|External Events List & Date Format]]
-- [[_COMMUNITY_Member Edit Page Tests|Member Edit Page Tests]]
-- [[_COMMUNITY_Member Form Tests|Member Form Tests]]
-- [[_COMMUNITY_Members List Page Tests|Members List Page Tests]]
-- [[_COMMUNITY_Public Calendar Page Frontend|Public Calendar Page Frontend]]
-- [[_COMMUNITY_Help Page Frontend|Help Page Frontend]]
-- [[_COMMUNITY_Impressum Page Frontend|Impressum Page Frontend]]
-- [[_COMMUNITY_Statistics Index Page Frontend|Statistics Index Page Frontend]]
-- [[_COMMUNITY_OpenAPI Public & Impersonation Endpoints|OpenAPI Public & Impersonation Endpoints]]
-- [[_COMMUNITY_CI Workflow Configuration|CI Workflow Configuration]]
-- [[_COMMUNITY_Compose Env-Var Bugs Cross-Reference|Compose Env-Var Bugs Cross-Reference]]
-- [[_COMMUNITY_Root Package Config|Root Package Config]]
-- [[_COMMUNITY_Oxlint Configuration|Oxlint Configuration]]
-- [[_COMMUNITY_API Package Metadata|API Package Metadata]]
-- [[_COMMUNITY_App Package Metadata|App Package Metadata]]
-- [[_COMMUNITY_Fibonacci Retry Backoff|Fibonacci Retry Backoff]]
-- [[_COMMUNITY_API Playwright Config|API Playwright Config]]
-- [[_COMMUNITY_Device Trust Backend|Device Trust Backend]]
-- [[_COMMUNITY_Ability View-Permission Checks|Ability View-Permission Checks]]
-- [[_COMMUNITY_Demo Seed Seekers & Emails|Demo Seed Seekers & Emails]]
-- [[_COMMUNITY_Docker Compose Env Test|Docker Compose Env Test]]
-- [[_COMMUNITY_External Events List Page Tests|External Events List Page Tests]]
-- [[_COMMUNITY_File Form Tests|File Form Tests]]
-- [[_COMMUNITY_Lodge Detail Page Tests|Lodge Detail Page Tests]]
-- [[_COMMUNITY_Lodges List Page Tests|Lodges List Page Tests]]
-- [[_COMMUNITY_Seekers List Page Tests|Seekers List Page Tests]]
-- [[_COMMUNITY_MFA Management E2E Spec|MFA Management E2E Spec]]
-- [[_COMMUNITY_App README (Vite Template)|App README (Vite Template)]]
-- [[_COMMUNITY_Academic Title Form Frontend|Academic Title Form Frontend]]
-- [[_COMMUNITY_District Form Frontend|District Form Frontend]]
-- [[_COMMUNITY_Prettier Configuration|Prettier Configuration]]
-- [[_COMMUNITY_App Root TS Config|App Root TS Config]]
-- [[_COMMUNITY_Member Rollback Error|Member Rollback Error]]
-- [[_COMMUNITY_ICS Fetch DNS Mock Test|ICS Fetch DNS Mock Test]]
-- [[_COMMUNITY_API Test Setup|API Test Setup]]
-- [[_COMMUNITY_Postgres DB Compose Services|Postgres DB Compose Services]]
-- [[_COMMUNITY_Lodge Bijou Medal Image|Lodge Bijou Medal Image]]
-- [[_COMMUNITY_Error Page Bijou Image|Error Page Bijou Image]]
-- [[_COMMUNITY_Bijou Medal Asset|Bijou Medal Asset]]
-- [[_COMMUNITY_Large Bijou Medal Asset|Large Bijou Medal Asset]]
-- [[_COMMUNITY_No-Gendering Style Policy|No-Gendering Style Policy]]
+- Frontend Auth & MFA Tests
+- Statistics & File Stats Types
+- Misc Component Tests
+- API App Bootstrap & Errors
+- Directory & Route Guard Frontend
+- Core Domain Types
+- Members Route Backend
+- Configuration Feature Frontend
+- Seekers Route Backend
+- Refresh Token Auth Backend
+- Detail Page Tests
+- Database Helpers & Reset
+- App Config Service Tests
+- Demo Seed Data Generator
+- Attached Files Route Backend
+- Seekers Feature Frontend
+- API Integration Test Helpers
+- Announcements Feature Frontend
+- MFA Feature Frontend API
+- Lodges Feature Frontend
+- Login & MFA Challenge Frontend
+- External Events Feature Frontend
+- API Client & Public Types
+- App Shell & Idle Timeout Tests
+- Statistics Route Backend
+- Me Route & Authorization
+- Account & Create Pages Frontend
+- Authorization Ability Rules
+- E2E Security & Auth Setup
+- Event Digest & Mail Strings
+- App Config Route & Validation
+- Public Routes Backend
+- API TypeScript Config
+- Events Route Backend
+- Members Export Frontend
+- Officers Feature Frontend
+- App TypeScript Config
+- API Package Dependencies
+- Session & Login Lockout Backend
+- Ability Role Definitions
+- App Package Dependencies
+- Account & Toast Tests
+- Calendar Grid Logic
+- MFA TOTP & Backup Codes
+- Files Feature Frontend
+- Ability Route Checks (Members)
+- Directories Route & Errors
+- App Dev Dependencies
+- E2E Frontend Seed Script
+- Server Status & MFA Client
+- Member List Pages Frontend
+- MFA Status & Settings Backend
+- ICS Sources & Pagination Backend
+- External Events Route Backend
+- Blue/Green Deploy Documentation
+- App Node TypeScript Config
+- Lodges Route & Slug Utility
+- Districts Route Backend
+- Council List & Contact Links Frontend
+- API Dev Dependencies
+- App Config Service Class
+- Academic Titles Route Backend
+- Member Accordion Frontend
+- ICS Sync Scheduler Backend
+- Officers Route & UUID Utility
+- Announcements Route Backend
+- Attached Files Route Tests
+- Members List Route Tests
+- Events List Page Frontend
+- JWT & Token Config Backend
+- Event Form & Time Math Frontend
+- SSRF-Safe ICS Fetch
+- Categories Route Backend
+- App Entry & Theme
+- Dashboard & Stats Frontend
+- Events API & Workingplan Export
+- Configuration & Account Tests
+- API npm Scripts
+- Demo Seed Brothers Tests
+- App Config Route Tests
+- Events Route Tests
+- Statistics Route Tests
+- App npm Scripts
+- Event Detail Page & API Tests
+- Security Invariants Documentation
+- Demo Seed Content Generator
+- Mail & Email OTP Backend
+- Officers Route Tests
+- Styled Error Pages
+- Members CSV Export Tests
+- Member Detail & List Pages Frontend
+- Admin Account Provisioning Backend
+- Member Degree Date Helpers
+- Member JSON Export Helpers
+- Directories Route Tests
+- Birthday Contact Dialog Frontend
+- External Event Detail Page Tests
+- MFA Documentation (CLAUDE.md)
+- Demo Event Schedule Generator
+- MFA Passkeys Backend
+- External Events Route Tests
+- Lodges Route Tests
+- Edge & Blue/Green Documentation
+- Contributing & Security Policy Docs
+- MFA Lockout Backend
+- Social Icon Sprite Sheet
+- Calendar Filter Frontend
+- Statistics Nav Tabs Tests
+- Forgot Password Page Frontend
+- Product Vision Documentation
+- Rate Limiting Backend
+- Member Address Helpers
+- Member Birthday & Age Helpers
+- Generated OpenAPI Schema Types
+- External Events List & Date Format
+- Member Edit Page Tests
+- Member Form Tests
+- Members List Page Tests
+- Public Calendar Page Frontend
+- Help Page Frontend
+- Impressum Page Frontend
+- Statistics Index Page Frontend
+- OpenAPI Public & Impersonation Endpoints
+- CI Workflow Configuration
+- Compose Env-Var Bugs Cross-Reference
+- Root Package Config
+- Oxlint Configuration
+- API Package Metadata
+- App Package Metadata
+- Fibonacci Retry Backoff
+- API Playwright Config
+- Device Trust Backend
+- Ability View-Permission Checks
+- Demo Seed Seekers & Emails
+- Docker Compose Env Test
+- Events Calendar E2E Spec
+- External Events E2E Spec
+- External Events List Page Tests
+- File Form Tests
+- Lodge Detail Page Tests
+- Lodges List Page Tests
+- Seekers List Page Tests
+- MFA Management E2E Spec
+- App README (Vite Template)
+- Academic Title Form Frontend
+- District Form Frontend
+- Prettier Configuration
+- App Root TS Config
+- Member Rollback Error
+- ICS Fetch DNS Mock Test
+- API Test Setup
+- Authorization Boundaries E2E Spec
+- Mobile Nav E2E Spec
+- Postgres DB Compose Services
+- Prisma Config
+- Token Config Test
+- ICS Sync Scheduler Test
+- API Vitest Config
+- Account E2E Spec
+- Announcements E2E Spec
+- Auth E2E Spec
+- Categories E2E Spec
+- Configuration E2E Spec
+- Dashboard E2E Spec
+- Events E2E Spec
+- Workingplan Export E2E Spec
+- Files E2E Spec
+- Lodges E2E Spec
+- Member Impersonation E2E Spec
+- Member Export E2E Spec
+- Member Management E2E Spec
+- Member Nav Tabs E2E Spec
+- Matriculation Number E2E Spec
+- Members E2E Spec
+- Public Calendar E2E Spec
+- Public Landing E2E Spec
+- Seekers E2E Spec
+- Statistics E2E Spec
+- App Playwright Config
+- Lodge Bijou Medal Image
+- Error Page Bijou Image
+- Bijou Medal Asset
+- Large Bijou Medal Asset
+- App Test Setup
+- Vite Config
+- No-Gendering Style Policy
+- Addresses Prisma Client
+- Announcement Subscriptions Prisma Client
+- Announcements Prisma Client
+- App Config Adapters Prisma Client
+- AR Internal Metadata Prisma Client
+- Attached File Roles Prisma Client
+- Attached Files Prisma Client
+- Categories Prisma Client
+- Category Roles Prisma Client
+- Custom Logos Prisma Client
+- Directories Prisma Client
+- Directory Roles Prisma Client
+- Districts Prisma Client
+- Event Participants Prisma Client
+- Events Prisma Client
+- External Event ICS Sources Prisma Client
+- External Event Participants Prisma Client
+- External Events Prisma Client
+- File Downloads Prisma Client
+- Friendly ID Slugs Prisma Client
+- Impersonation Events Prisma Client
+- Lodges Prisma Client
+- Login Lockouts Prisma Client
+- MFA Backup Codes Prisma Client
+- MFA Email OTP Codes Prisma Client
+- MFA Lockouts Prisma Client
+- MFA Reset Events Prisma Client
+- MFA Trusted Devices Prisma Client
+- Officers Prisma Client
+- Roles Prisma Client
+- Schema Migrations Prisma Client
+- Seekers Prisma Client
+- User Roles Prisma Client
+- Users Prisma Client
+- Docker Compose Env Test
+- MFA Challenge Form Component
+- WireGuard Tunnel Runbook
+- Prisma Client Options Types
+- MFA Management E2E Spec
+- App Frontend README
+- Academic Title Form Component
+- District Form Component
+- Prettier Config
+- App TS Config
+- Safe ICS Fetch Test
+- API Test Setup
+- Bijou Logo Image
+- Lodge Bijou Medal Image
+- Bijou Star Badge Image
+- Bijou Medal Graphic
+- Large Bijou Medal Image
+- pnpm Workspace Config
 
 ## God Nodes (most connected - your core abstractions)
-1. `createUser()` - 83 edges
-2. `useAuth()` - 81 edges
-3. `apiErrorMessage()` - 80 edges
-4. `useToast()` - 74 edges
-5. `issueAccessToken()` - 55 edges
-6. `resetDb()` - 44 edges
-7. `AuthProvider()` - 41 edges
-8. `apiErrorHandler()` - 36 edges
+1. `useAuth()` - 83 edges
+2. `apiErrorMessage()` - 64 edges
+3. `createUser()` - 63 edges
+4. `useToast()` - 55 edges
+5. `PrismaClient` - 49 edges
+6. `issueAccessToken()` - 39 edges
+7. `AuthProvider()` - 39 edges
+8. `resetDb()` - 36 edges
 9. `appConfig` - 34 edges
-10. `apiFetch()` - 30 edges
+10. `apiErrorHandler()` - 28 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Run the Test Gate Before Opening a PR` --semantically_similar_to--> `bin/deploy-to --remote Runs test-gate On Deploy Host`  [INFERRED] [semantically similar]
-  CONTRIBUTING.md → CLAUDE.md
-- `Security Policy Scope (api/, app/, bin/, infra/)` --conceptually_related_to--> `Security Requirements Checklist`  [INFERRED]
-  SECURITY.md → CLAUDE.md
-- `GET /api/v1/health Endpoint` --references--> `Blue/Green Deploy Mechanism`  [EXTRACTED]
-  openapi/openapi.yaml → CLAUDE.md
-- `Production api Service (docker-compose.production.yml)` --shares_data_with--> `MFA_ENCRYPTION_KEY Rotation Constraint`  [INFERRED]
-  infra/docker-compose.production.yml → CLAUDE.md
-- `pnpm Workspace Configuration (app, api packages)` --references--> `Production api Service (docker-compose.production.yml)`  [INFERRED]
-  pnpm-workspace.yaml → infra/docker-compose.production.yml
+- `buildApp()` --indirect_call--> `apiErrorHandler()`  [INFERRED]
+  api/test/routes/members.test.ts → api/src/lib/errors.ts
+- `buildApp()` --indirect_call--> `apiErrorHandler()`  [INFERRED]
+  api/test/routes/membersLists.test.ts → api/src/lib/errors.ts
+- `buildApp()` --indirect_call--> `apiErrorHandler()`  [INFERRED]
+  api/test/routes/passwordReset.test.ts → api/src/lib/errors.ts
+- `loadAddressMap()` --indirect_call--> `row()`  [INFERRED]
+  api/src/routes/seekers.ts → app/src/features/events/api.test.ts
+- `toastWrapper()` --indirect_call--> `ToastProvider()`  [INFERRED]
+  app/src/features/members/api.test.ts → app/src/notifications/ToastProvider.tsx
 
 ## Import Cycles
-- 1-file cycle: `api/src/authz/ability.ts -> api/src/authz/ability.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/mfa_lockouts.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/addresses.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/commonInputTypes.ts -> api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/commonInputTypes.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/academic_titles.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/announcement_subscriptions.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/announcements.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/app_config_adapters.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/ar_internal_metadata.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/attached_file_roles.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/attached_files.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/categories.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/category_roles.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/custom_logos.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/directories.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/directory_roles.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/districts.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/event_participants.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/events.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/external_event_ics_sources.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
+- 3-file cycle: `api/src/generated/prisma/internal/prismaNamespace.ts -> api/src/generated/prisma/models.ts -> api/src/generated/prisma/models/external_event_participants.ts -> api/src/generated/prisma/internal/prismaNamespace.ts`
 
-## Hyperedges (group relationships)
-- **Security Audit Invariants Checklist** — claude_md_authorization_per_handler, claude_md_privilege_granting_fields, claude_md_bulk_pii_export_audit_log, claude_md_impersonation_tokens, claude_md_spa_security_headers, claude_md_dangerously_set_inner_html, claude_md_file_upload_limits, claude_md_sensitive_config_defaults, claude_md_ssrf_safe_fetch, claude_md_login_enumeration, claude_md_refresh_token_revocation [EXTRACTED 1.00]
-- **Blue/Green Deploy Topology (edge + app + api)** — claude_md_deploy_mechanism, claude_md_persistent_bluegreen_slots, infra_docker_compose_production_edge_service, infra_docker_compose_production_app_service, infra_docker_compose_production_api_service, readme_bluegreen_three_containers [INFERRED 0.90]
-- **Multi-Factor Authentication Subsystem** — claude_md_mfa_encryption_key, claude_md_mfa_grace_period, claude_md_mfa_setup_gate, claude_md_mfa_lockout_pattern, openapi_openapi_openapi_mfa_endpoints [INFERRED 0.90]
-
-## Communities (186 total, 24 thin omitted)
+## Communities (277 total, 89 thin omitted)
 
 ### Community 0 - "Frontend Auth & MFA Tests"
-Cohesion: 0.04
-Nodes (25): MfaLoginResult, AuthContext, AuthProvider(), LoginResult, Status, meUser, server, server (+17 more)
+Cohesion: 0.01
+Nodes (144): Academic_titlesScalarFieldEnum, AddressesScalarFieldEnum, Announcement_subscriptionsScalarFieldEnum, AnnouncementsScalarFieldEnum, App_config_adaptersScalarFieldEnum, Ar_internal_metadataScalarFieldEnum, Args, At (+136 more)
 
 ### Community 1 - "Statistics & File Stats Types"
-Cohesion: 0.06
-Nodes (42): DownloadList, DownloadRow, ExternalEventIcsSource, ExternalEventIcsSourceInput, ExternalEventIcsSourceList, ExternalEventIcsSourceUpdate, FileStatsList, FileStatsRow (+34 more)
+Cohesion: 0.03
+Nodes (34): AuthContext, AuthContextValue, AuthProvider(), LoginResult, Status, meUser, server, server (+26 more)
 
 ### Community 2 - "Misc Component Tests"
 Cohesion: 0.04
-Nodes (16): server, server, server, server, server, server, server, server (+8 more)
+Nodes (58): AddressInput, addressJson(), addressPurpose(), addressStreet(), addressVcfType(), addYears(), ADMIN_FIELDS, applyDegreeDates() (+50 more)
 
 ### Community 3 - "API App Bootstrap & Errors"
-Cohesion: 0.06
-Nodes (30): BARE_ROUTES, ROUTE_MOUNTS, authenticateApiUser(), revokeAllFamiliesForUser(), ApiErrorCode, apiErrorHandler(), isOpenApiValidationError(), STATUS_BY_CODE (+22 more)
+Cohesion: 0.03
+Nodes (62): Academic_titlesAggregateArgs, Academic_titlesAvgAggregateInputType, Academic_titlesAvgAggregateOutputType, academic_titlesAvgOrderByAggregateInput, Academic_titlesCountAggregateInputType, Academic_titlesCountAggregateOutputType, academic_titlesCountArgs, academic_titlesCountOrderByAggregateInput (+54 more)
 
 ### Community 4 - "Directory & Route Guard Frontend"
-Cohesion: 0.07
-Nodes (30): CategorySummary, Directory, DirectoryList, useAuth(), RequireAuth(), mockAuth(), RowActionsProps, VisibleToRoles() (+22 more)
+Cohesion: 0.03
+Nodes (60): AggregateEvent_participants, BigIntFieldUpdateOperationsInput, Event_participantsAggregateArgs, Event_participantsAvgAggregateInputType, Event_participantsAvgAggregateOutputType, event_participantsAvgOrderByAggregateInput, Event_participantsCountAggregateInputType, Event_participantsCountAggregateOutputType (+52 more)
 
 ### Community 5 - "Core Domain Types"
-Cohesion: 0.09
-Nodes (36): AttachedFileSummary, Category, CategoryInput, CategoryList, DirectoryInput, DirectorySummary, MemberAddressInput, MemberInput (+28 more)
+Cohesion: 0.03
+Nodes (59): AddressesAggregateArgs, AddressesAvgAggregateInputType, AddressesAvgAggregateOutputType, addressesAvgOrderByAggregateInput, AddressesCountAggregateInputType, AddressesCountAggregateOutputType, addressesCountArgs, addressesCountOrderByAggregateInput (+51 more)
 
 ### Community 6 - "Members Route Backend"
-Cohesion: 0.06
-Nodes (27): AddressInput, ADMIN_FIELDS, BIRTHDAY_SORTABLE_COLUMNS, BirthdaySortableColumn, birthdaySortComparator(), BirthdaySortKey, DEGREE_ROLE_NAMES, faxNumbersPrintable() (+19 more)
+Cohesion: 0.03
+Nodes (59): AggregateAttached_files, Attached_filesAggregateArgs, Attached_filesAvgAggregateInputType, Attached_filesAvgAggregateOutputType, attached_filesAvgOrderByAggregateInput, Attached_filesCountAggregateInputType, Attached_filesCountAggregateOutputType, attached_filesCountArgs (+51 more)
 
 ### Community 7 - "Configuration Feature Frontend"
-Cohesion: 0.10
-Nodes (31): AcademicTitleInput, AcademicTitleList, AcademicTitleSummary, AppConfigValues, DistrictInput, server, useAcademicTitles(), useAppConfig() (+23 more)
+Cohesion: 0.03
+Nodes (59): AggregateCustom_logos, BytesFieldUpdateOperationsInput, Custom_logosAggregateArgs, Custom_logosAvgAggregateInputType, Custom_logosAvgAggregateOutputType, custom_logosAvgOrderByAggregateInput, Custom_logosCountAggregateInputType, Custom_logosCountAggregateOutputType (+51 more)
 
 ### Community 8 - "Seekers Route Backend"
-Cohesion: 0.06
-Nodes (26): ADDRESS_FIELD_KEYS, ADDRESS_LABELS, addressFieldsToString(), AddressInputFields, addressJson(), addressPurpose(), addressStreet(), contactValueFor() (+18 more)
+Cohesion: 0.03
+Nodes (59): AggregateExternal_event_ics_sources, BoolFieldUpdateOperationsInput, External_event_ics_sourcesAggregateArgs, External_event_ics_sourcesAvgAggregateInputType, External_event_ics_sourcesAvgAggregateOutputType, external_event_ics_sourcesAvgOrderByAggregateInput, External_event_ics_sourcesCountAggregateInputType, External_event_ics_sourcesCountAggregateOutputType (+51 more)
 
 ### Community 9 - "Refresh Token Auth Backend"
-Cohesion: 0.08
-Nodes (26): digest(), IssuedRefreshToken, issueRefreshToken(), RefreshTokenInvalidError, RefreshTokenReuseError, RotatedRefreshToken, rotateRefreshToken(), app (+18 more)
+Cohesion: 0.03
+Nodes (59): AggregateExternal_event_participants, External_event_participantsAggregateArgs, External_event_participantsAvgAggregateInputType, External_event_participantsAvgAggregateOutputType, external_event_participantsAvgOrderByAggregateInput, External_event_participantsCountAggregateInputType, External_event_participantsCountAggregateOutputType, external_event_participantsCountArgs (+51 more)
 
 ### Community 10 - "Detail Page Tests"
-Cohesion: 0.07
-Nodes (17): server, server, server, registerRequests, server, unregisterRequests, server, server (+9 more)
+Cohesion: 0.03
+Nodes (59): AggregateExternal_events, External_eventsAggregateArgs, External_eventsAvgAggregateInputType, External_eventsAvgAggregateOutputType, external_eventsAvgOrderByAggregateInput, External_eventsCountAggregateInputType, External_eventsCountAggregateOutputType, external_eventsCountArgs (+51 more)
 
 ### Community 11 - "Database Helpers & Reset"
-Cohesion: 0.11
-Nodes (11): dedupeMatriculationNumbers(), adapter, globalForPrisma, EXCLUDED_TABLES, resetDb(), resettableTableNames(), app, app (+3 more)
+Cohesion: 0.03
+Nodes (59): AggregateFriendly_id_slugs, Friendly_id_slugsAggregateArgs, Friendly_id_slugsAvgAggregateInputType, Friendly_id_slugsAvgAggregateOutputType, friendly_id_slugsAvgOrderByAggregateInput, Friendly_id_slugsCountAggregateInputType, Friendly_id_slugsCountAggregateOutputType, friendly_id_slugsCountArgs (+51 more)
 
 ### Community 12 - "App Config Service Tests"
-Cohesion: 0.08
-Nodes (24): appConfig, AppConfigServiceOptions, CacheEntry, ConfigType, ConfigValue, DEFAULT_RAW_VALUES, FALSE_VALUES, KNOWN_KEYS (+16 more)
+Cohesion: 0.03
+Nodes (58): AggregateAnnouncement_subscriptions, Announcement_subscriptionsAggregateArgs, Announcement_subscriptionsAvgAggregateInputType, Announcement_subscriptionsAvgAggregateOutputType, announcement_subscriptionsAvgOrderByAggregateInput, Announcement_subscriptionsCountAggregateInputType, Announcement_subscriptionsCountAggregateOutputType, announcement_subscriptionsCountArgs (+50 more)
 
 ### Community 13 - "Demo Seed Data Generator"
-Cohesion: 0.08
-Nodes (31): addMonthsUTC(), ALL_BROTHER_INITIALS, ALL_DEGREE_ROLES, ANNOUNCEMENT_SPECS, APPRENTICE_INITIALS, BREMEN_STREETS, bremenPhoneNumber(), BROTHER_FIRST_NAMES (+23 more)
+Cohesion: 0.03
+Nodes (58): AggregateAnnouncements, AnnouncementsAggregateArgs, AnnouncementsAvgAggregateInputType, AnnouncementsAvgAggregateOutputType, announcementsAvgOrderByAggregateInput, AnnouncementsCountAggregateInputType, AnnouncementsCountAggregateOutputType, announcementsCountArgs (+50 more)
 
 ### Community 14 - "Attached Files Route Backend"
-Cohesion: 0.09
-Nodes (21): attachedFileJson(), attachedFileSummaryJson(), envKeyPrefix(), extractBoundary(), extractMultipartRequest(), isAncestorDeleted(), isCategoryDeleted(), MAX_DB_MEM_SIZE_DEFAULT (+13 more)
+Cohesion: 0.03
+Nodes (58): AggregateApp_config_adapters, App_config_adaptersAggregateArgs, App_config_adaptersAvgAggregateInputType, App_config_adaptersAvgAggregateOutputType, app_config_adaptersAvgOrderByAggregateInput, App_config_adaptersCountAggregateInputType, App_config_adaptersCountAggregateOutputType, app_config_adaptersCountArgs (+50 more)
 
 ### Community 15 - "Seekers Feature Frontend"
-Cohesion: 0.11
-Nodes (23): Seeker, SeekerInput, SeekerList, SeekerNameList, SeekerSummary, SeekerFilter, server, useCreateSeeker() (+15 more)
+Cohesion: 0.03
+Nodes (58): AggregateAttached_file_roles, Attached_file_rolesAggregateArgs, Attached_file_rolesAvgAggregateInputType, Attached_file_rolesAvgAggregateOutputType, attached_file_rolesAvgOrderByAggregateInput, Attached_file_rolesCountAggregateInputType, Attached_file_rolesCountAggregateOutputType, attached_file_rolesCountArgs (+50 more)
 
 ### Community 16 - "API Integration Test Helpers"
-Cohesion: 0.14
-Nodes (24): app, authHeaders(), makeApplicationAdmin(), issueAccessToken(), adminAuthHeader(), authHeader(), fileAdminAuthHeader(), makeAdminAuthHeader() (+16 more)
+Cohesion: 0.03
+Nodes (58): AggregateCategories, CategoriesAggregateArgs, CategoriesAvgAggregateInputType, CategoriesAvgAggregateOutputType, categoriesAvgOrderByAggregateInput, CategoriesCountAggregateInputType, CategoriesCountAggregateOutputType, categoriesCountArgs (+50 more)
 
 ### Community 17 - "Announcements Feature Frontend"
-Cohesion: 0.12
-Nodes (21): Announcement, AnnouncementInput, AnnouncementList, AnnouncementSummary, GdprGate(), AnnouncementCreatePage(), emptyAnnouncement, AnnouncementDetailPage() (+13 more)
+Cohesion: 0.03
+Nodes (58): AggregateCategory_roles, Category_rolesAggregateArgs, Category_rolesAvgAggregateInputType, Category_rolesAvgAggregateOutputType, category_rolesAvgOrderByAggregateInput, Category_rolesCountAggregateInputType, Category_rolesCountAggregateOutputType, category_rolesCountArgs (+50 more)
 
 ### Community 18 - "MFA Feature Frontend API"
-Cohesion: 0.13
-Nodes (23): MfaMethodsList, MfaPasskeyCredential, MfaSetupProof, MfaSetupStartResult, MfaSetupVerifyResult, MfaTrustedDevice, useMfaPasskeyCredentials(), useMfaStatus() (+15 more)
+Cohesion: 0.03
+Nodes (58): AggregateDirectories, DirectoriesAggregateArgs, DirectoriesAvgAggregateInputType, DirectoriesAvgAggregateOutputType, directoriesAvgOrderByAggregateInput, DirectoriesCountAggregateInputType, DirectoriesCountAggregateOutputType, directoriesCountArgs (+50 more)
 
 ### Community 19 - "Lodges Feature Frontend"
-Cohesion: 0.13
-Nodes (22): DistrictList, DistrictSummary, Lodge, LodgeInput, LodgeList, LodgeSummary, server, useCreateLodge() (+14 more)
+Cohesion: 0.03
+Nodes (58): AggregateDirectory_roles, Directory_rolesAggregateArgs, Directory_rolesAvgAggregateInputType, Directory_rolesAvgAggregateOutputType, directory_rolesAvgOrderByAggregateInput, Directory_rolesCountAggregateInputType, Directory_rolesCountAggregateOutputType, directory_rolesCountArgs (+50 more)
 
 ### Community 20 - "Login & MFA Challenge Frontend"
-Cohesion: 0.09
-Nodes (14): PublicLandingConfig, MfaMethod, useLandingConfig(), SiteMetaSync(), server, navActionSx, server, TopNav() (+6 more)
+Cohesion: 0.03
+Nodes (58): AggregateDistricts, DistrictsAggregateArgs, DistrictsAvgAggregateInputType, DistrictsAvgAggregateOutputType, districtsAvgOrderByAggregateInput, DistrictsCountAggregateInputType, DistrictsCountAggregateOutputType, districtsCountArgs (+50 more)
 
 ### Community 21 - "External Events Feature Frontend"
-Cohesion: 0.15
-Nodes (22): ExternalEvent, ExternalEventInput, ExternalEventList, ExternalEventParticipant, ExternalEventWithParticipants, ExternalEventDefaults, server, useConfirmExternalEventParticipant() (+14 more)
+Cohesion: 0.03
+Nodes (58): AggregateEvents, EventsAggregateArgs, EventsAvgAggregateInputType, EventsAvgAggregateOutputType, eventsAvgOrderByAggregateInput, EventsCountAggregateInputType, EventsCountAggregateOutputType, eventsCountArgs (+50 more)
 
 ### Community 22 - "API Client & Public Types"
-Cohesion: 0.12
-Nodes (17): apiFetch(), downloadFile(), fetchWithTimeout(), refreshSession(), DemoAccountsList, HealthStatus, PublicHelp, PublicImpressum (+9 more)
+Cohesion: 0.03
+Nodes (58): AggregateFile_downloads, File_downloadsAggregateArgs, File_downloadsAvgAggregateInputType, File_downloadsAvgAggregateOutputType, file_downloadsAvgOrderByAggregateInput, File_downloadsCountAggregateInputType, File_downloadsCountAggregateOutputType, file_downloadsCountArgs (+50 more)
 
 ### Community 23 - "App Shell & Idle Timeout Tests"
-Cohesion: 0.08
-Nodes (12): Probe(), server, user, ACTIVITY_EVENTS, getIdleTimeoutMs(), useIdleTimeout(), server, Trigger() (+4 more)
+Cohesion: 0.03
+Nodes (58): AggregateImpersonation_events, GetImpersonation_eventsAggregateType, GetImpersonation_eventsGroupByPayload, Impersonation_eventsAggregateArgs, Impersonation_eventsAvgAggregateInputType, Impersonation_eventsAvgAggregateOutputType, impersonation_eventsAvgOrderByAggregateInput, Impersonation_eventsCountAggregateInputType (+50 more)
 
 ### Community 24 - "Statistics Route Backend"
-Cohesion: 0.09
-Nodes (17): Request, AppAbility, VisibilityContext, DownloadRowJson, DOWNLOADS_SORTABLE_COLUMNS, downloadsSortComparator, FILE_STATS_SORTABLE_COLUMNS, FileStatsFlatRow (+9 more)
+Cohesion: 0.03
+Nodes (58): AggregateLodges, GetLodgesAggregateType, GetLodgesGroupByPayload, LodgesAggregateArgs, LodgesAvgAggregateInputType, LodgesAvgAggregateOutputType, lodgesAvgOrderByAggregateInput, LodgesCountAggregateInputType (+50 more)
 
 ### Community 25 - "Me Route & Authorization"
-Cohesion: 0.10
-Nodes (20): Action, toUserSubject(), subject(), abilitiesMap(), AbilityProbe, authJsonFor(), AuthJsonUser, canOnSelf() (+12 more)
+Cohesion: 0.03
+Nodes (58): AggregateLogin_lockouts, GetLogin_lockoutsAggregateType, GetLogin_lockoutsGroupByPayload, Login_lockoutsAggregateArgs, Login_lockoutsAvgAggregateInputType, Login_lockoutsAvgAggregateOutputType, login_lockoutsAvgOrderByAggregateInput, Login_lockoutsCountAggregateInputType (+50 more)
 
 ### Community 26 - "Account & Create Pages Frontend"
-Cohesion: 0.14
-Nodes (18): apiErrorMessage(), AccountPage(), FormValues, ProfileSection(), schema, useUpdatePassword(), useCreateEvent(), useUpdateEvent() (+10 more)
+Cohesion: 0.03
+Nodes (58): AggregateMfa_backup_codes, GetMfa_backup_codesAggregateType, GetMfa_backup_codesGroupByPayload, Mfa_backup_codesAggregateArgs, Mfa_backup_codesAvgAggregateInputType, Mfa_backup_codesAvgAggregateOutputType, mfa_backup_codesAvgOrderByAggregateInput, Mfa_backup_codesCountAggregateInputType (+50 more)
 
 ### Community 27 - "Authorization Ability Rules"
-Cohesion: 0.13
-Nodes (14): buildAbility(), hasRole(), isAdmin(), isAppResponsible(), isNetDelegate(), isSecretary(), isUserAdmin(), isWorshipfulMaster() (+6 more)
+Cohesion: 0.03
+Nodes (58): AggregateMfa_email_otp_codes, GetMfa_email_otp_codesAggregateType, GetMfa_email_otp_codesGroupByPayload, Mfa_email_otp_codesAggregateArgs, Mfa_email_otp_codesAvgAggregateInputType, Mfa_email_otp_codesAvgAggregateOutputType, mfa_email_otp_codesAvgOrderByAggregateInput, Mfa_email_otp_codesCountAggregateInputType (+50 more)
 
 ### Community 28 - "E2E Security & Auth Setup"
-Cohesion: 0.11
-Nodes (16): SeedUser, adapter, createSeedUser(), ensureRole(), EXCLUDED_TABLES, globalSetup(), prisma, resetDb() (+8 more)
+Cohesion: 0.03
+Nodes (58): AggregateMfa_lockouts, GetMfa_lockoutsAggregateType, GetMfa_lockoutsGroupByPayload, Mfa_lockoutsAggregateArgs, Mfa_lockoutsAvgAggregateInputType, Mfa_lockoutsAvgAggregateOutputType, mfa_lockoutsAvgOrderByAggregateInput, Mfa_lockoutsCountAggregateInputType (+50 more)
 
 ### Community 29 - "Event Digest & Mail Strings"
-Cohesion: 0.13
-Nodes (16): main(), adminBccAddresses(), collectExternal(), collectInternal(), CollectResult, DIGEST_ROLE_NAMES, DigestResult, DigestStrings (+8 more)
+Cohesion: 0.03
+Nodes (58): AggregateMfa_reset_events, GetMfa_reset_eventsAggregateType, GetMfa_reset_eventsGroupByPayload, Mfa_reset_eventsAggregateArgs, Mfa_reset_eventsAvgAggregateInputType, Mfa_reset_eventsAvgAggregateOutputType, mfa_reset_eventsAvgOrderByAggregateInput, Mfa_reset_eventsCountAggregateInputType (+50 more)
 
 ### Community 30 - "App Config Route & Validation"
-Cohesion: 0.12
-Nodes (21): ContractValidationOptions, createContractValidationMiddleware(), DEFAULT_API_SPEC_PATH, matchesAny(), runChain(), castBoolean(), castForWrite(), ConfigType (+13 more)
+Cohesion: 0.03
+Nodes (58): AggregateMfa_trusted_devices, GetMfa_trusted_devicesAggregateType, GetMfa_trusted_devicesGroupByPayload, Mfa_trusted_devicesAggregateArgs, Mfa_trusted_devicesAvgAggregateInputType, Mfa_trusted_devicesAvgAggregateOutputType, mfa_trusted_devicesAvgOrderByAggregateInput, Mfa_trusted_devicesCountAggregateInputType (+50 more)
 
 ### Community 31 - "Public Routes Backend"
-Cohesion: 0.11
-Nodes (16): anonAccessEnabled(), buildWorkingplanPdf(), formatDateOnly(), formatTime(), getBoolean(), getConfigString(), MAIL_FIELDS, PDF_LABELS (+8 more)
+Cohesion: 0.03
+Nodes (58): AggregateOfficers, GetOfficersAggregateType, GetOfficersGroupByPayload, OfficersAggregateArgs, OfficersAvgAggregateInputType, OfficersAvgAggregateOutputType, officersAvgOrderByAggregateInput, OfficersCountAggregateInputType (+50 more)
 
 ### Community 32 - "API TypeScript Config"
+Cohesion: 0.03
+Nodes (58): AggregateRoles, GetRolesAggregateType, GetRolesGroupByPayload, RolesAggregateArgs, RolesAvgAggregateInputType, RolesAvgAggregateOutputType, rolesAvgOrderByAggregateInput, RolesCountAggregateInputType (+50 more)
+
+### Community 33 - "Events Route Backend"
+Cohesion: 0.03
+Nodes (58): AggregateSeekers, GetSeekersAggregateType, GetSeekersGroupByPayload, SeekersAggregateArgs, SeekersAvgAggregateInputType, SeekersAvgAggregateOutputType, seekersAvgOrderByAggregateInput, SeekersCountAggregateInputType (+50 more)
+
+### Community 34 - "Members Export Frontend"
+Cohesion: 0.03
+Nodes (58): AggregateUser_roles, GetUser_rolesAggregateType, GetUser_rolesGroupByPayload, User_rolesAggregateArgs, User_rolesAvgAggregateInputType, User_rolesAvgAggregateOutputType, user_rolesAvgOrderByAggregateInput, User_rolesCountAggregateInputType (+50 more)
+
+### Community 35 - "Officers Feature Frontend"
+Cohesion: 0.03
+Nodes (58): AggregateUsers, GetUsersAggregateType, GetUsersGroupByPayload, UsersAggregateArgs, UsersAvgAggregateInputType, UsersAvgAggregateOutputType, usersAvgOrderByAggregateInput, UsersCountAggregateInputType (+50 more)
+
+### Community 36 - "App TypeScript Config"
+Cohesion: 0.05
+Nodes (29): app/index.html (SPA entry point), App(), queryClient, server, user, Probe(), server, user (+21 more)
+
+### Community 37 - "API Package Dependencies"
+Cohesion: 0.05
+Nodes (23): useAuth(), RequireAuth(), mockAuth(), BirthdayCalendarConsentSection(), FormValues, ProfileSection(), schema, memberFixture (+15 more)
+
+### Community 38 - "Session & Login Lockout Backend"
+Cohesion: 0.06
+Nodes (39): main(), adminBccAddresses(), collectExternal(), collectInternal(), CollectResult, DIGEST_ROLE_NAMES, DigestResult, DigestStrings (+31 more)
+
+### Community 39 - "Ability Role Definitions"
+Cohesion: 0.08
+Nodes (41): Action, adminAbilities(), announcementAdminAbilities(), applicationAdminAbilities(), buildAbility(), canViewAttachedFile(), canViewCategory(), canViewDirectory() (+33 more)
+
+### Community 40 - "App Package Dependencies"
+Cohesion: 0.04
+Nodes (53): AggregateAr_internal_metadata, Ar_internal_metadataAggregateArgs, Ar_internal_metadataCountAggregateInputType, Ar_internal_metadataCountAggregateOutputType, ar_internal_metadataCountArgs, ar_internal_metadataCountOrderByAggregateInput, ar_internal_metadataCreateArgs, ar_internal_metadataCreateInput (+45 more)
+
+### Community 41 - "Account & Toast Tests"
+Cohesion: 0.04
+Nodes (52): AggregateSchema_migrations, GetSchema_migrationsAggregateType, GetSchema_migrationsGroupByPayload, Schema_migrationsAggregateArgs, Schema_migrationsCountAggregateInputType, Schema_migrationsCountAggregateOutputType, schema_migrationsCountArgs, schema_migrationsCountOrderByAggregateInput (+44 more)
+
+### Community 42 - "Calendar Grid Logic"
+Cohesion: 0.07
+Nodes (33): ExternalEventInput, ExternalEventParticipant, ExternalEventWithParticipants, MeUser, ExternalEventDefaults, server, useConfirmExternalEventParticipant(), useCreateExternalEvent() (+25 more)
+
+### Community 43 - "MFA TOTP & Backup Codes"
+Cohesion: 0.04
+Nodes (47): BigIntFilter, BigIntWithAggregatesFilter, BoolFilter, BoolNullableFilter, BoolNullableWithAggregatesFilter, BoolWithAggregatesFilter, BytesFilter, BytesNullableFilter (+39 more)
+
+### Community 45 - "Ability Route Checks (Members)"
+Cohesion: 0.04
+Nodes (45): Academic_titlesScalarFieldEnum, AddressesScalarFieldEnum, Announcement_subscriptionsScalarFieldEnum, AnnouncementsScalarFieldEnum, App_config_adaptersScalarFieldEnum, Ar_internal_metadataScalarFieldEnum, Attached_file_rolesScalarFieldEnum, Attached_filesScalarFieldEnum (+37 more)
+
+### Community 46 - "Directories Route & Errors"
+Cohesion: 0.07
+Nodes (31): server, useAcademicTitles(), useAppConfig(), useCreateAcademicTitle(), useCreateDistrict(), useDeleteAcademicTitle(), useDeleteDistrict(), useResetLogo() (+23 more)
+
+### Community 47 - "App Dev Dependencies"
+Cohesion: 0.07
+Nodes (29): buildListResponse(), clamp(), ListResponse, PageParams, parsePageParams(), rubyToI(), generateUniqueUuid(), announcementJson() (+21 more)
+
+### Community 48 - "E2E Frontend Seed Script"
+Cohesion: 0.08
+Nodes (35): BirthdayListRow, CouncilList, CsvExportData, CsvExportRow, ExportData, ExportRow, MemberList, NextMatriculationNumber (+27 more)
+
+### Community 49 - "Server Status & MFA Client"
+Cohesion: 0.07
+Nodes (23): server, server, useEvent(), useRegisterEventParticipant(), useRemoveEventParticipant(), EventDetailPage(), registerRequests, server (+15 more)
+
+### Community 50 - "Member List Pages Frontend"
+Cohesion: 0.05
+Nodes (40): academic_titles, addresses, announcement_subscriptions, announcements, app_config_adapters, ar_internal_metadata, attached_file_roles, attached_files (+32 more)
+
+### Community 51 - "MFA Status & Settings Backend"
+Cohesion: 0.08
+Nodes (31): DownloadList, DownloadRow, FileStatsList, FileStatsRow, MemStats, UserFileStatsList, UserFileStatsRow, UserStatsList (+23 more)
+
+### Community 52 - "ICS Sources & Pagination Backend"
+Cohesion: 0.07
+Nodes (22): ApiError, ApiErrorCode, apiErrorHandler(), isOpenApiValidationError(), STATUS_BY_CODE, router, app, createCategory() (+14 more)
+
+### Community 53 - "External Events Route Backend"
+Cohesion: 0.06
+Nodes (27): ADDRESS_FIELD_KEYS, ADDRESS_LABELS, addressFieldsToString(), AddressInputFields, addressJson(), addressPurpose(), addressStreet(), contactValueFor() (+19 more)
+
+### Community 54 - "Blue/Green Deploy Documentation"
+Cohesion: 0.08
+Nodes (34): AcademicTitleInput, AcademicTitleList, AcademicTitleSummary, Announcement, AnnouncementList, AppConfigValues, AttachedFileSummary, DirectorySummary (+26 more)
+
+### Community 55 - "App Node TypeScript Config"
+Cohesion: 0.05
+Nodes (38): academic_titles, addresses, announcement_subscriptions, announcements, app_config_adapters, ar_internal_metadata, attached_file_roles, categories (+30 more)
+
+### Community 56 - "Lodges Route & Slug Utility"
+Cohesion: 0.07
+Nodes (36): addMonthsUTC(), ALL_BROTHER_INITIALS, ALL_DEGREE_ROLES, ANNOUNCEMENT_SPECS, APPRENTICE_INITIALS, BREMEN_STREETS, bremenPhoneNumber(), BROTHER_FIRST_NAMES (+28 more)
+
+### Community 57 - "Districts Route Backend"
+Cohesion: 0.10
+Nodes (26): apiErrorMessage(), SeekerInput, useUpdateEvent(), EventEditPage(), useDeleteOfficer(), OfficerDetailPage(), SeekerFilter, server (+18 more)
+
+### Community 58 - "Council List & Contact Links Frontend"
+Cohesion: 0.07
+Nodes (23): authenticateApiUser(), Request, AppAbility, loadUserRoleNames(), PORT, AdminAccountConfigError, syncAdminAccountFromEnv(), VisibilityContext (+15 more)
+
+### Community 59 - "API Dev Dependencies"
+Cohesion: 0.09
+Nodes (24): AccessTokenInvalidError, AccessTokenPayload, issueAccessToken(), issueMfaPendingToken(), secret(), verifyAccessToken(), requireMfaPendingToken(), sessionPayloadFor() (+16 more)
+
+### Community 60 - "App Config Service Class"
+Cohesion: 0.09
+Nodes (21): Category, CategoryInput, CategoryList, server, VisibleToRoles(), server, useCategory(), useCreateCategory() (+13 more)
+
+### Community 61 - "Academic Titles Route Backend"
+Cohesion: 0.08
+Nodes (18): Me, server, UpdatePasswordInput, useUpdatePassword(), server, toastWrapper(), server, useDeleteFile() (+10 more)
+
+### Community 62 - "Member Accordion Frontend"
+Cohesion: 0.11
+Nodes (23): baseCookieOptions(), clearRefreshTokenCookie(), setRefreshTokenCookie(), digest(), isDeviceTrusted(), issueTrustedDeviceToken(), isLockedOut(), lockDurationMs() (+15 more)
+
+### Community 63 - "ICS Sync Scheduler Backend"
+Cohesion: 0.08
+Nodes (22): anonAccessEnabled(), birthdayCalendarAvailable(), birthdayCalendarIcsUrl(), birthdayOccurrences(), BirthdayRow, buildWorkingplanPdf(), DEFAULT_LOGO_PATH, formatDateOnly() (+14 more)
+
+### Community 64 - "Officers Route & UUID Utility"
+Cohesion: 0.09
+Nodes (17): AddressSummary, CouncilRow, PhoneListRow, EmailLink(), PhoneLink(), useCouncilList(), usePhoneList(), BirthdayContactDialog() (+9 more)
+
+### Community 65 - "Announcements Route Backend"
+Cohesion: 0.11
+Nodes (11): dedupeMatriculationNumbers(), authHeaders(), makeApplicationAdmin(), adapter, globalForPrisma, consumeBackupCode(), generateBackupCodes(), generateOneCode() (+3 more)
+
+### Community 66 - "Attached Files Route Tests"
+Cohesion: 0.11
+Nodes (23): DistrictList, DistrictSummary, Lodge, LodgeInput, LodgeList, LodgeSummary, server, useCreateLodge() (+15 more)
+
+### Community 67 - "Members List Route Tests"
+Cohesion: 0.10
+Nodes (19): digest(), IssuedRefreshToken, issueRefreshToken(), RefreshTokenInvalidError, RefreshTokenReuseError, RotatedRefreshToken, rotateRefreshToken(), app (+11 more)
+
+### Community 68 - "Events List Page Frontend"
+Cohesion: 0.12
+Nodes (19): AnnouncementInput, AnnouncementSummary, GdprGate(), AnnouncementCreatePage(), emptyAnnouncement, AnnouncementDetailPage(), AnnouncementEditPage(), AnnouncementFormProps (+11 more)
+
+### Community 69 - "JWT & Token Config Backend"
+Cohesion: 0.16
+Nodes (26): router, createUser(), app, assignRole(), authHeaders(), createRole(), makeMember(), makeNetDelegate() (+18 more)
+
+### Community 70 - "Event Form & Time Math Frontend"
+Cohesion: 0.09
+Nodes (15): AttachedFile, AttachedFileList, UpdateFileInput, UploadFileInput, useFile(), useUpdateFile(), useUploadFile(), FileDropZone() (+7 more)
+
+### Community 71 - "SSRF-Safe ICS Fetch"
+Cohesion: 0.11
+Nodes (17): revokeAllFamiliesForUser(), JWT_ACCESS_TTL_SECONDS, JWT_REFRESH_TTL_SECONDS, RESET_PASSWORD_TOKEN_TTL_SECONDS, getTransport(), MailMessage, resolveMailTransportMode(), sendMail() (+9 more)
+
+### Community 72 - "Categories Route Backend"
+Cohesion: 0.09
+Nodes (13): generateUniqueSlug(), slugify(), directoryJson(), directorySummaryJson(), router, isSortableColumn(), lodgeJson(), lodgeSortComparator() (+5 more)
+
+### Community 73 - "App Entry & Theme"
+Cohesion: 0.16
+Nodes (18): ApiError, apiFetch(), downloadFile(), fetchWithTimeout(), getMfaChallengeMethods(), mfaPendingFetch(), refreshSession(), server (+10 more)
+
+### Community 74 - "Dashboard & Stats Frontend"
+Cohesion: 0.10
+Nodes (15): attached_files, attachedFileJson(), attachedFileSummaryJson(), envKeyPrefix(), isAncestorDeleted(), isCategoryDeleted(), MAX_DB_MEM_SIZE_DEFAULT, maxDbMemSizeBytes() (+7 more)
+
+### Community 75 - "Events API & Workingplan Export"
+Cohesion: 0.13
+Nodes (16): AppConfigService, AppConfigServiceOptions, CacheEntry, castBoolean(), castForWrite(), coerce(), ConfigType, ConfigValue (+8 more)
+
+### Community 76 - "Configuration & Account Tests"
+Cohesion: 0.14
+Nodes (11): Member, MemberSummary, useMember(), useUpdateMember(), MemberAccordionRow(), server, MemberEditPage(), mockedUseMember (+3 more)
+
+### Community 77 - "API npm Scripts"
+Cohesion: 0.08
+Nodes (24): dependencies, bcryptjs, @casl/ability, cookie-parser, dompurify, express, express-openapi-validator, express-rate-limit (+16 more)
+
+### Community 78 - "Demo Seed Brothers Tests"
 Cohesion: 0.09
 Nodes (22): compilerOptions, declaration, erasableSyntaxOnly, lib, module, moduleDetection, moduleResolution, noEmit (+14 more)
 
-### Community 33 - "Events Route Backend"
+### Community 79 - "App Config Route Tests"
+Cohesion: 0.13
+Nodes (17): toUserSubject(), abilitiesMap(), AbilityProbe, authJsonFor(), AuthJsonUser, birthdayCalendarConsentRequested(), canOnSelf(), CRUD_ACTIONS (+9 more)
+
+### Community 80 - "Events Route Tests"
+Cohesion: 0.17
+Nodes (16): appConfig, buildAuthenticationOptions(), buildRegistrationOptions(), getRelyingPartyConfig(), RelyingPartyConfig, verifyAuthentication(), verifyRegistration(), getMfaSettings() (+8 more)
+
+### Community 81 - "Statistics Route Tests"
 Cohesion: 0.12
 Nodes (15): EventJson, EventParticipantJson, EventValidationFields, firstString(), formatDateOnly(), formatTime(), isBlank(), isSortableColumn() (+7 more)
 
-### Community 34 - "Members Export Frontend"
-Cohesion: 0.17
-Nodes (21): BirthdayList, CouncilList, CsvExportData, ExportData, MemberList, NextMatriculationNumber, PhoneList, buildPdf() (+13 more)
-
-### Community 35 - "Officers Feature Frontend"
-Cohesion: 0.18
-Nodes (15): Officer, OfficerInput, OfficerList, server, useCreateOfficer(), useDeleteOfficer(), useOfficer(), usePositionRoles() (+7 more)
-
-### Community 36 - "App TypeScript Config"
+### Community 82 - "App npm Scripts"
 Cohesion: 0.09
 Nodes (21): compilerOptions, allowArbitraryExtensions, allowImportingTsExtensions, erasableSyntaxOnly, jsx, lib, module, moduleDetection (+13 more)
 
-### Community 37 - "API Package Dependencies"
-Cohesion: 0.10
-Nodes (21): dependencies, bcryptjs, @casl/ability, cookie-parser, express, express-openapi-validator, express-rate-limit, helmet (+13 more)
-
-### Community 38 - "Session & Login Lockout Backend"
-Cohesion: 0.14
-Nodes (15): baseCookieOptions(), clearRefreshTokenCookie(), setRefreshTokenCookie(), isLockedOut(), lockDurationMs(), recordFailedLogin(), resetLoginLockout(), revokeFamily() (+7 more)
-
-### Community 39 - "Ability Role Definitions"
-Cohesion: 0.25
-Nodes (19): adminAbilities(), announcementAdminAbilities(), applicationAdminAbilities(), defaultUserAbilities(), enteredApprenticeAbilities(), fellowCraftAbilities(), fileAdminAbilities(), Grant (+11 more)
-
-### Community 40 - "App Package Dependencies"
+### Community 83 - "Event Detail Page & API Tests"
 Cohesion: 0.10
 Nodes (21): dependencies, dompurify, @emotion/react, @emotion/styled, @fontsource-variable/inter, @hookform/resolvers, i18next, jspdf (+13 more)
 
-### Community 41 - "Account & Toast Tests"
-Cohesion: 0.13
-Nodes (11): Me, server, UpdatePasswordInput, server, server, Toast, ToastProvider(), noopToastApi (+3 more)
+### Community 84 - "Security Invariants Documentation"
+Cohesion: 0.15
+Nodes (13): Directory, DirectoryInput, DirectoryList, useCreateDirectory(), useDirectory(), useUpdateDirectory(), DirectoryCreatePage(), server (+5 more)
 
-### Community 42 - "Calendar Grid Logic"
-Cohesion: 0.20
-Nodes (16): eventsRangeQueryKey(), useCalendarBirthdays(), useCalendarExternalEvents(), useCalendarIcsSources(), useEventsInRange(), addMonths(), addWeeks(), buildMonthGrid() (+8 more)
-
-### Community 43 - "MFA TOTP & Backup Codes"
-Cohesion: 0.22
-Nodes (14): consumeBackupCode(), generateBackupCodes(), generateOneCode(), decryptSecret(), encryptSecret(), loadKey(), buildOtpauthUri(), generateTotpSecret() (+6 more)
-
-### Community 44 - "Files Feature Frontend"
+### Community 85 - "Demo Seed Content Generator"
 Cohesion: 0.16
-Nodes (14): AttachedFile, AttachedFileList, server, UpdateFileInput, UploadFileInput, useDeleteFile(), useFile(), useUpdateFile() (+6 more)
+Nodes (15): ExternalEventIcsSource, ExternalEventIcsSourceInput, ExternalEventIcsSourceList, ExternalEventIcsSourceUpdate, server, useCreateExternalEventIcsSource(), useDeleteExternalEventIcsSource(), useExternalEventIcsSources() (+7 more)
 
-### Community 45 - "Ability Route Checks (Members)"
+### Community 86 - "Mail & Email OTP Backend"
+Cohesion: 0.12
+Nodes (15): MemberAddressInput, MemberInput, useCreateMember(), useNextMatriculationNumber(), ADMIN_FIELDS, emptyMember, MemberCreatePage(), server (+7 more)
+
+### Community 87 - "Officers Route Tests"
+Cohesion: 0.10
+Nodes (20): devDependencies, jsdom, msw, openapi-typescript, oxlint, @playwright/test, prettier, @testing-library/dom (+12 more)
+
+### Community 88 - "Styled Error Pages"
 Cohesion: 0.22
 Nodes (18): canManageUserAsUserAdmin(), canSeeAdminAccount(), canViewUserInDirectory(), canCreateClass(), canCsvExportClass(), canCsvExportRow(), canDestroyRow(), canListRow() (+10 more)
 
-### Community 46 - "Directories Route & Errors"
-Cohesion: 0.11
-Nodes (4): ApiError, directoryJson(), directorySummaryJson(), router
-
-### Community 47 - "App Dev Dependencies"
-Cohesion: 0.11
-Nodes (19): devDependencies, jsdom, msw, openapi-typescript, oxlint, @playwright/test, prettier, @testing-library/dom (+11 more)
-
-### Community 48 - "E2E Frontend Seed Script"
+### Community 89 - "Members CSV Export Tests"
 Cohesion: 0.18
 Nodes (17): adapter, DATE_OF_BIRTH, daysFromNow(), ensureRole(), ensureUser(), ensureUserHasRole(), EXCLUDED_TABLES, main() (+9 more)
 
-### Community 49 - "Server Status & MFA Client"
-Cohesion: 0.20
-Nodes (12): ApiError, getMfaChallengeMethods(), mfaPendingFetch(), server, verifyMfaChallenge(), Listener, listeners, reportFailure() (+4 more)
+### Community 125 - "Root Package Config"
+Cohesion: 0.16
+Nodes (16): BIRTHDAY_CALENDAR_CONSENT_MODE_VALUES, castBoolean(), castForWrite(), ConfigType, DEFAULT_RAW_VALUES, envKeyPrefix(), FALSE_VALUES, KNOWN_KEYS (+8 more)
 
-### Community 50 - "Member List Pages Frontend"
-Cohesion: 0.14
-Nodes (9): PhoneListRow, useBirthdayList(), usePhoneList(), BirthdayListPage(), autoTableCalls, server, MembersNavTabs(), PhoneListPage() (+1 more)
-
-### Community 51 - "MFA Status & Settings Backend"
-Cohesion: 0.21
-Nodes (14): getMfaSettings(), MfaMode, MfaSettings, computeGracePeriodEndsAt(), getUserMfaMethods(), getUsersWithVerifiedMfa(), isMfaSetupRequiredFor(), MfaMethod (+6 more)
-
-### Community 52 - "ICS Sources & Pagination Backend"
-Cohesion: 0.18
-Nodes (12): buildListResponse(), clamp(), ListResponse, PageParams, parsePageParams(), rubyToI(), externalEventIcsSourcesRouter, firstString() (+4 more)
-
-### Community 53 - "External Events Route Backend"
+### Community 126 - "Oxlint Configuration"
 Cohesion: 0.15
 Nodes (10): externalEventJson, ExternalEventParticipantJson, externalEventsRouter, ExternalEventValidationFields, firstString(), formatDateOnly(), formatTime(), isBlank() (+2 more)
 
-### Community 54 - "Blue/Green Deploy Documentation"
-Cohesion: 0.14
-Nodes (17): Container Naming Convention (values read from .env.<env>, not assumed), Blue/Green Deploy Mechanism, Expand/Contract Migration Requirement, Migrations Are Roll-Forward Only, Never Edit an Already-Shipped Migration File, Styled 404/500/502 Error Pages, Deploy Mechanism Testing Bar (live runs + zero non-2xx observation), Wiring Tunnel IP Into APP_LISTEN_IP and Host Nginx Upstream (+9 more)
+### Community 127 - "API Package Metadata"
+Cohesion: 0.21
+Nodes (13): MfaMethodsList, MfaPasskeyCredential, MfaSetupStartResult, MfaSetupVerifyResult, MfaTrustedDevice, useRemoveMfaMethod(), useRemoveMfaPasskey(), useStartMfaSetup() (+5 more)
 
-### Community 55 - "App Node TypeScript Config"
+### Community 128 - "App Package Metadata"
 Cohesion: 0.12
 Nodes (16): compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, lib, module, moduleDetection, noEmit, noFallthroughCasesInSwitch (+8 more)
 
-### Community 56 - "Lodges Route & Slug Utility"
-Cohesion: 0.17
-Nodes (10): generateUniqueSlug(), slugify(), isSortableColumn(), lodgeJson(), lodgeSortComparator(), lodgeSummaryJson(), router, SORTABLE_COLUMNS (+2 more)
+### Community 129 - "Fibonacci Retry Backoff"
+Cohesion: 0.12
+Nodes (16): devDependencies, dotenv, @playwright/test, prisma, supertest, tsx, @types/cookie-parser, @types/express (+8 more)
 
-### Community 57 - "Districts Route Backend"
+### Community 130 - "API Playwright Config"
+Cohesion: 0.21
+Nodes (12): extractBoundary(), ParsedMultipart, ParsedMultipartFile, parseMultipart(), parsePartHeaders(), splitBuffer(), trimSurroundingCrlf(), sanitizeSvg() (+4 more)
+
+### Community 131 - "Device Trust Backend"
 Cohesion: 0.18
 Nodes (8): router, app, assignRole(), authHeaders(), createRole(), makeApplicationAdmin(), makeMember(), makeWorshipfulMaster()
 
-### Community 58 - "Council List & Contact Links Frontend"
+### Community 132 - "Ability View-Permission Checks"
+Cohesion: 0.17
+Nodes (15): BirthdayList, EventList, EventWithParticipants, ExternalEvent, ExternalEventList, CalendarIcsSourcesResult, downloadInternalWorkingplanPdf(), EventDefaults (+7 more)
+
+### Community 133 - "Demo Seed Seekers & Emails"
 Cohesion: 0.18
-Nodes (8): CouncilRow, EmailLink(), PhoneLink(), useCouncilList(), CouncilListPage(), server, twoRows, MemberDetails()
+Nodes (9): CategorySummary, RowActionsProps, useCategories(), useDeleteCategory(), CategoriesListPage(), CategoryDetailPage(), server, useDeleteDirectory() (+1 more)
 
-### Community 59 - "API Dev Dependencies"
-Cohesion: 0.13
-Nodes (15): devDependencies, dotenv, @playwright/test, prisma, supertest, tsx, @types/cookie-parser, @types/express (+7 more)
+### Community 134 - "Docker Compose Env Test"
+Cohesion: 0.17
+Nodes (8): DemoAccountsList, HealthStatus, server, useDemoMode(), DemoBanner(), server, useDemoAccounts(), MfaSetupBanner()
 
-### Community 60 - "App Config Service Class"
-Cohesion: 0.20
-Nodes (8): AppConfigService, castBoolean(), castForWrite(), coerce(), defaultTtlMs(), parseMaxDbMemSize(), parseTimespanDays(), rubyToI()
+### Community 135 - "Events Calendar E2E Spec"
+Cohesion: 0.17
+Nodes (10): EventInput, useCreateEvent(), useEventDefaults(), emptyEvent, EventCreatePage(), server, EventForm(), EventFormProps (+2 more)
 
-### Community 61 - "Academic Titles Route Backend"
+### Community 136 - "External Events E2E Spec"
+Cohesion: 0.17
+Nodes (10): SeedUser, adapter, createSeedUser(), ensureRole(), EXCLUDED_TABLES, globalSetup(), prisma, resetDb() (+2 more)
+
+### Community 137 - "External Events List Page Tests"
 Cohesion: 0.20
 Nodes (8): router, app, assignRole(), authHeaders(), createRole(), makeAdmin(), makeMember(), makeUserAdminOnly()
 
-### Community 62 - "Member Accordion Frontend"
+### Community 138 - "File Form Tests"
 Cohesion: 0.19
-Nodes (5): Member, MemberSummary, MemberAccordionRow(), server, buildMemberFormDefaults()
+Nodes (9): router, app, assignRole(), authHeaders(), buildApp(), createMember(), createRole(), createTaggedUser() (+1 more)
 
-### Community 63 - "ICS Sync Scheduler Backend"
-Cohesion: 0.23
-Nodes (12): IcsSourceSyncOutcome, IcsSyncResult, ParsedIcsEvent, parseIcsEvents(), syncAllActiveIcsSources(), syncExternalEventIcsSource(), toDateOnly(), toTimeOnly() (+4 more)
-
-### Community 64 - "Officers Route & UUID Utility"
+### Community 139 - "Lodge Detail Page Tests"
 Cohesion: 0.18
-Nodes (6): generateUniqueUuid(), generateUniqueOfficerUuid(), OfficerJoins, officerJson(), officerSummaryJson(), router
+Nodes (8): BARE_ROUTES, ROUTE_MOUNTS, router, pendingProofChallenges, pendingRegistrationChallenges, router, ALLOWED_BARE_ROUTES, ALLOWED_MOUNT_NAMES
 
-### Community 65 - "Announcements Route Backend"
-Cohesion: 0.20
-Nodes (11): announcementJson(), firstString(), fullname(), isBlank(), isSortableColumn(), presenceErrors(), router, SORTABLE_COLUMNS (+3 more)
-
-### Community 66 - "Attached Files Route Tests"
+### Community 140 - "Lodges List Page Tests"
 Cohesion: 0.18
-Nodes (8): router, app, authHeaders(), createCategory(), createDirectory(), envKeyPrefix(), setMaxDbMemSize(), slugify()
+Nodes (7): categoryJson(), categorySortComparator(), categorySummaryJson(), isSortableColumn(), router, SORTABLE_COLUMNS, SortableColumn
 
-### Community 67 - "Members List Route Tests"
-Cohesion: 0.21
-Nodes (8): app, assignRole(), authHeaders(), buildApp(), createMember(), createRole(), createTaggedUser(), createUserWithRole()
+### Community 141 - "Seekers List Page Tests"
+Cohesion: 0.19
+Nodes (7): app, authHeaders(), createCategory(), createDirectory(), envKeyPrefix(), setMaxDbMemSize(), slugify()
 
-### Community 68 - "Events List Page Frontend"
-Cohesion: 0.21
-Nodes (12): Event, toLocalDateString(), useEvents(), EventsListPage(), autoTableCalls, eventRow, expectedWorkingplanTo(), renderListPage() (+4 more)
+### Community 143 - "App README (Vite Template)"
+Cohesion: 0.18
+Nodes (5): events, router, app, createEvent(), daysFromNowUtc()
 
-### Community 69 - "JWT & Token Config Backend"
-Cohesion: 0.23
-Nodes (8): AccessTokenInvalidError, AccessTokenPayload, issueMfaPendingToken(), secret(), verifyAccessToken(), JWT_ACCESS_TTL_SECONDS, JWT_REFRESH_TTL_SECONDS, RESET_PASSWORD_TOKEN_TTL_SECONDS
+### Community 144 - "Academic Title Form Frontend"
+Cohesion: 0.33
+Nodes (8): decryptSecret(), encryptSecret(), loadKey(), buildOtpauthUri(), generateTotpSecret(), renderTotpQrDataUrl(), verifyEncryptedTotpCode(), verifyTotpCode()
 
-### Community 70 - "Event Form & Time Math Frontend"
-Cohesion: 0.23
-Nodes (8): EventInput, useEventDefaults(), EventForm(), EventFormProps, eventSchema, server, minutesBetween(), shiftTime()
-
-### Community 71 - "SSRF-Safe ICS Fetch"
+### Community 145 - "District Form Frontend"
 Cohesion: 0.29
-Nodes (10): assertSafeIcsUrl(), createPinnedDispatcher(), fetchIcsUrlSafely(), IPv4Octets, isBlockedAddress(), isIPv4Blocked(), parseIPv4(), pinnedLookup() (+2 more)
+Nodes (10): router, app, assignRole(), createRole(), envKeyPrefix(), getConfigValue(), makeApplicationAdmin(), makeMember() (+2 more)
 
-### Community 72 - "Categories Route Backend"
+### Community 146 - "Prettier Configuration"
 Cohesion: 0.20
-Nodes (6): categoryJson(), categorySortComparator(), categorySummaryJson(), isSortableColumn(), SORTABLE_COLUMNS, SortableColumn
+Nodes (5): app, gateApp, makeMustSetupUser(), setMfaGracePeriod(), setMfaMode()
 
-### Community 73 - "App Entry & Theme"
-Cohesion: 0.23
-Nodes (7): app/index.html (SPA entry point), App(), queryClient, server, user, router, theme
+### Community 147 - "App Root TS Config"
+Cohesion: 0.32
+Nodes (8): addMonths(), addWeeks(), buildMonthGrid(), buildWeekGrid(), startOfWeek(), toDateKey(), FIXED_ANCHOR, server
 
-### Community 74 - "Dashboard & Stats Frontend"
-Cohesion: 0.29
-Nodes (6): EventList, useMemStats(), MemStatsPage(), StorageBanner(), formatBytes(), UNITS
-
-### Community 75 - "Events API & Workingplan Export"
-Cohesion: 0.26
-Nodes (11): EventWithParticipants, CalendarIcsSourcesResult, downloadInternalWorkingplanPdf(), EventDefaults, fetchAllBirthdayListRows(), fetchEventsInRange(), fetchWorkingplanEvents(), filterBirthdaysInRange() (+3 more)
-
-### Community 76 - "Configuration & Account Tests"
-Cohesion: 0.15
-Nodes (6): memberFixture, server, academicTitles, districts, roles, server
-
-### Community 77 - "API npm Scripts"
+### Community 148 - "Member Rollback Error"
 Cohesion: 0.18
 Nodes (11): scripts, build, dev, e2e, events:nightly, migrate:deploy, seed:e2e, start (+3 more)
 
-### Community 78 - "Demo Seed Brothers Tests"
+### Community 149 - "ICS Fetch DNS Mock Test"
 Cohesion: 0.18
 Nodes (4): brotherRoleNamesFor(), buildBrotherSpecs(), DEMO_ACCOUNTS, seedBrothers()
 
-### Community 79 - "App Config Route Tests"
-Cohesion: 0.33
-Nodes (10): app, assignRole(), authHeaders(), createRole(), envKeyPrefix(), getConfigValue(), makeApplicationAdmin(), makeMember() (+2 more)
-
-### Community 80 - "Events Route Tests"
+### Community 150 - "API Test Setup"
 Cohesion: 0.31
 Nodes (9): app, assignRole(), authHeaders(), createEvent(), createRole(), makeFileAdmin(), makeMember(), makeWorkingPlanAdmin() (+1 more)
 
-### Community 81 - "Statistics Route Tests"
-Cohesion: 0.42
-Nodes (10): app, assignRole(), authHeaders(), createRole(), fiftyYearsAgo(), makeAdmin(), makeMemberOfCouncil(), makeNetDelegate() (+2 more)
-
-### Community 82 - "App npm Scripts"
+### Community 151 - "Authorization Boundaries E2E Spec"
 Cohesion: 0.18
 Nodes (11): scripts, build, dev, e2e, format, gen:api, lint, preview (+3 more)
 
-### Community 83 - "Event Detail Page & API Tests"
-Cohesion: 0.29
-Nodes (8): BirthdayListRow, server, toastWrapper(), useDeleteEvent(), useEvent(), useRegisterEventParticipant(), useRemoveEventParticipant(), EventDetailPage()
-
-### Community 84 - "Security Invariants Documentation"
-Cohesion: 0.18
-Nodes (11): Authorization Is Per-Handler, Not Centralized, Bulk PII Exports Must Be Audit-Logged Server-Side, dangerouslySetInnerHTML Sinks Must Sanitize, File-Accepting Endpoints Must Enforce Real Production Limits, Login/Session Endpoints Must Not Leak Account Existence, Privilege-Granting Fields Must Be Scoped to Specific Grant, Security-Sensitive Account Events Must Revoke Refresh-Token Families, Security Requirements Checklist (+3 more)
-
-### Community 85 - "Demo Seed Content Generator"
+### Community 152 - "Mobile Nav E2E Spec"
 Cohesion: 0.22
 Nodes (10): buildPlaceholderPdf(), daysFromNow(), ensureRole(), grantAllDegreesVisibility(), seedAnnouncements(), seedCategoryWithDirectories(), seedIcsSources(), seedPlaceholderDocuments() (+2 more)
 
-### Community 86 - "Mail & Email OTP Backend"
-Cohesion: 0.33
-Nodes (7): getTransport(), MailMessage, resolveMailTransportMode(), sendMail(), generateSixDigitCode(), sendEmailOtp(), verifyEmailOtp()
-
-### Community 87 - "Officers Route Tests"
+### Community 153 - "Postgres DB Compose Services"
 Cohesion: 0.29
 Nodes (6): app, assignRole(), authHeaders(), createRole(), makeMember(), makeWorshipfulMaster()
 
-### Community 88 - "Styled Error Pages"
+### Community 154 - "Prisma Config"
 Cohesion: 0.33
-Nodes (9): app/public/errors/404.html, app/public/errors/500.html, app/public/errors/502.html, app/public/errors/bijou.png, fibonacci(), nextFibDelay(), readIndex(), start() (+1 more)
+Nodes (6): app/public/errors/bijou.png, fibonacci(), nextFibDelay(), readIndex(), start(), app/public/errors/style.css
 
-### Community 89 - "Members CSV Export Tests"
-Cohesion: 0.20
-Nodes (6): CsvExportRow, ExportRow, addressBlock(), Address, server, toastWrapper()
+### Community 155 - "Token Config Test"
+Cohesion: 0.31
+Nodes (7): Event, useDeleteEvent(), useEvents(), EventsListPage(), ViewMode, MemberDetails(), formatDate()
 
-### Community 90 - "Member Detail & List Pages Frontend"
-Cohesion: 0.29
-Nodes (7): RecordExportFailedError, useDeleteMember(), useMembers(), useResetMemberMfa(), MemberDetailPage(), MembersListPage(), MembersStatCard()
+### Community 156 - "ICS Sync Scheduler Test"
+Cohesion: 0.31
+Nodes (6): bearer(), enrollTotp(), resetMemberMfa(), RESOURCE_CASES, ResourceCase, uuidOf()
 
-### Community 91 - "Admin Account Provisioning Backend"
-Cohesion: 0.33
-Nodes (4): loadUserRoleNames(), PORT, AdminAccountConfigError, syncAdminAccountFromEnv()
+### Community 157 - "API Vitest Config"
+Cohesion: 0.31
+Nodes (6): router, app, assignRole(), createLoginableUser(), createMember(), createRole()
 
-### Community 92 - "Member Degree Date Helpers"
-Cohesion: 0.25
-Nodes (9): applyDegreeDates(), firstMobile(), getDegreeDate(), isPresent(), MemberListRowJson, msgRoleNotFound(), parseDateOnly(), setDegreeByName() (+1 more)
-
-### Community 93 - "Member JSON Export Helpers"
+### Community 158 - "Account E2E Spec"
 Cohesion: 0.28
-Nodes (9): csvExportRowJson(), exportRowJson(), formatDateOnly(), fullname(), fullnameWithTitle(), loadAddressesForUser(), memberDetailJson(), numDegree() (+1 more)
+Nodes (4): PublicLandingConfig, useLandingConfig(), LandingResolver(), server
 
-### Community 94 - "Directories Route Tests"
-Cohesion: 0.28
-Nodes (5): app, authHeaders(), createCategory(), createDirectory(), slugify()
+### Community 159 - "Announcements E2E Spec"
+Cohesion: 0.36
+Nodes (8): eventsRangeQueryKey(), useCalendarBirthdays(), useCalendarExternalEvents(), useCalendarIcsSources(), useEventsInRange(), EventsCalendarView(), EventsCalendarViewProps, ViewMode
 
-### Community 95 - "Birthday Contact Dialog Frontend"
-Cohesion: 0.28
-Nodes (6): AddressSummary, useMember(), BirthdayContactDialog(), BirthdayContactDialogProps, hasContactInfo(), server
+### Community 160 - "Auth E2E Spec"
+Cohesion: 0.36
+Nodes (7): useMfaPasskeyCredentials(), useMfaStatus(), useRegenerateBackupCodes(), useRevokeTrustedDevice(), useTrustedDevices(), BackupCodesSection(), TrustedDevicesSection()
 
-### Community 96 - "External Event Detail Page Tests"
-Cohesion: 0.22
-Nodes (4): MeUser, AuthContextValue, registerRequests, server
-
-### Community 97 - "MFA Documentation (CLAUDE.md)"
-Cohesion: 0.25
-Nodes (9): Every Security Finding Must Land As a Regression Test, MFA_ENCRYPTION_KEY Rotation Constraint, mfa_grace_period_started_at System-Managed Timestamp, Shared MFA Lockout Pattern (isMfaLockedOut/recordFailedMfaAttempt/resetMfaLockout), Live Per-Request Mandatory-MFA Setup Gate, Security Audit Remediation History, PATCH /api/v1/app_config Endpoint, /api/v1/mfa/* Endpoints (+1 more)
-
-### Community 98 - "Demo Event Schedule Generator"
+### Community 161 - "Categories E2E Spec"
 Cohesion: 0.25
 Nodes (6): buildDemoEventSchedule(), nextTwelveMonths(), seedEvents(), timeOfDay(), wednesdaysInMonth(), SEED_DATES
 
-### Community 99 - "MFA Passkeys Backend"
-Cohesion: 0.50
-Nodes (6): buildAuthenticationOptions(), buildRegistrationOptions(), getRelyingPartyConfig(), RelyingPartyConfig, verifyAuthentication(), verifyRegistration()
-
-### Community 100 - "External Events Route Tests"
+### Community 162 - "Configuration E2E Spec"
 Cohesion: 0.39
-Nodes (6): app, assignRole(), authHeaders(), createRole(), makeMember(), makeSecretary()
+Nodes (5): deriveLogoVariants(), flattenedIcon(), LogoVariants, maskableIcon(), squareIcon()
 
-### Community 101 - "Lodges Route Tests"
+### Community 163 - "Dashboard E2E Spec"
 Cohesion: 0.39
-Nodes (6): app, assignRole(), authHeaders(), createRole(), makeMember(), makeWorshipfulMaster()
+Nodes (6): router, app, assignRole(), createRole(), makeApplicationAdmin(), makeMember()
 
-### Community 102 - "Edge & Blue/Green Documentation"
-Cohesion: 0.36
-Nodes (8): ACTIVE_APP_UPSTREAM Required-Var Footgun Fix, Edge Reverse Proxy Pattern, Edge Nginx Template Directory Bind-Mount (inode pinning fix), MAX_UPLOAD_FILE_SIZE_MB Single Source of Truth, Persistent Blue/Green Slot Containers, Reboot-Ordering Caveat (edge DNS resolve-once limitation), Production app Service (docker-compose.production.yml), Production edge Service (docker-compose.production.yml)
+### Community 164 - "Events E2E Spec"
+Cohesion: 0.39
+Nodes (5): app, assignRole(), createRole(), makeMember(), makeSecretary()
 
-### Community 103 - "Contributing & Security Policy Docs"
-Cohesion: 0.25
-Nodes (8): bin/deploy-to --remote Runs test-gate On Deploy Host, test-gate Inter-Container Networking (compose network, not host-gateway), Contributor Covenant Code of Conduct v2.1, Conventional Commits Convention, CONTRIBUTING Guidelines, Run the Test Gate Before Opening a PR, Security Vulnerability Reporting Process, Security Policy Scope (api/, app/, bin/, infra/)
+### Community 165 - "Workingplan Export E2E Spec"
+Cohesion: 0.32
+Nodes (4): PublicHelp, useHelp(), HelpPage(), server
 
-### Community 104 - "MFA Lockout Backend"
-Cohesion: 0.57
-Nodes (5): isMfaLockedOut(), lockDurationMs(), recordFailedMfaAttempt(), resetMfaLockout(), verifyExistingMfaProof()
+### Community 166 - "Files E2E Spec"
+Cohesion: 0.32
+Nodes (4): PublicImpressum, useImpressum(), ImpressumPage(), server
 
-### Community 105 - "Social Icon Sprite Sheet"
+### Community 167 - "Lodges E2E Spec"
+Cohesion: 0.32
+Nodes (7): toLocalDateString(), autoTableCalls, eventRow, expectedWorkingplanTo(), renderListPage(), renderPage(), server
+
+### Community 168 - "Member Impersonation E2E Spec"
+Cohesion: 0.29
+Nodes (5): MfaSetupProof, useMfaProofPasskeyOptions(), MfaProofDialog(), ProofMethod, server
+
+### Community 169 - "Member Export E2E Spec"
 Cohesion: 0.29
 Nodes (7): Bluesky icon, Discord icon, Documentation icon, GitHub icon, icons.svg (icon sprite sheet), Social icon, X (Twitter) icon
 
-### Community 106 - "Calendar Filter Frontend"
+### Community 170 - "Member Management E2E Spec"
 Cohesion: 0.33
 Nodes (4): ExternalEventIcsSourceOption, CalendarFilterOption, CalendarFilterProps, icsSources
 
-### Community 108 - "Forgot Password Page Frontend"
-Cohesion: 0.29
-Nodes (3): FormValues, schema, server
-
-### Community 109 - "Product Vision Documentation"
+### Community 171 - "Member Nav Tabs E2E Spec"
 Cohesion: 0.29
 Nodes (6): Accessibility & inclusion: WCAG 2.2 AA floor, Anti-references: not consumer SaaS / not dense enterprise-grid, Brand personality: formal, discreet, trustworthy, Design principles: clarity, restraint, comfort, sensitivity, Product purpose: Logenhelfer member-management system, Product users: Freemason lodge officers/secretaries/members
 
-### Community 110 - "Rate Limiting Backend"
+### Community 172 - "Matriculation Number E2E Spec"
+Cohesion: 0.33
+Nodes (3): config, LogOptions, PrismaClientConstructor
+
+### Community 173 - "Members E2E Spec"
 Cohesion: 0.47
-Nodes (5): createRateLimiter(), envOverride(), loginRateLimiter, passwordResetRateLimiter, rateLimitedResponse()
+Nodes (5): ContractValidationOptions, createContractValidationMiddleware(), DEFAULT_API_SPEC_PATH, matchesAny(), runChain()
 
-### Community 111 - "Member Address Helpers"
-Cohesion: 0.40
-Nodes (6): addressJson(), addressPurpose(), addressStreet(), addressVcfType(), directoryPdfAddressJson(), exportAddressJson()
-
-### Community 112 - "Member Birthday & Age Helpers"
-Cohesion: 0.47
-Nodes (6): addYears(), birthdayListRowJson(), buildBirthdaySortKey(), computeAge(), daysUntilNextBirthday(), enteredApprenticeDate()
-
-### Community 113 - "Generated OpenAPI Schema Types"
+### Community 174 - "Public Calendar E2E Spec"
 Cohesion: 0.33
 Nodes (5): components, $defs, operations, paths, webhooks
 
-### Community 114 - "External Events List & Date Format"
-Cohesion: 0.53
-Nodes (3): useExternalEvents(), ExternalEventsListPage(), formatDate()
-
-### Community 115 - "Member Edit Page Tests"
+### Community 175 - "Public Landing E2E Spec"
 Cohesion: 0.33
-Nodes (3): mockedUseMember, mockedUseUpdateMember, server
+Nodes (6): Contributor Covenant Code of Conduct v2.1, Conventional Commits Convention, CONTRIBUTING Guidelines, Run the Test Gate Before Opening a PR, Security Vulnerability Reporting Process, Security Policy Scope (api/, app/, bin/, infra/)
 
-### Community 116 - "Member Form Tests"
-Cohesion: 0.33
-Nodes (4): adminRolesFixture, emptyValues, positionRolesFixture, server
-
-### Community 118 - "Public Calendar Page Frontend"
-Cohesion: 0.40
-Nodes (3): usePublicWorkingplan(), PublicCalendarPage(), server
-
-### Community 119 - "Help Page Frontend"
-Cohesion: 0.40
-Nodes (3): useHelp(), HelpPage(), server
-
-### Community 120 - "Impressum Page Frontend"
-Cohesion: 0.40
-Nodes (3): useImpressum(), ImpressumPage(), server
-
-### Community 122 - "OpenAPI Public & Impersonation Endpoints"
-Cohesion: 0.33
-Nodes (6): Impersonation Tokens Must Be Distinguishable and Attributable, Canonical /arbeitsplan.ics and .pdf URLs, GET /api/v1/health Endpoint, POST /api/v1/members/{uuid}/impersonate Endpoint, /api/v1/public/workingplan.ics and .pdf Endpoints, Logenhelfer API OpenAPI Spec
-
-### Community 123 - "CI Workflow Configuration"
+### Community 176 - "Seekers E2E Spec"
 Cohesion: 0.33
 Nodes (6): CI Workflow (GitHub Actions), CI api job (Prisma migrate + tests), CI app job (lint/typecheck/test/build), CI contract job (Spectral OpenAPI lint), Rationale: CI disabled to workflow_dispatch-only, .spectral.yaml (extends spectral:oas)
 
-### Community 124 - "Compose Env-Var Bugs Cross-Reference"
-Cohesion: 0.47
-Nodes (6): Dev api Service (docker-compose.yml), Demo api Service Override (docker-compose.demo.yml), DEMO_MODE Missing From Container Env Bug (found 2026-07-31), Production api Service (docker-compose.production.yml), MFA_ENCRYPTION_KEY Missing From Container Env Bug (found 2026-08-01, next), pnpm Workspace Configuration (app, api packages)
-
-### Community 125 - "Root Package Config"
+### Community 177 - "Statistics E2E Spec"
 Cohesion: 0.33
 Nodes (5): name, packageManager, private, scripts, dev
 
-### Community 126 - "Oxlint Configuration"
+### Community 178 - "App Playwright Config"
 Cohesion: 0.33
 Nodes (5): plugins, rules, react/only-export-components, react/rules-of-hooks, $schema
 
-### Community 127 - "API Package Metadata"
+### Community 179 - "Lodge Bijou Medal Image"
 Cohesion: 0.40
 Nodes (4): name, private, type, version
 
-### Community 128 - "App Package Metadata"
+### Community 180 - "Error Page Bijou Image"
 Cohesion: 0.40
 Nodes (4): name, private, type, version
 
-### Community 129 - "Fibonacci Retry Backoff"
+### Community 181 - "Bijou Medal Asset"
+Cohesion: 0.60
+Nodes (3): ACTIVITY_EVENTS, getIdleTimeoutMs(), useIdleTimeout()
+
+### Community 182 - "Large Bijou Medal Asset"
 Cohesion: 0.70
 Nodes (3): FIB_SEQUENCE, fibonacci(), nextFibDelay
 
-### Community 131 - "Device Trust Backend"
-Cohesion: 0.83
-Nodes (3): digest(), isDeviceTrusted(), issueTrustedDeviceToken()
-
-### Community 132 - "Ability View-Permission Checks"
+### Community 224 - "WireGuard Tunnel Runbook"
 Cohesion: 0.50
-Nodes (4): canViewAttachedFile(), canViewCategory(), canViewDirectory(), rolesOverlap()
+Nodes (4): Wiring Tunnel IP Into APP_LISTEN_IP and Host Nginx Upstream, Per-Host WireGuard Keypair Generation, Private /30 Overlay Subnet Selection, WireGuard Tunnel Setup Runbook
 
-### Community 133 - "Demo Seed Seekers & Emails"
-Cohesion: 0.50
-Nodes (4): demoPhoneNumber(), emailFor(), foldUmlauts(), seedSeekers()
+### Community 225 - "Prisma Client Options Types"
+Cohesion: 0.67
+Nodes (3): PrismaClientBaseOptions, PrismaClientOptionsWithAccelerateUrl, PrismaClientOptionsWithAdapter
 
-### Community 143 - "App README (Vite Template)"
+### Community 227 - "App Frontend README"
 Cohesion: 0.67
 Nodes (3): app/README.md (Vite React TS template readme), Oxlint type-aware lint config, React Compiler (not enabled)
 
 ## Knowledge Gaps
-- **595 isolated node(s):** `SeedUser`, `rootEnvPath`, `adapter`, `prisma`, `EXCLUDED_TABLES` (+590 more)
+- **2975 isolated node(s):** `SeedUser`, `rootEnvPath`, `adapter`, `prisma`, `EXCLUDED_TABLES` (+2970 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **24 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **89 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `row()` connect `Seekers Route Backend` to `Event Detail Page & API Tests`?**
-  _High betweenness centrality (0.350) - this node is a cross-community bridge._
-- **Why does `appConfig` connect `App Config Service Tests` to `API App Bootstrap & Errors`, `Members Route Backend`, `Seekers Route Backend`, `Refresh Token Auth Backend`, `Database Helpers & Reset`, `Attached Files Route Backend`, `API Integration Test Helpers`, `Statistics Route Backend`, `Me Route & Authorization`, `Event Digest & Mail Strings`, `App Config Route & Validation`, `Public Routes Backend`, `Events Route Backend`, `Directories Route & Errors`, `MFA Status & Settings Backend`, `External Events Route Backend`, `Announcements Route Backend`, `Attached Files Route Tests`, `Members List Route Tests`, `Categories Route Backend`, `App Config Route Tests`, `Statistics Route Tests`, `Mail & Email OTP Backend`, `MFA Passkeys Backend`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `row()` connect `External Events Route Backend` to `Academic Titles Route Backend`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **Why does `PrismaClient` connect `Files Feature Frontend` to `Frontend Auth & MFA Tests`, `Matriculation Number E2E Spec`?**
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **What connects `SeedUser`, `rootEnvPath`, `adapter` to the rest of the system?**
-  _611 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _2975 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Frontend Auth & MFA Tests` be split into smaller, more focused modules?**
-  _Cohesion score 0.04266510812390415 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.013793103448275862 - nodes in this community are weakly interconnected._
 - **Should `Statistics & File Stats Types` be split into smaller, more focused modules?**
-  _Cohesion score 0.05909090909090909 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.03368083400160385 - nodes in this community are weakly interconnected._
 - **Should `Misc Component Tests` be split into smaller, more focused modules?**
-  _Cohesion score 0.037037037037037035 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04299847792998478 - nodes in this community are weakly interconnected._
 - **Should `API App Bootstrap & Errors` be split into smaller, more focused modules?**
-  _Cohesion score 0.05725490196078432 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.031746031746031744 - nodes in this community are weakly interconnected._
