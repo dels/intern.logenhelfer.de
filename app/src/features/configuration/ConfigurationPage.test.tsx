@@ -194,6 +194,25 @@ describe('ConfigurationPage', () => {
     expect(field).toBeDisabled();
   });
 
+  // Regression: saving any unrelated field in demo mode used to submit the
+  // whole (unchanged) AppConfig state, including max_db_mem_size - which
+  // the demo backend rejects outright just for being present in the body
+  // (see api/src/routes/appConfig.ts), so every save failed with
+  // "max_db_mem_size is not editable in this environment" even though the
+  // admin never touched that field.
+  it('omits untouched fields (incl. the demo-locked max_db_mem_size) when saving an unrelated change in demo mode', async () => {
+    server.use(http.get('/api/v1/health', () => HttpResponse.json({ status: 'ok', revision: null, demo: true })));
+    const user = userEvent.setup();
+    renderPage();
+
+    const toggle = await screen.findByRole('switch', { name: 'Administratoren in Benutzerliste anzeigen?' });
+    await user.click(toggle);
+    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(lastPatchBody).not.toBeNull());
+    expect(lastPatchBody).toEqual({ show_admins: false });
+  });
+
   it('shows exactly one alert when saving AppConfig fails, not a duplicate inline+toast pair', async () => {
     server.use(
       http.patch('/api/v1/app_config', () => HttpResponse.json({ detail: 'Ungültige Konfiguration' }, { status: 422 })),

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import {
   Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, List, ListItem, ListItemText,
   MenuItem, Radio, RadioGroup, Stack, Switch, Tab, Tabs, TextField, Typography,
@@ -84,8 +84,21 @@ function AppConfigSection({ activeTab }: { activeTab: number }) {
   const setField = (key: keyof AppConfigValues, value: unknown) => setValues((v) => ({ ...v, [key]: value }));
   const activeCategory = categoryForTab(activeTab);
 
+  // Only submit fields the admin actually changed - not the whole loaded
+  // state. Otherwise every save drags along every untouched key (including
+  // demo-locked ones like max_db_mem_size), which the demo backend rejects
+  // outright just for being present in the body, breaking unrelated saves.
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const changed: Partial<AppConfigValues> = {};
+    for (const key of Object.keys(values) as (keyof AppConfigValues)[]) {
+      if (values[key] !== data[key]) changed[key] = values[key];
+    }
+    update(changed);
+  };
+
   return (
-    <Box component="form" sx={{ mb: 4 }} onSubmit={(e) => { e.preventDefault(); update(values); }}>
+    <Box component="form" sx={{ mb: 4 }} onSubmit={onSubmit}>
       {(['funktionen', 'konfiguration', 'impressum', 'sicherheit'] as const).map((category) => (
         <TabPanel key={category} active={activeCategory === category}>
           <Stack spacing={2} sx={{ maxWidth: 640 }}>
