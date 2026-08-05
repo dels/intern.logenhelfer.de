@@ -16,7 +16,6 @@ import EventsListPage from './features/events/EventsListPage';
 import EventCreatePage from './features/events/EventCreatePage';
 import EventEditPage from './features/events/EventEditPage';
 import EventDetailPage from './features/events/EventDetailPage';
-import ExternalEventsListPage from './features/externalEvents/ExternalEventsListPage';
 import ExternalEventCreatePage from './features/externalEvents/ExternalEventCreatePage';
 import ExternalEventEditPage from './features/externalEvents/ExternalEventEditPage';
 import ExternalEventDetailPage from './features/externalEvents/ExternalEventDetailPage';
@@ -91,7 +90,6 @@ export const routes: RouteObject[] = [
           { path: '/events/new', element: <EventCreatePage /> },
           { path: '/events/:uuid/edit', element: <EventEditPage /> },
           { path: '/events/:uuid', element: <EventDetailPage /> },
-          { path: '/external-events', element: <ExternalEventsListPage /> },
           { path: '/external-events/new', element: <ExternalEventCreatePage /> },
           { path: '/external-events/:uuid/edit', element: <ExternalEventEditPage /> },
           { path: '/external-events/:uuid', element: <ExternalEventDetailPage /> },

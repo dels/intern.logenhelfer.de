@@ -12,7 +12,6 @@
     "configurationSection": "Configuration",
     "filesSection": "Files",
     "openMenu": "Open menu",
-    "externalEvents": "External Events",
     "externalEventIcsSources": "External ICS Calendars"
   },
   "dashboard": {

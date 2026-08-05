@@ -67,7 +67,7 @@ export default function ExternalEventDetailPage() {
                   color="error"
                   variant="contained"
                   disabled={deleting}
-                  onClick={() => deleteEvent(uuid, { onSuccess: () => navigate('/external-events') })}
+                  onClick={() => deleteEvent(uuid, { onSuccess: () => navigate('/events') })}
                 >
                   {t('externalEvents.deleteConfirm')}
                 </Button>

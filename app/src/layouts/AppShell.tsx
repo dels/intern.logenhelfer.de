@@ -156,7 +156,6 @@ export default function AppShell() {
     { key: 'nav.dashboard', to: '/dashboard', icon: <DashboardIcon /> },
     { key: 'nav.announcements', to: '/announcements', icon: <AnnouncementIcon /> },
     { key: 'nav.events', to: '/events', icon: <EventIcon /> },
-    { key: 'nav.externalEvents', to: '/external-events', icon: <EventIcon /> },
     { key: 'nav.users', to: '/members', icon: <PeopleIcon /> },
     ...(abilities.seeker?.includes('read') ? [{ key: 'nav.seekers', to: '/seekers', icon: <PersonSearchIcon /> }] : []),
     ...(abilities.statistic?.includes('index') ? [{ key: 'nav.statistics', to: '/statistics', icon: <BarChartIcon /> }] : []),

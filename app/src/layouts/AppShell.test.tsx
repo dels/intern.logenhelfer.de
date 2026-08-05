@@ -136,7 +136,7 @@ describe('AppShell sidebar sections', () => {
     expect(screen.queryByRole('link', { name: 'Logen' })).not.toBeInTheDocument();
   });
 
-  it('shows the external ICS calendars link only for users who can create external events, and unconditionally shows the external events link', async () => {
+  it('shows the external ICS calendars link only for users who can create external events', async () => {
     server.use(
       http.get('/api/v1/me', () => HttpResponse.json({ user, abilities: { external_event: ['create'] } })),
     );
@@ -146,12 +146,11 @@ describe('AppShell sidebar sections', () => {
         <AuthProvider><RouterProvider router={router} /></AuthProvider>
       </QueryClientProvider>,
     );
-    expect(await screen.findByRole('link', { name: 'Externe Termine' })).toBeInTheDocument();
     expect(await screen.findByText('Konfiguration')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Externe ICS-Kalender' })).toBeInTheDocument();
   });
 
-  it('hides the external ICS calendars link for a user without external_event.create, while still showing external events', async () => {
+  it('hides the external ICS calendars link for a user without external_event.create', async () => {
     server.use(
       http.get('/api/v1/me', () => HttpResponse.json({ user, abilities: { external_event: ['read'] } })),
     );
@@ -161,7 +160,7 @@ describe('AppShell sidebar sections', () => {
         <AuthProvider><RouterProvider router={router} /></AuthProvider>
       </QueryClientProvider>,
     );
-    expect(await screen.findByRole('link', { name: 'Externe Termine' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText(user.firstname + ' ' + user.lastname)).toBeInTheDocument());
     expect(screen.queryByText('Konfiguration')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Externe ICS-Kalender' })).not.toBeInTheDocument();
   });
@@ -284,7 +283,7 @@ describe('AppShell sidebar sections', () => {
     // exactly the general-nav links - no category link, no Konfiguration
     // section, nothing extra rendered by an "empty" categories section.
     const linkNames = within(nav).getAllByRole('link').map((link) => link.textContent);
-    expect(linkNames).toEqual(['Übersicht', 'Aktuelles', 'Arbeitsplan', 'Externe Termine', 'Mitglieder', 'Mein Konto']);
+    expect(linkNames).toEqual(['Übersicht', 'Aktuelles', 'Arbeitsplan', 'Mitglieder', 'Mein Konto']);
     expect(within(nav).queryByText('Konfiguration')).not.toBeInTheDocument();
   });
 

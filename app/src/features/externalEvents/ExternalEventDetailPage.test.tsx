@@ -81,6 +81,7 @@ function renderPage() {
         <MemoryRouter initialEntries={['/external-events/e1']}>
           <Routes>
             <Route path="/external-events/:uuid" element={<ExternalEventDetailPage />} />
+            <Route path="/events" element={<div>Arbeitsplan page</div>} />
           </Routes>
         </MemoryRouter>
       </AuthProvider>
@@ -269,5 +270,19 @@ describe('ExternalEventDetailPage', () => {
     await waitFor(() => expect(screen.getByText('Sommerfest')).toBeInTheDocument());
     const expectedDate = new Date('2026-09-01T00:00:00').toLocaleString(i18n.language, { dateStyle: 'medium' });
     expect(screen.getByText(`${expectedDate} 18:00`)).toBeInTheDocument();
+  });
+
+  it('navigates to the Arbeitsplan list (not the removed /external-events page) after a confirmed delete', async () => {
+    server.use(
+      http.get('/api/v1/me', () =>
+        HttpResponse.json({ user: meFixture({ uuid: 'admin' }), abilities: { external_event: ['update', 'destroy'] } }),
+      ),
+      http.delete('/api/v1/external_events/e1', () => new HttpResponse(null, { status: 204 })),
+    );
+    renderPage();
+    await screen.findByRole('button', { name: 'Löschen' });
+    await userEvent.click(screen.getByRole('button', { name: 'Löschen' }));
+    await userEvent.click(screen.getByRole('button', { name: /wirklich löschen/i }));
+    await waitFor(() => expect(screen.getByText('Arbeitsplan page')).toBeInTheDocument());
   });
 });
