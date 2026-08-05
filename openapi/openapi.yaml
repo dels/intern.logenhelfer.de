@@ -2483,6 +2483,35 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/me/birthday_calendar_consent:
+    patch:
+      operationId: updateBirthdayCalendarConsent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BirthdayCalendarConsentInput' }
+      responses:
+        '200':
+          description: Current user and abilities, with the updated birthday-calendar consent
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [user, abilities, mfa_setup_required]
+                properties:
+                  user: { $ref: '#/components/schemas/MeUser' }
+                  abilities:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
+                  mfa_setup_required: { type: boolean }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/me/password:
     patch:
       operationId: updateMyPassword
@@ -2548,6 +2577,23 @@ paths:
       responses:
         '200':
           description: iCalendar (.ics) feed of upcoming public events
+          content:
+            text/calendar:
+              schema: { type: string }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/public/birthdays/{secret}/calendar.ics:
+    get:
+      operationId: getPublicBirthdayCalendarIcs
+      security: []
+      parameters:
+        - name: secret
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: iCalendar (.ics) feed of pseudonymized member birthdays (initials only)
           content:
             text/calendar:
               schema: { type: string }
@@ -2772,7 +2818,7 @@ components:
     MeUser:
       type: object
       additionalProperties: false
-      required: [id, uuid, email, firstname, lastname, subscribed_to_announcements, gdpr_accepted]
+      required: [id, uuid, email, firstname, lastname, subscribed_to_announcements, gdpr_accepted, birthday_calendar_consent, birthday_calendar_consent_requested]
       properties:
         id: { type: integer }
         uuid: { type: string }
@@ -2781,6 +2827,8 @@ components:
         lastname: { type: string, nullable: true }
         subscribed_to_announcements: { type: boolean }
         gdpr_accepted: { type: boolean }
+        birthday_calendar_consent: { type: boolean }
+        birthday_calendar_consent_requested: { type: boolean }
     SessionPayload:
       type: object
       additionalProperties: false
@@ -3042,12 +3090,13 @@ components:
     PublicLandingConfig:
       type: object
       additionalProperties: false
-      required: [calendar_as_landing_page, lodge, language, logo_version]
+      required: [calendar_as_landing_page, lodge, language, logo_version, birthday_calendar_ics_url]
       properties:
         calendar_as_landing_page: { type: boolean }
         lodge: { type: string }
         language: { type: string }
         logo_version: { type: integer, nullable: true }
+        birthday_calendar_ics_url: { type: string, nullable: true }
     CustomLogoMeta:
       type: object
       additionalProperties: false
@@ -4085,6 +4134,12 @@ components:
       required: [subscribed]
       properties:
         subscribed: { type: boolean }
+    BirthdayCalendarConsentInput:
+      type: object
+      additionalProperties: false
+      required: [consent]
+      properties:
+        consent: { type: boolean }
     AppConfigValues:
       type: object
       additionalProperties: false
@@ -4122,5 +4177,7 @@ components:
         mfa_enforce_for_officers: { type: boolean, nullable: true }
         mfa_grace_period_days: { type: integer, nullable: true }
         mfa_trusted_device_days: { type: integer, nullable: true }
+        birthday_calendar_available: { type: boolean, nullable: true }
+        birthday_calendar_consent_mode: { type: string, nullable: true }
 security:
   - bearerAuth: []

@@ -8,13 +8,14 @@ describe('FIELDS', () => {
     }
   });
 
-  it('groups every boolean toggle under Funktionen, and only booleans', () => {
+  it('groups every boolean toggle under Funktionen, and only booleans (except the birthday-calendar consent-mode radio, which must live in the same tab as its own toggle)', () => {
     const funktionen = FIELDS.filter((f) => f.category === 'funktionen');
     const funktionenKeys = funktionen.map((f) => f.key);
     expect(funktionenKeys).toEqual(
       expect.arrayContaining(['working_plan_as_start_page', 'public_wp_available_to_anon_users', 'show_admins']),
     );
     for (const field of funktionen) {
+      if (field.key === 'birthday_calendar_consent_mode') continue;
       expect(field.type).toBe('boolean');
     }
   });
@@ -53,6 +54,20 @@ describe('FIELDS', () => {
     const mfaModeField = FIELDS.find((f) => f.key === 'mfa_mode');
     expect(mfaModeField?.type).toBe('enum');
     expect(mfaModeField?.options).toEqual(['optional', 'mandatory']);
+  });
+
+  it('gives the birthday_calendar_consent_mode field exactly the "individual"/"blanket" options', () => {
+    const field = FIELDS.find((f) => f.key === 'birthday_calendar_consent_mode');
+    expect(field?.type).toBe('enum');
+    expect(field?.options).toEqual(['individual', 'blanket']);
+    expect(field?.renderAs).toBe('radio');
+  });
+
+  it('only shows birthday_calendar_consent_mode when birthday_calendar_available is true', () => {
+    const field = FIELDS.find((f) => f.key === 'birthday_calendar_consent_mode');
+    expect(field?.visibleWhen?.({ birthday_calendar_available: true })).toBe(true);
+    expect(field?.visibleWhen?.({ birthday_calendar_available: false })).toBe(false);
+    expect(field?.visibleWhen?.({})).toBe(false);
   });
 
   it('has no duplicate keys and covers every field the single-page ConfigurationPage previously rendered', () => {

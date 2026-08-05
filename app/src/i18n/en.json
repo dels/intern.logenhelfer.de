@@ -368,6 +368,10 @@
         "name": "Public working plan visible to anonymous users",
         "description": "When enabled, the working plan is visible on the landing page next to the login. WARNING: changes only take effect after an application restart."
       },
+      "birthday_calendar_available": {
+        "name": "Offer pseudonymized birthday calendar",
+        "description": "Offers a subscribable calendar of member birthdays - entries show initials only, never the full name."
+      },
       "working_plan_as_start_page": {
         "name": "Working plan as start page",
         "description": "When the start page is loaded, the working plan is shown instead of the login. Requires the working plan to be publicly visible. WARNING: changes only take effect after an application restart."
@@ -494,6 +498,14 @@
       "mfa_trusted_device_days": {
         "name": "Trusted device duration (days)",
         "description": "Number of days a device is remembered as trusted after a successful two-factor authentication (maximum 90)."
+      },
+      "birthday_calendar_consent_mode": {
+        "name": "Birthday calendar consent",
+        "description": "Controls how members' consent to appear in the birthday calendar is obtained.",
+        "values": {
+          "individual": "Ask members individually for consent",
+          "blanket": "Consent already obtained from all members some other way"
+        }
       }
     }
   },
@@ -509,7 +521,9 @@
     "passwordTooShort": "Password must be at least 8 characters.",
     "passwordMismatch": "Passwords do not match.",
     "profileHeader": "Profile",
-    "profileSuccess": "Profile updated successfully."
+    "profileSuccess": "Profile updated successfully.",
+    "birthdayCalendarHeader": "Birthday calendar",
+    "birthdayCalendarConsent": "Show my birthday in the pseudonymized birthday calendar"
   },
   "mfa": {
     "setup": {
@@ -615,7 +629,8 @@
     "heading": "Public Calendar",
     "noEvents": "No upcoming events.",
     "icsSubscribe": "Subscribe to this calendar (.ics)",
-    "exportPdf": "Download as PDF"
+    "exportPdf": "Download as PDF",
+    "birthdayCalendarSubscribe": "Birthday calendar"
   },
   "publicLayout": {
     "loginLink": "Sign in",

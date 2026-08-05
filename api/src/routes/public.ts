@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -75,6 +76,102 @@ async function getTimespanDays(key: string): Promise<number> {
 
 async function anonAccessEnabled(): Promise<boolean> {
   return getBoolean('public_wp_available_to_anon_users');
+}
+
+async function birthdayCalendarAvailable(): Promise<boolean> {
+  return getBoolean('birthday_calendar_available');
+}
+
+/**
+ * Constant-time comparison against BIRTHDAY_CALENDAR_SECRET (provisioned
+ * like MFA_ENCRYPTION_KEY - see bin/init-env/bin/deploy-to). Unlike
+ * workingplan.ics, birthday data is sensitive enough that "anyone who knows
+ * this URL path pattern exists" isn't an acceptable audience - only "anyone
+ * who was given this exact URL" - so this needs its own secret, not just the
+ * AppConfig toggle.
+ */
+function birthdayCalendarSecretMatches(candidate: string): boolean {
+  const expected = process.env.BIRTHDAY_CALENDAR_SECRET ?? '';
+  if (expected.length === 0) {
+    return false;
+  }
+  const a = Buffer.from(candidate);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+async function birthdayCalendarIcsUrl(): Promise<string | null> {
+  if (!(await birthdayCalendarAvailable())) {
+    return null;
+  }
+  const secret = process.env.BIRTHDAY_CALENDAR_SECRET;
+  if (!secret) {
+    return null;
+  }
+  return `/api/v1/public/birthdays/${secret}/calendar.ics`;
+}
+
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+interface BirthdayRow {
+  uuid: string | null;
+  firstname: string;
+  lastname: string;
+  date_of_birth: Date;
+}
+
+/** How many yearly occurrences to emit per member on every fetch (regenerated fresh, no RRULE - see the design spec for why). */
+const BIRTHDAY_FEED_YEARS = 3;
+
+function birthdayOccurrences(row: BirthdayRow, fromYear: number): Array<{ date: Date; age: number }> {
+  const birthMonth = row.date_of_birth.getUTCMonth();
+  const birthDay = row.date_of_birth.getUTCDate();
+  const birthYear = row.date_of_birth.getUTCFullYear();
+  // Date.UTC would otherwise silently roll Feb 29 over into March 1st in a
+  // non-leap occurrence year (JS Date normalizes out-of-range day numbers) -
+  // Feb 28 is the intended fallback per the design spec, so this is handled
+  // explicitly rather than relying on that normalization.
+  const isFeb29 = birthMonth === 1 && birthDay === 29;
+  const occurrences: Array<{ date: Date; age: number }> = [];
+  for (let i = 0; i < BIRTHDAY_FEED_YEARS; i += 1) {
+    const year = fromYear + i;
+    const day = isFeb29 && !isLeapYear(year) ? 28 : birthDay;
+    occurrences.push({ date: new Date(Date.UTC(year, birthMonth, day)), age: year - birthYear });
+  }
+  return occurrences;
+}
+
+/** Initials only, never full names - e.g. "A. B.s 57. Geburtstag". */
+function birthdaySummary(row: BirthdayRow, age: number): string {
+  const firstInitial = row.firstname.trim().charAt(0).toUpperCase();
+  const lastInitial = row.lastname.trim().charAt(0).toUpperCase();
+  return `${firstInitial}. ${lastInitial}.s ${age}. Geburtstag`;
+}
+
+/**
+ * Batch admin-detection for the blanket-consent-mode feed (see the route's
+ * own comment on why only blanket mode needs this) - mirrors
+ * ability.ts's `isAdmin`/`canViewUserInDirectory` (the same admin-hiding
+ * rule the authenticated GET /api/v1/members/birthday_list roster already
+ * applies via canSeeAdminAccount), reproduced narrowly here rather than
+ * importing from members.ts's private helpers, since this route only needs
+ * "is this user an Admin," not the full role-row shape members.ts's
+ * memberDetailJson needs. Two queries regardless of how many userIds are
+ * passed (no N+1) - same two-step user_roles-then-roles join pattern
+ * members.ts's loadRoleRowsForUsers already uses, since user_roles/roles
+ * have no Prisma relation defined between them.
+ */
+async function adminUserIds(userIds: number[]): Promise<Set<number>> {
+  if (userIds.length === 0) return new Set();
+  const adminRole = await prisma.roles.findFirst({ where: { name: 'Admin' } });
+  if (!adminRole) return new Set();
+  const rows = await prisma.user_roles.findMany({
+    where: { user_id: { in: userIds }, role_id: adminRole.id },
+    select: { user_id: true },
+  });
+  return new Set(rows.map((r) => r.user_id).filter((id): id is number => id !== null));
 }
 
 // -- logo / PWA icons -----------------------------------------------------
@@ -245,12 +342,13 @@ function publicEventJson(event: { title: string | null; location: string | null;
 // GET /api/v1/public/landing
 router.get('/landing', async (_req, res, next) => {
   try {
-    const [startPage, anonEnabled, lodge, language, logoVersion] = await Promise.all([
+    const [startPage, anonEnabled, lodge, language, logoVersion, birthdayIcsUrl] = await Promise.all([
       getBoolean('working_plan_as_start_page'),
       getBoolean('public_wp_available_to_anon_users'),
       getConfigString('lodge'),
       getConfigString('language'),
       currentLogoVersion(),
+      birthdayCalendarIcsUrl(),
     ]);
 
     res.status(200).json({
@@ -258,6 +356,16 @@ router.get('/landing', async (_req, res, next) => {
       lodge: lodge ?? '',
       language: language ?? 'de',
       logo_version: logoVersion,
+      // Security fix: this endpoint is fully unauthenticated - only surface
+      // the birthday-feed secret URL here when the org has already decided
+      // its calendar can be seen anonymously at all (same anonEnabled gate
+      // as calendar_as_landing_page above), never unconditionally just
+      // because birthday_calendar_available is on. Otherwise this endpoint
+      // hands the "secret" URL to literally any anonymous caller regardless
+      // of the org's own anon-access decision - and since this repo is
+      // public, the fact that this field exists at all is discoverable by
+      // anyone, so the secret would protect nothing once the feature is on.
+      birthday_calendar_ics_url: anonEnabled ? birthdayIcsUrl : null,
     });
   } catch (err) {
     next(err);
@@ -376,6 +484,83 @@ router.get('/workingplan.ics', async (_req, res, next) => {
         stamp: event.created_at,
         ...(event.updated_at.getTime() !== event.created_at.getTime() ? { lastModified: event.updated_at } : {}),
       });
+    }
+
+    res.status(200).type('text/calendar').send(calendar.toString());
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/public/birthdays/:secret/calendar.ics
+//
+// Net-new, no Rails precedent (unlike the rest of this file). Gated on two
+// independent things, both required: birthday_calendar_available (an admin
+// decision, like every other flag here) AND the secret path segment,
+// constant-time-compared against BIRTHDAY_CALENDAR_SECRET - see
+// birthdayCalendarSecretMatches's own comment for why this feed needs a
+// secret and workingplan.ics doesn't.
+router.get('/birthdays/:secret/calendar.ics', async (req, res, next) => {
+  try {
+    if (!(await birthdayCalendarAvailable()) || !birthdayCalendarSecretMatches(req.params.secret)) {
+      throw ApiError.notFound();
+    }
+
+    const consentMode = (await getConfigString('birthday_calendar_consent_mode')) ?? 'individual';
+    const allRows = await prisma.users.findMany({
+      where: {
+        deleted: { not: true },
+        date_of_birth: { not: null },
+        firstname: { not: null },
+        lastname: { not: null },
+        ...(consentMode === 'individual' ? { birthday_calendar_consent: true } : {}),
+      },
+      select: { id: true, uuid: true, firstname: true, lastname: true, date_of_birth: true },
+    });
+
+    // Blanket mode has no per-member opt-in to rely on (unlike individual
+    // mode, where a member's own explicit consent already overrides this),
+    // so it must not bypass the same admin-visibility rule the authenticated
+    // birthday_list roster applies (ability.ts's canSeeAdminAccount /
+    // canViewUserInDirectory). An anonymous caller here is never an admin
+    // themselves, so that rule simplifies to: show_admins must be on, or
+    // this user must not be an Admin.
+    let rows = allRows;
+    if (consentMode !== 'individual' && !(await getBoolean('show_admins'))) {
+      const admins = await adminUserIds(allRows.map((u) => u.id));
+      rows = allRows.filter((u) => !admins.has(u.id));
+    }
+
+    const domain = (await getConfigString('domain')) ?? 'logenhelfer.de';
+    const language = ((await getConfigString('language')) ?? 'de').toUpperCase();
+    const lodge = (await getConfigString('lodge')) ?? 'Logenhelfer';
+    const calendar = ical({ timezone: 'Europe/Berlin', prodId: { company: lodge, product: 'Geburtstagskalender', language } });
+    const fromYear = todayUtc().getUTCFullYear();
+
+    for (const user of rows) {
+      // Defensive re-check even though the Prisma `where` above already
+      // filters null firstname/lastname/date_of_birth - TypeScript still
+      // sees these as nullable coming back from Prisma, and an empty-string
+      // firstname/lastname (not null, so not filtered above) would produce
+      // an empty initial, which is skipped rather than emitted.
+      if (!user.firstname?.trim() || !user.lastname?.trim() || !user.date_of_birth) {
+        continue;
+      }
+      const row: BirthdayRow = { uuid: user.uuid, firstname: user.firstname, lastname: user.lastname, date_of_birth: user.date_of_birth };
+      for (const occurrence of birthdayOccurrences(row, fromYear)) {
+        calendar.createEvent({
+          // One UID per person PER YEAR (not a single recurring UID) - each
+          // occurrence's SUMMARY has a different age, so each needs its own
+          // stable identity instead of sharing an RRULE'd UID.
+          id: `birthday-${row.uuid ?? ''}-${occurrence.date.getUTCFullYear()}@${domain}`,
+          start: occurrence.date,
+          end: addDaysUtc(occurrence.date, 1),
+          allDay: true,
+          summary: birthdaySummary(row, occurrence.age),
+          transparency: ICalEventTransparency.TRANSPARENT,
+          stamp: new Date(),
+        });
+      }
     }
 
     res.status(200).type('text/calendar').send(calendar.toString());

@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Box, Paper, TextField, Button, Typography, Alert } from '@mui/material';
+import { Box, Paper, TextField, Button, Typography, Alert, FormControlLabel, Switch } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useUpdatePassword } from './api';
+import { useUpdateBirthdayCalendarConsent } from '../announcements/api';
 import { apiErrorMessage } from '../../api/client';
 import { useAuth } from '../../auth/AuthProvider';
 import { useMember, useUpdateMember } from '../members/api';
@@ -74,6 +75,30 @@ function ProfileSection() {
   );
 }
 
+function BirthdayCalendarConsentSection() {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { mutate, isPending } = useUpdateBirthdayCalendarConsent();
+
+  if (!user?.birthday_calendar_consent_requested) return null;
+
+  return (
+    <Paper sx={{ p: 3, maxWidth: 480, mb: 3 }}>
+      <Typography variant="h2" sx={{ mb: 2 }}>{t('account.birthdayCalendarHeader')}</Typography>
+      <FormControlLabel
+        control={(
+          <Switch
+            checked={user.birthday_calendar_consent}
+            disabled={isPending}
+            onChange={(e) => mutate(e.target.checked)}
+          />
+        )}
+        label={t('account.birthdayCalendarConsent')}
+      />
+    </Paper>
+  );
+}
+
 export default function AccountPage() {
   const { t } = useTranslation();
   const [success, setSuccess] = useState(false);
@@ -94,7 +119,7 @@ export default function AccountPage() {
         display: 'grid',
         gap: 3,
         gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-        gridTemplateAreas: { xs: '"profile" "mfa" "password"', md: '"profile mfa" "password mfa"' },
+        gridTemplateAreas: { xs: '"profile" "mfa" "birthday" "password"', md: '"profile mfa" "birthday mfa" "password mfa"' },
       }}
       >
         <Box sx={{ gridArea: 'profile' }}>
@@ -102,6 +127,9 @@ export default function AccountPage() {
         </Box>
         <Box sx={{ gridArea: 'mfa' }}>
           <MfaAccountSection />
+        </Box>
+        <Box sx={{ gridArea: 'birthday' }}>
+          <BirthdayCalendarConsentSection />
         </Box>
         <Box sx={{ gridArea: 'password' }}>
           <Paper sx={{ p: 3, maxWidth: 420 }}>

@@ -1,12 +1,15 @@
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfRounded';
 import RssFeedIcon from '@mui/icons-material/RssFeedRounded';
+import CakeIcon from '@mui/icons-material/CakeRounded';
 import { useTranslation } from 'react-i18next';
 import { usePublicWorkingplan } from '../features/public-calendar/api';
+import { useLandingConfig } from '../features/public-landing/api';
 
 export default function PublicCalendarPage() {
   const { t, i18n } = useTranslation();
   const { data, isLoading } = usePublicWorkingplan();
+  const { data: landing } = useLandingConfig();
 
   if (isLoading) return null;
 
@@ -22,6 +25,11 @@ export default function PublicCalendarPage() {
         <Button size="small" startIcon={<RssFeedIcon />} component="a" href="/arbeitsplan.ics">
           {t('publicCalendar.icsSubscribe')}
         </Button>
+        {landing?.birthday_calendar_ics_url && (
+          <Button size="small" startIcon={<CakeIcon />} component="a" href={landing.birthday_calendar_ics_url}>
+            {t('publicCalendar.birthdayCalendarSubscribe')}
+          </Button>
+        )}
       </Stack>
       {hasRows && data ? (
         <Stack spacing={2}>

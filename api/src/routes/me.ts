@@ -130,9 +130,11 @@ interface MeUserPayload {
   lastname: string | null;
   subscribed_to_announcements: boolean;
   gdpr_accepted: boolean | null;
+  birthday_calendar_consent: boolean;
+  birthday_calendar_consent_requested: boolean;
 }
 
-type AuthJsonUser = Pick<users, 'id' | 'uuid' | 'email' | 'firstname' | 'lastname' | 'accepted_gdpr'>;
+type AuthJsonUser = Pick<users, 'id' | 'uuid' | 'email' | 'firstname' | 'lastname' | 'accepted_gdpr' | 'birthday_calendar_consent'>;
 
 /**
  * Port of User#auth_json (rails-app/app/models/user.rb). Duplicated from
@@ -153,6 +155,21 @@ type AuthJsonUser = Pick<users, 'id' | 'uuid' | 'email' | 'firstname' | 'lastnam
  * real user is expected to have a uuid and a blank string is a safer failure
  * mode than a response-validation 500.
  */
+/**
+ * Whether the frontend should show the birthday-calendar opt-in switch at
+ * all - true only when the feature is enabled AND the admin has chosen
+ * per-member consent (not "blanket" - see this repo's CLAUDE.md/design spec
+ * for the "Zustimmung aller Brüder anderweitig eingeholt" mode, where no
+ * per-member switch is shown because there's nothing for the member to
+ * opt into individually).
+ */
+async function birthdayCalendarConsentRequested(): Promise<boolean> {
+  if ((await appConfig.get('birthday_calendar_available')) !== true) {
+    return false;
+  }
+  return (await appConfig.get('birthday_calendar_consent_mode')) === 'individual';
+}
+
 async function authJsonFor(user: AuthJsonUser): Promise<MeUserPayload> {
   const subscriptionCount = await prisma.announcement_subscriptions.count({ where: { user_id: user.id } });
   return {
@@ -163,6 +180,8 @@ async function authJsonFor(user: AuthJsonUser): Promise<MeUserPayload> {
     lastname: user.lastname,
     subscribed_to_announcements: subscriptionCount > 0,
     gdpr_accepted: user.accepted_gdpr,
+    birthday_calendar_consent: user.birthday_calendar_consent,
+    birthday_calendar_consent_requested: await birthdayCalendarConsentRequested(),
   };
 }
 
@@ -359,6 +378,41 @@ router.patch('/me/gdpr_acceptance', authenticateApiUser, async (req: Request, re
     await prisma.users.update({ where: { id: user.id }, data: { accepted_gdpr: true } });
 
     res.status(200).json(await meJson({ ...user, accepted_gdpr: true }, ability));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/me/birthday_calendar_consent', authenticateApiUser, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = req.currentUser!;
+    const ability = req.ability!;
+
+    // Security fix precedent: same impersonation gate as
+    // announcement_subscription/gdpr_acceptance above - this is a real
+    // consent record (see this repo's CLAUDE.md: "member self-service
+    // actions that create a consent/attribution record ... must not be
+    // silently executable while impersonating"), so it must never be
+    // attributable to the impersonated member while an admin is actually
+    // driving the session.
+    if (req.impersonatorId !== undefined) {
+      res.status(403).json({ error: 'forbidden_while_impersonating' });
+      return;
+    }
+
+    if (!canOnSelf(ability, 'update_birthday_calendar_consent', user)) {
+      res.status(403).json({ error: 'forbidden' });
+      return;
+    }
+
+    // No Rails-boolean-cast helper needed here (unlike castRailsBoolean
+    // above) - this is a net-new endpoint with no legacy param semantics to
+    // match, and in production express-openapi-validator already rejects a
+    // non-boolean `consent` before this handler ever runs.
+    const consent = Boolean((req.body as { consent?: boolean } | undefined)?.consent);
+    const updated = await prisma.users.update({ where: { id: user.id }, data: { birthday_calendar_consent: consent } });
+
+    res.status(200).json(await meJson(updated, ability));
   } catch (err) {
     next(err);
   }

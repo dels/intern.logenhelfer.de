@@ -31,13 +31,23 @@ const memberFixture = {
 };
 
 const server = setupServer(
-  http.get('/api/v1/me', () => HttpResponse.json({ user: { id: 1, uuid: 'm1', email: 'a@b.de', firstname: 'Max', lastname: 'Muster' }, abilities: {} })),
+  http.get('/api/v1/me', () => HttpResponse.json({
+    user: { id: 1, uuid: 'm1', email: 'a@b.de', firstname: 'Max', lastname: 'Muster', birthday_calendar_consent: false, birthday_calendar_consent_requested: true },
+    abilities: {},
+  })),
   http.patch('/api/v1/me/password', async ({ request }) => {
     const body = await request.json() as { current_password: string; new_password: string; new_password_confirmation: string };
     if (body.current_password !== 'correct-password') {
       return HttpResponse.json({ error: 'unprocessable', detail: 'Aktuelles Passwort ist falsch' }, { status: 422 });
     }
     return HttpResponse.json({ user: { id: 1, uuid: 'm1', email: 'a@b.de', firstname: 'Max', lastname: 'Muster' }, abilities: {} });
+  }),
+  http.patch('/api/v1/me/birthday_calendar_consent', async ({ request }) => {
+    const body = await request.json() as { consent: boolean };
+    return HttpResponse.json({
+      user: { id: 1, uuid: 'm1', email: 'a@b.de', firstname: 'Max', lastname: 'Muster', birthday_calendar_consent: body.consent, birthday_calendar_consent_requested: true },
+      abilities: {},
+    });
   }),
   http.get('/api/v1/roles', () => HttpResponse.json({ rows: [] })),
   http.get('/api/v1/members/m1', () => HttpResponse.json(memberFixture)),
@@ -165,5 +175,33 @@ describe('AccountPage', () => {
 
     expect(await screen.findByRole('heading', { name: /mfa verwalten|manage mfa/i })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /sicherheit verwalten|mfa verwalten|manage security|manage mfa/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the birthday-calendar consent switch when the feature requests it', async () => {
+    renderPage();
+    expect(await screen.findByRole('switch', { name: /Geburtstagskalender/i })).toBeInTheDocument();
+  });
+
+  it('hides the birthday-calendar consent switch when not requested', async () => {
+    server.use(
+      http.get('/api/v1/me', () => HttpResponse.json({
+        user: { id: 1, uuid: 'm1', email: 'a@b.de', firstname: 'Max', lastname: 'Muster', birthday_calendar_consent: false, birthday_calendar_consent_requested: false },
+        abilities: {},
+      })),
+    );
+    renderPage();
+    await screen.findByLabelText(/E-Mail/);
+    expect(screen.queryByRole('switch', { name: /Geburtstagskalender/i })).not.toBeInTheDocument();
+  });
+
+  it('toggles the birthday-calendar consent switch', async () => {
+    renderPage();
+    const user = userEvent.setup();
+    const toggle = await screen.findByRole('switch', { name: /Geburtstagskalender/i });
+    expect(toggle).not.toBeChecked();
+
+    await user.click(toggle);
+
+    await waitFor(() => expect(toggle).toBeChecked());
   });
 });

@@ -368,6 +368,10 @@
         "name": "Öffentlicher Arbeitsplan öffentlich einsehbar",
         "description": "Wenn die Option gesetzt ist, so ist der AP sichtbar auf der Startseite neben dem Login. ACHTUNG: Änderungen werden erst nach Neustart der Anwendung aktiv."
       },
+      "birthday_calendar_available": {
+        "name": "Pseudonymisierten Geburtstagskalender anbieten",
+        "description": "Bietet einen abonnierbaren Kalender mit den Geburtstagen der Mitglieder an - Einträge zeigen nur Initialen, nie den vollen Namen."
+      },
       "working_plan_as_start_page": {
         "name": "Arbeitsplan als Startseite",
         "description": "Wenn die Startseite aufgerufen wird, wird nicht der Login, sondern der Arbeitsplan angezeigt. Setzt voraus, dass der AP öffentlich einsehbar ist. ACHTUNG: Änderungen werden erst nach Neustart der Anwendung aktiv."
@@ -494,6 +498,14 @@
       "mfa_trusted_device_days": {
         "name": "Vertrauensdauer für Geräte (Tage)",
         "description": "Anzahl der Tage, für die ein Gerät nach erfolgreicher Zwei-Faktor-Authentifizierung als vertrauenswürdig gilt (maximal 90)."
+      },
+      "birthday_calendar_consent_mode": {
+        "name": "Zustimmung zum Geburtstagskalender",
+        "description": "Legt fest, wie die Zustimmung der Mitglieder zur Anzeige im Geburtstagskalender eingeholt wird.",
+        "values": {
+          "individual": "Mitglieder individuell nach Zustimmung fragen",
+          "blanket": "Zustimmung aller Brüder anderweitig eingeholt"
+        }
       }
     }
   },
@@ -509,7 +521,9 @@
     "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
     "passwordMismatch": "Die Passwörter stimmen nicht überein.",
     "profileHeader": "Profil",
-    "profileSuccess": "Profil erfolgreich aktualisiert."
+    "profileSuccess": "Profil erfolgreich aktualisiert.",
+    "birthdayCalendarHeader": "Geburtstagskalender",
+    "birthdayCalendarConsent": "Meinen Geburtstag im pseudonymisierten Geburtstagskalender anzeigen"
   },
   "mfa": {
     "setup": {
@@ -616,7 +630,8 @@
     "heading": "Öffentlicher Terminplan",
     "noEvents": "Aktuell keine Termine.",
     "icsSubscribe": "Diesen Kalender abonnieren (.ics)",
-    "exportPdf": "Als PDF herunterladen"
+    "exportPdf": "Als PDF herunterladen",
+    "birthdayCalendarSubscribe": "Geburtstagkalender"
   },
   "publicLayout": {
     "loginLink": "Anmelden",

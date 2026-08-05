@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, IconButton, List, ListItem, ListItemText,
-  MenuItem, Stack, Switch, Tab, Tabs, TextField, Typography,
+  MenuItem, Radio, RadioGroup, Stack, Switch, Tab, Tabs, TextField, Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -89,18 +89,20 @@ function AppConfigSection({ activeTab }: { activeTab: number }) {
       {(['funktionen', 'konfiguration', 'impressum', 'sicherheit'] as const).map((category) => (
         <TabPanel key={category} active={activeCategory === category}>
           <Stack spacing={2} sx={{ maxWidth: 640 }}>
-            {FIELDS.filter((field) => field.category === category).map(({ key, type, options, unit }) => (
-              <ConfigField
-                key={key}
-                fieldKey={key}
-                type={type}
-                options={options}
-                unit={unit}
-                value={values[key]}
-                onChange={(v) => setField(key, v)}
-                disabled={key === 'max_db_mem_size' && demo}
-              />
-            ))}
+            {FIELDS.filter((field) => field.category === category && (!field.visibleWhen || field.visibleWhen(values)))
+              .map(({ key, type, options, unit, renderAs }) => (
+                <ConfigField
+                  key={key}
+                  fieldKey={key}
+                  type={type}
+                  options={options}
+                  unit={unit}
+                  renderAs={renderAs}
+                  value={values[key]}
+                  onChange={(v) => setField(key, v)}
+                  disabled={key === 'max_db_mem_size' && demo}
+                />
+              ))}
           </Stack>
         </TabPanel>
       ))}
@@ -116,12 +118,13 @@ function AppConfigSection({ activeTab }: { activeTab: number }) {
 const BYTES_PER_MB = 1024 * 1024;
 
 function ConfigField({
-  fieldKey, type, options, unit, value, onChange, disabled,
+  fieldKey, type, options, unit, renderAs, value, onChange, disabled,
 }: {
   fieldKey: keyof AppConfigValues;
   type: FieldType;
   options?: string[];
   unit?: 'mb';
+  renderAs?: 'radio';
   value: AppConfigValues[keyof AppConfigValues];
   onChange: (value: unknown) => void;
   disabled?: boolean;
@@ -153,6 +156,20 @@ function ConfigField({
           label={label}
         />
         {description && <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{description}</Typography>}
+      </Box>
+    );
+  }
+
+  if (type === 'enum' && renderAs === 'radio') {
+    return (
+      <Box>
+        <Typography sx={{ fontWeight: 500 }}>{label}</Typography>
+        {description && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>{description}</Typography>}
+        <RadioGroup value={value ?? options?.[0] ?? ''} onChange={(e) => onChange(e.target.value)}>
+          {(options ?? []).map((option) => (
+            <FormControlLabel key={option} value={option} control={<Radio />} label={t(`configuration.options.${fieldKey}.values.${option}`)} />
+          ))}
+        </RadioGroup>
       </Box>
     );
   }

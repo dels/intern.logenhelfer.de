@@ -19,6 +19,10 @@ export type Action =
   | 'edit'
   | 'update'
   | 'update_announcement_subscription'
+  // Net-new self-service action, no rails-app/app/models/ability.rb
+  // counterpart to port (same rationale as me.ts's MeUserPayload.uuid
+  // addition - a deliberate product addition on top of the Rails port).
+  | 'update_birthday_calendar_consent'
   | 'update_password'
   | 'create'
   | 'index'
@@ -233,7 +237,7 @@ export function toUserSubject(user: users, roleNames: readonly string[] = []) {
 /** Port of Ability#default_user_abilities (ability.rb L4-31). */
 function defaultUserAbilities({ can }: Grant, user: UserLike): void {
   can(['google_sync', 'create_google_contact', 'update_google_contact'], 'User');
-  can(['show', 'edit', 'update', 'update_announcement_subscription', 'update_password'], 'User', { id: user.id });
+  can(['show', 'edit', 'update', 'update_announcement_subscription', 'update_birthday_calendar_consent', 'update_password'], 'User', { id: user.id });
   can(['show', 'create', 'edit', 'update'], 'EventParticipant', { user_id: user.id });
   can(['show', 'create', 'edit', 'update'], 'ExternalEventParticipant', { user_id: user.id });
   can(['index', 'show'], 'Announcement');

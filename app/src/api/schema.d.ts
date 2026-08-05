@@ -278,6 +278,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mfa/proof/passkey/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Mints a WebAuthn authentication challenge (kept in an in-process, per-user map - see mfa.ts's pendingProofChallenges) scoped to the caller's own enrolled passkey credentials, for use as `proof` when adding/removing another MFA method or regenerating backup codes. 404s if the caller has no passkey credentials to prove with. */
+        post: operations["getMfaProofPasskeyOptions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/mfa/trusted-devices": {
         parameters: {
             query?: never;
@@ -1322,6 +1339,22 @@ export interface paths {
         patch: operations["acceptGdpr"];
         trace?: never;
     };
+    "/api/v1/me/birthday_calendar_consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateBirthdayCalendarConsent"];
+        trace?: never;
+    };
     "/api/v1/me/password": {
         parameters: {
             query?: never;
@@ -1362,6 +1395,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getPublicWorkingplanIcs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/public/birthdays/{secret}/calendar.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicBirthdayCalendarIcs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1534,6 +1583,8 @@ export interface components {
             lastname: string | null;
             subscribed_to_announcements: boolean;
             gdpr_accepted: boolean;
+            birthday_calendar_consent: boolean;
+            birthday_calendar_consent_requested: boolean;
         };
         SessionPayload: {
             access_token: string;
@@ -1545,6 +1596,12 @@ export interface components {
             mode: "optional" | "mandatory";
             /** Format: date-time */
             grace_period_ends_at: string | null;
+        };
+        MfaProof: {
+            /** @enum {string} */
+            method: "totp" | "backup_code" | "passkey";
+            code?: string;
+            response?: Record<string, never>;
         };
         MfaSetupStartResult: {
             otpauth_uri?: string;
@@ -1699,6 +1756,7 @@ export interface components {
             lodge: string;
             language: string;
             logo_version: number | null;
+            birthday_calendar_ics_url: string | null;
         };
         CustomLogoMeta: {
             content_type: string;
@@ -2347,6 +2405,9 @@ export interface components {
         AnnouncementSubscriptionInput: {
             subscribed: boolean;
         };
+        BirthdayCalendarConsentInput: {
+            consent: boolean;
+        };
         AppConfigValues: {
             public_wp_available_to_anon_users?: boolean | null;
             working_plan_as_start_page?: boolean | null;
@@ -2381,6 +2442,8 @@ export interface components {
             mfa_enforce_for_officers?: boolean | null;
             mfa_grace_period_days?: number | null;
             mfa_trusted_device_days?: number | null;
+            birthday_calendar_available?: boolean | null;
+            birthday_calendar_consent_mode?: string | null;
         };
     };
     responses: {
@@ -2685,11 +2748,7 @@ export interface operations {
                     /** @enum {string} */
                     method: "totp" | "email" | "passkey";
                     /** @description Only required when the caller already has a verified method and method is totp or passkey. */
-                    proof?: {
-                        /** @enum {string} */
-                        method?: "totp" | "backup_code";
-                        code?: string;
-                    };
+                    proof?: components["schemas"]["MfaProof"];
                 };
             };
         };
@@ -2828,8 +2887,9 @@ export interface operations {
             content: {
                 "application/json": {
                     /** @enum {string} */
-                    method?: "totp" | "backup_code" | "email";
+                    method?: "totp" | "backup_code" | "email" | "passkey";
                     code?: string;
+                    response?: Record<string, never>;
                 };
             };
         };
@@ -2859,11 +2919,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    proof: {
-                        /** @enum {string} */
-                        method: "totp" | "backup_code";
-                        code: string;
-                    };
+                    proof: components["schemas"]["MfaProof"];
                 };
             };
         };
@@ -2892,11 +2948,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    proof: {
-                        /** @enum {string} */
-                        method: "totp" | "backup_code";
-                        code: string;
-                    };
+                    proof: components["schemas"]["MfaProof"];
                 };
             };
         };
@@ -2932,6 +2984,28 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    getMfaProofPasskeyOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description WebAuthn authentication options, allowCredentials scoped to the caller's own passkeys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaWebauthnAuthenticationOptions"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     listMfaTrustedDevices: {
@@ -5540,6 +5614,38 @@ export interface operations {
             403: components["responses"]["Forbidden"];
         };
     };
+    updateBirthdayCalendarConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BirthdayCalendarConsentInput"];
+            };
+        };
+        responses: {
+            /** @description Current user and abilities, with the updated birthday-calendar consent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        user: components["schemas"]["MeUser"];
+                        abilities: {
+                            [key: string]: ("read" | "create" | "update" | "destroy" | "index" | "user_stats" | "downloads" | "file_stats" | "user_file_stats" | "mem_stats" | "names_list")[];
+                        };
+                        mfa_setup_required: boolean;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     updateMyPassword: {
         parameters: {
             query?: never;
@@ -5619,6 +5725,29 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description iCalendar (.ics) feed of upcoming public events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicBirthdayCalendarIcs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                secret: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description iCalendar (.ics) feed of pseudonymized member birthdays (initials only) */
             200: {
                 headers: {
                     [name: string]: unknown;

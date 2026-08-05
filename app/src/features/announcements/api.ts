@@ -90,3 +90,22 @@ export function useAcceptGdpr() {
     },
   });
 }
+
+// Self-service only - acts on current_user. Frontend-only gate: the switch
+// that calls this is only rendered when Me.user.birthday_calendar_consent_requested
+// is true (see AccountPage.tsx) - the backend itself allows the write
+// regardless (a member flipping consent off after the admin later disables
+// the feature entirely is harmless and shouldn't 403).
+export function useUpdateBirthdayCalendarConsent() {
+  const { setUser } = useAuth();
+  const toast = useToast();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: (consent: boolean) =>
+      apiFetch<Me>('/api/v1/me/birthday_calendar_consent', { method: 'PATCH', body: JSON.stringify({ consent }) }),
+    onSuccess: (me) => {
+      setUser(me.user);
+      toast.success(t('common.toast.updated'));
+    },
+  });
+}

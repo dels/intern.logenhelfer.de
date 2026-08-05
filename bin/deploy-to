@@ -175,6 +175,22 @@ if ! grep -q '^MFA_ENCRYPTION_KEY=' "${ENV_ENV_FILE}"; then
   echo "MFA_ENCRYPTION_KEY=${MFA_KEY}" >> "${ENV_ENV_FILE}"
 fi
 
+# Auto-provision BIRTHDAY_CALENDAR_SECRET the same way as MFA_ENCRYPTION_KEY
+# above (same rationale: local .env.<env> is the source of truth, must be
+# provisioned there before the scp push below, idempotent via grep).
+if ! grep -q '^BIRTHDAY_CALENDAR_SECRET=' "${ENV_ENV_FILE}"; then
+  echo ">>> Provisioning BIRTHDAY_CALENDAR_SECRET into ${ENV_ENV_FILE} (one-time)..."
+  command -v openssl >/dev/null 2>&1 || { echo "Error: openssl not found in PATH — cannot provision BIRTHDAY_CALENDAR_SECRET." >&2; exit 1; }
+  BIRTHDAY_SECRET="$(openssl rand -hex 32)"
+  [[ "${BIRTHDAY_SECRET}" =~ ^[0-9a-f]{64}$ ]] || { echo "Error: openssl did not produce a valid 64-char hex BIRTHDAY_CALENDAR_SECRET (got '${BIRTHDAY_SECRET}') — not writing it to ${ENV_ENV_FILE}." >&2; exit 1; }
+  # Same trailing-newline guard as the MFA_ENCRYPTION_KEY block above - see
+  # its comment for the 2026-08-02 prod incident this prevents.
+  if [ -n "$(tail -c1 "${ENV_ENV_FILE}")" ]; then
+    printf '\n' >> "${ENV_ENV_FILE}"
+  fi
+  echo "BIRTHDAY_CALENDAR_SECRET=${BIRTHDAY_SECRET}" >> "${ENV_ENV_FILE}"
+fi
+
 # Captured now (finalized local content, including any provisioning above) so
 # the remote session can re-assert it verbatim once it actually holds the
 # per-env lock below — see that reassert_env_file() definition's own comment
