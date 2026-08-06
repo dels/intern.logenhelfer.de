@@ -34,6 +34,7 @@ export const FIELDS: AppConfigFieldDef[] = [
   { key: 'users_can_view_statistics', type: 'boolean', category: 'funktionen' },
   { key: 'show_seeker_names_to_brothers', type: 'boolean', category: 'funktionen' },
   { key: 'notify_technical_contact_on_unknown_password_reset', type: 'boolean', category: 'funktionen' },
+  { key: 'notify_user_on_login_activity', type: 'boolean', category: 'funktionen' },
   { key: 'birthday_calendar_available', type: 'boolean', category: 'funktionen' },
   {
     key: 'birthday_calendar_consent_mode',

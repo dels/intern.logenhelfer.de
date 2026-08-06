@@ -18,6 +18,7 @@ import {
 } from '../auth/refreshToken.js';
 import { prisma } from '../db.js';
 import { ApiError } from '../lib/errors.js';
+import { sendLoginLockoutEmail, sendLoginSuccessEmail } from '../lib/loginNotification.js';
 import { buildAuthenticationOptions, verifyAuthentication } from '../lib/mfaPasskeys.js';
 import { getUserMfaMethods, isMfaSetupRequiredFor } from '../lib/mfaStatus.js';
 import { loginRateLimiter } from '../middleware/rateLimit.js';
@@ -199,8 +200,15 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
     }
 
     if (!user || !passwordValid) {
-      await recordFailedLogin(email);
+      const { lockedOut } = await recordFailedLogin(email);
+      // Response first, then notify - closes even the sub-millisecond
+      // synchronous-execution-up-to-first-await timing difference between
+      // "known user, locked out" and "unknown email" (belt-and-braces on top
+      // of the already-closed DUMMY_PASSWORD_HASH oracle above).
       res.status(401).json({ error: 'invalid_credentials' });
+      if (lockedOut && user) {
+        void sendLoginLockoutEmail(user, req, 'password');
+      }
       return;
     }
 
@@ -228,6 +236,7 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
       const mfaSetupRequired = await isMfaSetupRequiredFor(user.id);
       const { rawToken } = await issueRefreshToken(user.id);
       setRefreshTokenCookie(res, rawToken);
+      void sendLoginSuccessEmail(user, req, 'password');
       res.status(200).json({ ...(await sessionPayloadFor(user)), setup_required: mfaSetupRequired });
       return;
     }
@@ -236,6 +245,7 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
     if (await isDeviceTrusted(user.id, typeof deviceToken === 'string' ? deviceToken : undefined)) {
       const { rawToken } = await issueRefreshToken(user.id);
       setRefreshTokenCookie(res, rawToken);
+      void sendLoginSuccessEmail(user, req, 'password');
       res.status(200).json(await sessionPayloadFor(user));
       return;
     }
@@ -348,8 +358,18 @@ router.post('/session/passkey/verify', loginRateLimiter, async (req: Request, re
     });
 
     if (!verification.verified) {
-      await recordFailedMfaAttempt(`passkey:${credentialId}`);
+      const { lockedOut } = await recordFailedMfaAttempt(`passkey:${credentialId}`);
+      // Look up the owner (if any) before responding, but send the response
+      // first and fire the notification after - response first, then notify,
+      // same principle as the password-lockout branch above. A soft-
+      // deleted/offboarded member's passkey credential row survives
+      // offboarding, and their email is mangled to
+      // `deleted-<ts>-<email>` on offboarding - sending to it is pointless,
+      // hence the `!owner.deleted` guard (matches the same check 20 lines
+      // below in the success path).
+      const owner = lockedOut ? await prisma.users.findUnique({ where: { id: stored.user_id } }) : null;
       res.status(401).json({ error: 'unauthorized' });
+      if (owner && !owner.deleted) void sendLoginLockoutEmail(owner, req, 'passkey');
       return;
     }
 
@@ -375,6 +395,7 @@ router.post('/session/passkey/verify', loginRateLimiter, async (req: Request, re
     }
     const { rawToken } = await issueRefreshToken(user.id);
     setRefreshTokenCookie(res, rawToken);
+    void sendLoginSuccessEmail(user, req, 'passkey');
     res.status(200).json(await sessionPayloadFor(user));
   } catch (err) {
     next(err);

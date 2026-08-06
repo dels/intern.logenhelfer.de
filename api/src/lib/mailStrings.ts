@@ -1,3 +1,5 @@
+import type { LoginMethod } from './loginNotification.js';
+
 export type MailLanguage = 'de' | 'en';
 
 export interface MailStrings {
@@ -25,6 +27,15 @@ export interface MailStrings {
     internalLine(title: string, dateStr: string, location: string): string;
     participantLine(name: string): string;
   };
+  loginNotification: {
+    subject(lodge: string): string;
+    body(firstname: string, at: string, ip: string, methodLabel: string): string;
+  };
+  loginLockoutNotification: {
+    subject(lodge: string): string;
+    body(firstname: string, at: string, ip: string, methodLabel: string): string;
+  };
+  loginMethodLabel(method: LoginMethod): string;
 }
 
 /**
@@ -88,6 +99,45 @@ const MAIL_STRINGS: Record<MailLanguage, MailStrings> = {
       internalLine: (title, dateStr, location) => `${title} am ${dateStr} in ${location}:`,
       participantLine: (name) => `  - ${name}`,
     },
+    loginNotification: {
+      subject: (lodge) => `Neue Anmeldung bei ${lodge}`,
+      body: (firstname, at, ip, methodLabel) => [
+        `Lieber Br. ${firstname}`,
+        '',
+        'Es gab eine neue Anmeldung bei Deinem Konto:',
+        `Zeitpunkt: ${at}`,
+        `IP-Adresse: ${ip}`,
+        `Methode: ${methodLabel}`,
+        '',
+        'Falls Du Dich gerade selbst angemeldet hast, kannst Du diese E-Mail ignorieren.',
+        '',
+        'Herzliche brdrl. Grüße',
+      ].join('\n'),
+    },
+    loginLockoutNotification: {
+      subject: (lodge) => `Mehrere fehlgeschlagene Anmeldeversuche bei ${lodge}`,
+      body: (firstname, at, ip, methodLabel) => [
+        `Lieber Br. ${firstname}`,
+        '',
+        'Es wurden mehrere fehlgeschlagene Anmeldeversuche bei Deinem Konto festgestellt:',
+        `Zeitpunkt: ${at}`,
+        `IP-Adresse: ${ip}`,
+        `Methode: ${methodLabel}`,
+        '',
+        'Falls Du das selbst warst, kannst Du diese E-Mail ignorieren - Dein Konto entsperrt sich automatisch nach kurzer Zeit.',
+        '',
+        'Herzliche brdrl. Grüße',
+      ].join('\n'),
+    },
+    loginMethodLabel: (method) =>
+      ({
+        password: 'Passwort',
+        passkey: 'Passkey',
+        totp: 'TOTP',
+        email: 'E-Mail-Code',
+        backup_code: 'Backup-Code',
+        mfa_unknown: 'MFA',
+      })[method],
   },
   en: {
     passwordReset: {
@@ -142,6 +192,45 @@ const MAIL_STRINGS: Record<MailLanguage, MailStrings> = {
       internalLine: (title, dateStr, location) => `${title} on ${dateStr} at ${location}:`,
       participantLine: (name) => `  - ${name}`,
     },
+    loginNotification: {
+      subject: (lodge) => `New login for ${lodge}`,
+      body: (firstname, at, ip, methodLabel) => [
+        `Dear Br. ${firstname}`,
+        '',
+        'There was a new login to your account:',
+        `Time: ${at}`,
+        `IP address: ${ip}`,
+        `Method: ${methodLabel}`,
+        '',
+        'If this was you, you can ignore this email.',
+        '',
+        'Fraternally,',
+      ].join('\n'),
+    },
+    loginLockoutNotification: {
+      subject: (lodge) => `Multiple failed login attempts for ${lodge}`,
+      body: (firstname, at, ip, methodLabel) => [
+        `Dear Br. ${firstname}`,
+        '',
+        'Multiple failed login attempts were detected on your account:',
+        `Time: ${at}`,
+        `IP address: ${ip}`,
+        `Method: ${methodLabel}`,
+        '',
+        'If this was you, you can ignore this email - your account will unlock automatically after a short time.',
+        '',
+        'Fraternally,',
+      ].join('\n'),
+    },
+    loginMethodLabel: (method) =>
+      ({
+        password: 'Password',
+        passkey: 'Passkey',
+        totp: 'TOTP',
+        email: 'Email code',
+        backup_code: 'Backup code',
+        mfa_unknown: 'MFA',
+      })[method],
   },
 };
 

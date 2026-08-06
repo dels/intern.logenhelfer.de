@@ -914,6 +914,7 @@ describe('passkey as MFA re-verification proof (verifyExistingMfaProof)', () => 
     await resetDb();
     process.env.MFA_ENCRYPTION_KEY = 'a'.repeat(64);
     vi.mocked(verifyAuthentication).mockReset();
+    for (const key of Object.keys(KNOWN_KEYS)) appConfig.dirty(key);
   });
 
   async function getPasskeyProofOptions(token: string) {
@@ -1066,5 +1067,39 @@ describe('passkey as MFA re-verification proof (verifyExistingMfaProof)', () => 
       .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
     expect(lockedOutRes.status).toBe(422);
     expect(await prisma.mfa_totp_credentials.findUnique({ where: { user_id: user.id } })).not.toBeNull();
+  });
+
+  // mfa.ts's re-proof lockout (mfa-proof:${userId}) is a step-up
+  // confirmation for an already-authenticated session, not a login attempt -
+  // it must never trigger a login-notification email, toggle on or not.
+  it('never sends a login-notification email for mfa-proof lockouts (not a login attempt)', async () => {
+    await appConfig.set('notify_user_on_login_activity', true);
+    // .mockClear() is load-bearing here, not just tidiness: vi.spyOn re-uses
+    // an already-spied function's existing mock (it doesn't reset call
+    // history), and an earlier test in this file (email-OTP proof, above)
+    // already spied on and called the real mail.sendMail - without clearing,
+    // this test's "not.toHaveBeenCalled()" would fail on that leftover call
+    // history instead of on anything this test itself does.
+    vi.spyOn(mail, 'sendMail').mockClear().mockResolvedValue(undefined);
+
+    const user = await createUser();
+    const secret = authenticator.generateSecret();
+    await createTotpCredential(user.id, secret, true);
+    await createPasskeyCredential(user.id, 'cred-a');
+    const token = issueAccessToken(user.id);
+
+    vi.mocked(verifyAuthentication).mockResolvedValue({
+      verified: false,
+    } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+    for (let i = 0; i < 5; i++) {
+      await getPasskeyProofOptions(token);
+      await request(app)
+        .delete('/api/v1/mfa/methods/totp')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ proof: { method: 'passkey', response: { id: 'cred-a' } } });
+    }
+
+    expect(mail.sendMail).not.toHaveBeenCalled();
   });
 });
