@@ -10,6 +10,7 @@ import { AuthProvider } from '../../auth/AuthProvider';
 import '../../i18n';
 
 const server = setupServer(
+  http.get('/api/v1/health', () => HttpResponse.json({ status: 'ok', revision: null, demo: false })),
   http.get('/api/v1/me', () => HttpResponse.json({ user: { id: 1 }, abilities: { user: ['destroy'], statistic: ['user_stats'] } })),
   http.get('/api/v1/statistics/user_stats', () =>
     HttpResponse.json({
@@ -127,6 +128,21 @@ describe('UserStatsPage', () => {
     await waitFor(() => expect(screen.getByText('Muster')).toBeInTheDocument());
     expect(screen.queryByRole('columnheader', { name: /^IP-Adresse/ })).not.toBeInTheDocument();
     expect(screen.queryByText('127.0.0.1')).not.toBeInTheDocument();
+  });
+
+  it('hides the sign-in IP column in demo mode even for a viewer with User destroy ability', async () => {
+    server.use(http.get('/api/v1/health', () => HttpResponse.json({ status: 'ok', revision: null, demo: true })));
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Muster')).toBeInTheDocument());
+    expect(screen.queryByRole('columnheader', { name: /^IP-Adresse/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('127.0.0.1')).not.toBeInTheDocument();
+  });
+
+  it('shows the sign-in IP column again once demo mode is off, for a viewer with User destroy ability', async () => {
+    server.use(http.get('/api/v1/health', () => HttpResponse.json({ status: 'ok', revision: null, demo: false })));
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Muster')).toBeInTheDocument());
+    expect(screen.getByText('127.0.0.1')).toBeInTheDocument();
   });
 
   it('shows a forbidden message instead of the table when the viewer lacks the user_stats ability', async () => {

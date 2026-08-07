@@ -5,6 +5,7 @@ import type { GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data
 import DataTable from '../../components/DataTable';
 import { useUserStats } from './api';
 import { useAuth } from '../../auth/AuthProvider';
+import { useDemoMode } from '../../api/useDemoMode';
 import type { UserStatsRow } from '../../api/types';
 import StatisticsNavTabs from './StatisticsNavTabs';
 
@@ -15,7 +16,8 @@ export default function UserStatsPage() {
   const [sortModel, setSortModel] = useState<GridSortModel>([{ field: 'current_sign_in_at', sort: 'desc' }]);
   const sortParam = sortModel[0] ? `${sortModel[0].sort === 'desc' ? '-' : ''}${sortModel[0].field}` : '-current_sign_in_at';
   const { data, isLoading } = useUserStats(paginationModel.page, paginationModel.pageSize, sortParam);
-  const showIp = abilities.user?.includes('destroy') ?? false;
+  const demo = useDemoMode();
+  const showIp = !demo && (abilities.user?.includes('destroy') ?? false);
 
   if (!abilities.statistic?.includes('user_stats')) {
     return <Alert severity="error">{t('statistics.forbidden')}</Alert>;
