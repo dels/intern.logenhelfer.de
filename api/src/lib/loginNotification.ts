@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 import { appConfig } from './appConfig.js';
-import { sendMail } from './mail.js';
+import { enqueueMail } from './mailQueue.js';
 import { mailStringsFor } from './mailStrings.js';
 
 /**
@@ -54,7 +54,7 @@ export async function sendLoginSuccessEmail(user: NotifiableUser, req: Request, 
     const methodLabel = strings.loginMethodLabel(method);
     const at = new Date().toISOString();
     const ip = req.ip ?? 'unknown';
-    await sendMail({
+    await enqueueMail({
       to: user.email,
       from: `"${lodgeShort}" <${defaultFromEmail ?? ''}>`,
       subject: strings.loginNotification.subject(lodgeShort),
@@ -73,7 +73,7 @@ export async function sendLoginLockoutEmail(user: NotifiableUser, req: Request, 
     const methodLabel = strings.loginMethodLabel(method);
     const at = new Date().toISOString();
     const ip = req.ip ?? 'unknown';
-    await sendMail({
+    await enqueueMail({
       to: user.email,
       from: `"${lodgeShort}" <${defaultFromEmail ?? ''}>`,
       subject: strings.loginLockoutNotification.subject(lodgeShort),

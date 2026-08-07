@@ -1,6 +1,6 @@
 import { prisma } from '../db.js';
 import { appConfig } from './appConfig.js';
-import { sendMail } from './mail.js';
+import { enqueueMail } from './mailQueue.js';
 import { mailStringsFor, type MailStrings } from './mailStrings.js';
 
 /**
@@ -180,7 +180,7 @@ export async function sendEventRegistrationDigest(): Promise<DigestResult> {
     // One send with every recipient in `to`, not one sendMail per recipient -
     // otherwise each admin in `bcc` would get a duplicate copy per "to"
     // address (Secretary + JuniorDeacon normally both configured).
-    await sendMail({
+    await enqueueMail({
       to: recipients.join(','),
       bcc,
       subject: strings.subject,

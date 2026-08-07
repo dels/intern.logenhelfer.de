@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { randomInt } from 'node:crypto';
 
 import { prisma } from '../db.js';
-import { sendMail } from './mail.js';
+import { enqueueMail } from './mailQueue.js';
 
 const BCRYPT_COST = 12;
 const OTP_TTL_MS = 10 * 60_000;
@@ -25,7 +25,7 @@ export async function sendEmailOtp(userId: number, email: string, purpose: 'setu
     },
   });
 
-  await sendMail({
+  await enqueueMail({
     to: email,
     subject: 'Dein Anmeldecode',
     text: `Dein Bestätigungscode lautet: ${code}\n\nDieser Code ist 10 Minuten gültig.`,

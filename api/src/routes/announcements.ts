@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { authenticateApiUser } from '../auth/middleware.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
-import { sendMail } from '../lib/mail.js';
+import { enqueueMail } from '../lib/mailQueue.js';
 import { mailStringsFor } from '../lib/mailStrings.js';
 import { buildListResponse, parsePageParams } from '../lib/pagination.js';
 import { generateUniqueUuid } from '../lib/uuid.js';
@@ -156,7 +156,7 @@ async function notifySubscribers(announcement: AnnouncementRow, creatorName: str
 
   await Promise.all(
     subscribers.map((subscriber) =>
-      sendMail({
+      enqueueMail({
         to: subscriber.email,
         subject: strings.subject(domain ?? ''),
         text: strings.body(subscriber.firstname ?? '', announcement.title ?? '', creatorName, domain ?? '', technicalContactEmail ?? ''),
