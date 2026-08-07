@@ -207,7 +207,14 @@ router.get('/user_stats', async (req, res, next) => {
     const { page, perPage } = parsePageParams(req.query as Record<string, unknown>);
 
     const callerRoleNames = await loadUserRoleNames(req.currentUser!.id);
-    const canSeeIp = canSeeIpFields(callerRoleNames);
+    // Demo mode: this report is reachable by anyone with demo credentials,
+    // and current_sign_in_ip here is a real visitor's IP (not seeded fixture
+    // data) - hide it from every caller, Admin/NetDelegate included, same
+    // rationale as mfaSettings.ts's DEMO_MODE override. Reusing the single
+    // `canSeeIp` value for both the response mapping below and the sort
+    // clause keeps the side-channel protection (see userStatsSortClause's
+    // doc comment) in sync automatically.
+    const canSeeIp = canSeeIpFields(callerRoleNames) && process.env.DEMO_MODE !== 'true';
     const { field, direction } = userStatsSortClause(req.query.sort, canSeeIp);
 
     const undeleted = await prisma.users.findMany({ where: { deleted: false }, select: { date_of_birth: true } });
