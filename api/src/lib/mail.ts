@@ -16,7 +16,7 @@ import { appConfig } from './appConfig.js';
  * real behavioral difference (no preview UI), acceptable since dev/test
  * never need to see rendered mail today - see this module's `sendMail` doc.
  */
-interface MailMessage {
+export interface MailMessage {
   to: string;
   cc?: string;
   bcc?: string;

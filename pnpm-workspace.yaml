@@ -9,6 +9,12 @@ allowBuilds:
   '@prisma/engines': true
   core-js: true
   esbuild: true
+  # msgpackr-extract is an optional native-acceleration add-on for msgpackr
+  # (a transitive dep pulled in by bullmq/ioredis). Denied here rather than
+  # approved: it's optional (pure-JS fallback works fine, and this module's
+  # own tests never need it), and this repo doesn't run unreviewed
+  # postinstall scripts without an explicit reason to.
+  msgpackr-extract: false
   msw: true
   prisma: true
 minimumReleaseAgeExclude:
