@@ -754,6 +754,8 @@ describe('GET /api/v1/public/status/:token', () => {
     expect(res.body.revision === null || typeof res.body.revision === 'string').toBe(true);
     expect(Object.keys(res.body.checks).sort()).toEqual(['postgres', 'redis'].sort());
     expect(Object.keys(res.body.checks.postgres).sort()).toEqual(['ok', 'host', 'port'].sort());
+    expect(res.body.checks.postgres.port === null || typeof res.body.checks.postgres.port === 'number').toBe(true);
+    expect(res.body.checks.postgres.host === null || typeof res.body.checks.postgres.host === 'string').toBe(true);
   });
 
   it('returns 404 {error: "not_found"} when the token is wrong', async () => {
@@ -782,6 +784,7 @@ describe('GET /api/v1/public/status/:token', () => {
   it('never leaks the raw DATABASE_URL or a postgres:// connection string in the response body', async () => {
     const res = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
 
+    expect(res.status).toBe(200);
     const serialized = JSON.stringify(res.body);
     expect(serialized).not.toContain(process.env.DATABASE_URL ?? '');
     expect(serialized).not.toMatch(/postgres(ql)?:\/\//);

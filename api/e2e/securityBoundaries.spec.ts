@@ -202,7 +202,13 @@ test.describe('birthday calendar feed (secret-gated public endpoint)', () => {
 
 test.describe('status endpoint (secret-gated public endpoint)', () => {
   test('a wrong token never leaks check data or 500s', async ({ request }) => {
-    const res = await request.get('/api/v1/public/status/e2e-definitely-wrong-token');
+    // Deliberately same length as the real 64-char hex token (unlike the
+    // `public endpoints` describe block's wrong-token test above, which uses
+    // a different-length token) - a same-length wrong token is required to
+    // actually exercise timingSafeEqual's byte-comparison path rather than
+    // its `a.length === b.length` short-circuit, which every other
+    // wrong-token test in this codebase only hits.
+    const res = await request.get(`/api/v1/public/status/${'0'.repeat(64)}`);
     expect(res.status()).toBe(404);
     const body = await res.json();
     expect(body).toEqual({ error: 'not_found' });

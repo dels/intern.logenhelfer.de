@@ -1419,6 +1419,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/status/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/workingplan.pdf": {
         parameters: {
             query?: never;
@@ -1767,6 +1783,22 @@ export interface components {
             status: "ok";
             revision?: string | null;
             demo: boolean;
+        };
+        PublicStatus: {
+            /** @enum {string} */
+            status: "ok" | "error";
+            revision: string | null;
+            uptime_seconds: number;
+            checks: {
+                postgres: {
+                    ok: boolean;
+                    host: string | null;
+                    port: number | null;
+                };
+                redis: {
+                    configured: boolean;
+                };
+            };
         };
         PublicImpressum: {
             html: string;
@@ -5758,6 +5790,39 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
+        };
+    };
+    getPublicStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description All checks passed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicStatus"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            /** @description A check failed (currently only Postgres) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicStatus"];
+                };
+            };
         };
     };
     getPublicWorkingplanPdf: {
