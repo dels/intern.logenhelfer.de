@@ -8,11 +8,12 @@ import { Router } from 'express';
 import { jsPDF } from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 
-import { prisma } from '../db.js';
+import { prisma, databaseHostPort } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
 import { deriveLogoVariants, type LogoVariants } from '../lib/logoVariants.js';
+import { statusRateLimiter } from '../middleware/rateLimit.js';
 
 /**
  * Port of:
@@ -92,6 +93,23 @@ async function birthdayCalendarAvailable(): Promise<boolean> {
  */
 function birthdayCalendarSecretMatches(candidate: string): boolean {
   const expected = process.env.BIRTHDAY_CALENDAR_SECRET ?? '';
+  if (expected.length === 0) {
+    return false;
+  }
+  const a = Buffer.from(candidate);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/**
+ * Constant-time comparison against STATUS_ENDPOINT_TOKEN (provisioned like
+ * MFA_ENCRYPTION_KEY/BIRTHDAY_CALENDAR_SECRET - see bin/init-env/bin/deploy-to).
+ * No AppConfig toggle backs this route - the token is the entire
+ * access-control surface; rotating it in .env.<env> is how monitoring
+ * access gets revoked.
+ */
+function statusEndpointTokenMatches(candidate: string): boolean {
+  const expected = process.env.STATUS_ENDPOINT_TOKEN ?? '';
   if (expected.length === 0) {
     return false;
   }
@@ -695,6 +713,51 @@ router.get('/logo/:file', async (req, res, next) => {
     const variants = await deriveLogoVariants(source);
     res.set('Cache-Control', 'public, max-age=31536000, immutable');
     res.status(200).type('image/png').send(variants[variant]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/public/status/:token
+//
+// Unauthenticated (no authenticateApiUser, same as every route in this
+// file) but token-gated in the URL itself, for external uptime monitoring
+// (Uptime Kuma-style). Deliberately has NO AppConfig toggle, unlike every
+// other route in this file - the token is the only on/off switch (rotate
+// STATUS_ENDPOINT_TOKEN in .env.<env> to revoke a previously-issued
+// monitoring URL). Wrong/missing token -> uniform 404, same rationale as
+// birthdayCalendarSecretMatches: this must not confirm the route even
+// exists to an unauthenticated prober.
+router.get<{ token: string }>('/status/:token', statusRateLimiter, async (req, res, next) => {
+  try {
+    if (!statusEndpointTokenMatches(req.params.token)) {
+      throw ApiError.notFound();
+    }
+
+    let postgresOk = true;
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch {
+      postgresOk = false;
+    }
+
+    const { host, port } = databaseHostPort();
+
+    res.status(postgresOk ? 200 : 503).json({
+      status: postgresOk ? 'ok' : 'error',
+      revision: process.env.GIT_HASH ?? null,
+      // Deploy-time PROXY, not a real deploy-timestamp mechanism: seconds
+      // since THIS process started, not strictly "since the currently-active
+      // slot was cut over" - they normally coincide in this blue/green setup,
+      // but a bare process restart (crash, host reboot) also resets this.
+      uptime_seconds: Math.floor(process.uptime()),
+      checks: {
+        postgres: { ok: postgresOk, host, port },
+        // No Redis in this codebase yet - reported structurally so a future
+        // addition only has to flip this value, not invent a new shape.
+        redis: { configured: false },
+      },
+    });
   } catch (err) {
     next(err);
   }

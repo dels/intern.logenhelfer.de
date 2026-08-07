@@ -4,7 +4,7 @@ import type { events } from '../../src/generated/prisma/client.js';
 import express from 'express';
 import request from 'supertest';
 import sharp from 'sharp';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { issueAccessToken } from '../../src/auth/jwt.js';
 import { prisma } from '../../src/db.js';
@@ -721,5 +721,69 @@ describe('security', () => {
     const res = await request(app).get('/api/v1/public/workingplan').set(authHeaders(user.id));
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'not_found' });
+  });
+});
+
+// -- GET /api/v1/public/status/:token ---------------------------------------
+//
+// Net-new, no Rails precedent - token-gated public health endpoint for
+// external uptime monitoring (Uptime Kuma-style). No AppConfig toggle backs
+// this route, deliberately (see statusEndpointTokenMatches's own comment) -
+// STATUS_ENDPOINT_TOKEN is the entire access-control surface, so these tests
+// exercise the real token from the shared root .env rather than stubbing it.
+describe('GET /api/v1/public/status/:token', () => {
+  const REAL_TOKEN = process.env.STATUS_ENDPOINT_TOKEN ?? '';
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns 200 with the exact expected body shape when the token is correct and Postgres is up', async () => {
+    const res = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      status: 'ok',
+      checks: {
+        postgres: { ok: true },
+        redis: { configured: false },
+      },
+    });
+    expect(Object.keys(res.body).sort()).toEqual(['status', 'revision', 'uptime_seconds', 'checks'].sort());
+    expect(typeof res.body.uptime_seconds).toBe('number');
+    expect(res.body.revision === null || typeof res.body.revision === 'string').toBe(true);
+    expect(Object.keys(res.body.checks).sort()).toEqual(['postgres', 'redis'].sort());
+    expect(Object.keys(res.body.checks.postgres).sort()).toEqual(['ok', 'host', 'port'].sort());
+  });
+
+  it('returns 404 {error: "not_found"} when the token is wrong', async () => {
+    const res = await request(app).get('/api/v1/public/status/definitely-wrong-token');
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'not_found' });
+  });
+
+  it('returns 404 when no token segment is present at all', async () => {
+    const res = await request(app).get('/api/v1/public/status/');
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 503 with status "error" and checks.postgres.ok false when Postgres is unreachable', async () => {
+    vi.spyOn(prisma, '$queryRaw').mockImplementation(() => {
+      throw new Error('connection refused');
+    });
+
+    const res = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+
+    expect(res.status).toBe(503);
+    expect(res.body.status).toBe('error');
+    expect(res.body.checks.postgres.ok).toBe(false);
+  });
+
+  it('never leaks the raw DATABASE_URL or a postgres:// connection string in the response body', async () => {
+    const res = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+
+    const serialized = JSON.stringify(res.body);
+    expect(serialized).not.toContain(process.env.DATABASE_URL ?? '');
+    expect(serialized).not.toMatch(/postgres(ql)?:\/\//);
   });
 });
