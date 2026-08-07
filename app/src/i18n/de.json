@@ -193,6 +193,7 @@
     "mfaReset": "MFA zurücksetzen",
     "mfaResetConfirm": "Wirklich zurücksetzen?",
     "mfaResetSuccess": "MFA wurde zurückgesetzt",
+    "mfaColumnHeader": "MFA",
     "save": "Speichern",
     "addresses": "Adressen",
     "roles": "Rollen",

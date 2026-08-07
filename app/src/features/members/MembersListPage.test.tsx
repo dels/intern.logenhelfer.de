@@ -69,12 +69,12 @@ describe('MembersListPage', () => {
     await waitFor(() => expect(screen.getByText('Max Mitglied')).toBeInTheDocument());
   });
 
-  it('renders columns in the order Matrikelnummer, Name, Mobil, E-Mail, with no Beruf column', async () => {
+  it('renders columns in the order Matrikelnummer, Name, MFA, Mobil, E-Mail, with no Beruf column', async () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Max Mitglied')).toBeInTheDocument());
     const headers = screen.getAllByRole('columnheader').map((el) => el.textContent);
     // Trailing '' is the unlabeled actions column.
-    expect(headers).toEqual(['Matrikelnummer', 'Name', 'Mobil', 'E-Mail', '']);
+    expect(headers).toEqual(['Matrikelnummer', 'Name', 'MFA', 'Mobil', 'E-Mail', '']);
   });
 
   it('renders the full name as "firstname lastname" (not "lastname, firstname") under the renamed Name column', async () => {
@@ -130,6 +130,32 @@ describe('MembersListPage', () => {
     await waitFor(() => expect(screen.getByText('Max Mitglied')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Bearbeiten' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Löschen' })).not.toBeInTheDocument();
+  });
+
+  it('shows a filled shield icon in the desktop table when a member has MFA enabled and can be edited', async () => {
+    server.use(http.get('/api/v1/members', () => HttpResponse.json({ rows: [memberRow({ mfa_enabled: true })], row_count: 1 })));
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Max Mitglied')).toBeInTheDocument());
+    const icon = screen.getByTestId('ShieldIcon');
+    expect(icon).toHaveAttribute('aria-label', 'Zwei-Faktor-Authentifizierung aktiv');
+    expect(screen.queryByTestId('ShieldOutlinedIcon')).not.toBeInTheDocument();
+  });
+
+  it('shows an outlined shield icon in the desktop table when a member does not have MFA enabled', async () => {
+    server.use(http.get('/api/v1/members', () => HttpResponse.json({ rows: [memberRow({ mfa_enabled: false })], row_count: 1 })));
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Max Mitglied')).toBeInTheDocument());
+    const icon = screen.getByTestId('ShieldOutlinedIcon');
+    expect(icon).toHaveAttribute('aria-label', 'Zwei-Faktor-Authentifizierung nicht eingerichtet');
+    expect(screen.queryByTestId('ShieldIcon')).not.toBeInTheDocument();
+  });
+
+  it('does not show the MFA shield icon in the desktop table when the member cannot be edited (same gate as row actions)', async () => {
+    server.use(http.get('/api/v1/members', () => HttpResponse.json({ rows: [memberRow({ can_edit: false, can_destroy: false, mfa_enabled: true })], row_count: 1 })));
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Max Mitglied')).toBeInTheDocument());
+    expect(screen.queryByTestId('ShieldIcon')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('ShieldOutlinedIcon')).not.toBeInTheDocument();
   });
 
   it('navigates to the edit page without navigating to the detail page', async () => {
