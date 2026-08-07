@@ -148,3 +148,57 @@ describe('PhoneListPage', () => {
     expect(screen.getByRole('tab', { name: 'Beamtenrat' })).toBeInTheDocument();
   });
 });
+
+describe('PhoneListPage mobile view', () => {
+  function forceMobile() {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+    return () => { window.matchMedia = originalMatchMedia; };
+  }
+
+  it('renders an accordion list instead of the data grid, with only the name visible before expanding', async () => {
+    const restore = forceMobile();
+    try {
+      renderPage();
+      await waitFor(() => expect(screen.getByText('Max Muster')).toBeInTheDocument());
+      expect(screen.queryByRole('grid')).not.toBeInTheDocument();
+      expect(screen.queryByText('030-1')).not.toBeInTheDocument();
+    } finally {
+      restore();
+    }
+  });
+
+  it('shows the phone number once the accordion row is expanded', async () => {
+    const restore = forceMobile();
+    try {
+      renderPage();
+      await waitFor(() => expect(screen.getByText('Max Muster')).toBeInTheDocument());
+      await userEvent.click(screen.getByText('Max Muster'));
+      expect(await screen.findByRole('link', { name: '030-1' })).toBeInTheDocument();
+    } finally {
+      restore();
+    }
+  });
+
+  it('shows a pagination control only when there is more than one page', async () => {
+    const restore = forceMobile();
+    try {
+      server.use(http.get('/api/v1/members/phone_list', () =>
+        HttpResponse.json({ rows: [{ uuid: 'u-1', lastname: 'Muster', firstname: 'Max', phone: '030-1', fax: '', mobile: '' }], row_count: 30 })));
+      renderPage();
+      await waitFor(() => expect(screen.getByText('Max Muster')).toBeInTheDocument());
+      expect(screen.getByRole('navigation')).toBeInTheDocument();
+    } finally {
+      restore();
+    }
+  });
+});

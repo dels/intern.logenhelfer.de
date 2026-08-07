@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Pagination, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import type { GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
 import DataTable from '../../components/DataTable';
+import PhoneAccordionList from './PhoneAccordionList';
 import { usePhoneList, downloadPhoneListPdf } from './api';
 import type { PhoneListRow } from '../../api/types';
 import MembersNavTabs from './MembersNavTabs';
@@ -14,6 +16,10 @@ export default function PhoneListPage() {
   const [sortModel, setSortModel] = useState<GridSortModel>([{ field: 'lastname', sort: 'asc' }]);
   const sortParam = sortModel[0] ? `${sortModel[0].sort === 'desc' ? '-' : ''}${sortModel[0].field}` : 'lastname';
   const { data, isLoading } = usePhoneList(paginationModel.page, paginationModel.pageSize, sortParam);
+
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const pageCount = Math.ceil((data?.row_count ?? 0) / paginationModel.pageSize);
 
   const columns: GridColDef<PhoneListRow>[] = [
     { field: 'lastname', headerName: t('members.lastname'), flex: 1 },
@@ -29,17 +35,31 @@ export default function PhoneListPage() {
         <Button onClick={() => void downloadPhoneListPdf()}>{t('members.exportPdf')}</Button>
       </Box>
       <MembersNavTabs />
-      <DataTable<PhoneListRow>
-        columns={columns}
-        rows={data?.rows ?? []}
-        rowCount={data?.row_count ?? 0}
-        loading={isLoading}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        sortModel={sortModel}
-        onSortModelChange={setSortModel}
-        getRowId={(row) => row.uuid ?? ''}
-      />
+      {isDesktop ? (
+        <DataTable<PhoneListRow>
+          columns={columns}
+          rows={data?.rows ?? []}
+          rowCount={data?.row_count ?? 0}
+          loading={isLoading}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
+          getRowId={(row) => row.uuid ?? ''}
+        />
+      ) : (
+        <>
+          <PhoneAccordionList rows={data?.rows ?? []} />
+          {pageCount > 1 && (
+            <Pagination
+              sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}
+              count={pageCount}
+              page={paginationModel.page + 1}
+              onChange={(_e, page) => setPaginationModel((m) => ({ ...m, page: page - 1 }))}
+            />
+          )}
+        </>
+      )}
     </Box>
   );
 }
