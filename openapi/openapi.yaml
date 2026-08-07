@@ -2599,6 +2599,30 @@ paths:
               schema: { type: string }
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/public/status/{token}:
+    get:
+      operationId: getPublicStatus
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: All checks passed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicStatus' }
+        '503':
+          description: A check failed (currently only Postgres)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicStatus' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/v1/public/workingplan.pdf:
     get:
       operationId: getPublicWorkingplanPdf
@@ -3112,6 +3136,33 @@ components:
         status: { type: string, enum: [ok] }
         revision: { type: string, nullable: true }
         demo: { type: boolean }
+    PublicStatus:
+      type: object
+      additionalProperties: false
+      required: [status, revision, uptime_seconds, checks]
+      properties:
+        status: { type: string, enum: [ok, error] }
+        revision: { type: string, nullable: true }
+        uptime_seconds: { type: integer }
+        checks:
+          type: object
+          additionalProperties: false
+          required: [postgres, redis]
+          properties:
+            postgres:
+              type: object
+              additionalProperties: false
+              required: [ok, host, port]
+              properties:
+                ok: { type: boolean }
+                host: { type: string, nullable: true }
+                port: { type: integer, nullable: true }
+            redis:
+              type: object
+              additionalProperties: false
+              required: [configured]
+              properties:
+                configured: { type: boolean }
     PublicImpressum:
       type: object
       additionalProperties: false

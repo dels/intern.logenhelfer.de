@@ -10,6 +10,18 @@ function databaseUrl(): string {
   return value;
 }
 
+export function databaseHostPort(): { host: string | null; port: number | null } {
+  try {
+    const parsed = new URL(databaseUrl());
+    return {
+      host: parsed.hostname || null,
+      port: parsed.port ? Number.parseInt(parsed.port, 10) : 5432,
+    };
+  } catch {
+    return { host: null, port: null };
+  }
+}
+
 // Prisma v7's driver adapters take their pool defaults straight from `pg`,
 // which (unlike Prisma v6's own built-in engine) waits forever for a free
 // connection by default (`connectionTimeoutMillis: 0`) instead of erroring

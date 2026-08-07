@@ -73,3 +73,10 @@ export const loginRateLimiter: RateLimitRequestHandler = createRateLimiter('LOGI
  * AppConfig toggle, not this limiter.
  */
 export const passwordResetRateLimiter: RateLimitRequestHandler = createRateLimiter('PASSWORD_RESET', 5, 60_000);
+
+/**
+ * Throttles the public status endpoint (`GET /api/v1/public/status/:token`)
+ * to 60 requests per 60s per IP. Env overrides: `RATE_LIMIT_STATUS_MAX` /
+ * `RATE_LIMIT_STATUS_WINDOW_MS`.
+ */
+export const statusRateLimiter: RateLimitRequestHandler = createRateLimiter('STATUS', 60, 60_000);
