@@ -79,9 +79,16 @@ services:
       # not a real secret, just needs to be a stable non-empty value so local
       # dev/test-gate always has one without requiring .env setup.
       BIRTHDAY_CALENDAR_SECRET: ${BIRTHDAY_CALENDAR_SECRET:-dev-only-birthday-calendar-secret-not-for-production-use}
+      # Dev-only fixed fallback, same convention as MFA_ENCRYPTION_KEY/
+      # BIRTHDAY_CALENDAR_SECRET above - not a real secret, just needs to be a
+      # stable non-empty value so local dev/test-gate always has one without
+      # requiring .env setup.
+      STATUS_ENDPOINT_TOKEN: ${STATUS_ENDPOINT_TOKEN:-dev-only-status-endpoint-token-not-for-production-use}
       # Rate limits: centrally configurable via the shared root .env.
       RATE_LIMIT_LOGIN_MAX: ${RATE_LIMIT_LOGIN_MAX:-10}
       RATE_LIMIT_LOGIN_WINDOW_MS: ${RATE_LIMIT_LOGIN_WINDOW_MS:-60000}
+      RATE_LIMIT_STATUS_MAX: ${RATE_LIMIT_STATUS_MAX:-60}
+      RATE_LIMIT_STATUS_WINDOW_MS: ${RATE_LIMIT_STATUS_WINDOW_MS:-60000}
       MAX_UPLOAD_FILE_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB:-20}
       GIT_HASH: ${GIT_HASH:-}
       # Mail (prod/production only; local dev logs instead of sending - see
