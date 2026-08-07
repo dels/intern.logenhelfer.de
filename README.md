@@ -70,12 +70,12 @@ network and serving everything else as the static SPA. This keeps the
 API/app split as an implementation detail of this repo instead of something
 every environment's host-nginx config has to know about.
 
-External uptime monitoring (Uptime Kuma or similar) can poll
-`GET /api/v1/public/status/<STATUS_ENDPOINT_TOKEN>` — the token is
-auto-generated for a brand-new environment by `bin/init-env`, and
-auto-provisioned into any already-live environment's `.env.<env>` by
-`bin/deploy-to` on its next ordinary deploy (same pattern as
-`MFA_ENCRYPTION_KEY`/`BIRTHDAY_CALENDAR_SECRET`).
+External uptime monitoring (Uptime Kuma or similar) can poll `GET
+/api/v1/public/status/<STATUS_ENDPOINT_TOKEN>` — the token is auto-generated
+for a brand-new environment by `bin/init-env`, and auto-provisioned into any
+already-live environment's `.env.<env>` by `bin/deploy-to` on its next
+ordinary deploy (same pattern as `MFA_ENCRYPTION_KEY`/
+`BIRTHDAY_CALENDAR_SECRET`).
 
 ### When the deploy host isn't the TLS-terminating host
 
