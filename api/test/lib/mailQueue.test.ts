@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Queue } from 'bullmq';
 
 vi.mock('../../src/lib/mail.js', () => ({ sendMail: vi.fn().mockResolvedValue(undefined) }));
 const { sendMail } = await import('../../src/lib/mail.js');
@@ -69,13 +70,24 @@ describe('enqueueMail', () => {
 // in your own .env) to run this block; it skips cleanly otherwise, and
 // always runs in bin/test-gate (Task 5 wires that up).
 describe.skipIf(!process.env.REDIS_HOST)('enqueueMail against a real Redis', () => {
+  // Unique per test run (and per concurrent worktree) so a prior run's
+  // leftover jobs can never be mistaken for evidence that this run's
+  // enqueueMail call actually worked - see the afterEach below for the
+  // matching cleanup that keeps this queue from leaking state forward too.
+  let verifyQueue: Queue | undefined;
+
   afterEach(async () => {
+    if (verifyQueue) {
+      await verifyQueue.obliterate({ force: true });
+      await verifyQueue.close();
+      verifyQueue = undefined;
+    }
     await closeMailQueue();
   });
 
   it('adds a real job instead of calling sendMail directly', async () => {
     vi.stubEnv('REDIS_PROTOCOL', process.env.REDIS_PROTOCOL || 'redis');
-    vi.stubEnv('DEPLOY_NAME', 'test');
+    vi.stubEnv('DEPLOY_NAME', `test-${process.pid}`);
     const message = { to: 'brother@example.test', subject: 'Real queue test', text: 'Body' };
 
     await enqueueMail(message);
@@ -83,9 +95,8 @@ describe.skipIf(!process.env.REDIS_HOST)('enqueueMail against a real Redis', () 
     expect(sendMail).not.toHaveBeenCalled();
 
     const { Queue } = await import('bullmq');
-    const verifyQueue = new Queue(mailQueueName(), { connection: buildRedisConnection() });
+    verifyQueue = new Queue(mailQueueName(), { connection: buildRedisConnection() });
     const jobs = await verifyQueue.getJobs(['waiting', 'delayed', 'active', 'completed']);
     expect(jobs.some((job) => job.data.to === message.to)).toBe(true);
-    await verifyQueue.close();
   });
 });
