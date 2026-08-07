@@ -70,6 +70,8 @@ network and serving everything else as the static SPA. This keeps the
 API/app split as an implementation detail of this repo instead of something
 every environment's host-nginx config has to know about.
 
+External uptime monitoring (Uptime Kuma or similar) can poll `GET /api/v1/public/status/<STATUS_ENDPOINT_TOKEN>` — see `bin/init-env`'s auto-generated secrets for how the token is provisioned.
+
 ### When the deploy host isn't the TLS-terminating host
 
 The topology above assumes the Docker host and the TLS-terminating host

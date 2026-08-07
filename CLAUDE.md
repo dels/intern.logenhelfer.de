@@ -608,6 +608,29 @@ allow side misses that.
   attempt (same status/body either way) — don't add a distinguishable
   status code for a new one, it would leak lockout state to an attacker.
 
+### Public status endpoint (monitoring)
+
+- **`GET /api/v1/public/status/:token` has no AppConfig toggle**, unlike
+  every other route in `api/src/routes/public.ts`. This is deliberate
+  (YAGNI) — `STATUS_ENDPOINT_TOKEN` (provisioned like `MFA_ENCRYPTION_KEY`/
+  `BIRTHDAY_CALENDAR_SECRET` — see `bin/init-env`/`bin/deploy-to`) is the
+  only on/off switch. To revoke a leaked/previously-issued monitoring URL,
+  rotate the token in `.env.<env>` and redeploy — don't add a second
+  AppConfig flag for this.
+- **`uptime_seconds` in that response is `process.uptime()`, not a real
+  deploy-timestamp mechanism.** It resets whenever the process restarts,
+  not necessarily in lockstep with a blue/green cutover. Don't build a
+  "since last deploy" guarantee on top of it without adding real
+  deploy-timestamp tracking first.
+- **The Postgres check reports `host`/`port` only**, parsed via `new
+  URL(...)` in `api/src/db.ts`'s `databaseHostPort()`. Never thread the raw
+  `DATABASE_URL` (or `databaseUrl()`, which stays unexported) into this
+  route or its response — that would leak credentials + db name to anyone
+  who correctly guesses/receives the status URL.
+- **`checks.redis` is always `{configured: false}`** — there is no Redis in
+  this codebase. A future Redis addition should flip this value in place,
+  not invent a new response shape or a new Kuma monitor.
+
 ## General Advices
 
 We do not gender in german. We are only working with the male version.
