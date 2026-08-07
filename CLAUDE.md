@@ -56,10 +56,13 @@ Key facts to hold onto while working on or around this mechanism:
   containers `docker ps` shows running before assuming host contention. The
   compose service key for the API is `api` and for the frontend is `app`,
   both matching their respective source folders (this part is fixed,
-  independent of `.env.<env>`). There is no `worker` container: the TS API
-  has no background job queue (see `api/src/routes/announcements.ts`'s
-  `notifySubscribers` for the one email notification ported from Rails'
-  mailers — sent inline, not queued). `bin/deploy-to` also reads
+  independent of `.env.<env>`). There is no separate `worker` container/
+  process: outbound mail (including `api/src/routes/announcements.ts`'s
+  `notifySubscribers`) goes through `api/src/lib/mailQueue.ts`'s
+  `enqueueMail`, which either sends inline (no Redis configured — the
+  default) or enqueues onto a Redis-backed BullMQ queue whose consumer
+  (`api/src/lib/mailWorker.ts`'s `startMailWorker`) runs in-process inside
+  the existing `api` container, not a separate one. `bin/deploy-to` also reads
   `EDGE_CONTAINER_NAME` from `.env.<env>` the same way, hard-required just
   like `API_CONTAINER_NAME`/`APP_CONTAINER_NAME` — a bare shared default like
   `edge` is exactly the kind of value that collides across environments on a

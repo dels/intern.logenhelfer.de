@@ -62,14 +62,52 @@ describe('enqueueMail', () => {
     expect(sendMail).toHaveBeenCalledTimes(1);
     expect(sendMail).toHaveBeenCalledWith(message);
   });
+
+  // Regression test for a final-review Critical finding: buildRedisConnection
+  // used to set maxRetriesPerRequest: null unconditionally, which meant a
+  // command sent while Redis is configured-but-unreachable sat in ioredis's
+  // offline queue forever - enqueueMail never resolved or rejected, hanging
+  // POST /password/forgot, MFA email-OTP setup, and POST /announcements
+  // indefinitely. No real Redis server needed here (that's the point - this
+  // tests the unreachable case), so it always runs, no describe.skipIf guard.
+  it('falls back to sendMail instead of hanging when Redis is configured but unreachable', async () => {
+    vi.stubEnv('REDIS_PROTOCOL', 'redis');
+    vi.stubEnv('REDIS_HOST', '127.0.0.1');
+    vi.stubEnv('REDIS_PORT', '1'); // nothing listens on port 1 - connection refused/times out
+    vi.stubEnv('DEPLOY_NAME', `test-unreachable-${process.pid}`);
+    const message = { to: 'brother@example.test', subject: 'Unreachable Redis test', text: 'Body' };
+
+    const startedAt = Date.now();
+    await enqueueMail(message);
+    const elapsedMs = Date.now() - startedAt;
+
+    // buildRedisConnection's producer role documents a ~6.6s worst-case
+    // budget (connectTimeout + bounded retries) - allow a margin above that
+    // instead of asserting near-instant, since CI/CPU-starved hosts can be
+    // slower than a laptop, and this specific unreachable port (nothing
+    // listens there) actually fails much faster than that worst case.
+    expect(elapsedMs).toBeLessThan(10_000);
+    expect(sendMail).toHaveBeenCalledTimes(1);
+    expect(sendMail).toHaveBeenCalledWith(message);
+
+    await closeMailQueue();
+  });
 });
 
 // Needs an actual Redis - BullMQ has no official in-memory fake worth
-// trusting for this. Set REDIS_HOST (e.g. via `docker compose up -d redis`
-// locally, using REDIS_HOST=127.0.0.1 and REDIS_PORT=${REDIS_LOCAL_PORT:-56379}
-// in your own .env) to run this block; it skips cleanly otherwise, and
-// always runs in bin/test-gate (Task 5 wires that up).
-describe.skipIf(!process.env.REDIS_HOST)('enqueueMail against a real Redis', () => {
+// trusting for this. Set TEST_REDIS_HOST (e.g. via `docker compose up -d
+// redis` locally, using TEST_REDIS_HOST=127.0.0.1 and
+// TEST_REDIS_PORT=${REDIS_LOCAL_PORT:-56379} in your own .env, or on the
+// command line: `TEST_REDIS_HOST=127.0.0.1 TEST_REDIS_PORT=56379 npx vitest
+// run test/lib/mailQueue.test.ts`) to run this block; it skips cleanly
+// otherwise, and always runs in bin/test-gate. TEST_REDIS_* (not REDIS_*) is
+// deliberate - see bin/test-gate's own comment on this: REDIS_* is what
+// redisConfigured() reads at runtime, and setting it env-wide on the whole
+// suite broke 24+ unrelated tests that route mail through enqueueMail. Every
+// real-Redis it() below stubs REDIS_PROTOCOL/REDIS_HOST/REDIS_PORT (and
+// DEPLOY_NAME) explicitly from these TEST_REDIS_* vars rather than relying on
+// any of them being ambient in process.env.
+describe.skipIf(!process.env.TEST_REDIS_HOST)('enqueueMail against a real Redis', () => {
   // Unique per test run (and per concurrent worktree) so a prior run's
   // leftover jobs can never be mistaken for evidence that this run's
   // enqueueMail call actually worked - see the afterEach below for the
@@ -86,7 +124,9 @@ describe.skipIf(!process.env.REDIS_HOST)('enqueueMail against a real Redis', () 
   });
 
   it('adds a real job instead of calling sendMail directly', async () => {
-    vi.stubEnv('REDIS_PROTOCOL', process.env.REDIS_PROTOCOL || 'redis');
+    vi.stubEnv('REDIS_PROTOCOL', process.env.TEST_REDIS_PROTOCOL || 'redis');
+    vi.stubEnv('REDIS_HOST', process.env.TEST_REDIS_HOST || '127.0.0.1');
+    vi.stubEnv('REDIS_PORT', process.env.TEST_REDIS_PORT || '6379');
     vi.stubEnv('DEPLOY_NAME', `test-${process.pid}`);
     const message = { to: 'brother@example.test', subject: 'Real queue test', text: 'Body' };
 

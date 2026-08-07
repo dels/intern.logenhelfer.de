@@ -39,15 +39,25 @@ export async function alertTechnicalContact(job: Job<MailMessage> | undefined, e
  * process).
  */
 export function startMailWorker(): void {
-  if (!redisConfigured() || process.env.NODE_ENV === 'test') return;
+  const isTest = process.env.NODE_ENV === 'test';
+  if (!redisConfigured() || isTest) {
+    // Don't log the no-op reason when it's specifically NODE_ENV=test - this
+    // module is imported by every test file that touches mail, and logging
+    // here would add noise to every single test run.
+    if (!redisConfigured() && !isTest) {
+      console.log('[mailWorker] disabled (no Redis configured)');
+    }
+    return;
+  }
 
   worker = new Worker<MailMessage>(
     mailQueueName(),
     async (job) => {
       await sendMail(job.data);
     },
-    { connection: buildRedisConnection() },
+    { connection: buildRedisConnection('worker') },
   );
+  console.log(`[mailWorker] started (queue=${mailQueueName()})`);
 
   worker.on('failed', (job, err) => {
     console.error(`[mailWorker] job ${job?.id} failed`, err);

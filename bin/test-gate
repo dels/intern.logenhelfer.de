@@ -249,10 +249,22 @@ docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
   -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
   -e MFA_ENCRYPTION_KEY="$MFA_ENCRYPTION_KEY" \
   -e BIRTHDAY_CALENDAR_SECRET="$BIRTHDAY_CALENDAR_SECRET" \
-  -e REDIS_PROTOCOL=redis \
-  -e REDIS_HOST=redis \
-  -e REDIS_PORT=6379 \
+  -e TEST_REDIS_PROTOCOL=redis \
+  -e TEST_REDIS_HOST=redis \
+  -e TEST_REDIS_PORT=6379 \
   "$NODE_IMAGE" bash -euc "
+    # TEST_REDIS_* (not REDIS_*) is deliberate: this \`pnpm run test\` runs the
+    # FULL api vitest suite, not just the mail-queue-specific test files.
+    # redisConfigured() in api/src/lib/mailQueue.ts checks REDIS_PROTOCOL/
+    # REDIS_HOST/REDIS_PORT - setting those env-wide here made EVERY test that
+    # exercises a migrated call site (login, password reset, MFA email-OTP,
+    # announcements) try to route through the real queue instead of the
+    # mocked sendMail fallback, breaking 24+ tests (found in a final-review
+    # pass, fixed same-commit). TEST_REDIS_* is a signal read only by the two
+    # real-Redis describe.skipIf blocks in mailQueue.test.ts/mailWorker.test.ts,
+    # which stub REDIS_PROTOCOL/REDIS_HOST/REDIS_PORT (and DEPLOY_NAME) onto
+    # process.env themselves, scoped to just their own it() blocks via
+    # vi.stubEnv - every other test never sees REDIS_HOST set at all.
     # Matches api/Dockerfile's build stage exactly (curl/ca-certificates/openssl) -
     # without openssl, Prisma can't detect the real libssl version here and
     # silently guesses 'openssl-1.1.x', which can pick a different query-engine
