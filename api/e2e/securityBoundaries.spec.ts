@@ -176,6 +176,12 @@ test.describe('public endpoints (no Authorization header needed)', () => {
     expect(res.status()).toBe(200);
     expect(await res.text()).toBe('ok');
   });
+
+  test('GET /api/v1/public/status/:token 404s with a wrong token (no Authorization header needed)', async ({ request }) => {
+    const res = await request.get('/api/v1/public/status/e2e-definitely-wrong-token');
+    expect(res.status()).toBe(404);
+    expect(await res.json()).toEqual({ error: 'not_found' });
+  });
 });
 
 test.describe('birthday calendar feed (secret-gated public endpoint)', () => {
@@ -188,6 +194,15 @@ test.describe('birthday calendar feed (secret-gated public endpoint)', () => {
   // anything" abuse-case check appropriate for a shared, wide e2e sweep.
   test('a wrong secret never leaks data or 500s, even if somehow enabled', async ({ request }) => {
     const res = await request.get('/api/v1/public/birthdays/e2e-definitely-wrong-secret/calendar.ics');
+    expect(res.status()).toBe(404);
+    const body = await res.json();
+    expect(body).toEqual({ error: 'not_found' });
+  });
+});
+
+test.describe('status endpoint (secret-gated public endpoint)', () => {
+  test('a wrong token never leaks check data or 500s', async ({ request }) => {
+    const res = await request.get('/api/v1/public/status/e2e-definitely-wrong-token');
     expect(res.status()).toBe(404);
     const body = await res.json();
     expect(body).toEqual({ error: 'not_found' });
