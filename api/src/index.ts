@@ -2,6 +2,7 @@ import { app } from './app.js';
 import { syncAdminAccountFromEnv } from './lib/adminAccount.js';
 import { resetAndSeedDemoData } from './lib/demoSeed.js';
 import { startIcsAutoSync } from './lib/icsSyncScheduler.js';
+import { startMailWorker } from './lib/mailWorker.js';
 
 // Placeholder default, distinct from Rails (9876) and the frontend's dev
 // port (5173). Matches app/vite.config.ts's existing '/api' proxy default
@@ -15,4 +16,5 @@ await resetAndSeedDemoData();
 app.listen(PORT, () => {
   console.log(`api listening on port ${PORT}`);
   startIcsAutoSync();
+  startMailWorker();
 });
