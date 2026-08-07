@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/mail.js', () => ({ sendMail: vi.fn().mockResolvedValue(undefined) }));
 const { sendMail } = await import('../../src/lib/mail.js');
-const { redisConfigured, mailQueueName, enqueueMail } = await import('../../src/lib/mailQueue.js');
+const { redisConfigured, mailQueueName, enqueueMail, closeMailQueue, buildRedisConnection } = await import('../../src/lib/mailQueue.js');
 
 // vi.stubEnv's automatic restore (via vi.unstubAllEnvs in afterEach) means
 // these tests are safe to run even when a developer's local .env already
@@ -60,5 +60,32 @@ describe('enqueueMail', () => {
 
     expect(sendMail).toHaveBeenCalledTimes(1);
     expect(sendMail).toHaveBeenCalledWith(message);
+  });
+});
+
+// Needs an actual Redis - BullMQ has no official in-memory fake worth
+// trusting for this. Set REDIS_HOST (e.g. via `docker compose up -d redis`
+// locally, using REDIS_HOST=127.0.0.1 and REDIS_PORT=${REDIS_LOCAL_PORT:-56379}
+// in your own .env) to run this block; it skips cleanly otherwise, and
+// always runs in bin/test-gate (Task 5 wires that up).
+describe.skipIf(!process.env.REDIS_HOST)('enqueueMail against a real Redis', () => {
+  afterEach(async () => {
+    await closeMailQueue();
+  });
+
+  it('adds a real job instead of calling sendMail directly', async () => {
+    vi.stubEnv('REDIS_PROTOCOL', process.env.REDIS_PROTOCOL || 'redis');
+    vi.stubEnv('DEPLOY_NAME', 'test');
+    const message = { to: 'brother@example.test', subject: 'Real queue test', text: 'Body' };
+
+    await enqueueMail(message);
+
+    expect(sendMail).not.toHaveBeenCalled();
+
+    const { Queue } = await import('bullmq');
+    const verifyQueue = new Queue(mailQueueName(), { connection: buildRedisConnection() });
+    const jobs = await verifyQueue.getJobs(['waiting', 'delayed', 'active', 'completed']);
+    expect(jobs.some((job) => job.data.to === message.to)).toBe(true);
+    await verifyQueue.close();
   });
 });
