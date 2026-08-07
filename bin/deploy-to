@@ -315,6 +315,19 @@ APP_CONTAINER=\$(grep '^APP_CONTAINER_NAME=' "\$ENV_FILE" | tail -1 | cut -d= -f
 grep -q '^EDGE_CONTAINER_NAME=' "\$ENV_FILE" || { echo "Error: EDGE_CONTAINER_NAME not set in \$ENV_FILE — required (no more bare 'edge' default) so this environment's edge container can never collide with a sibling project's or another logenhelfer environment's container on this shared host. See CLAUDE.md's container-naming note." >&2; exit 1; }
 EDGE_CONTAINER=\$(grep '^EDGE_CONTAINER_NAME=' "\$ENV_FILE" | tail -1 | cut -d= -f2-)
 
+# DEPLOY_NAME is only required when this environment has Redis configured
+# (REDIS_HOST set) - the mail queue needs it to build an environment-scoped
+# queue name for the shared Redis instance (see .env.example). Cross-checked
+# against the env name this script was invoked with (\$ENV, baked in locally
+# below - unlike \$ENV_FILE/\$DEPLOY_NAME_VALUE which are evaluated on the
+# remote host) so a copy-pasted .env.<env> can't silently namespace jobs
+# under the wrong environment's queue.
+if grep -q '^REDIS_HOST=' "\$ENV_FILE" && [ -n "\$(grep '^REDIS_HOST=' "\$ENV_FILE" | tail -1 | cut -d= -f2-)" ]; then
+  grep -q '^DEPLOY_NAME=' "\$ENV_FILE" || { echo "Error: DEPLOY_NAME not set in \$ENV_FILE — required whenever REDIS_HOST is set, so the mail queue can build an environment-scoped queue name. See .env.example." >&2; exit 1; }
+  DEPLOY_NAME_VALUE=\$(grep '^DEPLOY_NAME=' "\$ENV_FILE" | tail -1 | cut -d= -f2-)
+  [ "\$DEPLOY_NAME_VALUE" = "$ENV" ] || { echo "Error: DEPLOY_NAME (\$DEPLOY_NAME_VALUE) in \$ENV_FILE does not match the environment this deploy was invoked for ($ENV) — check for a copy-pasted .env.<env> file." >&2; exit 1; }
+fi
+
 # Self-heal: \$ENV_FILE saying the edge container SHOULD be named
 # \$EDGE_CONTAINER doesn't mean the container running right now actually is
 # - that value can be added/changed in \$ENV_FILE without anyone following
