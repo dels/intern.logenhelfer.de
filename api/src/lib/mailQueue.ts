@@ -49,15 +49,37 @@ export function buildRedisConnection(role: 'worker' | 'producer' = 'worker'): Re
   const { REDIS_PROTOCOL, REDIS_USERNAME, REDIS_PASSWORD, REDIS_HOST, REDIS_PORT } = process.env;
   const auth = REDIS_USERNAME && REDIS_PASSWORD ? `${REDIS_USERNAME}:${REDIS_PASSWORD}@` : '';
   const url = `${REDIS_PROTOCOL}://${auth}${REDIS_HOST}:${REDIS_PORT}`;
+  // enableReadyCheck: false on both roles - by default ioredis runs INFO
+  // right after connecting to confirm the server isn't still loading a
+  // persisted dataset before marking the connection ready; we don't manage
+  // this Redis's lifecycle ourselves (a persistently-running shared
+  // instance, never something we start up and need to wait on for an
+  // RDB/AOF replay), so this check has no value here. Belt-and-braces only:
+  // found live 2026-08-08 that the shared prod Redis's `rels` ACL user has
+  // no permission for INFO ("NOPERM User rels has no permissions to run the
+  // 'info' command"), and while ioredis's OWN ready-check already degrades
+  // gracefully on a NOPERM'd INFO (one console.warn, then proceeds - see
+  // ioredis's Redis.js _readyCheck), this still avoids that warning
+  // entirely on every (re)connect. The actual source of the repeated,
+  // unhandled NOPERM error spam we saw was NOT ioredis's ready-check at
+  // all - it was BullMQ's own separate, mandatory
+  // RedisConnection#getRedisVersionAndType(), which unconditionally calls
+  // `.info()` itself (no NOPERM handling) to detect the server version/type
+  // for its own minimum-version enforcement. That's what `skipVersionCheck:
+  // true` on the Queue/Worker options below actually silences - it's the
+  // one that matters; enableReadyCheck here is defense in depth, not the
+  // fix. (There's no ioredis option to swap the ready-check's command to
+  // something the ACL does allow, e.g. PING - it's hardcoded to INFO.)
   if (role === 'producer') {
     return new Redis(url, {
+      enableReadyCheck: false,
       maxRetriesPerRequest: 3,
       enableOfflineQueue: false,
       connectTimeout: 2_000,
       retryStrategy: (times) => (times > 2 ? null : 300),
     });
   }
-  return new Redis(url, { maxRetriesPerRequest: null });
+  return new Redis(url, { enableReadyCheck: false, maxRetriesPerRequest: null });
 }
 
 /**
@@ -75,10 +97,31 @@ export function mailQueueName(): string {
 }
 
 let queue: Queue<MailMessage> | null = null;
+// BullMQ treats an externally-constructed connection (what buildRedisConnection
+// returns) as "shared" and deliberately never quits/disconnects it on
+// queue.close() - it assumes the caller owns it and might reuse it elsewhere
+// (see bullmq's createRedisBackend: `shared: isRedisInstance(opts.connection)`).
+// We DO own it and never reuse it, so we have to close it ourselves - found
+// live 2026-08-08 debugging the NOPERM incident: without this, queue.close()
+// silently left the connection open, and closeMailQueue() (whose whole job is
+// letting scripts/eventsNightly.ts's short-lived process exit) did nothing.
+let connection: Redis | null = null;
 
 function getQueue(): Queue<MailMessage> {
-  queue ??= new Queue<MailMessage>(mailQueueName(), { connection: buildRedisConnection('producer') });
+  if (!queue) {
+    connection = buildRedisConnection('producer');
+    // skipVersionCheck: true - see buildRedisConnection's doc comment above;
+    // this is what actually stops BullMQ's own unconditional INFO call from
+    // erroring against an ACL that doesn't permit it.
+    queue = new Queue<MailMessage>(mailQueueName(), { connection, skipVersionCheck: true });
+  }
   return queue;
+}
+
+/** Tears down both the Queue wrapper and the underlying connection it doesn't own. */
+async function teardownQueue(target: { queue: Queue<MailMessage>; connection: Redis | null }): Promise<void> {
+  await target.queue.close().catch(() => {});
+  await target.connection?.quit().catch(() => target.connection?.disconnect());
 }
 
 /**
@@ -118,9 +161,10 @@ export async function enqueueMail(message: MailMessage): Promise<void> {
     // disable queueing for the rest of the process's lifetime (permanent
     // degradation) instead of recovering the next time Redis is reachable.
     if (queue) {
-      const deadQueue = queue;
+      const dead = { queue, connection };
       queue = null;
-      await deadQueue.close().catch(() => {});
+      connection = null;
+      await teardownQueue(dead);
     }
     await sendMail(message);
   }
@@ -133,7 +177,9 @@ export async function enqueueMail(message: MailMessage): Promise<void> {
  */
 export async function closeMailQueue(): Promise<void> {
   if (queue) {
-    await queue.close();
+    const target = { queue, connection };
     queue = null;
+    connection = null;
+    await teardownQueue(target);
   }
 }
