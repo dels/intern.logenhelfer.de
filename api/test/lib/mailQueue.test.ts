@@ -113,12 +113,21 @@ describe.skipIf(!process.env.TEST_REDIS_HOST)('enqueueMail against a real Redis'
   // enqueueMail call actually worked - see the afterEach below for the
   // matching cleanup that keeps this queue from leaking state forward too.
   let verifyQueue: Queue | undefined;
+  // BullMQ treats an externally-constructed connection as "shared" and
+  // never quits it itself on queue.close() - same reason mailQueue.ts's own
+  // teardownQueue exists. verifyQueue.close() alone leaves this connection
+  // open; found live 2026-08-08 when that leaked connection outlived an ACL
+  // user deletion in the NOPERM regression test below and threw unrelated
+  // WRONGPASS errors afterward.
+  let verifyConnection: ReturnType<typeof buildRedisConnection> | undefined;
 
   afterEach(async () => {
     if (verifyQueue) {
       await verifyQueue.obliterate({ force: true });
-      await verifyQueue.close();
+      await verifyQueue.close().catch(() => {});
+      await verifyConnection?.quit().catch(() => verifyConnection?.disconnect());
       verifyQueue = undefined;
+      verifyConnection = undefined;
     }
     await closeMailQueue();
   });
@@ -135,8 +144,67 @@ describe.skipIf(!process.env.TEST_REDIS_HOST)('enqueueMail against a real Redis'
     expect(sendMail).not.toHaveBeenCalled();
 
     const { Queue } = await import('bullmq');
-    verifyQueue = new Queue(mailQueueName(), { connection: buildRedisConnection() });
+    verifyConnection = buildRedisConnection();
+    verifyQueue = new Queue(mailQueueName(), { connection: verifyConnection });
     const jobs = await verifyQueue.getJobs(['waiting', 'delayed', 'active', 'completed']);
     expect(jobs.some((job) => job.data.to === message.to)).toBe(true);
+  });
+
+  // Regression test for a live incident (2026-08-08): the shared prod
+  // Redis's `rels` ACL user is deliberately locked down and has no
+  // permission for INFO ("NOPERM User rels has no permissions to run the
+  // 'info' command"). That error came from BullMQ's own unconditional
+  // RedisConnection#getRedisVersionAndType() call, not from ioredis's own
+  // ready-check (which already degrades gracefully on a NOPERM'd INFO) -
+  // fixed via `skipVersionCheck: true` on both the Queue and Worker
+  // options in mailQueue.ts/mailWorker.ts. This test creates a real
+  // restricted-ACL user on the test Redis to reproduce the exact failure
+  // mode rather than only asserting the fix in the abstract.
+  it('still enqueues successfully when the Redis user\'s ACL denies INFO (2026-08-08 NOPERM regression)', async () => {
+    const adminHost = process.env.TEST_REDIS_HOST || '127.0.0.1';
+    const adminPort = Number(process.env.TEST_REDIS_PORT || '6379');
+    const { Redis } = await import('ioredis');
+    const admin = new Redis({ host: adminHost, port: adminPort });
+    const restrictedUsername = `noinfo-${process.pid}`;
+    const restrictedPassword = 'test-only-not-a-real-secret';
+    try {
+      // +@all then -info mirrors the shape of a real locked-down ACL user:
+      // broad command access, but INFO explicitly denied.
+      await admin.call('ACL', 'SETUSER', restrictedUsername, 'on', `>${restrictedPassword}`, '~*', '+@all', '-info');
+
+      vi.stubEnv('REDIS_PROTOCOL', process.env.TEST_REDIS_PROTOCOL || 'redis');
+      vi.stubEnv('REDIS_HOST', adminHost);
+      vi.stubEnv('REDIS_PORT', String(adminPort));
+      vi.stubEnv('REDIS_USERNAME', restrictedUsername);
+      vi.stubEnv('REDIS_PASSWORD', restrictedPassword);
+      vi.stubEnv('DEPLOY_NAME', `test-noinfo-${process.pid}`);
+      const message = { to: 'brother@example.test', subject: 'NOPERM regression test', text: 'Body' };
+
+      await enqueueMail(message);
+
+      expect(sendMail).not.toHaveBeenCalled();
+
+      const { Queue } = await import('bullmq');
+      verifyConnection = buildRedisConnection();
+      verifyQueue = new Queue(mailQueueName(), { connection: verifyConnection, skipVersionCheck: true });
+      const jobs = await verifyQueue.getJobs(['waiting', 'delayed', 'active', 'completed']);
+      expect(jobs.some((job) => job.data.to === message.to)).toBe(true);
+
+      // Close this test's own connections BEFORE deleting the restricted
+      // user below, not in the shared afterEach (which runs after this
+      // finally block) - a connection still using this user's credentials
+      // when the user disappears throws an unrelated, delayed WRONGPASS
+      // error instead of the assertions above ever getting a chance to run
+      // (found live 2026-08-08 authoring this exact test).
+      await verifyQueue.obliterate({ force: true });
+      await verifyQueue.close().catch(() => {});
+      await verifyConnection.quit().catch(() => verifyConnection?.disconnect());
+      verifyQueue = undefined;
+      verifyConnection = undefined;
+      await closeMailQueue();
+    } finally {
+      await admin.call('ACL', 'DELUSER', restrictedUsername).catch(() => {});
+      await admin.quit();
+    }
   });
 });

@@ -1,10 +1,16 @@
 import { Worker, type Job } from 'bullmq';
+import type { Redis } from 'ioredis';
 
 import { appConfig } from './appConfig.js';
 import { buildRedisConnection, mailQueueName, redisConfigured } from './mailQueue.js';
 import { sendMail, type MailMessage } from './mail.js';
 
 let worker: Worker<MailMessage> | null = null;
+// Same reason as mailQueue.ts's own `connection` variable: BullMQ treats an
+// externally-constructed connection as "shared" and never quits it itself
+// (see bullmq's createRedisBackend), so stopMailWorker() has to close this
+// directly or the connection leaks past worker.close().
+let workerConnection: Redis | null = null;
 
 /**
  * Alerts a human that mail delivery is failing systemically - called only
@@ -50,12 +56,17 @@ export function startMailWorker(): void {
     return;
   }
 
+  // skipVersionCheck: true - see mailQueue.ts's buildRedisConnection doc
+  // comment; without it BullMQ's own unconditional INFO call errors against
+  // an ACL that doesn't permit it (found live 2026-08-08 against the shared
+  // prod Redis's restricted `rels` user).
+  workerConnection = buildRedisConnection('worker');
   worker = new Worker<MailMessage>(
     mailQueueName(),
     async (job) => {
       await sendMail(job.data);
     },
-    { connection: buildRedisConnection('worker') },
+    { connection: workerConnection, skipVersionCheck: true },
   );
   console.log(`[mailWorker] started (queue=${mailQueueName()})`);
 
@@ -71,7 +82,11 @@ export function startMailWorker(): void {
 /** Closes the worker's connection if one was ever started - no-ops otherwise. */
 export async function stopMailWorker(): Promise<void> {
   if (worker) {
-    await worker.close();
+    const closingWorker = worker;
+    const closingConnection = workerConnection;
     worker = null;
+    workerConnection = null;
+    await closingWorker.close().catch(() => {});
+    await closingConnection?.quit().catch(() => closingConnection?.disconnect());
   }
 }
