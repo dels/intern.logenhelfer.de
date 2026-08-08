@@ -764,6 +764,28 @@ describe('GET /api/v1/public/status/:token', () => {
     expect(res.body).toEqual({ error: 'not_found' });
   });
 
+  // Regression: checks.redis.configured was a hardcoded `false` literal
+  // (written before the mail queue existed) - it never reflected whether
+  // REDIS_* was actually set, so a correctly-configured environment's
+  // monitoring page silently lied. Both directions asserted explicitly so
+  // a future regression back to a hardcoded value fails either way, not
+  // just the direction that happens to match today's default test env.
+  it('reflects the real REDIS_* configuration state, not a hardcoded value', async () => {
+    vi.stubEnv('REDIS_PROTOCOL', '');
+    vi.stubEnv('REDIS_HOST', '');
+    vi.stubEnv('REDIS_PORT', '');
+    const unconfigured = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+    expect(unconfigured.body.checks.redis).toEqual({ configured: false });
+
+    vi.stubEnv('REDIS_PROTOCOL', 'redis');
+    vi.stubEnv('REDIS_HOST', '127.0.0.1');
+    vi.stubEnv('REDIS_PORT', '6379');
+    const configured = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+    expect(configured.body.checks.redis).toEqual({ configured: true });
+
+    vi.unstubAllEnvs();
+  });
+
   it('returns 404 when no token segment is present at all', async () => {
     const res = await request(app).get('/api/v1/public/status/');
     expect(res.status).toBe(404);

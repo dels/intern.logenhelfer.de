@@ -12,6 +12,7 @@ import { prisma, databaseHostPort } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
+import { redisConfigured } from '../lib/mailQueue.js';
 import { deriveLogoVariants, type LogoVariants } from '../lib/logoVariants.js';
 import { statusRateLimiter } from '../middleware/rateLimit.js';
 
@@ -753,9 +754,10 @@ router.get<{ token: string }>('/status/:token', statusRateLimiter, async (req, r
       uptime_seconds: Math.floor(process.uptime()),
       checks: {
         postgres: { ok: postgresOk, host, port },
-        // No Redis in this codebase yet - reported structurally so a future
-        // addition only has to flip this value, not invent a new shape.
-        redis: { configured: false },
+        // Whether the mail queue is routing through Redis vs. sending
+        // inline (see mailQueue.ts's own doc comment) - not a live PING,
+        // matching this field's name: "configured", not "ok".
+        redis: { configured: redisConfigured() },
       },
     });
   } catch (err) {
