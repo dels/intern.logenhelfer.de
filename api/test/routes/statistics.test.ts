@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import express from 'express';
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { users } from '../../src/generated/prisma/client.js';
 
@@ -246,6 +246,74 @@ describe('Statistics API', () => {
       // sort=current_sign_in_ip ascending request would have produced.
       expect(uuids.indexOf(recentHighIp.uuid)).toBeLessThan(uuids.indexOf(olderLowIp.uuid));
     });
+
+    describe('demo mode', () => {
+      beforeEach(() => {
+        delete process.env.DEMO_MODE;
+      });
+      afterEach(() => {
+        delete process.env.DEMO_MODE;
+      });
+
+      it('nulls out current_sign_in_ip for an Admin caller when DEMO_MODE is set (should-deny)', async () => {
+        process.env.DEMO_MODE = 'true';
+        const plainMember = await makePlainMember();
+        const admin = await makeAdmin();
+        await prisma.users.update({
+          where: { id: plainMember.id },
+          data: { current_sign_in_at: new Date(), sign_in_count: 3, current_sign_in_ip: '203.0.113.5' },
+        });
+
+        const res = await request(app).get('/api/v1/statistics/user_stats').set(authHeaders(admin));
+
+        expect(res.status).toBe(200);
+        const row = res.body.rows.find((r: { uuid: string }) => r.uuid === plainMember.uuid);
+        expect(row.current_sign_in_ip).toBeNull();
+      });
+
+      it('still exposes current_sign_in_ip to an Admin caller once DEMO_MODE is unset (should-allow)', async () => {
+        const plainMember = await makePlainMember();
+        const admin = await makeAdmin();
+        await prisma.users.update({
+          where: { id: plainMember.id },
+          data: { current_sign_in_at: new Date(), sign_in_count: 3, current_sign_in_ip: '203.0.113.5' },
+        });
+
+        const res = await request(app).get('/api/v1/statistics/user_stats').set(authHeaders(admin));
+
+        expect(res.status).toBe(200);
+        const row = res.body.rows.find((r: { uuid: string }) => r.uuid === plainMember.uuid);
+        expect(row.current_sign_in_ip).toBe('203.0.113.5');
+      });
+
+      it('ignores a current_sign_in_ip sort request from an Admin caller in demo mode instead of leaking IP ordering via row order (should-deny)', async () => {
+        process.env.DEMO_MODE = 'true';
+        const admin = await makeAdmin();
+        const recentHighIp = await makePlainMember();
+        const olderLowIp = await makePlainMember();
+        await prisma.users.update({
+          where: { id: recentHighIp.id },
+          data: { current_sign_in_at: new Date(Date.now() - 60 * 60 * 1000), sign_in_count: 1, current_sign_in_ip: '9.9.9.9' },
+        });
+        await prisma.users.update({
+          where: { id: olderLowIp.id },
+          data: { current_sign_in_at: new Date(Date.now() - 2 * 60 * 60 * 1000), sign_in_count: 1, current_sign_in_ip: '1.1.1.1' },
+        });
+
+        const res = await request(app)
+          .get('/api/v1/statistics/user_stats')
+          .query({ sort: 'current_sign_in_ip' })
+          .set(authHeaders(admin));
+
+        expect(res.status).toBe(200);
+        const rows = res.body.rows as { uuid: string; current_sign_in_ip: string | null }[];
+        rows.forEach((r) => expect(r.current_sign_in_ip).toBeNull());
+        const uuids = rows.map((r) => r.uuid);
+        // Falls back to the default (current_sign_in_at desc), not the
+        // ascending-by-IP order an honored sort would have produced.
+        expect(uuids.indexOf(recentHighIp.uuid)).toBeLessThan(uuids.indexOf(olderLowIp.uuid));
+      });
+    });
   });
 
   describe('GET /api/v1/statistics/downloads', () => {
@@ -327,6 +395,46 @@ describe('Statistics API', () => {
       expect(row.filename).toBe('satzung.pdf');
       expect(row.user_fullname).toBe([plainMember.firstname, plainMember.lastname].filter(Boolean).join(' '));
       expect(row.created_at).toBeTruthy();
+    });
+
+    describe('demo mode', () => {
+      beforeEach(() => {
+        delete process.env.DEMO_MODE;
+      });
+      afterEach(() => {
+        delete process.env.DEMO_MODE;
+      });
+
+      it('nulls out remote_ip for an Admin caller when DEMO_MODE is set (should-deny)', async () => {
+        process.env.DEMO_MODE = 'true';
+        const plainMember = await makePlainMember();
+        const admin = await makeAdmin();
+        const now = new Date();
+        const download = await prisma.file_downloads.create({
+          data: { user_id: plainMember.id, filename: 'satzung.pdf', remote_ip: '198.51.100.7', deleted: false, created_at: now, updated_at: now },
+        });
+
+        const res = await request(app).get('/api/v1/statistics/downloads').set(authHeaders(admin));
+
+        expect(res.status).toBe(200);
+        const row = res.body.rows.find((r: { id: number }) => r.id === download.id);
+        expect(row.remote_ip).toBeNull();
+      });
+
+      it('still exposes remote_ip to an Admin caller once DEMO_MODE is unset (should-allow)', async () => {
+        const plainMember = await makePlainMember();
+        const admin = await makeAdmin();
+        const now = new Date();
+        const download = await prisma.file_downloads.create({
+          data: { user_id: plainMember.id, filename: 'satzung.pdf', remote_ip: '198.51.100.7', deleted: false, created_at: now, updated_at: now },
+        });
+
+        const res = await request(app).get('/api/v1/statistics/downloads').set(authHeaders(admin));
+
+        expect(res.status).toBe(200);
+        const row = res.body.rows.find((r: { id: number }) => r.id === download.id);
+        expect(row.remote_ip).toBe('198.51.100.7');
+      });
     });
   });
 

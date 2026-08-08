@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
-  Alert, Box, Button, TextField, Typography, Dialog, DialogTitle, DialogContent, DialogActions, useMediaQuery, Pagination,
+  Alert, Box, Button, TextField, Typography, Dialog, DialogTitle, DialogContent, DialogActions, useMediaQuery, Pagination, Tooltip,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
+import ShieldIcon from '@mui/icons-material/Shield';
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import type { GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
 import { useTranslation } from 'react-i18next';
 import DataTable from '../../components/DataTable';
@@ -66,6 +68,16 @@ export default function MembersListPage() {
   const columns: GridColDef<MemberSummary>[] = [
     { field: 'matriculation_number', headerName: t('members.matriculationNumber'), width: 140 },
     { field: 'lastname', headerName: t('members.name'), flex: 1, valueGetter: (_v, row) => `${row.firstname} ${row.lastname}` },
+    {
+      field: 'mfa_enabled', headerName: t('members.mfaColumnHeader'), width: 72, sortable: false, filterable: false, disableColumnMenu: true,
+      // Same gate as MemberAccordionList.tsx's mobile badge and this table's
+      // own actions column: per-row can_edit, not a class-level ability.
+      renderCell: (params) => (params.row.can_edit ? (
+        <Tooltip title={params.row.mfa_enabled ? t('members.mfaEnabled') : t('members.mfaDisabled')}>
+          {params.row.mfa_enabled ? <ShieldIcon fontSize="small" color="success" /> : <ShieldOutlinedIcon fontSize="small" color="disabled" />}
+        </Tooltip>
+      ) : null),
+    },
     { field: 'mobile', headerName: t('members.mobile'), flex: 1, renderCell: (params) => (params.value ? <PhoneLink phone={params.value} /> : null) },
     { field: 'email', headerName: t('members.email'), flex: 1, renderCell: (params) => (params.value ? <EmailLink email={params.value} /> : null) },
     {

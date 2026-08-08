@@ -193,6 +193,7 @@
     "mfaReset": "Reset MFA",
     "mfaResetConfirm": "Really reset?",
     "mfaResetSuccess": "MFA has been reset",
+    "mfaColumnHeader": "MFA",
     "save": "Save",
     "addresses": "Addresses",
     "roles": "Roles",

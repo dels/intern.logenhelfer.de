@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Pagination, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import type { GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
 import DataTable from '../../components/DataTable';
+import BirthdayAccordionList from './BirthdayAccordionList';
 import { useBirthdayList, downloadBirthdayListPdf } from './api';
 import type { BirthdayListRow } from '../../api/types';
 import MembersNavTabs from './MembersNavTabs';
@@ -13,6 +15,10 @@ export default function BirthdayListPage() {
   const [sortModel, setSortModel] = useState<GridSortModel>([{ field: 'date_of_birth', sort: 'asc' }]);
   const sortParam = sortModel[0] ? `${sortModel[0].sort === 'desc' ? '-' : ''}${sortModel[0].field}` : 'date_of_birth';
   const { data, isLoading } = useBirthdayList(paginationModel.page, paginationModel.pageSize, sortParam);
+
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const pageCount = Math.ceil((data?.row_count ?? 0) / paginationModel.pageSize);
 
   // date_of_birth and both jubilee fields are pure dates (no time-of-day
   // component), unlike UserStatsPage's current_sign_in_at which is a
@@ -47,17 +53,31 @@ export default function BirthdayListPage() {
         <Button onClick={() => void downloadBirthdayListPdf()}>{t('members.exportPdf')}</Button>
       </Box>
       <MembersNavTabs />
-      <DataTable<BirthdayListRow>
-        columns={columns}
-        rows={data?.rows ?? []}
-        rowCount={data?.row_count ?? 0}
-        loading={isLoading}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        sortModel={sortModel}
-        onSortModelChange={setSortModel}
-        getRowId={(row) => row.uuid ?? ''}
-      />
+      {isDesktop ? (
+        <DataTable<BirthdayListRow>
+          columns={columns}
+          rows={data?.rows ?? []}
+          rowCount={data?.row_count ?? 0}
+          loading={isLoading}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          sortModel={sortModel}
+          onSortModelChange={setSortModel}
+          getRowId={(row) => row.uuid ?? ''}
+        />
+      ) : (
+        <>
+          <BirthdayAccordionList rows={data?.rows ?? []} formatDate={formatDate} />
+          {pageCount > 1 && (
+            <Pagination
+              sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}
+              count={pageCount}
+              page={paginationModel.page + 1}
+              onChange={(_e, page) => setPaginationModel((m) => ({ ...m, page: page - 1 }))}
+            />
+          )}
+        </>
+      )}
     </Box>
   );
 }
