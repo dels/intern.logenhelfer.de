@@ -59,8 +59,11 @@ describe('infra/docker-compose.production.yml: api service environment', () => {
 
   // Every var api/src actually reads via process.env.X and throws/misbehaves
   // without (not every optional/default-able one - e.g. RATE_LIMIT_* has
-  // safe defaults elsewhere and isn't required here).
-  it.each(['DATABASE_URL', 'JWT_SECRET', 'MFA_ENCRYPTION_KEY'])(
+  // safe defaults elsewhere and isn't required here). REDIS_HOST/DEPLOY_NAME
+  // represent the mail queue's 6-var family (api/src/lib/mailQueue.ts) -
+  // these two are sufficient to catch the whole family missing from this
+  // block, no need to enumerate REDIS_PROTOCOL/USERNAME/PASSWORD/PORT too.
+  it.each(['DATABASE_URL', 'JWT_SECRET', 'MFA_ENCRYPTION_KEY', 'REDIS_HOST', 'DEPLOY_NAME'])(
     'passes %s through to the container (present in the environment: block)',
     (requiredVar) => {
       expect(keys).toContain(requiredVar);

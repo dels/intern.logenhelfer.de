@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { authenticateApiUser } from '../auth/middleware.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
-import { sendMail } from '../lib/mail.js';
+import { enqueueMail } from '../lib/mailQueue.js';
 import { mailStringsFor } from '../lib/mailStrings.js';
 import { buildListResponse, parsePageParams } from '../lib/pagination.js';
 import { generateUniqueUuid } from '../lib/uuid.js';
@@ -136,11 +136,11 @@ function findVisibleAnnouncement(uuid: string): Promise<AnnouncementRow | null> 
  * no i18n setup exists in this API yet, same rationale as this file's
  * `presenceErrors` hardcoding German strings directly).
  *
- * ponytail: sent inline, awaited by the request (see the POST handler) -
- * no background job queue exists in this API. Fine at today's volume (one
- * admin action, a handful of subscribers); if that ever changes, add a real
- * queue (e.g. BullMQ, Redis is no longer provisioned though) rather than
- * blocking the response on a slow SMTP call.
+ * ponytail: routed through `enqueueMail` (see the POST handler, which still
+ * awaits this function) - when Redis is configured, each send is handed off
+ * as a durable, retried job instead of blocking the response on a slow SMTP
+ * call. Without Redis configured, `enqueueMail` falls back to the old
+ * inline-send behavior, so this stays correct either way.
  */
 async function notifySubscribers(announcement: AnnouncementRow, creatorName: string): Promise<void> {
   const [subscriptions, domain, technicalContactEmail, language] = await Promise.all([
@@ -156,7 +156,7 @@ async function notifySubscribers(announcement: AnnouncementRow, creatorName: str
 
   await Promise.all(
     subscribers.map((subscriber) =>
-      sendMail({
+      enqueueMail({
         to: subscriber.email,
         subject: strings.subject(domain ?? ''),
         text: strings.body(subscriber.firstname ?? '', announcement.title ?? '', creatorName, domain ?? '', technicalContactEmail ?? ''),
@@ -231,7 +231,7 @@ router.post('/', async (req, res, next) => {
     const json = await announcementJson(created);
     // A failed notification shouldn't fail the announcement's own creation -
     // matches Rails' `deliver_later` decoupling the mail from the request,
-    // just done inline (no job queue in this port; see notifySubscribers's doc).
+    // done here via the mail queue instead (see notifySubscribers's doc).
     try {
       await notifySubscribers(created, json.created_by_name);
     } catch (err) {

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { prisma } from '../src/db.js';
 import { sendEventRegistrationDigest } from '../src/lib/eventRegistrationDigest.js';
 import { syncAllActiveIcsSources } from '../src/lib/externalEventIcsSync.js';
+import { closeMailQueue } from '../src/lib/mailQueue.js';
 import { fetchIcsUrlSafely } from '../src/lib/safeIcsFetch.js';
 
 /**
@@ -46,5 +47,5 @@ if (isMainModule) {
       console.error('[events-nightly] fatal error', err);
       process.exitCode = 1;
     })
-    .finally(() => prisma.$disconnect());
+    .finally(() => Promise.all([prisma.$disconnect(), closeMailQueue()]));
 }

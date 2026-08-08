@@ -98,6 +98,14 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      # Mail queue (optional - see .env.example's Redis section). Unset
+      # means enqueueMail falls back to sending inline, same as today.
+      REDIS_PROTOCOL: ${REDIS_PROTOCOL:-}
+      REDIS_USERNAME: ${REDIS_USERNAME:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_HOST: ${REDIS_HOST:-}
+      REDIS_PORT: ${REDIS_PORT:-}
+      DEPLOY_NAME: ${DEPLOY_NAME:-}
       # Keeps V8's heap ceiling under mem_limit below so Node gets a chance to
       # GC under memory pressure instead of the kernel OOM-killing the whole
       # container outright.
@@ -121,6 +129,40 @@ services:
     pids_limit: 128
     mem_limit: 768m
     cpus: "2.0"
+
+  redis:
+    # Floating major tag (alpine variant - smallest image, this is a
+    # throwaway local/CI queue, not a persisted store) - see
+    # infra/db-host-reference/ for why Postgres pins more tightly; Redis
+    # here holds no data worth surviving a restart.
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${REDIS_LOCAL_PORT:-56379}:6379"
+    # redis:7-alpine's entrypoint only drops root->redis privilege via
+    # `setpriv` when it detects it's running as root (uid 0) - that drop
+    # needs CAP_SETUID/CAP_SETGID, which cap_drop: [ALL] below removes with
+    # no cap_add (unlike postgres-db above, which does need cap_add for its
+    # own root-phase chown). Starting directly as the image's existing
+    # `redis` user (by name, not numeric uid/gid, so it survives this being
+    # a floating tag - see the image comment above - if a future 7.x rebuild
+    # ever shifts the underlying uid/gid) skips that branch entirely, so no
+    # capabilities need adding back. Verified: with this line removed, the
+    # container crash-loops on
+    # "setpriv: setresuid failed: Operation not permitted".
+    user: "redis"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: "0.5"
 
 volumes:
   postgresvolume: {}

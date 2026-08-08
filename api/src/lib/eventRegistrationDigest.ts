@@ -21,6 +21,18 @@ import { mailStringsFor, type MailStrings } from './mailStrings.js';
  * mail delivery is confirmed for ALL recipients: a stray row (event
  * deleted) is marked notified immediately; a real row is left pending on
  * any failure so the next nightly run retries it.
+ *
+ * Deliberately calls `sendMail` directly instead of `enqueueMail`, unlike
+ * every other feature call site (mailQueue.ts/mailWorker.ts are the queue's
+ * own plumbing, not comparable call sites). The retry mechanism above only
+ * works because it knows the *actual* delivery outcome before deciding
+ * whether to advance `notified_at` - `enqueueMail` would resolve as soon as
+ * the job is handed off to Redis, long before anything is actually sent, so
+ * a row could be marked notified for a message that later fails every
+ * queued retry and is never delivered, with no nightly rerun left to catch
+ * it. There's also no request latency to hide here in the first place,
+ * since this only ever runs from the nightly cron script
+ * (`scripts/eventsNightly.ts`), never from a live HTTP request.
  */
 
 const DIGEST_ROLE_NAMES = ['Secretary', 'JuniorDeacon'];

@@ -48,6 +48,13 @@ GATE_API_PORT="${GATE_API_PORT:-$((19876 + ($$ % 5000)))}"
 # Distinct from docker-compose.yml's default 55432 — that port is already in use
 # by a real local dev stack on this host; colliding with it aborts the whole gate.
 GATE_POSTGRES_PORT="${GATE_POSTGRES_PORT:-$((55499 + ($$ % 5000)))}"
+# Same reasoning as GATE_POSTGRES_PORT above, for redis's own published port
+# (infra/docker-compose.yml's REDIS_LOCAL_PORT, default 56379) — a real local
+# dev stack's own redis already binds that default on this host, so an
+# unmapped gate run would collide on the same 127.0.0.1:56379 and abort at
+# `dcg up -d --wait postgres-db redis`. PID-derived for the same
+# multi-concurrent-gate-run reason as the other two ports.
+GATE_REDIS_PORT="${GATE_REDIS_PORT:-$((60499 + ($$ % 5000)))}"
 # Caps each gate container's CPU use — matters most when bin/deploy-to --remote
 # runs this on a shared deploy host that's also serving live traffic. Override
 # via `bin/deploy-to ... --remote --cpus <n>` or GATE_CPUS directly.
@@ -120,6 +127,7 @@ POSTGRES_PASSWORD=gate
 POSTGRES_DB=gate
 API_PORT=$GATE_API_PORT
 POSTGRES_PORT=$GATE_POSTGRES_PORT
+REDIS_LOCAL_PORT=$GATE_REDIS_PORT
 # The login rate limiter (api/src/middleware/rateLimit.ts) no-ops under
 # NODE_ENV=test, same as Rack::Attack's own !Rails.env.test? exemption -
 # without this, the e2e suite's ~20 sequential logins trip the 10-per-60s
@@ -152,7 +160,7 @@ EOF
 # idempotent no-ops when there's nothing to clean up.
 echo ">>> Cleaning up any orphaned containers from a previous interrupted gate run..."
 dcg down -v --remove-orphans >/dev/null 2>&1 || true
-docker rm -f "${GATE_PROJECT}-postgres-db-1" "${GATE_PROJECT}-api-1" >/dev/null 2>&1 || true
+docker rm -f "${GATE_PROJECT}-postgres-db-1" "${GATE_PROJECT}-redis-1" "${GATE_PROJECT}-api-1" >/dev/null 2>&1 || true
 # GATE_PROJECT is now PID-suffixed (see its own comment above), so a crashed
 # *previous* run's leftovers carry a *different* PID suffix than this run's
 # own $GATE_PROJECT and the two lines above never match them. Sweep every
@@ -200,7 +208,7 @@ docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work -e CI=true -e COREP
 "
 
 echo "==> [2/3] api: ephemeral db (gate) + migrate, build/typecheck/vitest, seed e2e fixtures"
-dcg up -d --wait postgres-db
+dcg up -d --wait postgres-db redis
 
 # Joins the gate project's own compose network and addresses postgres-db by
 # its service name, rather than host.docker.internal + --add-host=host-gateway
@@ -244,7 +252,22 @@ docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
   -e MFA_ENCRYPTION_KEY="$MFA_ENCRYPTION_KEY" \
   -e BIRTHDAY_CALENDAR_SECRET="$BIRTHDAY_CALENDAR_SECRET" \
   -e STATUS_ENDPOINT_TOKEN="$STATUS_ENDPOINT_TOKEN" \
+  -e TEST_REDIS_PROTOCOL=redis \
+  -e TEST_REDIS_HOST=redis \
+  -e TEST_REDIS_PORT=6379 \
   "$NODE_IMAGE" bash -euc "
+    # TEST_REDIS_* (not REDIS_*) is deliberate: this \`pnpm run test\` runs the
+    # FULL api vitest suite, not just the mail-queue-specific test files.
+    # redisConfigured() in api/src/lib/mailQueue.ts checks REDIS_PROTOCOL/
+    # REDIS_HOST/REDIS_PORT - setting those env-wide here made EVERY test that
+    # exercises a migrated call site (login, password reset, MFA email-OTP,
+    # announcements) try to route through the real queue instead of the
+    # mocked sendMail fallback, breaking 24+ tests (found in a final-review
+    # pass, fixed same-commit). TEST_REDIS_* is a signal read only by the two
+    # real-Redis describe.skipIf blocks in mailQueue.test.ts/mailWorker.test.ts,
+    # which stub REDIS_PROTOCOL/REDIS_HOST/REDIS_PORT (and DEPLOY_NAME) onto
+    # process.env themselves, scoped to just their own it() blocks via
+    # vi.stubEnv - every other test never sees REDIS_HOST set at all.
     # Matches api/Dockerfile's build stage exactly (curl/ca-certificates/openssl) -
     # without openssl, Prisma can't detect the real libssl version here and
     # silently guesses 'openssl-1.1.x', which can pick a different query-engine

@@ -9,7 +9,7 @@ import { revokeAllFamiliesForUser } from '../auth/refreshToken.js';
 import { prisma } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
-import { sendMail } from '../lib/mail.js';
+import { enqueueMail } from '../lib/mailQueue.js';
 import { mailStringsFor } from '../lib/mailStrings.js';
 import { passwordResetRateLimiter } from '../middleware/rateLimit.js';
 
@@ -74,7 +74,7 @@ router.post('/password/forgot', passwordResetRateLimiter, async (req: Request, r
       const host = requestHost === configuredDomain ? requestHost : configuredDomain;
       const resetUrl = `${req.protocol}://${host}/reset-password?token=${rawToken}`;
       const strings = mailStringsFor(language ?? 'de').passwordReset;
-      await sendMail({
+      await enqueueMail({
         to: user.email,
         from: `"${lodgeShort}" <${defaultFromEmail}>`,
         subject: strings.subject(lodge ?? ''),
@@ -87,7 +87,7 @@ router.post('/password/forgot', passwordResetRateLimiter, async (req: Request, r
         appConfig.get('language') as Promise<string | null>,
       ]);
       const strings = mailStringsFor(language ?? 'de').unknownPasswordReset;
-      await sendMail({
+      await enqueueMail({
         to: technicalContactEmail ?? '',
         subject: strings.subject(domain ?? ''),
         text: strings.body(email, domain ?? ''),

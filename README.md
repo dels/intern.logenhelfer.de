@@ -52,6 +52,19 @@ prints the exact `CREATE ROLE`/`CREATE DATABASE` SQL for this, using the
 password it just generated — run it on `DB_HOST` as a Postgres superuser
 before the first deploy.
 
+Outbound mail (login notifications, password reset, MFA email codes,
+announcements) optionally goes through a Redis-backed queue instead of
+sending synchronously. Like Postgres, Redis is one shared instance across
+environments, human-provisioned outside any environment's compose file —
+there's no `redis` container in this repo. Referenced via 5 env vars
+(`REDIS_PROTOCOL`/`REDIS_USERNAME`/`REDIS_PASSWORD`/`REDIS_HOST`/
+`REDIS_PORT`, see `.env.example`); leaving them unset (the default for local
+dev/test and any not-yet-wired environment) sends mail synchronously with no
+Redis needed. Once Redis is configured for an environment, `DEPLOY_NAME` is
+also required, so that environment's jobs get their own isolated queue name
+on the shared Redis instance. The queue's consumer runs in-process inside
+the `api` container (`api/src/lib/mailWorker.ts`), not a separate container.
+
 Three containers per environment: `edge` (a stock `nginx:1.27-alpine`
 reverse proxy, always on, the sole container publishing a host port), `app`
 (static SPA, served by nginx — built from the `app/` source folder), `api`
