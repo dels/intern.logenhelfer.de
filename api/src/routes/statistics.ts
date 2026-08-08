@@ -47,9 +47,17 @@ function rubyToS(value: string | number | null | undefined): string {
  * IP field nulled out (both `UserStatsRow.current_sign_in_ip` and
  * `DownloadRow.remote_ip` are `required`+`nullable: true` in openapi.yaml, so
  * nulling - not omitting the key - is what keeps response validation green).
+ *
+ * Demo mode: both reports are reachable by anyone with demo credentials,
+ * and both IP fields there are real visitor traffic (not seeded fixture
+ * data) - nulled for every caller, Admin/NetDelegate included, whenever
+ * DEMO_MODE is set. Baked into this single helper (every call site routes
+ * through it) rather than duplicated per call site, so any future
+ * IP-bearing report inherits the same protection automatically instead of
+ * needing to remember to add the check itself.
  */
 function canSeeIpFields(callerRoleNames: readonly string[]): boolean {
-  return isAdmin(callerRoleNames) || isNetDelegate(callerRoleNames);
+  return (isAdmin(callerRoleNames) || isNetDelegate(callerRoleNames)) && process.env.DEMO_MODE !== 'true';
 }
 
 /** Port of User#fullname (rails-app/app/models/user.rb): compact + join(' '). */
@@ -207,14 +215,12 @@ router.get('/user_stats', async (req, res, next) => {
     const { page, perPage } = parsePageParams(req.query as Record<string, unknown>);
 
     const callerRoleNames = await loadUserRoleNames(req.currentUser!.id);
-    // Demo mode: this report is reachable by anyone with demo credentials,
-    // and current_sign_in_ip here is a real visitor's IP (not seeded fixture
-    // data) - hide it from every caller, Admin/NetDelegate included, same
-    // rationale as mfaSettings.ts's DEMO_MODE override. Reusing the single
-    // `canSeeIp` value for both the response mapping below and the sort
-    // clause keeps the side-channel protection (see userStatsSortClause's
-    // doc comment) in sync automatically.
-    const canSeeIp = canSeeIpFields(callerRoleNames) && process.env.DEMO_MODE !== 'true';
+    // canSeeIpFields() already folds in the DEMO_MODE check (see its own
+    // doc comment) - reusing this single `canSeeIp` value for both the
+    // response mapping below and the sort clause keeps the side-channel
+    // protection (see userStatsSortClause's doc comment) in sync
+    // automatically.
+    const canSeeIp = canSeeIpFields(callerRoleNames);
     const { field, direction } = userStatsSortClause(req.query.sort, canSeeIp);
 
     const undeleted = await prisma.users.findMany({ where: { deleted: false }, select: { date_of_birth: true } });

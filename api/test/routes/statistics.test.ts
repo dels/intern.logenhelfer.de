@@ -396,6 +396,46 @@ describe('Statistics API', () => {
       expect(row.user_fullname).toBe([plainMember.firstname, plainMember.lastname].filter(Boolean).join(' '));
       expect(row.created_at).toBeTruthy();
     });
+
+    describe('demo mode', () => {
+      beforeEach(() => {
+        delete process.env.DEMO_MODE;
+      });
+      afterEach(() => {
+        delete process.env.DEMO_MODE;
+      });
+
+      it('nulls out remote_ip for an Admin caller when DEMO_MODE is set (should-deny)', async () => {
+        process.env.DEMO_MODE = 'true';
+        const plainMember = await makePlainMember();
+        const admin = await makeAdmin();
+        const now = new Date();
+        const download = await prisma.file_downloads.create({
+          data: { user_id: plainMember.id, filename: 'satzung.pdf', remote_ip: '198.51.100.7', deleted: false, created_at: now, updated_at: now },
+        });
+
+        const res = await request(app).get('/api/v1/statistics/downloads').set(authHeaders(admin));
+
+        expect(res.status).toBe(200);
+        const row = res.body.rows.find((r: { id: number }) => r.id === download.id);
+        expect(row.remote_ip).toBeNull();
+      });
+
+      it('still exposes remote_ip to an Admin caller once DEMO_MODE is unset (should-allow)', async () => {
+        const plainMember = await makePlainMember();
+        const admin = await makeAdmin();
+        const now = new Date();
+        const download = await prisma.file_downloads.create({
+          data: { user_id: plainMember.id, filename: 'satzung.pdf', remote_ip: '198.51.100.7', deleted: false, created_at: now, updated_at: now },
+        });
+
+        const res = await request(app).get('/api/v1/statistics/downloads').set(authHeaders(admin));
+
+        expect(res.status).toBe(200);
+        const row = res.body.rows.find((r: { id: number }) => r.id === download.id);
+        expect(row.remote_ip).toBe('198.51.100.7');
+      });
+    });
   });
 
   describe('GET /api/v1/statistics/file_stats', () => {
