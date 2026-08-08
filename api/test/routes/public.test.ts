@@ -746,7 +746,7 @@ describe('GET /api/v1/public/status/:token', () => {
       status: 'ok',
       checks: {
         postgres: { ok: true },
-        redis: { configured: false },
+        redis: { configured: false, protocol: null, host: null, port: null, username: null },
       },
     });
     expect(Object.keys(res.body).sort()).toEqual(['status', 'revision', 'uptime_seconds', 'checks'].sort());
@@ -756,6 +756,13 @@ describe('GET /api/v1/public/status/:token', () => {
     expect(Object.keys(res.body.checks.postgres).sort()).toEqual(['ok', 'host', 'port'].sort());
     expect(res.body.checks.postgres.port === null || typeof res.body.checks.postgres.port === 'number').toBe(true);
     expect(res.body.checks.postgres.host === null || typeof res.body.checks.postgres.host === 'string').toBe(true);
+    // Connection details are fine to expose (this endpoint's whole access
+    // control is the URL token), but the password never should be - assert
+    // its absence explicitly rather than relying only on an exhaustive key
+    // list elsewhere, since that's the one field a copy-paste mistake could
+    // silently reintroduce.
+    expect(Object.keys(res.body.checks.redis).sort()).toEqual(['configured', 'protocol', 'host', 'port', 'username'].sort());
+    expect(res.body.checks.redis).not.toHaveProperty('password');
   });
 
   it('returns 404 {error: "not_found"} when the token is wrong', async () => {
@@ -775,13 +782,31 @@ describe('GET /api/v1/public/status/:token', () => {
     vi.stubEnv('REDIS_HOST', '');
     vi.stubEnv('REDIS_PORT', '');
     const unconfigured = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
-    expect(unconfigured.body.checks.redis).toEqual({ configured: false });
+    expect(unconfigured.body.checks.redis).toEqual({ configured: false, protocol: null, host: null, port: null, username: null });
 
     vi.stubEnv('REDIS_PROTOCOL', 'redis');
     vi.stubEnv('REDIS_HOST', '127.0.0.1');
     vi.stubEnv('REDIS_PORT', '6379');
     const configured = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
-    expect(configured.body.checks.redis).toEqual({ configured: true });
+    expect(configured.body.checks.redis).toEqual({ configured: true, protocol: 'redis', host: '127.0.0.1', port: 6379, username: null });
+
+    vi.unstubAllEnvs();
+  });
+
+  // The one field this endpoint must NEVER expose, checked with a real
+  // password actually set - not just absent-by-coincidence like the tests
+  // above, where REDIS_PASSWORD was never stubbed in the first place.
+  it('never exposes checks.redis.password, even when REDIS_PASSWORD and REDIS_USERNAME are set', async () => {
+    vi.stubEnv('REDIS_PROTOCOL', 'rediss');
+    vi.stubEnv('REDIS_HOST', 'redis.example.test');
+    vi.stubEnv('REDIS_PORT', '6379');
+    vi.stubEnv('REDIS_USERNAME', 'rels');
+    vi.stubEnv('REDIS_PASSWORD', 'super-secret-value');
+
+    const res = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+
+    expect(res.body.checks.redis).toEqual({ configured: true, protocol: 'rediss', host: 'redis.example.test', port: 6379, username: 'rels' });
+    expect(JSON.stringify(res.body)).not.toContain('super-secret-value');
 
     vi.unstubAllEnvs();
   });

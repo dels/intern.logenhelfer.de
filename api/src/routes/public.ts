@@ -756,8 +756,22 @@ router.get<{ token: string }>('/status/:token', statusRateLimiter, async (req, r
         postgres: { ok: postgresOk, host, port },
         // Whether the mail queue is routing through Redis vs. sending
         // inline (see mailQueue.ts's own doc comment) - not a live PING,
-        // matching this field's name: "configured", not "ok".
-        redis: { configured: redisConfigured() },
+        // matching this field's name: "configured", not "ok". Connection
+        // details are read straight off the same REDIS_* env vars
+        // redisConfigured()/buildRedisConnection() use - protocol/host/port/
+        // username, deliberately never the password, since this endpoint's
+        // only access control is a single static token in the URL.
+        redis: {
+          configured: redisConfigured(),
+          // `|| null`, not `?? null` - an empty string counts as unset here,
+          // matching redisConfigured()'s own truthiness check, so a blanked
+          // (e.g. test-gate's `-e REDIS_HOST=`) or merely-empty value reads
+          // as null rather than as an empty string.
+          protocol: process.env.REDIS_PROTOCOL || null,
+          host: process.env.REDIS_HOST || null,
+          port: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : null,
+          username: process.env.REDIS_USERNAME || null,
+        },
       },
     });
   } catch (err) {
