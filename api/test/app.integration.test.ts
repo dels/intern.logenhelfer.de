@@ -1210,4 +1210,30 @@ describe('app.ts integration', () => {
       expect(res.body.accounts[0]).toEqual({ email: expect.any(String), role: expect.any(String) });
     });
   });
+
+  // Regression: public.ts's GET /status/:token route was updated to return
+  // checks.redis.protocol/host/port/username, but openapi.yaml's PublicStatus
+  // schema was left declaring only `configured` with additionalProperties:
+  // false - found live 2026-08-09 on demo, a 500 from express-openapi-
+  // validator's RESPONSE validator ("must NOT have additional properties"),
+  // invisible to every test/routes/public.test.ts assertion since that file
+  // builds a standalone Express app around the router directly, bypassing
+  // the validator entirely (same class of bug as the mfa/challenge/methods
+  // regression below - only a test through the real, fully-wired `app` can
+  // catch a route/schema mismatch like this).
+  describe('GET /api/v1/public/status/:token contract validation (regression)', () => {
+    const REAL_TOKEN = process.env.STATUS_ENDPOINT_TOKEN ?? '';
+
+    it('returns a real 200 (not a contract-validation-rewritten 500) with the full redis details shape', async () => {
+      const res = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+      expect(res.status).toBe(200);
+      const redis = res.body.checks.redis;
+      expect(Object.keys(redis).sort()).toEqual(['configured', 'protocol', 'host', 'port', 'username'].sort());
+      expect(typeof redis.configured).toBe('boolean');
+      expect(redis.protocol === null || typeof redis.protocol === 'string').toBe(true);
+      expect(redis.host === null || typeof redis.host === 'string').toBe(true);
+      expect(redis.port === null || typeof redis.port === 'number').toBe(true);
+      expect(redis.username === null || typeof redis.username === 'string').toBe(true);
+    });
+  });
 });

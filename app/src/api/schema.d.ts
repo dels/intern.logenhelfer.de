@@ -1797,6 +1797,10 @@ export interface components {
                 };
                 redis: {
                     configured: boolean;
+                    protocol: string | null;
+                    host: string | null;
+                    port: number | null;
+                    username: string | null;
                 };
             };
         };

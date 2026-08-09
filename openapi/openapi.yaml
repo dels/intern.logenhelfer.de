@@ -3160,9 +3160,13 @@ components:
             redis:
               type: object
               additionalProperties: false
-              required: [configured]
+              required: [configured, protocol, host, port, username]
               properties:
                 configured: { type: boolean }
+                protocol: { type: string, nullable: true }
+                host: { type: string, nullable: true }
+                port: { type: integer, nullable: true }
+                username: { type: string, nullable: true }
     PublicImpressum:
       type: object
       additionalProperties: false
