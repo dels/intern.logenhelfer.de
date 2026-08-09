@@ -625,14 +625,27 @@ allow side misses that.
   not necessarily in lockstep with a blue/green cutover. Don't build a
   "since last deploy" guarantee on top of it without adding real
   deploy-timestamp tracking first.
-- **The Postgres check reports `host`/`port` only**, parsed via `new
-  URL(...)` in `api/src/db.ts`'s `databaseHostPort()`. Never thread the raw
-  `DATABASE_URL` (or `databaseUrl()`, which stays unexported) into this
-  route or its response — that would leak credentials + db name to anyone
-  who correctly guesses/receives the status URL.
-- **`checks.redis` is always `{configured: false}`** — there is no Redis in
-  this codebase. A future Redis addition should flip this value in place,
-  not invent a new response shape or a new Kuma monitor.
+- **The Postgres and Redis checks deliberately expose connection details —
+  host/port/username/database for Postgres, protocol/host/port/username for
+  Redis — but never a password, for either.** This endpoint's entire access
+  control is the URL token, so leaking *which* host/db/user a caller who
+  already has that token is talking to was judged an acceptable trade for
+  monitoring convenience; leaking a credential that lets them actually
+  connect is not. Postgres's fields are parsed via `new URL(...)` in
+  `api/src/db.ts`'s `databaseConnectionDetails()` (still never threads the
+  raw `DATABASE_URL`/`databaseUrl()`, which stays unexported, into the
+  route — the parsed fields only); Redis's are read straight off the
+  `REDIS_*` env vars in `api/src/routes/public.ts`. Any new field added to
+  either check must go through this same judgment call explicitly — default
+  to excluding it, not including it — and needs matching
+  `additionalProperties: false` + `required: [...]` updates in
+  `openapi/openapi.yaml`'s `PublicStatus` schema plus a regenerated
+  `app/src/api/schema.d.ts`, or a real response silently 500s (found live
+  2026-08-09 on demo: `express-openapi-validator`'s RESPONSE validator
+  rejecting a field the schema didn't yet know about — invisible to
+  `api/test/routes/public.test.ts` since that file bypasses the validator
+  entirely; only `api/test/app.integration.test.ts`, which exercises the
+  real wired `app`, catches this class of bug).
 
 ## General Advices
 

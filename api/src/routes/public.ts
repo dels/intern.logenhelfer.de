@@ -8,7 +8,7 @@ import { Router } from 'express';
 import { jsPDF } from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 
-import { prisma, databaseHostPort } from '../db.js';
+import { prisma, databaseConnectionDetails } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
@@ -742,7 +742,7 @@ router.get<{ token: string }>('/status/:token', statusRateLimiter, async (req, r
       postgresOk = false;
     }
 
-    const { host, port } = databaseHostPort();
+    const { host, port, username, database } = databaseConnectionDetails();
 
     res.status(postgresOk ? 200 : 503).json({
       status: postgresOk ? 'ok' : 'error',
@@ -753,7 +753,7 @@ router.get<{ token: string }>('/status/:token', statusRateLimiter, async (req, r
       // but a bare process restart (crash, host reboot) also resets this.
       uptime_seconds: Math.floor(process.uptime()),
       checks: {
-        postgres: { ok: postgresOk, host, port },
+        postgres: { ok: postgresOk, host, port, username, database },
         // Whether the mail queue is routing through Redis vs. sending
         // inline (see mailQueue.ts's own doc comment) - not a live PING,
         // matching this field's name: "configured", not "ok". Connection

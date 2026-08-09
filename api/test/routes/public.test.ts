@@ -753,9 +753,11 @@ describe('GET /api/v1/public/status/:token', () => {
     expect(typeof res.body.uptime_seconds).toBe('number');
     expect(res.body.revision === null || typeof res.body.revision === 'string').toBe(true);
     expect(Object.keys(res.body.checks).sort()).toEqual(['postgres', 'redis'].sort());
-    expect(Object.keys(res.body.checks.postgres).sort()).toEqual(['ok', 'host', 'port'].sort());
+    expect(Object.keys(res.body.checks.postgres).sort()).toEqual(['ok', 'host', 'port', 'username', 'database'].sort());
     expect(res.body.checks.postgres.port === null || typeof res.body.checks.postgres.port === 'number').toBe(true);
     expect(res.body.checks.postgres.host === null || typeof res.body.checks.postgres.host === 'string').toBe(true);
+    expect(res.body.checks.postgres.username === null || typeof res.body.checks.postgres.username === 'string').toBe(true);
+    expect(res.body.checks.postgres.database === null || typeof res.body.checks.postgres.database === 'string').toBe(true);
     // Connection details are fine to expose (this endpoint's whole access
     // control is the URL token), but the password never should be - assert
     // its absence explicitly rather than relying only on an exhaustive key
@@ -835,5 +837,26 @@ describe('GET /api/v1/public/status/:token', () => {
     const serialized = JSON.stringify(res.body);
     expect(serialized).not.toContain(process.env.DATABASE_URL ?? '');
     expect(serialized).not.toMatch(/postgres(ql)?:\/\//);
+  });
+
+  // checks.postgres.username/database are deliberate exposures (this
+  // endpoint's whole access control is the URL token - see CLAUDE.md's
+  // "Public status endpoint" section) but the password never is, even when
+  // a real one is actually set - checked with a real stubbed value rather
+  // than absent-by-coincidence, same pattern as the redis password test.
+  it('exposes checks.postgres.username/database but never the password, even when both are set', async () => {
+    vi.stubEnv('DATABASE_URL', 'postgres://the_db_user:super-secret-pg-password@db.example.test:5432/the_db_name');
+
+    const res = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+
+    expect(res.body.checks.postgres).toMatchObject({
+      host: 'db.example.test',
+      port: 5432,
+      username: 'the_db_user',
+      database: 'the_db_name',
+    });
+    expect(JSON.stringify(res.body)).not.toContain('super-secret-pg-password');
+
+    vi.unstubAllEnvs();
   });
 });

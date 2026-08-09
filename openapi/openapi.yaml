@@ -3152,11 +3152,13 @@ components:
             postgres:
               type: object
               additionalProperties: false
-              required: [ok, host, port]
+              required: [ok, host, port, username, database]
               properties:
                 ok: { type: boolean }
                 host: { type: string, nullable: true }
                 port: { type: integer, nullable: true }
+                username: { type: string, nullable: true }
+                database: { type: string, nullable: true }
             redis:
               type: object
               additionalProperties: false

@@ -1794,6 +1794,8 @@ export interface components {
                     ok: boolean;
                     host: string | null;
                     port: number | null;
+                    username: string | null;
+                    database: string | null;
                 };
                 redis: {
                     configured: boolean;

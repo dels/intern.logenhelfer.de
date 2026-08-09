@@ -10,15 +10,26 @@ function databaseUrl(): string {
   return value;
 }
 
-export function databaseHostPort(): { host: string | null; port: number | null } {
+// Deliberately excludes the password even though this endpoint's caller
+// already saw fit to expose host/port/username/database - see the CLAUDE.md
+// "Public status endpoint" section for why those four are fine to publish
+// behind the status token but the password never is.
+export function databaseConnectionDetails(): {
+  host: string | null;
+  port: number | null;
+  username: string | null;
+  database: string | null;
+} {
   try {
     const parsed = new URL(databaseUrl());
     return {
       host: parsed.hostname || null,
       port: parsed.port ? Number.parseInt(parsed.port, 10) : 5432,
+      username: parsed.username || null,
+      database: parsed.pathname.replace(/^\//, '') || null,
     };
   } catch {
-    return { host: null, port: null };
+    return { host: null, port: null, username: null, database: null };
   }
 }
 

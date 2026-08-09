@@ -1235,5 +1235,20 @@ describe('app.ts integration', () => {
       expect(redis.port === null || typeof redis.port === 'number').toBe(true);
       expect(redis.username === null || typeof redis.username === 'string').toBe(true);
     });
+
+    // Same class of bug as above, for checks.postgres.username/database added
+    // 2026-08-09 - a fresh regression through the real, fully-wired `app`
+    // guards against a repeat of the exact same schema-drift mistake.
+    it('returns a real 200 with the full postgres details shape', async () => {
+      const res = await request(app).get(`/api/v1/public/status/${REAL_TOKEN}`);
+      expect(res.status).toBe(200);
+      const postgres = res.body.checks.postgres;
+      expect(Object.keys(postgres).sort()).toEqual(['ok', 'host', 'port', 'username', 'database'].sort());
+      expect(typeof postgres.ok).toBe('boolean');
+      expect(postgres.host === null || typeof postgres.host === 'string').toBe(true);
+      expect(postgres.port === null || typeof postgres.port === 'number').toBe(true);
+      expect(postgres.username === null || typeof postgres.username === 'string').toBe(true);
+      expect(postgres.database === null || typeof postgres.database === 'string').toBe(true);
+    });
   });
 });
