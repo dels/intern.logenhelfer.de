@@ -279,7 +279,15 @@ Key facts to hold onto while working on or around this mechanism:
   NOT-zero-downtime `docker compose ... up -d --force-recreate edge` (same
   command as that migration) before its `edge` container actually picks up
   the new mounts and stops being vulnerable to this bug on its next
-  restart.
+  restart. `bin/deploy-to` seeds `.deploy-state/active-app-slot` from the
+  old bare `.active-app-slot` (if present and the new file doesn't exist
+  yet) right after its `mkdir -p`, specifically so this recreate can happen
+  in either order relative to that environment's next deploy — it no longer
+  matters which comes first, `18-deploy-state.envsh` always has something
+  correct to read on the recreate's first start either way.
+  `bin/compose`'s own `ACTIVE_APP_UPSTREAM` fallback (used when `edge` is
+  down and you need `logs`/`ps` to actually work) checks the same two paths
+  in the same order for the same reason.
 - **Adjacent footgun (same root cause, different trigger):** if something
   recreates an `edge-<env>` container outside of `bin/deploy-to`'s own swap
   (which always supplies `ACTIVE_APP_UPSTREAM` fresh via `docker exec -e

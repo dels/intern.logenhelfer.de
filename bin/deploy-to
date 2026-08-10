@@ -382,6 +382,18 @@ MAX_UPLOAD_MB="\${MAX_UPLOAD_MB:-20}"
 # unwritable by this script's later marker-file writes below.
 DEPLOY_STATE_DIR=.deploy-state
 mkdir -p "\$DEPLOY_STATE_DIR"
+# Seed from the old bare-file location (pre-2026-08-10) if this environment
+# hasn't written the new one yet. Covers the one bad ordering: an operator
+# does the one-time "recreate edge to pick up the new volume mounts" step
+# (see CLAUDE.md) before this environment has run a single deploy with this
+# script version - without this, that recreate's very first container start
+# would have nothing in \$DEPLOY_STATE_DIR for 18-deploy-state.envsh to read,
+# same gap this whole mechanism exists to close. An ordinary deploy always
+# writes the new location fresh regardless (see below), making this purely
+# a bridge for that one ordering, not a new source of truth of its own.
+if [ ! -s "\$DEPLOY_STATE_DIR/active-app-slot" ] && [ -s .active-app-slot ]; then
+  cp .active-app-slot "\$DEPLOY_STATE_DIR/active-app-slot"
+fi
 
 # COMPOSE_EXTRA_FILES, like EDGE_CONTAINER_NAME above, is OPTIONAL: most
 # environments have no COMPOSE_EXTRA_FILES key at all, so this must default
@@ -826,8 +838,17 @@ DEPLOY_COMMITTED=true
 # reaches DEPLOY_COMMITTED, so it correctly leaves these two files
 # untouched, pointing at the last successful deploy's slot - exactly the
 # slot rollback reloads edge back onto, so they stay truthful even then.
-echo "\${APP_CONTAINER}-\${INACTIVE_SLOT}" > "\$DEPLOY_STATE_DIR/active-app-slot" 2>/dev/null || true
-echo "\$MAX_UPLOAD_MB" > "\$DEPLOY_STATE_DIR/max-upload-mb" 2>/dev/null || true
+# Not a silent '|| true': a failed write here (disk full, permissions) would
+# leave this file naming the PREVIOUS slot while edge's actual rendered
+# config already names the new one and the old slot is about to be torn
+# down below - the exact stale-marker state that reintroduces the crash-loop
+# this mechanism exists to prevent, arrived at through the failure path
+# instead of a restart. Warn loudly rather than pretend it succeeded; still
+# don't abort an already-committed, already-live-verified deploy over it.
+echo "\${APP_CONTAINER}-\${INACTIVE_SLOT}" > "\$DEPLOY_STATE_DIR/active-app-slot" 2>/dev/null \
+  || echo "WARNING: failed to write \$DEPLOY_STATE_DIR/active-app-slot - edge will NOT self-heal its upstream on its next restart until this is fixed by hand (see CLAUDE.md)." >&2
+echo "\$MAX_UPLOAD_MB" > "\$DEPLOY_STATE_DIR/max-upload-mb" 2>/dev/null \
+  || echo "WARNING: failed to write \$DEPLOY_STATE_DIR/max-upload-mb - see the active-app-slot warning above." >&2
 
 # ─── Retire the now-old slot (steady state only) + prune ──────────────────────
 if [ "\$EDGE_RUNNING" = "true" ]; then
