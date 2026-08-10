@@ -339,6 +339,33 @@ describe('MembersListPage', () => {
     createObjectURLSpy.mockRestore();
   });
 
+  it('advances to page 2 on the first click of the next-page button (desktop table)', async () => {
+    // Regression test: useMembers had no placeholderData/keepPreviousData,
+    // so changing pages made `data` (and thus rowCount) momentarily
+    // undefined/0 while the new page fetched. DataGrid's own row-count
+    // self-correction then snapped the page back to 0 mid-flight, so the
+    // first click appeared to do nothing - only a second click "stuck".
+    const requestedPages: number[] = [];
+    server.use(http.get('/api/v1/members', ({ request }) => {
+      const url = new URL(request.url);
+      const page = Number(url.searchParams.get('page'));
+      requestedPages.push(page);
+      return HttpResponse.json({
+        rows: [memberRow(page === 0 ? {} : { uuid: 'm2', firstname: 'Erika', lastname: 'Zweitseite' })],
+        row_count: 30, // pageSize 25 -> 2 pages
+      });
+    }));
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Max Mitglied')).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Zur nächsten Seite' }));
+
+    await waitFor(() => expect(screen.getByText('Erika Zweitseite')).toBeInTheDocument());
+    // Only ever asked for page 0 then page 1 - no self-correcting bounce
+    // back to 0 in between (which would show up as a repeated 0 here).
+    expect(requestedPages).toEqual([0, 1]);
+  });
+
   it('formats degree/accepted/birth dates in the exported PDF instead of raw ISO strings', async () => {
     autoTableCalls.length = 0;
     server.use(

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { jsPDF } from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import { encryptPDF } from '@pdfsmaller/pdf-encrypt-lite';
@@ -18,6 +18,11 @@ export function useMembers(page: number, pageSize: number, sort: string, search:
       apiFetch<MemberList>(
         `/api/v1/members?page=${page}&per_page=${pageSize}&sort=${encodeURIComponent(sort)}&search=${encodeURIComponent(search)}`,
       ),
+    // Without this, `data`/`row_count` collapse to undefined/0 while a new
+    // page is in flight, and DataGrid's own row-count self-correction snaps
+    // the page back to 0 mid-fetch - the first "next page" click appeared
+    // to do nothing (only a second click "stuck").
+    placeholderData: keepPreviousData,
   });
 }
 
