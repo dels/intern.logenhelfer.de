@@ -117,6 +117,8 @@
     "registeredToast": "Registered for {{name}}.",
     "exportWorkingplanPdf": "Export working plan as PDF",
     "birthdayCalendarIncludeLink": "Add birthday calendar",
+    "birthdayCalendarCopied": "Link copied. Add it to your calendar app as a calendar subscription.",
+    "birthdayCalendarCopyFailed": "Failed to copy the link.",
     "calendar": {
       "filterBirthdays": "Birthdays",
       "filterExternalEvents": "External events",
@@ -633,7 +635,9 @@
     "noEvents": "No upcoming events.",
     "icsSubscribe": "Subscribe to this calendar (.ics)",
     "exportPdf": "Download as PDF",
-    "birthdayCalendarSubscribe": "Birthday calendar"
+    "birthdayCalendarSubscribe": "Birthday calendar",
+    "birthdayCalendarCopied": "Link copied. Add it to your calendar app as a calendar subscription.",
+    "birthdayCalendarCopyFailed": "Failed to copy the link."
   },
   "publicLayout": {
     "loginLink": "Sign in",

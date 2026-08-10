@@ -117,6 +117,8 @@
     "registeredToast": "Zur Veranstaltung {{name}} angemeldet.",
     "exportWorkingplanPdf": "Arbeitsplan als PDF exportieren",
     "birthdayCalendarIncludeLink": "Geburtstagskalender einbinden",
+    "birthdayCalendarCopied": "Link kopiert. Füge ihn in deiner Kalender-App als Kalenderabo hinzu.",
+    "birthdayCalendarCopyFailed": "Kopieren des Links fehlgeschlagen.",
     "calendar": {
       "filterBirthdays": "Geburtstage",
       "filterExternalEvents": "Termine außer Haus",
@@ -634,7 +636,9 @@
     "noEvents": "Aktuell keine Termine.",
     "icsSubscribe": "Diesen Kalender abonnieren (.ics)",
     "exportPdf": "Als PDF herunterladen",
-    "birthdayCalendarSubscribe": "Geburtstagkalender"
+    "birthdayCalendarSubscribe": "Geburtstagkalender",
+    "birthdayCalendarCopied": "Link kopiert. Füge ihn in deiner Kalender-App als Kalenderabo hinzu.",
+    "birthdayCalendarCopyFailed": "Kopieren des Links fehlgeschlagen."
   },
   "publicLayout": {
     "loginLink": "Anmelden",

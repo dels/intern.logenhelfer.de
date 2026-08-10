@@ -14,12 +14,15 @@ import EventsListTable from './EventsListTable';
 import CalendarFilter from './CalendarFilter';
 import { useAuth } from '../../auth/AuthProvider';
 import { formatDate } from '../../utils/formatDate';
+import { copyToClipboard } from '../../utils/copyToClipboard';
+import { useToast } from '../../notifications/useToast';
 
 type ViewMode = 'list' | 'calendar';
 
 export default function EventsListPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const toast = useToast();
   const { abilities } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [anchor, setAnchor] = useState<Date>(new Date());
@@ -43,7 +46,17 @@ export default function EventsListPage() {
         <Typography variant="h1">{t('nav.events')}</Typography>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
           {birthdayCalendarIcsUrl && (
-            <Button component="a" href={birthdayCalendarIcsUrl} startIcon={<CakeIcon />}>
+            <Button
+              startIcon={<CakeIcon />}
+              onClick={async () => {
+                try {
+                  await copyToClipboard(new URL(birthdayCalendarIcsUrl, window.location.origin).href);
+                  toast.success(t('events.birthdayCalendarCopied'));
+                } catch {
+                  toast.error(t('events.birthdayCalendarCopyFailed'));
+                }
+              }}
+            >
               {t('events.birthdayCalendarIncludeLink')}
             </Button>
           )}
