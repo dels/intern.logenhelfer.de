@@ -8,6 +8,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import EventsListPage from './EventsListPage';
 import { toLocalDateString } from './api';
 import { AuthProvider } from '../../auth/AuthProvider';
+import { ToastProvider } from '../../notifications/ToastProvider';
 import '../../i18n';
 import i18n from '../../i18n';
 
@@ -53,23 +54,34 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
 afterEach(() => {
   server.resetHandlers();
   vi.useRealTimers();
+  Reflect.deleteProperty(navigator, 'clipboard');
 });
 afterAll(() => server.close());
+
+// jsdom has no Clipboard implementation - define it directly on the real
+// `navigator` (rather than `vi.stubGlobal('navigator', {...})`) so every
+// other property (userAgent, language, ...) stays intact for the rest of
+// the test. Cleaned up in the afterEach above, even on assertion failure.
+function stubClipboardWriteText(writeText: (text: string) => Promise<void>) {
+  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+}
 
 function renderPage() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <MemoryRouter initialEntries={['/events']}>
-          <Routes>
-            <Route path="/events" element={<EventsListPage />} />
-            <Route path="/events/new" element={<div>New event page</div>} />
-            <Route path="/events/:uuid/edit" element={<div>Edit event page</div>} />
-            <Route path="/external-events/new" element={<div>New external event page</div>} />
-          </Routes>
-        </MemoryRouter>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <MemoryRouter initialEntries={['/events']}>
+            <Routes>
+              <Route path="/events" element={<EventsListPage />} />
+              <Route path="/events/new" element={<div>New event page</div>} />
+              <Route path="/events/:uuid/edit" element={<div>Edit event page</div>} />
+              <Route path="/external-events/new" element={<div>New external event page</div>} />
+            </Routes>
+          </MemoryRouter>
+        </AuthProvider>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -309,13 +321,33 @@ describe('EventsListPage', () => {
     createObjectURLSpy.mockRestore();
   });
 
-  it('shows the birthday-calendar ICS link only when the public landing config provides one', async () => {
+  it('shows the birthday-calendar button only when the public landing config provides a URL', async () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
-    expect(screen.queryByRole('link', { name: 'Geburtstagskalender einbinden' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Geburtstagskalender einbinden' })).not.toBeInTheDocument();
+  });
 
+  it('copies the absolute birthday-calendar URL to the clipboard and shows a toast, instead of navigating', async () => {
     server.use(http.get('/api/v1/public/landing', () => HttpResponse.json({ birthday_calendar_ics_url: '/api/v1/public/birthdays/secret/calendar.ics' })));
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    stubClipboardWriteText(writeText);
     renderPage();
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Geburtstagskalender einbinden' })).toHaveAttribute('href', '/api/v1/public/birthdays/secret/calendar.ics'));
+
+    const button = await screen.findByRole('button', { name: 'Geburtstagskalender einbinden' });
+    expect(button.tagName).not.toBe('A');
+    await userEvent.click(button);
+
+    expect(writeText).toHaveBeenCalledWith(new URL('/api/v1/public/birthdays/secret/calendar.ics', window.location.origin).href);
+    await waitFor(() => expect(screen.getByText('Link kopiert. Füge ihn in deiner Kalender-App als Kalenderabo hinzu.')).toBeInTheDocument());
+  });
+
+  it('shows an error toast when the clipboard write fails', async () => {
+    server.use(http.get('/api/v1/public/landing', () => HttpResponse.json({ birthday_calendar_ics_url: '/api/v1/public/birthdays/secret/calendar.ics' })));
+    stubClipboardWriteText(vi.fn().mockRejectedValue(new Error('denied')));
+    renderPage();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Geburtstagskalender einbinden' }));
+
+    await waitFor(() => expect(screen.getByText('Kopieren des Links fehlgeschlagen.')).toBeInTheDocument());
   });
 });

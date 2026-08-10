@@ -19,9 +19,13 @@ bin/webpack*
 .babelrc
 # un-ignore our compose wrapper (ignored by some global gitignores)
 !bin/compose
-# bin/deploy-to's advisory, host-local marker of the last live-verified
-# blue/green slot (see CLAUDE.md's edge-recreate footgun bullet) - written
-# into each deploy host's checkout, never meant to be tracked
+# bin/deploy-to's host-local deploy-state dir (active-app-slot,
+# max-upload-mb - see CLAUDE.md's edge-recreate footgun bullet and
+# infra/edge/18-deploy-state.envsh) - written into each deploy host's
+# checkout, never meant to be tracked. .active-app-slot is the old
+# pre-2026-08-10 single-file location, kept ignored in case a stale one is
+# still lying around on some host's checkout.
+.deploy-state/
 .active-app-slot
 
 # Defensive: never track certs/keys, coverage output, or local-only Claude state

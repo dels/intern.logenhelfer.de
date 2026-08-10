@@ -95,15 +95,21 @@ fi
 # of which service the subcommand targets, so even `logs`/`ps` fail if this
 # is unset. Derive it the same way bin/deploy-to does: ask the running edge
 # container what it's actually proxying to (source of truth), falling back
-# to the advisory .active-app-slot marker if edge isn't up yet. Never
-# overrides a value the caller already exported.
+# to the .deploy-state/active-app-slot marker if edge isn't up yet (same
+# file edge's own 18-deploy-state.envsh reads on every container start -
+# see infra/edge/18-deploy-state.envsh), further falling back to the older
+# bare .active-app-slot (pre-2026-08-10 location) for an environment that
+# hasn't redeployed since that migration yet - without this second fallback,
+# any environment whose edge is down RIGHT NOW and hasn't deployed since
+# would lose the one thing that made bin/compose usable during an incident
+# in the first place. Never overrides a value the caller already exported.
 if [[ "$IS_PROD" == true && -z "${ACTIVE_APP_UPSTREAM:-}" ]]; then
   EDGE_CONTAINER="$(envval EDGE_CONTAINER_NAME)"
   if [[ -n "$EDGE_CONTAINER" ]] && [[ "$(docker inspect -f '{{.State.Running}}' "$EDGE_CONTAINER" 2>/dev/null)" == "true" ]]; then
     ACTIVE_APP_UPSTREAM="$(docker exec "$EDGE_CONTAINER" sh -c \
       "grep -oE 'proxy_pass http://[a-zA-Z0-9_.-]+' /etc/nginx/conf.d/default.conf | head -1 | sed 's#proxy_pass http://##'" 2>/dev/null || true)"
   fi
-  [[ -n "$ACTIVE_APP_UPSTREAM" ]] || ACTIVE_APP_UPSTREAM="$(cat .active-app-slot 2>/dev/null || true)"
+  [[ -n "${ACTIVE_APP_UPSTREAM:-}" ]] || ACTIVE_APP_UPSTREAM="$(cat .deploy-state/active-app-slot 2>/dev/null || cat .active-app-slot 2>/dev/null || true)"
   [[ -z "$ACTIVE_APP_UPSTREAM" ]] || export ACTIVE_APP_UPSTREAM
 fi
 

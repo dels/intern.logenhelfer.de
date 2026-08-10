@@ -1,0 +1,44 @@
+#!/bin/sh
+# Sourced by the nginx image's docker-entrypoint.sh (the .envsh extension is
+# what makes it sourced rather than executed - see the built-in
+# 15-local-resolvers.envsh this runs alongside) BEFORE the built-in
+# 20-envsubst-on-templates.sh renders default.conf.template. Anything this
+# exports is what that render sees.
+#
+# Why this exists: bin/deploy-to's zero-downtime swap (docker exec + envsubst
+# + nginx -s reload) rewrites the RENDERED FILE on disk, never this
+# container's own baked-in environment (Config.Env, set once at
+# creation/--force-recreate time). That's fine as long as edge itself never
+# restarts. But nginx's entrypoint re-runs envsubst from scratch on EVERY
+# container start, including a plain restart with no docker exec/recreate in
+# between - so a host reboot, an OOM-kill, or `docker restart edge-<env>`
+# always re-renders from the stale creation-time value, not whatever the
+# last real swap actually pointed at. That staleness is exactly what
+# repeatedly crash-looped edge in production (fwze, demo, and others before
+# them) after a host restart: the baked value named a slot that had since
+# been swapped away from and torn down.
+#
+# Fix: read the CURRENT values fresh from bind-mounted state files
+# (written by bin/deploy-to right after every live-verified cutover - see
+# its own comment) on every single start, and let them override the baked
+# env. This mount is a single FILE, not a directory, unlike the templates
+# mount in this same directory - see this repo's CLAUDE.md on why a directory
+# mount at /docker-entrypoint.d/ would shadow the image's own 10-/15-/20-/
+# 30- scripts and break envsubst entirely. The inode-pinning caveat that
+# directory mounts elsewhere solve for does NOT apply here - this script
+# only runs once per container start, so "an edit to THIS script itself only
+# takes effect on the next recreate" is an acceptable, rare exception (this
+# script changes far less often than the nginx template it feeds).
+#
+# [ -s FILE ] (not -f): a present-but-EMPTY marker must not override the
+# compose-level ${ACTIVE_APP_UPSTREAM:?...} with an empty string - envsubst
+# would render "proxy_pass http://:8080;", an invalid directive, i.e. a
+# fresh, more confusing crash-loop instead of the one this fixes.
+if [ -s /run/deploy-state/active-app-slot ]; then
+  ACTIVE_APP_UPSTREAM="$(cat /run/deploy-state/active-app-slot)"
+  export ACTIVE_APP_UPSTREAM
+fi
+if [ -s /run/deploy-state/max-upload-mb ]; then
+  NGINX_CLIENT_MAX_BODY_SIZE_MB="$(cat /run/deploy-state/max-upload-mb)"
+  export NGINX_CLIENT_MAX_BODY_SIZE_MB
+fi

@@ -205,53 +205,120 @@ Key facts to hold onto while working on or around this mechanism:
   bind it for the very first time. Every deploy after that one is
   zero-downtime. This is expected and by design, not a bug — don't try to
   eliminate it.
-- **Reboot-ordering caveat (accepted, self-healing limitation):** `edge`'s
-  `proxy_pass` target in `infra/edge/default.conf.template` is a plain
-  hardcoded hostname, not resolved via nginx's `resolver` directive — it's
-  only ever re-rendered and reloaded on a deliberate blue-green swap, so
-  there's no per-request re-resolution trick here (unlike `app`'s own
+- **Reboot-ordering caveat (accepted, genuinely self-healing part):**
+  `edge`'s `proxy_pass` target in `infra/edge/default.conf.template` is a
+  plain hardcoded hostname, not resolved via nginx's `resolver` directive —
+  it's only ever re-rendered and reloaded on a deliberate blue-green swap,
+  so there's no per-request re-resolution trick here (unlike `app`'s own
   `/api/` block, see that template's own comment for why the simpler form
   is sufficient given how infrequently `edge`'s target changes). This means
   the hostname is resolved once, at nginx config-load time. If the whole
   deploy host reboots, Docker restarts every `restart: unless-stopped`
   container (`edge`, both `api-*` slots, both `app-*` slots) without
-  guaranteeing start order — if `edge` happens to start before its active
-  slot's `app` container is reachable, nginx fails its config-load DNS
-  lookup and the `edge` container exits. This is self-healing: Docker's
-  restart policy keeps retrying `edge` on backoff until the hostname
-  resolves, typically within seconds once the `app` container catches up —
-  so it's a transient, reboot-only blip, not a deploy-time or steady-state
-  issue. Documented here as a known, accepted limitation rather than
-  something to "fix" with a `resolver` directive — that would trade a rare
-  few-seconds reboot blip for permanent per-request DNS-resolution
-  complexity on every single proxied request, a bad trade for how
-  infrequently full host reboots happen. Adjacent footgun (same root cause,
-  different trigger): if something recreates an `edge-<env>` container
-  outside of `bin/deploy-to`'s own swap (which always supplies
-  `ACTIVE_APP_UPSTREAM` fresh via `docker exec -e ...` regardless of what's
-  baked in), a compose default like `ACTIVE_APP_UPSTREAM:
-  ${ACTIVE_APP_UPSTREAM:-app}` would silently bake in the literal,
-  never-valid container name `app` (real names are always
+  guaranteeing start order — if `edge` happens to start before its
+  *currently-correct* slot's `app` container is reachable, nginx fails its
+  config-load DNS lookup and the `edge` container exits. This part really is
+  self-healing: Docker's restart policy keeps retrying `edge` on backoff
+  until the hostname resolves, typically within seconds once the `app`
+  container catches up — a transient, reboot-only blip, not a deploy-time
+  or steady-state issue. Not worth a `resolver` directive — that would trade
+  a rare few-seconds reboot blip for permanent per-request DNS-resolution
+  complexity on every single proxied request.
+- **Stale-baked-`ACTIVE_APP_UPSTREAM` bug (was miscategorized as part of the
+  reboot-ordering caveat above; actually NOT self-healing — fixed
+  2026-08-10 after recurring on fwze and demo, both down simultaneously
+  after a host reboot).** The confusion: a container *restart* (as opposed
+  to a `docker compose` recreate) re-runs nginx's entrypoint envsubst using
+  whatever was baked into `edge`'s `Config.Env` at its last
+  creation/`--force-recreate` — never what a later zero-downtime swap
+  (`docker exec` + `envsubst` + `nginx -s reload`, no recreate involved)
+  actually pointed it at. A normal blue/green swap rewrites the *rendered
+  file* only, so the container's own baked env goes stale the moment a
+  single real swap has happened. Every restart after that — reboot,
+  OOM-kill, a plain `docker restart`, an ad hoc recreate — re-derives from
+  that stale value. If the old slot it names has since been torn down (the
+  normal case a few deploys later), that's not a transient DNS race that
+  clears in seconds; it's a permanent crash-loop, because the hostname will
+  never resolve. This is what a bare `docker compose up --force-recreate
+  edge` with no default was already loudly guarding against (the
+  `ACTIVE_APP_UPSTREAM: ${ACTIVE_APP_UPSTREAM:?...}` requirement, added for
+  the literal-`"app"` incident below) — but a *restart* never goes through
+  `docker compose` interpolation at all, so that guard did nothing for it.
+  **Fix:** `infra/edge/18-deploy-state.envsh` is bind-mounted into
+  `edge` as a single **file** (deliberately not a directory — see the
+  template-mount bullet below for why a directory mount at
+  `/docker-entrypoint.d/` would shadow the image's own numbered scripts and
+  break envsubst outright; the inode-pinning problem that bullet solves for
+  doesn't apply here since this script only runs at container start, so an
+  edit to it taking effect only on the next recreate is an acceptable, rare
+  exception). It's an `.envsh` file, so the nginx entrypoint *sources* it
+  (same mechanism as the image's own `15-local-resolvers.envsh`) before
+  `20-envsubst-on-templates.sh` runs, and it re-derives both
+  `ACTIVE_APP_UPSTREAM` and `NGINX_CLIENT_MAX_BODY_SIZE_MB` fresh, on every
+  single start, from `./.deploy-state/active-app-slot` /
+  `./.deploy-state/max-upload-mb` — a small directory-mounted (same
+  rationale) deploy-host-local state dir that `bin/deploy-to` `mkdir -p`s
+  early and writes into right after every live-verified cutover (same two
+  values it already threads via `docker exec -e` into the swap itself, now
+  also persisted to survive a restart). Guards on `[ -s FILE ]`, not
+  `[ -f FILE ]` — a present-but-empty marker must not override the baked
+  `${...:?}` value with an empty string, which would render
+  `proxy_pass http://:8080;`, an invalid directive, i.e. a different,
+  more confusing crash-loop. A brand-new environment's very first
+  `docker compose up` (before any marker file exists yet) correctly falls
+  back to the compose-level `${ACTIVE_APP_UPSTREAM:?...}` value, unchanged
+  from before. The `.active-app-slot` marker file this superseded (moved to
+  `.deploy-state/active-app-slot`, alongside the new
+  `.deploy-state/max-upload-mb`) used to be described here as "purely
+  advisory, not a new source of truth" — that's no longer accurate: it's
+  now load-bearing at `edge`-container-*start* time, not just a human's
+  manual-recovery aid. `bin/deploy-to`'s own current-state *discovery*
+  (grep-ing `edge`'s live rendered config) is unchanged and still the real
+  source of truth for what `bin/deploy-to` itself trusts.
+  **Rollout/migration caveat:** a `volumes:` change doesn't retroactively
+  affect an already-running container (same class of exception as the
+  edge-template directory-mount migration below) — any environment
+  deployed before this fix landed needs one manual, deliberate,
+  NOT-zero-downtime `docker compose ... up -d --force-recreate edge` (same
+  command as that migration) before its `edge` container actually picks up
+  the new mounts and stops being vulnerable to this bug on its next
+  restart. `bin/deploy-to` seeds `.deploy-state/active-app-slot` from the
+  old bare `.active-app-slot` (if present and the new file doesn't exist
+  yet) right after its `mkdir -p` — but that seeding only runs when
+  `bin/deploy-to` itself runs, so it covers "deploy, then recreate" and "a
+  deploy got interrupted before cutover, then recreate," not "recreate
+  before this environment has ever run a single deploy with this script
+  version." For that last case the recreate command still needs its
+  `ACTIVE_APP_UPSTREAM=<slot>` prefix by hand (still `:?`-required, so a bad
+  guess fails loud rather than silently misrouting - no outage risk either
+  way) — or just `cp .active-app-slot .deploy-state/active-app-slot` first.
+  `bin/compose`'s own `ACTIVE_APP_UPSTREAM` fallback (used when `edge` is
+  down and you need `logs`/`ps` to actually work) checks both paths, in the
+  same order, independent of whether either script has run since.
+- **Adjacent footgun (same root cause, different trigger):** if something
+  recreates an `edge-<env>` container outside of `bin/deploy-to`'s own swap
+  (which always supplies `ACTIVE_APP_UPSTREAM` fresh via `docker exec -e
+  ...` regardless of what's baked in), a compose default like
+  `ACTIVE_APP_UPSTREAM: ${ACTIVE_APP_UPSTREAM:-app}` would silently bake in
+  the literal, never-valid container name `app` (real names are always
   `app-<env>-blue`/`-green`) with zero indication of what the right value
   should have been — this is why that var is the required-var form,
   `ACTIVE_APP_UPSTREAM: ${ACTIVE_APP_UPSTREAM:?...}` (same tier as
   `DATABASE_URL`/`JWT_SECRET`), so a bad ad hoc recreate fails loudly at
   `docker compose` invocation time instead of crash-looping with no hint —
-  its error message points at the `.active-app-slot` marker file (written
-  by `bin/deploy-to` right after every live-verified cutover; purely
-  advisory, **not** a new source of truth — `bin/deploy-to` itself still
-  always reads `edge`'s own live rendered config, same as before) for the
-  value to supply. Because `docker compose` interpolates every service's
-  `environment:` block on every invocation regardless of target service,
-  making this var required on `edge` alone would break every other `dc
-  build`/`dc run` call in `bin/deploy-to` that targets `api`/`app` — fixed
-  alongside by exporting a script-wide `ACTIVE_APP_UPSTREAM` right after the
-  active slot is determined, ahead of every later `dc` call.
+  its error message points at `.deploy-state/active-app-slot` (see above)
+  for the value to supply. Because `docker compose` interpolates every
+  service's `environment:` block on every invocation regardless of target
+  service, making this var required on `edge` alone would break every other
+  `dc build`/`dc run` call in `bin/deploy-to` that targets `api`/`app` —
+  fixed alongside by exporting a script-wide `ACTIVE_APP_UPSTREAM` right
+  after the active slot is determined, ahead of every later `dc` call.
   `bin/deploy-to` never force-recreates `edge` itself (it only reloads it
   in place), so this remains a footgun for a human running raw `docker
-  compose` commands against a live environment — the fix makes that
-  footgun loud instead of silent, it doesn't remove the need to supply the
-  right value by hand.
+  compose` commands against a live environment — preferring to write
+  `.deploy-state/active-app-slot` over passing `-e` for a manual recreate
+  (see above) now also survives that container's next restart, not just
+  fixing the one recreate.
 - **Edge's nginx template is bind-mounted as a directory
   (`infra/edge/`), never as a single file — this is load-bearing for
   zero-downtime template edits, not a style choice.** A single-file bind
@@ -277,8 +344,10 @@ Key facts to hold onto while working on or around this mechanism:
   infra/docker-compose.production.yml --env-file .env.<env> -p
   logenhelfer-<env> up -d --force-recreate edge` (the `ACTIVE_APP_UPSTREAM=`
   prefix is required since that var has no safe default — find the value in
-  that environment's `.active-app-slot`, or from `docker ps`/edge's own
-  currently-rendered config). This one recreate is NOT zero-downtime (same
+  that environment's `.deploy-state/active-app-slot`, or from `docker
+  ps`/edge's own currently-rendered config). This same recreate is also
+  what an environment needs once to pick up the stale-`ACTIVE_APP_UPSTREAM`
+  fix's new volume mounts — see that bullet above. This one recreate is NOT zero-downtime (same
   class of exception as the original blue/green first-deploy transition
   above) — do it as a deliberate, confirmed, low-traffic-window action per
   environment, not folded into a routine deploy. A brand-new environment's

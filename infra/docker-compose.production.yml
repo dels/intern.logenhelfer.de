@@ -163,29 +163,48 @@ services:
       # any other change — no detection logic or forced recreate needed in
       # bin/deploy-to.
       - ./edge:/etc/nginx/templates:ro
+      # Single-FILE mount, deliberately the opposite of the directory mount
+      # just above. A directory mount at /docker-entrypoint.d/ would shadow
+      # the nginx image's own numbered scripts (10-listen-on-ipv6,
+      # 15-local-resolvers.envsh, 20-envsubst-on-templates.sh,
+      # 30-tune-worker-processes.sh) instead of adding to them, which breaks
+      # envsubst entirely. The inode-pinning caveat the directory mount above
+      # exists to dodge doesn't bite here: this script only runs once at
+      # container start, so an edit to it taking effect only on the next
+      # recreate (not a live reload) is fine - see the script's own comment.
+      - ./edge/18-deploy-state.envsh:/docker-entrypoint.d/18-deploy-state.envsh:ro
+      # Directory mount (same rationale as the templates mount above): lets
+      # bin/deploy-to's marker-file writes (after every live-verified
+      # cutover) be picked up without needing edge itself recreated. See
+      # 18-deploy-state.envsh for what reads this.
+      - ../.deploy-state:/run/deploy-state:ro
     environment:
-      # Found 2026-08-01 on prod: a real, severe production outage. Something
-      # (not bin/deploy-to's own swap - that always supplies both these vars
-      # fresh via `docker exec -e ...` on every cutover, regardless of what's
-      # baked into the container - see this same repo's own CLAUDE.md on that
-      # point) caused edge-prod's *container itself* to restart, re-running
-      # its entrypoint's envsubst against THIS environment: block using
-      # whatever `docker compose up`/`--force-recreate` resolves at that
-      # moment. With the old `${ACTIVE_APP_UPSTREAM:-app}` default, an
-      # operator recreating edge without explicitly passing
-      # `ACTIVE_APP_UPSTREAM=<real-slot-name>` (there is no way to guess this
-      # correctly without already knowing it - see the marker file below)
-      # silently got the literal, never-valid container name "app" baked in,
-      # producing a "host not found in upstream 'app'" crash-loop with no
-      # actionable hint at all about what the *right* value would have been.
-      # `:?` converts that into an immediate, loud `docker compose` failure
-      # at invocation time instead - exactly the same tier as DATABASE_URL/
-      # JWT_SECRET above, and for the same reason: there is no universally
-      # safe default for this value, so failing loud beats guessing wrong.
-      # See ${DEPLOY_PATH}/.active-app-slot (written by bin/deploy-to on
-      # every successful cutover - see that script's own comment) for the
-      # value to supply during a manual recovery recreate.
-      ACTIVE_APP_UPSTREAM: ${ACTIVE_APP_UPSTREAM:?set ACTIVE_APP_UPSTREAM to the currently-active slot container name (see DEPLOY_PATH/.active-app-slot) before recreating edge by hand - there is no safe default}
+      # Found 2026-08-01 on prod, recurred 2026-08-10 on fwze+demo after a
+      # host reboot restarted (not recreated) edge with no deploy in
+      # between: a container RESTART re-runs nginx's entrypoint envsubst
+      # against THIS environment: block using whatever was baked in at this
+      # container's last creation/--force-recreate - never what a later
+      # zero-downtime swap (docker exec + reload, no recreate) actually
+      # pointed edge at. That baked value goes stale the moment a normal
+      # swap happens, so ANY subsequent restart (reboot, OOM-kill, a plain
+      # `docker restart`, an ad hoc recreate) reverts to it and crash-loops
+      # on a slot that's since been swapped away from and torn down.
+      #
+      # 18-deploy-state.envsh (mounted above, runs before this block is
+      # substituted) now closes that gap: it reads the CURRENT slot fresh
+      # from the bind-mounted state dir on every single start and overrides
+      # whatever's baked in here. This `:?`-required value is now only the
+      # fallback for the one case the state dir can't cover - a brand-new
+      # environment's very first `docker compose up`, before bin/deploy-to
+      # has ever written a marker file. Still fails loud rather than
+      # guessing (see the old literal-"app" incident this `:?` was added
+      # for) - there is still no universally safe default.
+      #
+      # For a manual recovery recreate, prefer writing
+      # ${DEPLOY_PATH}/.deploy-state/active-app-slot (picked up automatically,
+      # survives future restarts too) over passing -e here (which only fixes
+      # THIS recreate and goes stale again on the next restart).
+      ACTIVE_APP_UPSTREAM: ${ACTIVE_APP_UPSTREAM:?set ACTIVE_APP_UPSTREAM to the currently-active slot container name (see DEPLOY_PATH/.deploy-state/active-app-slot) before recreating edge by hand - there is no safe default}
       NGINX_CLIENT_MAX_BODY_SIZE_MB: ${MAX_UPLOAD_FILE_SIZE_MB:-20}
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/version.json || exit 1"]
