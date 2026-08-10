@@ -103,7 +103,7 @@ if [[ "$IS_PROD" == true && -z "${ACTIVE_APP_UPSTREAM:-}" ]]; then
     ACTIVE_APP_UPSTREAM="$(docker exec "$EDGE_CONTAINER" sh -c \
       "grep -oE 'proxy_pass http://[a-zA-Z0-9_.-]+' /etc/nginx/conf.d/default.conf | head -1 | sed 's#proxy_pass http://##'" 2>/dev/null || true)"
   fi
-  [[ -n "$ACTIVE_APP_UPSTREAM" ]] || ACTIVE_APP_UPSTREAM="$(cat .active-app-slot 2>/dev/null || true)"
+  [[ -n "${ACTIVE_APP_UPSTREAM:-}" ]] || ACTIVE_APP_UPSTREAM="$(cat .active-app-slot 2>/dev/null || true)"
   [[ -z "$ACTIVE_APP_UPSTREAM" ]] || export ACTIVE_APP_UPSTREAM
 fi
 
