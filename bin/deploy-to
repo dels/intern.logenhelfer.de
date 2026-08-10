@@ -370,6 +370,19 @@ fi
 MAX_UPLOAD_MB=\$(grep '^MAX_UPLOAD_FILE_SIZE_MB=' "\$ENV_FILE" | tail -1 | cut -d= -f2- || echo "")
 MAX_UPLOAD_MB="\${MAX_UPLOAD_MB:-20}"
 
+# Deploy-state dir: bind-mounted into edge (infra/docker-compose.production.yml's
+# edge service + infra/edge/18-deploy-state.envsh) so edge re-derives its own
+# upstream + max-body-size fresh on every single start, not only right after
+# a deploy - see that script's own comment for why the older docker-exec -e
+# swap alone left edge vulnerable to reverting to a stale slot on a plain
+# restart (host reboot, OOM-kill, ad hoc "docker restart edge-<env>", no
+# deploy-to run involved at all). mkdir'd here, as the deploy user, before
+# any dc call that might create/recreate edge - leaving it to docker to
+# auto-create the mount source on first use would make it root-owned and
+# unwritable by this script's later marker-file writes below.
+DEPLOY_STATE_DIR=.deploy-state
+mkdir -p "\$DEPLOY_STATE_DIR"
+
 # COMPOSE_EXTRA_FILES, like EDGE_CONTAINER_NAME above, is OPTIONAL: most
 # environments have no COMPOSE_EXTRA_FILES key at all, so this must default
 # to empty rather than hard-require it the way API_CONTAINER_NAME/
@@ -793,14 +806,28 @@ DEPLOY_COMMITTED=true
 # manual, ad hoc recreate meant reverse-engineering the currently-active
 # slot from 'docker ps' timestamps and container health, with no
 # authoritative source once edge's own rendered config is exactly the thing
-# a recreate destroys. This file is a purely-advisory, best-effort recovery
-# aid for that exact situation - NOT a new source of truth for bin/deploy-to
-# itself, which still always reads edge's own live rendered config on every
-# run (see the "Discover current deployment state" step above) precisely so
-# it never depends on a flag file that could drift from reality. Written
-# only after live verification above, so it always reflects a genuinely
-# confirmed-good slot, never a rolled-back one.
-echo "\${APP_CONTAINER}-\${INACTIVE_SLOT}" > .active-app-slot 2>/dev/null || true
+# a recreate destroys. These files started as a purely-advisory, best-effort
+# recovery aid for that exact situation - bin/deploy-to itself still always
+# reads edge's own live rendered config on every run (see the "Discover
+# current deployment state" step above) precisely so it never depends on a
+# flag file that could drift from reality, and that's unchanged here.
+#
+# They are NOT purely advisory anymore, though (recurred 2026-08-10 on
+# fwze+demo): edge's own 18-deploy-state.envsh (see
+# infra/docker-compose.production.yml + infra/edge/18-deploy-state.envsh) now
+# reads these same two files fresh on every edge container start to
+# re-derive its upstream + max-body-size, specifically so a plain restart
+# (reboot, OOM-kill, no deploy-to run involved) can't silently revert to a
+# stale creation-time value. That makes correctness here load-bearing at
+# CONTAINER-START time, not just for a human doing a manual recovery - the
+# invariant this depends on: only ever write these AFTER \$DEPLOY_COMMITTED
+# (i.e. after live verification above), so they always name a genuinely
+# confirmed-good slot. The warm-rollback branch in cleanup_on_exit never
+# reaches DEPLOY_COMMITTED, so it correctly leaves these two files
+# untouched, pointing at the last successful deploy's slot - exactly the
+# slot rollback reloads edge back onto, so they stay truthful even then.
+echo "\${APP_CONTAINER}-\${INACTIVE_SLOT}" > "\$DEPLOY_STATE_DIR/active-app-slot" 2>/dev/null || true
+echo "\$MAX_UPLOAD_MB" > "\$DEPLOY_STATE_DIR/max-upload-mb" 2>/dev/null || true
 
 # ─── Retire the now-old slot (steady state only) + prune ──────────────────────
 if [ "\$EDGE_RUNNING" = "true" ]; then
