@@ -281,13 +281,17 @@ Key facts to hold onto while working on or around this mechanism:
   the new mounts and stops being vulnerable to this bug on its next
   restart. `bin/deploy-to` seeds `.deploy-state/active-app-slot` from the
   old bare `.active-app-slot` (if present and the new file doesn't exist
-  yet) right after its `mkdir -p`, specifically so this recreate can happen
-  in either order relative to that environment's next deploy — it no longer
-  matters which comes first, `18-deploy-state.envsh` always has something
-  correct to read on the recreate's first start either way.
+  yet) right after its `mkdir -p` — but that seeding only runs when
+  `bin/deploy-to` itself runs, so it covers "deploy, then recreate" and "a
+  deploy got interrupted before cutover, then recreate," not "recreate
+  before this environment has ever run a single deploy with this script
+  version." For that last case the recreate command still needs its
+  `ACTIVE_APP_UPSTREAM=<slot>` prefix by hand (still `:?`-required, so a bad
+  guess fails loud rather than silently misrouting - no outage risk either
+  way) — or just `cp .active-app-slot .deploy-state/active-app-slot` first.
   `bin/compose`'s own `ACTIVE_APP_UPSTREAM` fallback (used when `edge` is
-  down and you need `logs`/`ps` to actually work) checks the same two paths
-  in the same order for the same reason.
+  down and you need `logs`/`ps` to actually work) checks both paths, in the
+  same order, independent of whether either script has run since.
 - **Adjacent footgun (same root cause, different trigger):** if something
   recreates an `edge-<env>` container outside of `bin/deploy-to`'s own swap
   (which always supplies `ACTIVE_APP_UPSTREAM` fresh via `docker exec -e
