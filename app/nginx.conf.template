@@ -26,7 +26,7 @@ server {
     # TLS (the SPA bundle is static, /api/ JSON below is proxied, not
     # compressed twice), so this isn't a BREACH-style compression oracle.
     gzip on;
-    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+    gzip_types text/plain text/css application/javascript text/javascript application/json image/svg+xml;
 
     # Security headers shared by every response this container serves. `add_header`
     # does not inherit from `server` into a `location` block that defines its own
