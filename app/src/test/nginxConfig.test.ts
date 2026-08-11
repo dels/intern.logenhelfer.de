@@ -119,7 +119,7 @@ describe('nginx Cache-Control for hashed static assets', () => {
       /location\s+~\*\s+(\^\/assets\/\S+)\s+\{/
     );
     expect(assetsBlockMatch).toBeDefined();
-    const regexSource = assetsBlockMatch![1];
+    const regexSource = assetsBlockMatch![1]!;
     // Strip the nginx-style anchors/flags into a real JS regex - the
     // pattern captured is already anchored with ^ and $, case-insensitive
     // (~*), matching nginx's own semantics closely enough for this check.
