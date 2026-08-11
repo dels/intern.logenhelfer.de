@@ -9,6 +9,7 @@ import CategoryDetailPage from './CategoryDetailPage';
 import { AuthProvider } from '../../auth/AuthProvider';
 import { BreadcrumbProvider } from '../../layouts/BreadcrumbContext';
 import Breadcrumbs from '../../layouts/Breadcrumbs';
+import { setAccessToken } from '../../api/token';
 import '../../i18n';
 
 function categoryFixture(overrides: Partial<Record<string, unknown>> = {}) {
@@ -33,7 +34,13 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => server.resetHandlers());
+// AuthProvider's cold-boot bootstrap effect (Task 4's sub-fix (a)) refreshes
+// the session before ever calling /me when there's no access token in
+// memory - this file's /me mock is token-agnostic and there's no
+// /session/refresh handler here, so a token must already be present for the
+// mount to reach /me at all, same as a returning session in the same tab.
+beforeEach(() => setAccessToken('test-token'));
+afterEach(() => { server.resetHandlers(); setAccessToken(null); });
 afterAll(() => server.close());
 
 function renderPage() {

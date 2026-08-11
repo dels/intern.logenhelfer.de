@@ -8,6 +8,7 @@ import { MemoryRouter } from 'react-router';
 import ConfigurationPage from './ConfigurationPage';
 import { AuthProvider } from '../../auth/AuthProvider';
 import { ToastProvider } from '../../notifications/ToastProvider';
+import { setAccessToken } from '../../api/token';
 import '../../i18n';
 
 function appConfigFixture(overrides: Partial<Record<string, unknown>> = {}) {
@@ -87,10 +88,16 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => { server.resetHandlers(); lastPatchBody = null; });
+afterEach(() => { server.resetHandlers(); lastPatchBody = null; setAccessToken(null); });
 afterAll(() => server.close());
 
+// AuthProvider's cold-boot bootstrap effect (Task 4's sub-fix (a)) refreshes
+// the session before ever calling /me when there's no access token in
+// memory - this file's /me mock is token-agnostic and there's no
+// /session/refresh handler here, so a token must already be present for the
+// mount to reach /me at all, same as a returning session in the same tab.
 beforeEach(() => {
+  setAccessToken('test-token');
   districts = [{ id: 1, name: 'Nordwest' }, { id: 2, name: 'Nordost' }];
   academicTitles = [{ id: 1, short: 'Dr.' }, { id: 2, short: 'Prof.' }];
   roles = [

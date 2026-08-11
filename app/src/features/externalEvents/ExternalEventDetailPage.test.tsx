@@ -8,6 +8,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import ExternalEventDetailPage from './ExternalEventDetailPage';
 import { AuthProvider } from '../../auth/AuthProvider';
 import type { ExternalEventParticipant, ExternalEventWithParticipants, MeUser } from '../../api/types';
+import { setAccessToken } from '../../api/token';
 import i18n from '../../i18n';
 
 function meFixture(overrides: Partial<MeUser> = {}): MeUser {
@@ -67,8 +68,15 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+// AuthProvider's cold-boot bootstrap effect (Task 4's sub-fix (a)) refreshes
+// the session before ever calling /me when there's no access token in
+// memory - this file's /me mock is token-agnostic and there's no
+// /session/refresh handler here, so a token must already be present for the
+// mount to reach /me at all, same as a returning session in the same tab.
+beforeEach(() => setAccessToken('test-token'));
 afterEach(() => {
   server.resetHandlers();
+  setAccessToken(null);
   registerRequests = [];
 });
 afterAll(() => server.close());

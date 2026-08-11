@@ -4,11 +4,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { startRegistration, WebAuthnError } from '@simplewebauthn/browser';
 import MfaSetupWizard from './MfaSetupWizard';
 import { AuthProvider } from '../../auth/AuthProvider';
 import { ToastProvider } from '../../notifications/ToastProvider';
+import { setAccessToken } from '../../api/token';
 import '../../i18n';
 
 vi.mock('@simplewebauthn/browser', async () => {
@@ -27,10 +28,12 @@ const server = setupServer(
   }),
   http.post('/api/v1/mfa/setup/totp/verify', () => HttpResponse.json({ backup_codes: ['AAAAA-BBBBB'] })),
   http.post('/api/v1/mfa/setup/passkey/verify', () => HttpResponse.json({ backup_codes: ['CCCCC-DDDDD'] })),
-  // AuthProvider's bootstrap effect and its refreshUser() (called by the new
-  // Continue button below) both hit GET /me - a single unconditional mock is
-  // enough here since this test never depends on the Authorization header
-  // distinguishing callers, unlike auth.test.tsx/LoginPage.test.tsx.
+  // AuthProvider's bootstrap effect (reached directly here since a token is
+  // pre-set below - see the beforeEach/afterEach block) and refreshUser()
+  // (called by the new Continue button below) both hit GET /me - a single
+  // unconditional mock is enough here since this test never depends on the
+  // Authorization header distinguishing callers, unlike
+  // auth.test.tsx/LoginPage.test.tsx.
   http.get('/api/v1/me', () => HttpResponse.json({ user: meUser, abilities: {}, mfa_setup_required: false })),
   http.get('/api/v1/mfa/status', () => HttpResponse.json({ methods: ['totp'], mode: 'optional', grace_period_ends_at: null })),
   http.get('/api/v1/mfa/passkeys', () => HttpResponse.json({ credentials: [] })),
@@ -38,7 +41,13 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
+// AuthProvider's cold-boot bootstrap effect (Task 4's sub-fix (a)) refreshes
+// the session before ever calling /me when there's no access token in
+// memory - this file's /me mock is token-agnostic and there's no
+// /session/refresh handler here, so a token must already be present for the
+// mount to reach /me at all, same as a returning session in the same tab.
+beforeEach(() => setAccessToken('test-token'));
+afterEach(() => { server.resetHandlers(); setAccessToken(null); });
 afterAll(() => server.close());
 
 function renderWizard() {

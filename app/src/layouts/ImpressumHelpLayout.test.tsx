@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import ImpressumHelpLayout from './ImpressumHelpLayout';
 import { AuthProvider } from '../auth/AuthProvider';
+import { setAccessToken } from '../api/token';
 import '../i18n';
 
 const server = setupServer(
@@ -16,7 +17,17 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => server.resetHandlers());
+// AuthProvider's cold-boot bootstrap effect (Task 4's sub-fix (a)) refreshes
+// the session before ever calling /me when there's no access token in
+// memory - this file has no /me mock at all (ImpressumHelpLayout doesn't
+// depend on it) and no /session/refresh mock either. A pre-set token routes
+// the mount straight to the (still unmocked, still failing) /me call,
+// restoring the original direct-/me-call path instead of adding a second
+// unmocked request in front of it. (Exact pre-fix failure timing was not
+// individually diagnosed - this restores the code path, not a measured
+// number.)
+beforeEach(() => setAccessToken('test-token'));
+afterEach(() => { server.resetHandlers(); setAccessToken(null); });
 afterAll(() => server.close());
 
 function renderImpressum() {
