@@ -16,7 +16,59 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       workbox: {
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB to accommodate the large bundle
+        // Precache scope (Task 7 of the perf-optimization plan): Task 6 split
+        // routes.tsx's ~51 page components into React.lazy() chunks (116 JS
+        // chunks instead of 6). Workbox's default generateSW behavior (no
+        // globPatterns override) precaches every build output, which meant
+        // the SW was proactively re-fetching all ~109 lazy route chunks
+        // immediately after first paint - undoing much of Task 6's benefit.
+        // This list instead precaches only the entry chunk plus the
+        // vendor/core chunks the entry itself statically pulls in - i.e.
+        // exactly what dist/index.html's own <script>/<link
+        // rel="modulepreload"> tags reference after a build, which is the
+        // ground truth for "needed before first paint" - plus the core
+        // stylesheet, the SW registration script, and the static
+        // offline/error pages. Every lazy route chunk is excluded here and
+        // gets runtime-cached by the browser's normal HTTP cache on first
+        // real visit instead of being force-fetched upfront.
+        // If the entry's static import graph grows a new shared chunk
+        // (e.g. after a dependency upgrade changes how Rollup splits
+        // vendor code), add its name-prefixed glob below - rebuild and
+        // check dist/index.html's modulepreload hrefs to find it. Missing
+        // one here only means that one file isn't precached (it still
+        // loads fine from the network on first visit); it does not break
+        // the SW or the app shell.
+        globPatterns: [
+          'index.html',
+          'registerSW.js',
+          'errors/**/*.{html,css,js}',
+          'assets/index-*.{js,css}',
+          'assets/rolldown-runtime-*.js',
+          'assets/Box-*.js',
+          'assets/Typography-*.js',
+          'assets/useSlot-*.js',
+          'assets/useSlotProps-*.js',
+          'assets/Grow-*.js',
+          'assets/Paper-*.js',
+          'assets/contains-*.js',
+          'assets/useRovingTabIndex-*.js',
+          'assets/Modal-*.js',
+          'assets/createSvgIcon-*.js',
+          'assets/List-*.js',
+          'assets/TextField-*.js',
+          'assets/listItemTextClasses-*.js',
+          'assets/MenuItem-*.js',
+          'assets/useQuery-*.js',
+          'assets/client-*.js',
+        ],
+        // 1 MB: headroom above the ~655 KB entry chunk Task 6 left behind
+        // (down from 1,567 KB pre-split). Previously raised to 3 MB
+        // specifically "to accommodate the large bundle" - now that the
+        // entry chunk is small again, a tighter limit works as a real size
+        // canary again (it will fail the build if the entry chunk balloons
+        // back up) instead of a muted alarm that would silently accept a
+        // multi-MB regression.
+        maximumFileSizeToCacheInBytes: 1024 * 1024,
       },
     }),
   ],
