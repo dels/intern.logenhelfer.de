@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppShell from './AppShell';
 import { AuthProvider, useAuth } from '../auth/AuthProvider';
 import { routes } from '../routes';
+import { setAccessToken } from '../api/token';
 import '../i18n';
 
 const user = { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster', subscribed_to_announcements: false, gdpr_accepted: true };
@@ -16,7 +17,13 @@ const server = setupServer(
   http.get('/api/v1/categories', () => HttpResponse.json({ rows: [], row_count: 0 })),
 );
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => server.resetHandlers());
+// AuthProvider's cold-boot bootstrap effect (Task 4's sub-fix (a)) refreshes
+// the session before ever calling /me when there's no access token in
+// memory - this file's /me mock is token-agnostic and there's no
+// /session/refresh handler here, so a token must already be present for the
+// mount to reach /me at all, same as a returning session in the same tab.
+beforeEach(() => setAccessToken('test-token'));
+afterEach(() => { server.resetHandlers(); setAccessToken(null); });
 afterAll(() => server.close());
 
 test('shell shows navigation and marks the active page', async () => {

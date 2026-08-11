@@ -1,6 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { jsPDF } from 'jspdf';
-import { autoTable } from 'jspdf-autotable';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../api/client';
 import { useToast } from '../../notifications/useToast';
@@ -327,6 +325,7 @@ export async function downloadInternalWorkingplanPdf() {
   const events = await fetchWorkingplanEvents(from, to);
   const birthdayRows = filterBirthdaysInRange(await fetchAllBirthdayListRows(), from, to);
 
+  const [{ jsPDF }, { autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
   const doc = new jsPDF({ orientation: 'portrait', format: 'a4' });
   let lastMonth = '';
   let lastDate = '';

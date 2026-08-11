@@ -88,6 +88,10 @@
     "serverUnavailable": "Connection to the server was lost.",
     "visibleTo": "Visible to: {{groups}}",
     "visibleToNone": "Visible to no group",
+    "chunkError": {
+      "message": "This page could not be loaded. The application was most likely updated in the meantime.",
+      "action": "Reload"
+    },
     "toast": {
       "created": "Created.",
       "updated": "Saved.",

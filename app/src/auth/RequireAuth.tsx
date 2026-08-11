@@ -1,13 +1,16 @@
 import { Navigate, Outlet, useLocation } from 'react-router';
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
 import { useAuth } from './AuthProvider';
+import AppShellSkeleton from '../layouts/AppShellSkeleton';
 
 export default function RequireAuth() {
   const { status, mfaSetupRequired, impersonating } = useAuth();
   const location = useLocation();
   if (status === 'loading') {
-    return <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '100dvh' }}><CircularProgress /></Box>;
+    // Structural skeleton chrome, not a bare full-viewport spinner - see
+    // AppShellSkeleton's own doc comment for why this is a separate,
+    // auth-independent component rather than AppShell itself made tolerant
+    // of a null/loading auth state.
+    return <AppShellSkeleton />;
   }
   if (status === 'anonymous') return <Navigate to="/login" replace />;
   // Mandatory MFA, grace period over (or never started), nothing enrolled -

@@ -88,6 +88,10 @@
     "serverUnavailable": "Verbindung zum Server unterbrochen.",
     "visibleTo": "Sichtbar für: {{groups}}",
     "visibleToNone": "Für keine Gruppe sichtbar",
+    "chunkError": {
+      "message": "Diese Seite konnte nicht geladen werden. Wahrscheinlich wurde die Anwendung zwischenzeitlich aktualisiert.",
+      "action": "Neu laden"
+    },
     "toast": {
       "created": "Erstellt.",
       "updated": "Gespeichert.",

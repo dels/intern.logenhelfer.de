@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { startAuthentication } from '@simplewebauthn/browser';
 import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser';
-import { apiFetch, verifyMfaChallenge } from '../api/client';
-import { setAccessToken, startImpersonation, stopImpersonation, onImpersonationEnded } from '../api/token';
+import { apiFetch, refreshSession, verifyMfaChallenge } from '../api/client';
+import { getAccessToken, setAccessToken, startImpersonation, stopImpersonation, onImpersonationEnded } from '../api/token';
 import type { Me, MeUser, MfaLoginResult, SessionPayload } from '../api/types';
 import { useIdleTimeout } from './useIdleTimeout';
 import { PasskeyOptionsFetchError } from './PasskeyOptionsFetchError';
@@ -78,12 +78,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // before this fetch resolves, which otherwise surfaces as an unhandled
     // "window is not defined" rejection in a later, unrelated test file.
     let cancelled = false;
-    apiFetch<Me>('/api/v1/me')
-      .then((me) => {
+    (async () => {
+      // On a true cold page load, `getAccessToken()` (a module-scope
+      // variable - see api/token.ts) always starts `null`, so calling
+      // `/api/v1/me` directly here is a *guaranteed* 401: client.ts's own
+      // 401-retry would then call refreshSession() and retry `/me` anyway,
+      // for three sequential round trips every single cold load. Calling
+      // refreshSession() ourselves first - the exact same function/dedup
+      // client.ts's retry path already uses, not a duplicate - cuts that to
+      // two round trips (refresh, then `/me`) on the happy path, and to just
+      // one (refresh only) when there's no session to restore at all. A
+      // token already present (e.g. a prior load in the same tab, or a
+      // test) skips this and keeps the original direct-`/me`-call behavior
+      // unchanged, since apiFetch's own refresh-then-retry already covers a
+      // merely-stale (as opposed to absent) token.
+      if (getAccessToken() === null) {
+        const refreshed = await refreshSession();
+        if (cancelled) return;
+        if (!refreshed) { setStatus('anonymous'); return; }
+      }
+      try {
+        const me = await apiFetch<Me>('/api/v1/me');
         if (cancelled) return;
         applyMe(me); setStatus('authenticated');
-      })
-      .catch(() => { if (!cancelled) setStatus('anonymous'); });
+      } catch {
+        if (!cancelled) setStatus('anonymous');
+      }
+    })();
     return () => { cancelled = true; };
   }, [applyMe]);
 

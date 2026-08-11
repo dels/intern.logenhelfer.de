@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { apiFetch, downloadFile, getMfaChallengeMethods, verifyMfaChallenge, ApiError, REQUEST_TIMEOUT_MS } from './client';
+import { apiFetch, downloadFile, getMfaChallengeMethods, refreshSession, verifyMfaChallenge, ApiError, REQUEST_TIMEOUT_MS } from './client';
 import { setAccessToken, startImpersonation, stopImpersonation, isImpersonating, onImpersonationEnded } from './token';
 import { subscribe, resetServerStatus, reportFailure } from './serverStatus';
 
@@ -291,6 +291,54 @@ describe('serverStatus integration', () => {
     await expect(apiFetch('/api/v1/me')).rejects.toThrowError(ApiError);
 
     expect(states).toEqual([true, false]); // flips to "up" on the received response, stays up (no re-flip for the 404 status itself)
+  });
+
+  // refreshSession() is called directly (not just indirectly via apiFetch's
+  // own 401-retry) by AuthProvider's cold-boot bootstrap effect (Task 4's
+  // sub-fix (a)) - on that path it is the *only* request made when there's
+  // no session to restore, so it must signal serverStatus itself rather than
+  // relying on a `/me` call that may never happen. Mirrors the equivalent
+  // apiFetch-level assertions above.
+  test('refreshSession reports failure on a raw network error', async () => {
+    server.use(http.post('/api/v1/session/refresh', () => HttpResponse.error()));
+    const states: boolean[] = [];
+    subscribe((down) => states.push(down));
+
+    await expect(refreshSession()).resolves.toBe(false);
+
+    expect(states).toEqual([false, true]);
+  });
+
+  test('refreshSession reports failure on a 5xx response', async () => {
+    server.use(http.post('/api/v1/session/refresh', () => new HttpResponse(null, { status: 500 })));
+    const states: boolean[] = [];
+    subscribe((down) => states.push(down));
+
+    await expect(refreshSession()).resolves.toBe(false);
+
+    expect(states).toEqual([false, true]);
+  });
+
+  test('refreshSession reports success on a normal 200 response', async () => {
+    server.use(http.post('/api/v1/session/refresh', () => HttpResponse.json({ access_token: 'fresh', user: { id: 1 } })));
+    reportFailure(); // start from "down" so reportSuccess is a real, observable transition
+    const states: boolean[] = [];
+    subscribe((down) => states.push(down));
+
+    await expect(refreshSession()).resolves.toBe(true);
+
+    expect(states).toEqual([true, false]);
+  });
+
+  test('refreshSession flips server-down back to up on a 401 (no/expired session cookie) without re-flipping it back down for the 401 itself', async () => {
+    server.use(http.post('/api/v1/session/refresh', () => new HttpResponse(null, { status: 401 })));
+    reportFailure(); // start from "down"
+    const states: boolean[] = [];
+    subscribe((down) => states.push(down));
+
+    await expect(refreshSession()).resolves.toBe(false);
+
+    expect(states).toEqual([true, false]);
   });
 });
 

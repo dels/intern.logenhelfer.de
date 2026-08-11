@@ -9,6 +9,7 @@ import EventsListPage from './EventsListPage';
 import { toLocalDateString } from './api';
 import { AuthProvider } from '../../auth/AuthProvider';
 import { ToastProvider } from '../../notifications/ToastProvider';
+import { setAccessToken } from '../../api/token';
 import '../../i18n';
 import i18n from '../../i18n';
 
@@ -36,6 +37,26 @@ vi.mock('jspdf-autotable', async () => {
   };
 });
 
+// Task 3 (dynamic-import jspdf/jspdf-autotable out of events/api.ts).
+// `moduleLoadCount` distinguishes eager (static) from lazy (dynamic)
+// import: vi.mock's factory only runs once, the first time the 'jspdf'
+// specifier is actually resolved - see the identical rationale in
+// members/BirthdayListPage.test.tsx's counterpart mock. Declared via
+// vi.hoisted since vi.mock's factory is hoisted above ordinary top-level
+// statements.
+const jsPDFTracking = vi.hoisted(() => ({ moduleLoadCount: 0, constructorCalls: [] as unknown[] }));
+vi.mock('jspdf', async () => {
+  jsPDFTracking.moduleLoadCount += 1;
+  const actual = await vi.importActual<typeof import('jspdf')>('jspdf');
+  class SpyJsPDF extends actual.jsPDF {
+    constructor(...args: ConstructorParameters<typeof actual.jsPDF>) {
+      jsPDFTracking.constructorCalls.push(args);
+      super(...args);
+    }
+  }
+  return { ...actual, jsPDF: SpyJsPDF };
+});
+
 const eventRow = { uuid: 'e1', title: 'Stiftungsfest', date: '2026-08-01', time: '19:00', whole_day: false, location: 'Festsaal', created_by_id: 1, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' };
 
 const server = setupServer(
@@ -51,8 +72,15 @@ const server = setupServer(
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+// AuthProvider's cold-boot bootstrap effect (Task 4's sub-fix (a)) refreshes
+// the session before ever calling /me when there's no access token in
+// memory - this file's /me mock is token-agnostic and there's no
+// /session/refresh handler here, so a token must already be present for the
+// mount to reach /me at all, same as a returning session in the same tab.
+beforeEach(() => setAccessToken('test-token'));
 afterEach(() => {
   server.resetHandlers();
+  setAccessToken(null);
   vi.useRealTimers();
   Reflect.deleteProperty(navigator, 'clipboard');
 });
@@ -210,6 +238,35 @@ describe('EventsListPage', () => {
     renderPage();
     expect(screen.getByTestId('external-events-spinner')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByTestId('external-events-spinner')).not.toBeInTheDocument());
+  });
+
+  // Must run before "builds and downloads an internal working-plan PDF..."
+  // / "accumulates the working-plan PDF..." below - jsPDFTracking's
+  // module-load count is a one-shot signal that would already be non-zero
+  // once any earlier test in this file has actually triggered a real
+  // download.
+  it('does not load the jspdf module at all until the working-plan PDF export button is actually clicked', async () => {
+    expect(jsPDFTracking.moduleLoadCount).toBe(0);
+    let recordExportCalled = false;
+    server.use(http.post('/api/v1/events/record_export', () => {
+      recordExportCalled = true;
+      return new HttpResponse(null, { status: 204 });
+    }));
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
+    expect(jsPDFTracking.moduleLoadCount).toBe(0);
+
+    const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Arbeitsplan als PDF exportieren' }));
+    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled());
+    expect(jsPDFTracking.moduleLoadCount).toBe(1);
+    expect(jsPDFTracking.constructorCalls).toHaveLength(1);
+    // Wait for the recordWorkingplanExport call this download triggers to
+    // settle before the test ends - see the identical rationale in
+    // members/BirthdayListPage.test.tsx's counterpart test.
+    await waitFor(() => expect(recordExportCalled).toBe(true));
+    createObjectURLSpy.mockRestore();
   });
 
   it('builds and downloads an internal working-plan PDF with a birthday-list page, and records the export', async () => {

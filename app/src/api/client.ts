@@ -46,15 +46,25 @@ export function apiErrorMessage(error: unknown): string | null {
 
 let refreshInFlight: Promise<boolean> | null = null;
 
-function refreshSession(): Promise<boolean> {
+// Exported so AuthProvider's cold-boot mount effect can call this directly
+// (skipping the guaranteed-401 `/me` call that would otherwise trigger it
+// indirectly via apiFetch's own 401-retry below) - see AuthProvider.tsx's
+// bootstrap effect. `refreshInFlight` dedup means a concurrent direct call
+// and an apiFetch-triggered call share the same in-flight request rather
+// than firing two refreshes.
+export function refreshSession(): Promise<boolean> {
   refreshInFlight ??= fetchWithTimeout('/api/v1/session/refresh', { method: 'POST', credentials: 'include' })
     .then(async (res) => {
-      if (!res.ok) return false;
+      reportSuccess(); // any response at all proves connectivity, regardless of its status
+      if (!res.ok) {
+        if (res.status >= 500) reportFailure();
+        return false;
+      }
       const body = (await res.json()) as SessionPayload;
       setAccessToken(body.access_token);
       return true;
     })
-    .catch(() => false)
+    .catch(() => { reportFailure(); return false; })
     .finally(() => { refreshInFlight = null; });
   return refreshInFlight;
 }

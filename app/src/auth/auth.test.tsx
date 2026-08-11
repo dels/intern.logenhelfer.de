@@ -141,6 +141,11 @@ test('unmounting before the bootstrap /api/v1/me fetch resolves does not throw o
   // when/where the promise settles.
   let resolveMe: ((value: { user: typeof user; abilities: Record<string, string[]> }) => void) | undefined;
   server.use(
+    // The bootstrap effect now refreshes before ever calling /me on a
+    // token-less cold boot (sub-fix (a)) - override the suite-wide 401
+    // refresh handler so /me is actually reached and left pending here,
+    // same as this test always intended.
+    http.post('/api/v1/session/refresh', () => HttpResponse.json({ access_token: 'boot-tok' })),
     http.get('/api/v1/me', () => new Promise((resolve) => { resolveMe = (body) => resolve(HttpResponse.json(body)); })),
   );
 
@@ -151,6 +156,67 @@ test('unmounting before the bootstrap /api/v1/me fetch resolves does not throw o
   await act(async () => {
     resolveMe!({ user, abilities: { event: ['read'] } });
     await Promise.resolve();
+  });
+});
+
+describe('cold-boot bootstrap sequencing (sub-fix (a))', () => {
+  test('with no access token and a successful refresh, the bootstrap refreshes before calling /me, and calls /me exactly once', async () => {
+    const calls: string[] = [];
+    server.use(
+      http.post('/api/v1/session/refresh', () => {
+        calls.push('refresh');
+        return HttpResponse.json({ access_token: 'boot-tok' });
+      }),
+      http.get('/api/v1/me', ({ request }) => {
+        calls.push('me');
+        expect(request.headers.get('Authorization')).toBe('Bearer boot-tok');
+        return HttpResponse.json({ user, abilities: { event: ['read'] } });
+      }),
+    );
+
+    let auth: ReturnType<typeof useAuth> | undefined;
+    function Probe() { auth = useAuth(); return null; }
+    render(<AuthProvider><Probe /></AuthProvider>);
+
+    await waitFor(() => expect(auth?.status).toBe('authenticated'));
+    expect(calls).toEqual(['refresh', 'me']);
+  });
+
+  test('with no access token and a failed refresh (no/expired session cookie), status resolves to anonymous without ever calling /me', async () => {
+    const meSpy = vi.fn();
+    server.use(
+      http.post('/api/v1/session/refresh', () => new HttpResponse(null, { status: 401 })),
+      http.get('/api/v1/me', () => { meSpy(); return new HttpResponse(null, { status: 401 }); }),
+    );
+
+    let auth: ReturnType<typeof useAuth> | undefined;
+    function Probe() { auth = useAuth(); return null; }
+    render(<AuthProvider><Probe /></AuthProvider>);
+
+    await waitFor(() => expect(auth?.status).toBe('anonymous'));
+    expect(meSpy).not.toHaveBeenCalled();
+  });
+
+  test('with an access token already present, the bootstrap calls /me directly without a pre-emptive refresh (unchanged behavior)', async () => {
+    setAccessToken('existing-tok');
+    const refreshSpy = vi.fn();
+    server.use(
+      http.post('/api/v1/session/refresh', () => {
+        refreshSpy();
+        return HttpResponse.json({ access_token: 'should-not-be-used' });
+      }),
+      http.get('/api/v1/me', ({ request }) => {
+        expect(request.headers.get('Authorization')).toBe('Bearer existing-tok');
+        return HttpResponse.json({ user, abilities: { event: ['read'] } });
+      }),
+    );
+
+    let auth: ReturnType<typeof useAuth> | undefined;
+    function Probe() { auth = useAuth(); return null; }
+    render(<AuthProvider><Probe /></AuthProvider>);
+
+    await waitFor(() => expect(auth?.status).toBe('authenticated'));
+    expect(refreshSpy).not.toHaveBeenCalled();
   });
 });
 

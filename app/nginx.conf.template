@@ -26,7 +26,7 @@ server {
     # TLS (the SPA bundle is static, /api/ JSON below is proxied, not
     # compressed twice), so this isn't a BREACH-style compression oracle.
     gzip on;
-    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+    gzip_types text/plain text/css application/javascript text/javascript application/json image/svg+xml;
 
     # Security headers shared by every response this container serves. `add_header`
     # does not inherit from `server` into a `location` block that defines its own
@@ -56,6 +56,34 @@ server {
 
     location = /version.json {
         add_header Cache-Control "no-store";
+        add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'self'; form-action 'self'" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # Vite's build emits every content-hashed JS/CSS/font/image file under
+    # /assets/ (its default assetsDir - vite.config.ts sets no
+    # build.assetsDir override, confirmed against a real `pnpm build` output:
+    # dist/assets/index-<hash>.js, dist/assets/index-<hash>.css,
+    # dist/assets/inter-*-<hash>.woff2, dist/assets/bijou-<hash>.png, etc).
+    # A hash in the filename means the content can never change without the
+    # URL also changing, so this is safe to cache for a full year and mark
+    # immutable - the browser never needs to revalidate it.
+    #
+    # Scoping the regex to the /assets/ prefix (rather than matching these
+    # extensions anywhere on the site) is what keeps this from ever matching
+    # vite-plugin-pwa's generated service-worker files - verified against
+    # the real build output: dist/sw.js, dist/workbox-<hash>.js, and
+    # dist/registerSW.js are all emitted at the site root, never under
+    # /assets/, so they fall through to `location /` below and get no
+    # Cache-Control header at all (correct - the service worker file must
+    # always be revalidated, or clients could get stuck on a stale SW that
+    # never picks up a new deploy). index.html itself is also at the root,
+    # for the same reason, and must keep falling through untouched so
+    # blue-green swaps are discovered on next load.
+    location ~* ^/assets/.*\.(js|css|woff2?|png|jpe?g|svg|gif|ico)$ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
         add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'self'; form-action 'self'" always;
         add_header X-Frame-Options "DENY" always;
         add_header X-Content-Type-Options "nosniff" always;

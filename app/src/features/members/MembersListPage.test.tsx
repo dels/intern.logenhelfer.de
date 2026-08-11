@@ -27,6 +27,29 @@ vi.mock('jspdf-autotable', async () => {
   };
 });
 
+// Task 3 (dynamic-import jspdf/jspdf-autotable/@pdfsmaller/pdf-encrypt-lite
+// out of members/api.ts). `moduleLoadCount` distinguishes eager (static)
+// from lazy (dynamic) import: vi.mock's factory only runs once, the first
+// time the 'jspdf' specifier is actually resolved - see the identical
+// rationale in members/BirthdayListPage.test.tsx's counterpart mock.
+// Declared via vi.hoisted since vi.mock's factory is hoisted above
+// ordinary top-level statements. The constructor spy additionally proves
+// *when within a single test* jsPDF is actually used - useful here to
+// assert opening the password dialog alone (before "PDF erzeugen" is
+// clicked) doesn't yet build anything.
+const jsPDFTracking = vi.hoisted(() => ({ moduleLoadCount: 0, constructorCalls: [] as unknown[] }));
+vi.mock('jspdf', async () => {
+  jsPDFTracking.moduleLoadCount += 1;
+  const actual = await vi.importActual<typeof import('jspdf')>('jspdf');
+  class SpyJsPDF extends actual.jsPDF {
+    constructor(...args: ConstructorParameters<typeof actual.jsPDF>) {
+      jsPDFTracking.constructorCalls.push(args);
+      super(...args);
+    }
+  }
+  return { ...actual, jsPDF: SpyJsPDF };
+});
+
 function memberRow(overrides: Partial<Record<string, unknown>> = {}) {
   return { uuid: 'm1', email: 'mm@example.org', firstname: 'Max', lastname: 'Mitglied', matriculation_number: 42, job_title: 'Zimmermann', mobile: '0170 1234567', can_edit: true, can_destroy: true, ...overrides };
 }
@@ -268,6 +291,49 @@ describe('MembersListPage', () => {
     const text = await (createObjectURLSpy.mock.calls[0]![0] as Blob).text();
     expect(text).toContain('Erste');
     expect(text).toContain('Zweite');
+    createObjectURLSpy.mockRestore();
+  });
+
+  // Must run before "prompts for a password... downloads an encrypted
+  // PDF" / "surfaces a visible error when record_export fails" / "formats
+  // degree/accepted/birth dates..." below - jsPDFTracking's module-load
+  // count is a one-shot signal that would already be non-zero once any
+  // earlier test in this file has actually triggered a real download.
+  it('does not load the jspdf module at all until the password dialog is confirmed with a valid password', async () => {
+    expect(jsPDFTracking.moduleLoadCount).toBe(0);
+    let recordExportCalled = false;
+    server.use(
+      http.get('/api/v1/members/export_data', () =>
+        HttpResponse.json({
+          rows: [{ uuid: 'u-1', matriculation_number: 1, fullname_with_title: 'Max Muster', job_title: '', num_degree: 1, entered_apprentice_since: null, accepted_at: null, date_of_birth: null, business_address: null, private_address: null, positions: [] }],
+          row_count: 1,
+        }),
+      ),
+      http.post('/api/v1/members/record_export', () => {
+        recordExportCalled = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
+    renderPage();
+    const user = userEvent.setup();
+
+    await waitFor(() => expect(screen.getByText('Max Mitglied')).toBeInTheDocument());
+    expect(jsPDFTracking.moduleLoadCount).toBe(0);
+
+    await user.click(await screen.findByRole('button', { name: 'PDF exportieren' }));
+    await screen.findByLabelText('Passwort'); // dialog open, still no PDF built
+    expect(jsPDFTracking.moduleLoadCount).toBe(0);
+
+    await user.type(screen.getByLabelText('Passwort'), 'secret123');
+    await user.click(screen.getByRole('button', { name: 'PDF erzeugen' }));
+    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled(), { timeout: 5000 });
+    expect(jsPDFTracking.moduleLoadCount).toBe(1);
+    expect(jsPDFTracking.constructorCalls).toHaveLength(1);
+    // Wait for the fire-and-forget recordExport call this download triggers
+    // to settle before the test ends - see the identical rationale in
+    // members/BirthdayListPage.test.tsx's counterpart test.
+    await waitFor(() => expect(recordExportCalled).toBe(true));
     createObjectURLSpy.mockRestore();
   });
 

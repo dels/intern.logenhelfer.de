@@ -485,6 +485,9 @@ model user_roles {
   created_at    DateTime  @db.Timestamp(6)
   updated_at    DateTime  @db.Timestamp(6)
   role_added_at DateTime? @db.Date
+
+  @@index([user_id], map: "index_user_roles_on_user_id")
+  @@index([role_id], map: "index_user_roles_on_role_id")
 }
 
 model users {

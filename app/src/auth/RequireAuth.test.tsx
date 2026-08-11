@@ -46,10 +46,18 @@ function renderWithRoutes(initialPath: string, extraRoutes?: ReactNode) {
 }
 
 describe('RequireAuth', () => {
-  it('renders a spinner (not children) while status is loading', () => {
+  it('renders structural skeleton chrome (not children, and not just a bare spinner) while status is loading', () => {
     mockAuth({ status: 'loading' });
-    renderWithRoutes('/other');
+    const { container } = renderWithRoutes('/other');
+    // A real, visible structural stand-in - not just a spinner floating in
+    // an otherwise-empty viewport (see AppShellSkeleton): asserting on the
+    // skeleton placeholders directly is what distinguishes this from the
+    // old bare-spinner render, which the progressbar assertion alone would
+    // not catch (the skeleton also keeps a CircularProgress for an
+    // accessible in-progress signal).
+    expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.queryByText('other-page')).not.toBeInTheDocument();
   });
 
