@@ -535,6 +535,41 @@ catch-all) is unrelated to these — it's real MUI, themed directly, and
 what actually handles unknown in-app URLs in practice; the static 404.html
 above only fires if `index.html` itself is missing from the image.
 
+## Route-level code splitting (`app/src/routes.tsx`)
+
+- **The eager import list at the top of `routes.tsx` is load-bearing and
+  silently breakable.** Every route component there is a plain static
+  import and therefore lands in the entry chunk; everything else is a
+  `React.lazy(() => import(...))`. The eager set is deliberately just the
+  critical-first-paint path: `AppShell`, `RequireAuth`, `PublicLayout`,
+  `ImpressumHelpLayout`, `LandingResolver`, `LoginPage`, `DashboardPage`.
+  Adding a static import to `routes.tsx` — or importing a heavy page from
+  `DashboardPage`/`AppShell` — pulls that page's whole dependency graph
+  back into the entry chunk with **no test failure**, since the split is a
+  bundler-level property nothing asserts on. In particular
+  `@mui/x-data-grid` (~410 kB, reached only via `components/DataTable.tsx`)
+  and `dompurify` (Impressum/Hilfe) are only off the critical path because
+  nothing eager reaches them. If the entry chunk ever jumps back toward
+  1.5 MB, check this first — `pnpm --filter app build` prints the per-chunk
+  table, and `vite.config.ts`'s `chunkSizeWarningLimit` is set just above
+  the current entry chunk specifically so that regression trips a warning.
+- **`app/src/layouts/LazyRouteBoundary.tsx` is this codebase's only error
+  boundary, and its narrowness is the design, not an oversight.** It exists
+  for exactly one failure mode: after a blue/green swap the previously
+  active slot's hashed chunk files stop being served, so a tab left open
+  across the swap holds an old entry chunk whose `import()` calls name
+  files that no longer exist. It recovers by reloading the page (capped via
+  a `sessionStorage` timestamp so a genuinely missing chunk can't produce a
+  reload loop), and **re-throws every error that isn't a chunk-load
+  failure** so ordinary render errors keep behaving as they always have.
+  Don't widen it into a general-purpose app error boundary as a drive-by —
+  that's a real design decision with its own UX/observability questions,
+  not a natural extension of this one. It's mounted as a pathless wrapper
+  route *inside* each of the three layout groups rather than once at the
+  route table's root, so the surrounding chrome (`AppShell`'s sidebar/top
+  nav) stays mounted while a chunk loads instead of flashing away and back
+  on every navigation; `app/src/routes.test.tsx` guards that placement.
+
 ## Testing this mechanism specifically
 
 Shell deploy scripts don't get unit tests in the usual sense. The bar here is:

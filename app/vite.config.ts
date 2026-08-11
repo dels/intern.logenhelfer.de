@@ -25,12 +25,15 @@ export default defineConfig({
       '/api': { target: process.env.API_PROXY ?? 'http://localhost:3000', changeOrigin: true },
     },
   },
-  // ponytail: single-bundle app, no route-level code-splitting yet — raise the
-  // ceiling to match reality instead of warning on every build. Add
-  // React.lazy() per route in routes.tsx if initial load time becomes a
-  // real complaint.
+  // Route-level code-splitting is in place (see routes.tsx's React.lazy
+  // block), so the entry chunk no longer carries every page. The remaining
+  // large chunks are third-party ones Rollup splits out on its own - jspdf
+  // and its html2canvas dependency (already dynamically imported, see
+  // features/*/api.ts) and @mui/x-data-grid, shared by every list page. The
+  // limit stays above those so the build isn't noisy about chunks that are
+  // already off the critical path; lower it if they ever get split further.
   build: {
-    chunkSizeWarningLimit: 2500,
+    chunkSizeWarningLimit: 700,
   },
   test: {
     environment: 'jsdom',
