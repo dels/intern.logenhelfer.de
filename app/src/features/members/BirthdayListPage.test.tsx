@@ -24,6 +24,33 @@ vi.mock('jspdf-autotable', async () => {
   };
 });
 
+// Task 3 (dynamic-import jspdf/jspdf-autotable out of members/api.ts).
+// `moduleLoadCount` distinguishes eager (static) from lazy (dynamic)
+// import: vi.mock's factory only runs once, the first time the 'jspdf'
+// specifier is actually resolved - for a *static* `import { jsPDF } from
+// 'jspdf'` at module scope, that happens while the module graph loads
+// (before any test body runs, since `import BirthdayListPage from
+// './BirthdayListPage'` above transitively imports members/api.ts); for a
+// *dynamic* `await import('jspdf')` inside buildPdf, it only happens once
+// that function actually runs. A constructor-call spy alone can't tell
+// these apart - the constructor only fires once code reaches `new
+// jsPDF(...)`, which happens on-demand either way. Declared via
+// vi.hoisted (not a bare module-scope const) because vi.mock's factory is
+// hoisted above ordinary top-level statements and would otherwise run
+// against a not-yet-initialized binding.
+const jsPDFTracking = vi.hoisted(() => ({ moduleLoadCount: 0, constructorCalls: [] as unknown[] }));
+vi.mock('jspdf', async () => {
+  jsPDFTracking.moduleLoadCount += 1;
+  const actual = await vi.importActual<typeof import('jspdf')>('jspdf');
+  class SpyJsPDF extends actual.jsPDF {
+    constructor(...args: ConstructorParameters<typeof actual.jsPDF>) {
+      jsPDFTracking.constructorCalls.push(args);
+      super(...args);
+    }
+  }
+  return { ...actual, jsPDF: SpyJsPDF };
+});
+
 const server = setupServer(
   http.get('/api/v1/members/birthday_list', () =>
     HttpResponse.json({
@@ -59,6 +86,39 @@ function renderPage() {
 }
 
 describe('BirthdayListPage', () => {
+  // Placed first in this describe block, deliberately: `jsPDFTracking`'s
+  // module-load count is a one-shot signal (vi.mock's factory runs at
+  // most once per test file), so this must run before any other test in
+  // this file triggers a real PDF download - otherwise that earlier
+  // download's own dynamic import would already have set the count,
+  // making this assertion meaningless for later tests.
+  it('does not load the jspdf module at all until the PDF export button is actually clicked', async () => {
+    expect(jsPDFTracking.moduleLoadCount).toBe(0);
+    let recordExportCalled = false;
+    server.use(
+      http.post('/api/v1/members/record_export', () => {
+        recordExportCalled = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Muster')).toBeInTheDocument());
+    expect(jsPDFTracking.moduleLoadCount).toBe(0);
+
+    const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'PDF exportieren' }));
+    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled());
+    expect(jsPDFTracking.moduleLoadCount).toBe(1);
+    expect(jsPDFTracking.constructorCalls).toHaveLength(1);
+    // Wait for the fire-and-forget recordExport call this download triggers
+    // to settle before the test ends - otherwise afterEach's
+    // server.resetHandlers() removes this handler while that request is
+    // still in flight, and the unhandled fetch fails with ECONNREFUSED.
+    await waitFor(() => expect(recordExportCalled).toBe(true));
+    createObjectURLSpy.mockRestore();
+  });
+
   it('requests the default sort (soonest-upcoming birthday) on first load', async () => {
     let lastSort: string | null = null;
     server.use(

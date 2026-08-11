@@ -1,7 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { jsPDF } from 'jspdf';
-import { autoTable } from 'jspdf-autotable';
-import { encryptPDF } from '@pdfsmaller/pdf-encrypt-lite';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../api/client';
 import { useToast } from '../../notifications/useToast';
@@ -169,7 +166,8 @@ export async function downloadMembersVcf() {
   triggerDownload(rows.map(vcardFor).join(''), 'text/x-vcard', `${new Date().toISOString().slice(0, 10)}-Mitglieder.vcf`);
 }
 
-function buildPdf(headers: string[], rows: (string | number | null)[][]): Blob {
+async function buildPdf(headers: string[], rows: (string | number | null)[][]): Promise<Blob> {
+  const [{ jsPDF }, { autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
   const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
   autoTable(doc, {
     head: [headers],
@@ -239,7 +237,7 @@ export class RecordExportFailedError extends Error {
 // report).
 export async function downloadPhoneListPdf() {
   const rows = await fetchAllPhoneListRows();
-  const blob = buildPdf(
+  const blob = await buildPdf(
     ['Titel', 'Name', 'Telefon', 'Fax', 'Mobil'],
     rows.map((r) => ['', `${r.lastname}, ${r.firstname}`, r.phone, r.fax, r.mobile]),
   );
@@ -285,7 +283,7 @@ export function addressBlock(addr: ExportRow['business_address']): string {
 // user-guessable owner secret, and costs nothing to do correctly.
 export async function downloadMembersListPdf(password: string) {
   const rows = await fetchAllExportRows();
-  const blob = buildPdf(
+  const blob = await buildPdf(
     ['MNr.', 'Name', 'Beruf', 'Grad', 'Aufg. am', 'Ang. am', 'Geburtstag', 'beruflich', 'privat', 'Ämter'],
     rows.map((r) => [
       r.matriculation_number, r.fullname_with_title, r.job_title, r.num_degree,
@@ -295,6 +293,7 @@ export async function downloadMembersListPdf(password: string) {
     ]),
   );
   const bytes = new Uint8Array(await blob.arrayBuffer());
+  const { encryptPDF } = await import('@pdfsmaller/pdf-encrypt-lite');
   const encrypted = await encryptPDF(bytes, password, crypto.randomUUID());
   // encryptPDF's return type is typed against `ArrayBufferLike` (which
   // includes SharedArrayBuffer), not the `ArrayBuffer` that BlobPart
@@ -313,7 +312,7 @@ export async function downloadMembersListPdf(password: string) {
 
 export async function downloadBirthdayListPdf() {
   const rows = await fetchAllBirthdayListRows();
-  const blob = buildPdf(
+  const blob = await buildPdf(
     ['Titel', 'Nachname', 'Vorname', 'Geburtstag', '25. Jubiläum', '40. Jubiläum'],
     rows.map((r) => ['', r.lastname, r.firstname, formatDate(r.date_of_birth, 'de-DE'), formatDate(r.twentyfifth_jubilee, 'de-DE'), formatDate(r.fortieth_jubilee, 'de-DE')]),
   );
