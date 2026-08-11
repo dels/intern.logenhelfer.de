@@ -1,7 +1,18 @@
 import '@testing-library/jest-dom/vitest';
 import { afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { Blob as NodeBlob, File as NodeFile } from 'node:buffer';
+
+// ponytail: default findBy*/waitFor timeout (1000ms) is a separate clock from
+// vite.config.ts's testTimeout bump above - raising testTimeout doesn't help
+// a findByRole that throws its own timeout first. routes.test.tsx's lazy-page
+// test does a real dynamic import() + auth bootstrap before the heading
+// appears, which fits under 1000ms alone but not under bin/test-gate's
+// full-suite CPU contention (--cpus 8 shared across every parallel worker) -
+// confirmed by reproducing the deploy failures on both fwze and next hosts
+// 2026-08-11: the exact same test flakes under the full suite, passes
+// reliably standalone. 5s gives headroom without hiding a genuine hang.
+configure({ asyncUtilTimeout: 5000 });
 
 // jsdom's test environment installs its own File/Blob constructors on
 // globalThis, shadowing Node's native (undici-backed) ones. MSW's node
