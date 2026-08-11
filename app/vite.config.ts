@@ -38,6 +38,13 @@ export default defineConfig({
         // one here only means that one file isn't precached (it still
         // loads fine from the network on first visit); it does not break
         // the SW or the app shell.
+        // These globs match on Rollup's human-readable chunk name prefix,
+        // not a stable chunk ID - if a lazy route chunk ever happens to
+        // get the same name prefix as one of these (e.g. a new lazy
+        // "Modal-*.js"), it would be silently over-included (extra bytes
+        // precached, not a break). After any dependency bump that changes
+        // vendor chunking, re-check: `ls dist/assets | grep '^<prefix>-'`
+        // for each prefix below should return exactly one file.
         globPatterns: [
           'index.html',
           'registerSW.js',
