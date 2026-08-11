@@ -70,11 +70,18 @@ export default defineConfig({
         ],
         // 1 MB: headroom above the ~655 KB entry chunk Task 6 left behind
         // (down from 1,567 KB pre-split). Previously raised to 3 MB
-        // specifically "to accommodate the large bundle" - now that the
-        // entry chunk is small again, a tighter limit works as a real size
-        // canary again (it will fail the build if the entry chunk balloons
-        // back up) instead of a muted alarm that would silently accept a
-        // multi-MB regression.
+        // specifically "to accommodate the large bundle"; back down now
+        // that the entry chunk is small again.
+        // NOTE this limit does NOT fail the build. workbox-build's
+        // size-transform silently drops any file over it from the precache
+        // manifest and only logs a warning - so an entry chunk that grows
+        // past 1 MB would still build and deploy fine, but the SW would
+        // precache an index.html whose own <script> points at a file the SW
+        // never cached (fine online, broken offline / stale-shell-ish).
+        // The real canary for that regression is `build.chunkSizeWarningLimit`
+        // below (700 kB), which is what actually prints a warning when the
+        // entry chunk balloons - watch the per-chunk table `pnpm --filter
+        // app build` prints, and the precache entry count in dist/sw.js.
         maximumFileSizeToCacheInBytes: 1024 * 1024,
       },
     }),

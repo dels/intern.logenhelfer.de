@@ -20,8 +20,7 @@ describe('nginx gzip_types configuration', () => {
 
     // Extract the gzip_types line
     const gzipTypesMatch = content.match(/gzip_types\s+([^;]+);/);
-    expect(gzipTypesMatch).toBeDefined();
-    expect(gzipTypesMatch?.[1]).toBeDefined();
+    expect(gzipTypesMatch).not.toBeNull();
 
     const gzipTypes = gzipTypesMatch![1];
 
@@ -41,8 +40,7 @@ describe('nginx gzip_types configuration', () => {
 
     // Extract the gzip_types line
     const gzipTypesMatch = content.match(/gzip_types\s+([^;]+);/);
-    expect(gzipTypesMatch).toBeDefined();
-    expect(gzipTypesMatch?.[1]).toBeDefined();
+    expect(gzipTypesMatch).not.toBeNull();
 
     const gzipTypes = gzipTypesMatch![1];
 
@@ -79,8 +77,7 @@ describe('nginx Cache-Control for hashed static assets', () => {
     const assetsBlockMatch = content.match(
       /location\s+~\*\s+\^\/assets\/[^{]+\{([^}]*)\}/
     );
-    expect(assetsBlockMatch).toBeDefined();
-    expect(assetsBlockMatch?.[0]).toBeDefined();
+    expect(assetsBlockMatch).not.toBeNull();
 
     const [fullBlock, blockBody] = assetsBlockMatch!;
 
@@ -118,7 +115,7 @@ describe('nginx Cache-Control for hashed static assets', () => {
     const assetsBlockMatch = content.match(
       /location\s+~\*\s+(\^\/assets\/\S+)\s+\{/
     );
-    expect(assetsBlockMatch).toBeDefined();
+    expect(assetsBlockMatch).not.toBeNull();
     const regexSource = assetsBlockMatch![1]!;
     // Strip the nginx-style anchors/flags into a real JS regex - the
     // pattern captured is already anchored with ^ and $, case-insensitive
@@ -159,7 +156,7 @@ describe('nginx Cache-Control for hashed static assets', () => {
     // all, let alone an immutable/long-lived one - so blue-green swaps are
     // discovered on the very next load.
     const catchAllMatch = content.match(/location\s+\/\s*\{([^}]*)\}/);
-    expect(catchAllMatch).toBeDefined();
+    expect(catchAllMatch).not.toBeNull();
     const catchAllBody = catchAllMatch![1];
 
     expect(catchAllBody).not.toMatch(/Cache-Control/);

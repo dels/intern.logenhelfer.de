@@ -1,5 +1,5 @@
 import { Component, Suspense, type ReactNode } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -30,6 +30,12 @@ const RELOAD_MARKER_KEY = 'logenhelfer:lazy-chunk-reload-at';
 // broken deploy) - stop and show a manual retry instead of spinning in a
 // reload loop.
 const RELOAD_COOLDOWN_MS = 10_000;
+// Upper bound on how long the service-worker teardown below may delay the
+// reload. Making the reload async is only safe if it can't hang: a
+// never-settling getRegistration()/unregister() would otherwise strand the
+// user on the loading fallback forever, which is strictly worse than the
+// plain reload this replaced.
+const SW_TEARDOWN_TIMEOUT_MS = 3_000;
 
 /**
  * Whether an error thrown during render is a failed dynamic `import()` of a
@@ -125,10 +131,62 @@ function defaultReload() {
   window.location.reload();
 }
 
+/**
+ * Unregisters this origin's service worker, if there is one.
+ *
+ * Reloading alone does NOT get fresh assets while a service worker controls
+ * the page: `dist/sw.js` registers a `NavigationRoute` bound to the
+ * *precached* `index.html`, so a reload is answered out of the SW's precache
+ * - the same stale index.html, naming the same already-404ing chunk hashes -
+ * until the SW's own background update check has finished installing, which
+ * it has not by the time an immediate reload is served.
+ *
+ * Unregistering is deliberately chosen over `registration.update()`: per the
+ * service-worker spec, `update()`'s promise resolves partway through the
+ * Install algorithm, *before* the new worker's install (and therefore its
+ * precache population) completes - so awaiting it still races. With no
+ * registration matching the scope, the reload's navigation request is a
+ * plain network fetch, which is deterministic. `registerSW.js` re-registers
+ * on that next load, so the precache repopulates itself; one uncached load
+ * on an error-recovery path is the right trade for actually recovering.
+ */
+async function unregisterServiceWorker(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+  const registration = await navigator.serviceWorker.getRegistration();
+  await registration?.unregister();
+}
+
+/**
+ * Drops the stale service worker and then reloads.
+ *
+ * Every failure path still reloads - no SW registered (dev/test), a
+ * rejected `getRegistration()`/`unregister()`, or a teardown that takes
+ * longer than `SW_TEARDOWN_TIMEOUT_MS`. Worst case that leaves us exactly
+ * where the plain reload was: possibly served the stale shell, and then
+ * caught by the cooldown/manual-retry path below.
+ */
+function reloadWithFreshAssets(reload: () => void): void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<void>((resolve) => {
+    timer = setTimeout(resolve, SW_TEARDOWN_TIMEOUT_MS);
+  });
+  void Promise.race([unregisterServiceWorker().catch(() => {}), timeout]).then(() => {
+    clearTimeout(timer);
+    reload();
+  });
+}
+
 type BoundaryProps = {
   children?: ReactNode;
   /** Injectable for tests; production always uses a real page reload. */
   reload?: () => void;
+  /**
+   * The current router location's `key`. Only used as a change signal: when
+   * it differs from the previous render's, the user has navigated, and a
+   * given-up chunk error must not keep occluding the new route. See
+   * componentDidUpdate.
+   */
+  locationKey?: string;
 };
 
 type BoundaryState = {
@@ -148,8 +206,12 @@ type BoundaryState = {
  * active slot's hashed chunk files eventually stop being served. A tab that
  * was open across the swap still holds the OLD index chunk, whose
  * `import()` calls point at filenames that no longer exist - so the first
- * navigation to a not-yet-visited route rejects. A full reload fetches the
- * current index.html and therefore the current chunk names, which fixes it.
+ * navigation to a not-yet-visited route rejects. Recovery is to unregister
+ * the service worker and *then* reload (see reloadWithFreshAssets): the
+ * reload has to bypass the SW's precached copy of the old index.html, or it
+ * is served the very same stale chunk names and fails again immediately -
+ * this time inside the cooldown window, i.e. straight into the give-up
+ * state.
  *
  * Scope is deliberately narrow: anything that is not a chunk-load failure
  * is re-thrown, preserving the app's existing behaviour for ordinary render
@@ -172,13 +234,47 @@ export class ChunkLoadErrorBoundary extends Component<BoundaryProps, BoundarySta
       this.setState({ phase: 'giveUp' });
       return;
     }
+    // Recorded synchronously, before the async teardown below - a second
+    // error arriving while the service worker is being unregistered must
+    // still see the budget as spent.
     markReloadAttempt();
-    (this.props.reload ?? defaultReload)();
+    reloadWithFreshAssets(this.props.reload ?? defaultReload);
+  }
+
+  /**
+   * Clears a given-up chunk error when the user navigates away.
+   *
+   * Without this the boundary is a dead end: it is a pathless wrapper route
+   * *inside* the layout, so the sidebar stays clickable, but every
+   * subsequent click would only change the URL while this boundary kept
+   * rendering the same warning - its <Outlet/> never gets to render the
+   * newly matched route.
+   *
+   * Resetting is deliberately scoped to chunk errors and to an actual
+   * navigation, rather than remounting the whole subtree via a
+   * `key={location.key}`: a key change would also tear down and re-create
+   * the page component on same-route param changes (/events/:uuid -> another
+   * uuid), which React Router otherwise keeps mounted.
+   */
+  componentDidUpdate(prevProps: BoundaryProps) {
+    if (!this.state.chunkError) return;
+    if (prevProps.locationKey === this.props.locationKey) return;
+    // Must be cleared too: render() re-throws a non-null `caught`, so
+    // leaving it set would rethrow the old chunk error on the next render.
+    this.caught = null;
+    // Guarded by both conditions above, so it runs at most once per
+    // navigation-away-from-an-error - this is the class-component form of
+    // "reset state when a prop changes", which has no
+    // getDerivedStateFromProps-only equivalent here (the *previous*
+    // location has to be compared against, and the error state has to
+    // survive ordinary re-renders).
+    // oxlint-disable-next-line react/no-did-update-set-state -- see above
+    this.setState({ chunkError: false, phase: 'pending' });
   }
 
   private handleManualReload = () => {
     markReloadAttempt();
-    (this.props.reload ?? defaultReload)();
+    reloadWithFreshAssets(this.props.reload ?? defaultReload);
   };
 
   render() {
@@ -213,8 +309,11 @@ export class ChunkLoadErrorBoundary extends Component<BoundaryProps, BoundarySta
  * boundary plus the Suspense boundary its lazy component needs.
  */
 export default function LazyRouteBoundary({ reload }: { reload?: () => void }) {
+  // The class component can't use hooks, so the location change it needs to
+  // reset a given-up chunk error is threaded in as a prop from here.
+  const { key: locationKey } = useLocation();
   return (
-    <ChunkLoadErrorBoundary reload={reload}>
+    <ChunkLoadErrorBoundary reload={reload} locationKey={locationKey}>
       <Suspense fallback={<RouteFallback />}>
         <Outlet />
       </Suspense>

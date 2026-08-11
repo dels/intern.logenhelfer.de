@@ -558,10 +558,11 @@ above only fires if `index.html` itself is missing from the image.
   for exactly one failure mode: after a blue/green swap the previously
   active slot's hashed chunk files stop being served, so a tab left open
   across the swap holds an old entry chunk whose `import()` calls name
-  files that no longer exist. It recovers by reloading the page (capped via
-  a `sessionStorage` timestamp so a genuinely missing chunk can't produce a
-  reload loop), and **re-throws every error that isn't a chunk-load
-  failure** so ordinary render errors keep behaving as they always have.
+  files that no longer exist. It recovers by **unregistering the service
+  worker and only then reloading** (capped via a `sessionStorage` timestamp
+  so a genuinely missing chunk can't produce a reload loop), and
+  **re-throws every error that isn't a chunk-load failure** so ordinary
+  render errors keep behaving as they always have.
   Don't widen it into a general-purpose app error boundary as a drive-by —
   that's a real design decision with its own UX/observability questions,
   not a natural extension of this one. It's mounted as a pathless wrapper
@@ -569,6 +570,35 @@ above only fires if `index.html` itself is missing from the image.
   route table's root, so the surrounding chrome (`AppShell`'s sidebar/top
   nav) stays mounted while a chunk loads instead of flashing away and back
   on every navigation; `app/src/routes.test.tsx` guards that placement.
+  - **The service-worker teardown is the load-bearing half of that
+    recovery, not a nicety.** A bare `window.location.reload()` does not
+    fetch a fresh `index.html` in production: `dist/sw.js` registers a
+    `NavigationRoute(createHandlerBoundToURL('index.html'))`, so the reload
+    is answered out of the SW's *precache* — the same stale index.html,
+    naming the same 404ing chunk hashes — because the SW's background
+    update check hasn't finished installing by then. Nothing in `app/src`
+    calls `virtual:pwa-register`'s `updateSW`, and the generated
+    `dist/registerSW.js` is the bare `navigator.serviceWorker.register`
+    form, so there is no other auto-update-and-reload path to rely on.
+    `registration.unregister()` is used rather than `registration.update()`
+    deliberately: per the service-worker spec `update()`'s promise resolves
+    partway through the Install algorithm, *before* the new worker's
+    precache is populated, so awaiting it still races. With no registration
+    in scope the reload's navigation is a plain network fetch;
+    `registerSW.js` re-registers on that next load, so the precache
+    repopulates itself. The teardown is wrapped in a timeout race and every
+    failure path (no SW, rejected call, hung call) still reloads — an async
+    recovery path must never be able to strand the user on the spinner.
+  - **The boundary clears its error state when the router location
+    changes** (a `locationKey` prop + `componentDidUpdate`, since a class
+    component can't use `useLocation`). Without that, the give-up notice is
+    a dead end: the boundary is a pathless wrapper route *inside* the
+    layout, so the sidebar stays clickable, but every later click would
+    only change the URL while the same Alert kept occluding the `Outlet`.
+    A `key={location.key}` remount was rejected on purpose — it would also
+    tear down and re-create the page component on same-route param changes
+    (`/events/:uuid` → another uuid), which React Router otherwise keeps
+    mounted.
 
 ## Testing this mechanism specifically
 
