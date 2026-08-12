@@ -50,13 +50,12 @@ describe('RequireAuth', () => {
     mockAuth({ status: 'loading' });
     const { container } = renderWithRoutes('/other');
     // A real, visible structural stand-in - not just a spinner floating in
-    // an otherwise-empty viewport (see AppShellSkeleton): asserting on the
+    // an otherwise-empty viewport (see AppShellSkeleton) - asserting on the
     // skeleton placeholders directly is what distinguishes this from the
-    // old bare-spinner render, which the progressbar assertion alone would
-    // not catch (the skeleton also keeps a CircularProgress for an
-    // accessible in-progress signal).
+    // old bare-spinner render. role="status"/aria-busy carries the
+    // accessible in-progress signal now (see PageSkeleton's own comment on
+    // why a visual spinner alongside the skeleton would be redundant).
     expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.queryByText('other-page')).not.toBeInTheDocument();
   });

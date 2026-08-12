@@ -1,7 +1,7 @@
 import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
 import Skeleton from '@mui/material/Skeleton';
 import Toolbar from '@mui/material/Toolbar';
+import PageSkeleton from './PageSkeleton';
 
 const DRAWER_WIDTH = 280;
 const NAV_ITEM_SKELETON_COUNT = 6;
@@ -83,8 +83,13 @@ export default function AppShellSkeleton() {
             <Skeleton key={i} variant="rounded" height={40} sx={{ mb: 1, borderRadius: 99 }} />
           ))}
         </Box>
-        <Box sx={{ flex: 1, height: '100%', display: 'grid', placeItems: 'center' }}>
-          <CircularProgress />
+        {/* Main content frame - was a bare centered spinner; a structural
+            skeleton here is the whole point of this component (see its
+            own top comment), so the content slot shouldn't regress to a
+            spinner just because AppShell itself doesn't know which page
+            is loading yet. */}
+        <Box sx={{ flex: 1, height: '100%', overflow: 'hidden' }}>
+          <PageSkeleton />
         </Box>
       </Box>
     </Box>

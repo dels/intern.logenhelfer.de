@@ -75,13 +75,13 @@ describe('isChunkLoadError', () => {
 });
 
 describe('Suspense fallback', () => {
-  it('shows a loading indicator while the route chunk is still downloading', () => {
+  it('shows a structural skeleton (not a bare spinner) while the route chunk is still downloading', () => {
     // A dynamic import that never settles == a chunk still in flight.
     const PendingPage = lazy(() => new Promise<{ default: () => ReactNode }>(() => {}));
-    renderBoundaryWith(<PendingPage />);
+    const { container } = renderBoundaryWith(<PendingPage />);
 
     expect(screen.getByRole('status')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
   });
 
   it('swaps the fallback for the page once the chunk resolves', async () => {
