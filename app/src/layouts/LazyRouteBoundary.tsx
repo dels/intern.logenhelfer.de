@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
+import PageSkeleton from './PageSkeleton';
 
 // Route-level code-splitting boundary. Every lazily-imported page in
 // routes.tsx renders through one of these (one per layout group), so the
@@ -88,15 +88,17 @@ function markReloadAttempt(): void {
   }
 }
 
-/** Suspense fallback for a route chunk that is still downloading. */
+/**
+ * Suspense fallback for a route chunk that is still downloading.
+ *
+ * A structural skeleton rather than a bare spinner - see PageSkeleton's own
+ * comment for why nothing here can know the real page's shape, and why
+ * that's fine for a generic stand-in shown for a few hundred ms.
+ */
 export function RouteFallback() {
   return (
-    <Box
-      role="status"
-      aria-busy="true"
-      sx={{ display: 'grid', placeItems: 'center', minHeight: 240, py: 6 }}
-    >
-      <CircularProgress />
+    <Box role="status" aria-busy="true">
+      <PageSkeleton />
     </Box>
   );
 }
