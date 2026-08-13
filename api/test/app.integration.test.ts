@@ -692,6 +692,28 @@ describe('app.ts integration', () => {
     });
   });
 
+  // Regression: BijouLogo.tsx, SiteMetaSync.tsx, and the manifest's own
+  // icons array (public.ts's getPublicManifest) all fetch these routes with
+  // a `?v=<logo_version>` cache-busting query param - openapi.yaml declared
+  // neither route as accepting any query parameter, so
+  // express-openapi-validator's request validation rejected every real
+  // request with 400 "Unknown query parameter 'v'" (browser: "Icon ...
+  // failed to load" during PWA install). Only reachable through the fully-
+  // wired `app` - public.test.ts mounts the bare router with no contract
+  // validation, so it can't catch a request-schema rejection.
+  describe('public logo/icon routes accept the ?v= cache-busting query param (contract validation)', () => {
+    it('GET /api/v1/public/logo?v=... does not 400', async () => {
+      await prisma.custom_logos.create({ data: { id: 1, content: Buffer.from('PNGDATA'), content_type: 'image/png' } });
+      const res = await request(app).get('/api/v1/public/logo?v=12345');
+      expect(res.status).toBe(200);
+    });
+
+    it('GET /api/v1/public/logo/icon-192.png?v=... does not 400', async () => {
+      const res = await request(app).get('/api/v1/public/logo/icon-192.png?v=12345');
+      expect(res.status).toBe(200);
+    });
+  });
+
   // Regression guard for a security-audit finding: app.ts never called
   // `app.set('trust proxy', ...)`. This app sits behind exactly three
   // reverse-proxy hops in production (host nginx -> edge -> app-container
