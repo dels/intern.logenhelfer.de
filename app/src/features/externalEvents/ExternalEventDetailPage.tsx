@@ -4,6 +4,8 @@ import { Alert, Box, Button, Chip, List, ListItem, ListItemText, Stack, Typograp
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { useTranslation } from 'react-i18next';
 import {
   useConfirmExternalEventParticipant,
@@ -90,11 +92,11 @@ export default function ExternalEventDetailPage() {
 
       <Box sx={{ mt: 2 }}>
         {!ownRegistration ? (
-          <Button variant="contained" disabled={registering} onClick={() => register({})}>
+          <Button variant="contained" size="large" startIcon={<HowToRegIcon />} disabled={registering} onClick={() => register({})}>
             {t('externalEvents.register')}
           </Button>
         ) : (
-          <Button color="error" disabled={unregistering} onClick={() => unregister(ownRegistration.user_uuid)}>
+          <Button variant="outlined" color="error" size="large" startIcon={<EventBusyIcon />} disabled={unregistering} onClick={() => unregister(ownRegistration.user_uuid)}>
             {t('externalEvents.unregister')}
           </Button>
         )}

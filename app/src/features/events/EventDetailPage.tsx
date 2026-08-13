@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router';
 import { Alert, Box, Button, Chip, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { useTranslation } from 'react-i18next';
 import { useEvent, useDeleteEvent, useRegisterEventParticipant, useRemoveEventParticipant } from './api';
 import { useAuth } from '../../auth/AuthProvider';
@@ -66,11 +68,11 @@ export default function EventDetailPage() {
 
       <Box sx={{ mt: 2 }}>
         {!ownRegistration ? (
-          <Button variant="contained" disabled={registering} onClick={() => register({})}>
+          <Button variant="contained" size="large" startIcon={<HowToRegIcon />} disabled={registering} onClick={() => register({})}>
             {t('events.register')}
           </Button>
         ) : (
-          <Button color="error" disabled={unregistering} onClick={() => unregister(ownRegistration.uuid)}>
+          <Button variant="outlined" color="error" size="large" startIcon={<EventBusyIcon />} disabled={unregistering} onClick={() => unregister(ownRegistration.uuid)}>
             {t('events.unregister')}
           </Button>
         )}
