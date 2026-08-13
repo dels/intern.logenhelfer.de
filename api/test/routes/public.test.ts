@@ -235,6 +235,14 @@ describe('GET /api/v1/public/logo', () => {
     const res = await request(app).get('/api/v1/public/logo');
     expect(res.status).toBe(404);
   });
+
+  // NOTE: the real ?v=<logo_version> cache-busting param (the one
+  // BijouLogo.tsx/SiteMetaSync.tsx actually send) can only be exercised
+  // through the fully-wired app in app.integration.test.ts - this file
+  // mounts the bare router with no OpenAPI contract-validation middleware,
+  // so it can't catch a request-schema rejection of that param. See
+  // app.integration.test.ts's "public logo/icon routes accept the ?v=
+  // cache-busting query param" block.
 });
 
 // -- GET /api/v1/public/impressum ------------------------------------------
@@ -684,6 +692,10 @@ describe('GET /api/v1/public/logo/:file', () => {
     const res = await request(app).get('/api/v1/public/logo/not-a-real-variant.png');
     expect(res.status).toBe(404);
   });
+
+  // NOTE: same caveat as GET /api/v1/public/logo above - the real ?v=
+  // param the manifest's icons array sends can only be exercised through
+  // the fully-wired app; see app.integration.test.ts.
 });
 
 // -- security ----------------------------------------------------------

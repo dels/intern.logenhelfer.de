@@ -2649,6 +2649,12 @@ paths:
     get:
       operationId: getPublicLogo
       security: []
+      parameters:
+        - name: v
+          in: query
+          required: false
+          description: Cache-busting logo_version, unused by the handler itself - just needs to be an accepted query param.
+          schema: { type: string }
       responses:
         '200':
           description: The active custom logo's raw bytes, if one has been uploaded
@@ -2706,6 +2712,11 @@ paths:
         - name: file
           in: path
           required: true
+          schema: { type: string }
+        - name: v
+          in: query
+          required: false
+          description: Cache-busting logo_version, unused by the handler itself - just needs to be an accepted query param.
           schema: { type: string }
       responses:
         '200':

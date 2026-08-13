@@ -5874,7 +5874,10 @@ export interface operations {
     };
     getPublicLogo: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cache-busting logo_version, unused by the handler itself - just needs to be an accepted query param. */
+                v?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5976,7 +5979,10 @@ export interface operations {
     };
     getPublicLogoVariant: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Cache-busting logo_version, unused by the handler itself - just needs to be an accepted query param. */
+                v?: string;
+            };
             header?: never;
             path: {
                 file: string;
