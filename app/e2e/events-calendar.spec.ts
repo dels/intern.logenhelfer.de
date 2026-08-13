@@ -73,9 +73,11 @@ test('a plain member registers for an internal event via the calendar chip, and 
   await page.goto('/events');
   await page.getByRole('button', { name: 'Kalender', exact: true }).click();
 
-  // The calendar Chip navigates to /events/:uuid on click (EventsCalendarView.tsx) -
-  // MUI renders a clickable Chip as a real <button>, so getByRole('button', ...)
-  // finds it directly instead of relying on click-bubbling from getByText.
+  // The calendar Chip is wrapped in a ButtonBase that navigates to
+  // /events/:uuid on click (EventsCalendarView.tsx) - the wrapper is the real
+  // <button>, its accessible name inherited from the Chip's label, so
+  // getByRole('button', ...) finds it directly instead of relying on
+  // click-bubbling from getByText.
   await page.getByRole('button', { name: title }).click();
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
 

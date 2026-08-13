@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Chip, Paper, Skeleton, Stack, Typography, useMediaQuery } from '@mui/material';
+import { Box, ButtonBase, Chip, Paper, Skeleton, Stack, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CakeIcon from '@mui/icons-material/Cake';
 import { useTranslation } from 'react-i18next';
@@ -131,18 +131,29 @@ export default function EventsCalendarView({ anchor, events, externalEvents, bir
                   minHeight: 96,
                   opacity,
                   bgcolor: isPast && isCurrentMonth ? 'action.hover' : undefined,
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}
               >
                 <Typography variant="caption">{date.getDate()}</Typography>
-                <Stack sx={{ gap: 0.5, mt: 0.5 }}>
+                {/* ponytail: onClick lives on the ButtonBase wrapper, not the Chip - flexGrow +
+                    each ButtonBase's flex:1 make the *whole remaining cell height* the click
+                    target for that event, not just the chip's visible pixels. */}
+                <Stack sx={{ gap: 0.5, mt: 0.5, flexGrow: 1 }}>
                   {(eventsByDate.get(key) ?? []).map((e) => (
-                    <Chip key={e.uuid} size="small" color="primary" variant={isPast ? 'outlined' : 'filled'} label={e.title} onClick={() => navigate(`/events/${e.uuid}`)} />
+                    <ButtonBase key={e.uuid} onClick={() => navigate(`/events/${e.uuid}`)} sx={{ display: 'block', flex: 1, width: '100%', textAlign: 'left', borderRadius: 1, '&:hover': { bgcolor: 'action.hover' } }}>
+                      <Chip size="small" color="primary" variant={isPast ? 'outlined' : 'filled'} label={e.title} />
+                    </ButtonBase>
                   ))}
                   {(externalEventsByDate.get(key) ?? []).map((e) => (
-                    <Chip key={e.uuid} size="small" color="default" variant={isPast ? 'outlined' : 'filled'} label={e.title} onClick={() => navigate(`/external-events/${e.uuid}`)} />
+                    <ButtonBase key={e.uuid} onClick={() => navigate(`/external-events/${e.uuid}`)} sx={{ display: 'block', flex: 1, width: '100%', textAlign: 'left', borderRadius: 1, '&:hover': { bgcolor: 'action.hover' } }}>
+                      <Chip size="small" color="default" variant={isPast ? 'outlined' : 'filled'} label={e.title} />
+                    </ButtonBase>
                   ))}
                   {(birthdaysByDate.get(key) ?? []).map((b) => (
-                    <Chip key={b.uuid} size="small" color="secondary" variant={isPast ? 'outlined' : 'filled'} icon={<CakeIcon />} label={`${b.firstname} ${b.lastname}`} onClick={() => setContactUuid(b.uuid)} />
+                    <ButtonBase key={b.uuid} onClick={() => setContactUuid(b.uuid)} sx={{ display: 'block', flex: 1, width: '100%', textAlign: 'left', borderRadius: 1, '&:hover': { bgcolor: 'action.hover' } }}>
+                      <Chip size="small" color="secondary" variant={isPast ? 'outlined' : 'filled'} icon={<CakeIcon />} label={`${b.firstname} ${b.lastname}`} />
+                    </ButtonBase>
                   ))}
                 </Stack>
               </Box>
@@ -159,29 +170,33 @@ export default function EventsCalendarView({ anchor, events, externalEvents, bir
               const monthLabel2 = item.date.toLocaleDateString(i18n.language, { month: 'short' }).replace('.', '');
               const isPast = toDateKey(item.date) < todayKey;
               return (
-                <Paper key={item.key} sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', bgcolor: isPast ? 'action.hover' : undefined }}>
-                  <Box sx={{
-                    flexShrink: 0, width: 56, height: 56, borderRadius: 1,
-                    bgcolor: isPast ? 'action.disabledBackground' : 'primary.dark',
-                    color: isPast ? 'text.secondary' : '#FFFFFF',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  }}
-                  >
-                    <Typography sx={{ fontSize: 20, fontWeight: 700, lineHeight: 1.1 }}>{dayLabel}</Typography>
-                    <Typography sx={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{monthLabel2}</Typography>
-                  </Box>
-                  {item.kind === 'birthday' ? (
-                    <Chip color="secondary" variant={isPast ? 'outlined' : 'filled'} icon={<CakeIcon />} label={item.label} onClick={item.onClick} />
-                  ) : (
-                    <Box sx={{ minWidth: 0 }}>
-                      <Chip color={item.kind === 'event' ? 'primary' : 'default'} variant={isPast ? 'outlined' : 'filled'} label={item.label} onClick={item.onClick} />
-                      {(item.time || item.location) && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          {[item.time, item.location].filter(Boolean).join(' · ')}
-                        </Typography>
-                      )}
+                // ponytail: the whole Paper row is the click target now (via the inner ButtonBase
+                // filling it), not just the chip - matches the desktop fix above.
+                <Paper key={item.key} sx={{ overflow: 'hidden', bgcolor: isPast ? 'action.hover' : undefined }}>
+                  <ButtonBase onClick={item.onClick} sx={{ display: 'flex', width: '100%', p: 2, gap: 2, alignItems: 'center', justifyContent: 'flex-start', textAlign: 'left', '&:hover': { bgcolor: 'action.hover' } }}>
+                    <Box sx={{
+                      flexShrink: 0, width: 56, height: 56, borderRadius: 1,
+                      bgcolor: isPast ? 'action.disabledBackground' : 'primary.dark',
+                      color: isPast ? 'text.secondary' : '#FFFFFF',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    }}
+                    >
+                      <Typography sx={{ fontSize: 20, fontWeight: 700, lineHeight: 1.1 }}>{dayLabel}</Typography>
+                      <Typography sx={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{monthLabel2}</Typography>
                     </Box>
-                  )}
+                    {item.kind === 'birthday' ? (
+                      <Chip color="secondary" variant={isPast ? 'outlined' : 'filled'} icon={<CakeIcon />} label={item.label} />
+                    ) : (
+                      <Box sx={{ minWidth: 0 }}>
+                        <Chip color={item.kind === 'event' ? 'primary' : 'default'} variant={isPast ? 'outlined' : 'filled'} label={item.label} />
+                        {(item.time || item.location) && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {[item.time, item.location].filter(Boolean).join(' · ')}
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                  </ButtonBase>
                 </Paper>
               );
             })

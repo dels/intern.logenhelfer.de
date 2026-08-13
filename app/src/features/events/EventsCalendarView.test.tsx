@@ -129,6 +129,21 @@ describe('EventsCalendarView', () => {
     }
   });
 
+  it('navigates to the event detail page when clicking the mobile row outside the chip (day badge/location text), not just the chip itself', async () => {
+    // Regression: the row's onClick used to live only on the inner Chip, so
+    // clicking the surrounding box (day-number badge, time/location text)
+    // did nothing - only the chip's own pixels were clickable.
+    const restore = mockMobileViewport();
+    try {
+      renderView({ events: [eventRow] });
+      // 'Saal' is the location text rendered next to the chip, not inside it.
+      await userEvent.click(screen.getByText('Saal'));
+      expect(await screen.findByText('Event detail page')).toBeInTheDocument();
+    } finally {
+      restore();
+    }
+  });
+
   it('opens the birthday contact dialog from the mobile list, same as from the grid chip', async () => {
     const restore = mockMobileViewport();
     try {
