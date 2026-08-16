@@ -62,31 +62,37 @@ export default function EventDetailPage() {
       {deleteError && <Alert severity="error" sx={{ mb: 2 }}>{apiErrorMessage(deleteError)}</Alert>}
       {registerError && <Alert severity="error" sx={{ mb: 2 }}>{apiErrorMessage(registerError)}</Alert>}
       {unregisterError && <Alert severity="error" sx={{ mb: 2 }}>{apiErrorMessage(unregisterError)}</Alert>}
-      <Typography>{formatDate(event.date, i18n.language)} {event.time ?? ''}</Typography>
-      {event.location && <Typography color="text.secondary">{event.location}</Typography>}
-      {event.public_description && <Typography sx={{ mt: 2 }}>{event.public_description}</Typography>}
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} sx={{ alignItems: 'flex-start' }}>
+        <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
+          <Typography>{formatDate(event.date, i18n.language)} {event.time ?? ''}</Typography>
+          {event.location && <Typography color="text.secondary">{event.location}</Typography>}
+          {event.public_description && <Typography sx={{ mt: 2 }}>{event.public_description}</Typography>}
 
-      <Box sx={{ mt: 2 }}>
-        {!ownRegistration ? (
-          <Button variant="contained" size="large" startIcon={<HowToRegIcon />} disabled={registering} onClick={() => register({})}>
-            {t('events.register')}
-          </Button>
-        ) : (
-          <Button variant="outlined" color="error" size="large" startIcon={<EventBusyIcon />} disabled={unregistering} onClick={() => unregister(ownRegistration.uuid)}>
-            {t('events.unregister')}
-          </Button>
-        )}
-      </Box>
+          <Box sx={{ mt: 2 }}>
+            {!ownRegistration ? (
+              <Button variant="contained" size="large" startIcon={<HowToRegIcon />} disabled={registering} onClick={() => register({})}>
+                {t('events.register')}
+              </Button>
+            ) : (
+              <Button variant="outlined" color="error" size="large" startIcon={<EventBusyIcon />} disabled={unregistering} onClick={() => unregister(ownRegistration.uuid)}>
+                {t('events.unregister')}
+              </Button>
+            )}
+          </Box>
+        </Box>
 
-      <Typography variant="h2" sx={{ mt: 3, mb: 1 }}>{t('events.participants')}</Typography>
-      <List>
-        {event.participants.map((p) => (
-          <ListItem key={p.uuid}>
-            <ListItemText primary={p.fullname} />
-          </ListItem>
-        ))}
-        {event.participants.length === 0 && <Chip label="—" size="small" />}
-      </List>
+        <Box sx={{ flex: '0 0 auto', width: { xs: '100%', md: 320 } }}>
+          <Typography variant="h2" sx={{ mb: 1 }}>{t('events.participants')}</Typography>
+          <List>
+            {event.participants.map((p) => (
+              <ListItem key={p.uuid}>
+                <ListItemText primary={p.fullname} />
+              </ListItem>
+            ))}
+            {event.participants.length === 0 && <Chip label="—" size="small" />}
+          </List>
+        </Box>
+      </Stack>
     </Box>
   );
 }
