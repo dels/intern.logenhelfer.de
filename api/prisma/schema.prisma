@@ -523,6 +523,14 @@ model users {
   oauth_expires_at          DateTime? @db.Timestamp(6)
   accepted_gdpr             Boolean?  @default(false)
   birthday_calendar_consent Boolean   @default(false)
+  // A dedicated per-user random token (not the general-purpose `uuid` above,
+  // which is already exposed via impersonation/self-service URLs elsewhere)
+  // - the birthday-feed .ics URL is built from this, so one member's link
+  // can be revoked (offboarding sets `deleted`, which the feed lookup checks)
+  // without rotating everyone else's. DB-generated so every insert path
+  // (member creation, demo seed, factories) gets one for free, no app code
+  // needed - see prisma/migrations/.../add_birthday_calendar_token.
+  birthday_calendar_token   String    @unique(map: "index_users_on_birthday_calendar_token") @default(dbgenerated("gen_random_uuid()::text")) @db.VarChar(255)
   // Note: impersonation_events.admin_id/user_id and refresh_tokens.user_id
   // have real FK constraints pointing at users(id), but are int8 columns
   // referencing this int4 (serial) PK. Prisma requires matching field types

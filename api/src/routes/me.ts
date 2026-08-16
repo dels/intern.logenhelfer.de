@@ -12,6 +12,7 @@ import { prisma } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { appConfig } from '../lib/appConfig.js';
 import { isMfaSetupRequiredFor } from '../lib/mfaStatus.js';
+import { birthdayCalendarIcsUrl } from './public.js';
 
 /**
  * Port of rails-app/app/controllers/api/v1/me_controller.rb.
@@ -134,7 +135,7 @@ interface MeUserPayload {
   birthday_calendar_consent_requested: boolean;
 }
 
-type AuthJsonUser = Pick<users, 'id' | 'uuid' | 'email' | 'firstname' | 'lastname' | 'accepted_gdpr' | 'birthday_calendar_consent'>;
+type AuthJsonUser = Pick<users, 'id' | 'uuid' | 'email' | 'firstname' | 'lastname' | 'accepted_gdpr' | 'birthday_calendar_consent' | 'birthday_calendar_token'>;
 
 /**
  * Port of User#auth_json (rails-app/app/models/user.rb). Duplicated from
@@ -236,7 +237,10 @@ async function seekerNamesListAllowedForCaller(ability: AppAbility): Promise<boo
   return (await appConfig.get('show_seeker_names_to_brothers')) === true;
 }
 
-async function meJson(user: AuthJsonUser, ability: AppAbility): Promise<{ user: MeUserPayload; abilities: Record<string, string[]>; mfa_setup_required: boolean }> {
+async function meJson(
+  user: AuthJsonUser,
+  ability: AppAbility,
+): Promise<{ user: MeUserPayload; abilities: Record<string, string[]>; mfa_setup_required: boolean; birthday_calendar_ics_url: string | null }> {
   const abilities = abilitiesMap(ability);
   if (await statisticsGatedForCaller(ability)) {
     abilities.statistic = (abilities.statistic ?? []).filter((action) => !STATISTICS_GATE_ACTIONS.includes(action));
@@ -244,7 +248,16 @@ async function meJson(user: AuthJsonUser, ability: AppAbility): Promise<{ user: 
   if (await seekerNamesListAllowedForCaller(ability)) {
     abilities.seeker = [...(abilities.seeker ?? []), 'names_list'];
   }
-  return { user: await authJsonFor(user), abilities, mfa_setup_required: await isMfaSetupRequiredFor(user.id) };
+  return {
+    user: await authJsonFor(user),
+    abilities,
+    mfa_setup_required: await isMfaSetupRequiredFor(user.id),
+    // Only an authenticated caller ever learns this URL now, built from
+    // their OWN per-user token - see public.ts's exported
+    // birthdayCalendarIcsUrl() comment for why /landing (fully
+    // unauthenticated) must not carry it any more.
+    birthday_calendar_ics_url: await birthdayCalendarIcsUrl(user.birthday_calendar_token),
+  };
 }
 
 /**

@@ -11,6 +11,7 @@ import { issueAccessToken } from '../../src/auth/jwt.js';
 import { RefreshTokenInvalidError, issueRefreshToken, rotateRefreshToken } from '../../src/auth/refreshToken.js';
 import { apiErrorHandler } from '../../src/lib/errors.js';
 import meRouter from '../../src/routes/me.js';
+import publicRouter from '../../src/routes/public.js';
 import { prisma } from '../../src/db.js';
 import { resetDb } from '../helpers/db.js';
 import { createUser } from '../helpers/factories.js';
@@ -27,6 +28,14 @@ const app = express();
 app.use(express.json());
 app.use('/api/v1', meRouter);
 app.use(apiErrorHandler);
+
+// Only for the birthday_calendar_ics_url tests below, which need to prove
+// the URL /me hands back is actually fetchable - mounted separately (like
+// public.test.ts's own app) rather than merged into `app` above, since this
+// file's router boundary is otherwise me.ts-only.
+const publicApp = express();
+publicApp.use('/api/v1/public', publicRouter);
+publicApp.use(apiErrorHandler);
 
 // Matches rails-app/spec/factories.rb's `factory :user` default password.
 const PASSWORD = 'foobar123';
@@ -200,6 +209,44 @@ describe('Me API', () => {
       const res = await request(app).get('/api/v1/me').set(authHeaders(user));
       expect(res.status).toBe(200);
       expect(res.body.mfa_setup_required).toBe(false);
+    });
+
+    // Security fix regression coverage (see public.test.ts's matching
+    // "never includes birthday_calendar_ics_url" test on the unauthenticated
+    // /landing route this replaced): the link is only ever handed to an
+    // *authenticated* caller now, built from their own per-user token.
+    describe('birthday_calendar_ics_url', () => {
+      it('is null when the birthday calendar feature is disabled (default)', async () => {
+        const user = await createMember();
+        const res = await request(app).get('/api/v1/me').set(authHeaders(user));
+
+        expect(res.status).toBe(200);
+        expect(res.body.birthday_calendar_ics_url).toBeNull();
+      });
+
+      it('points at the real, working feed once the feature is enabled, keyed to the caller\'s own token', async () => {
+        const user = await createMember();
+        await appConfig.set('birthday_calendar_available', true);
+
+        const res = await request(app).get('/api/v1/me').set(authHeaders(user));
+
+        expect(res.body.birthday_calendar_ics_url).toBe(`/api/v1/public/birthdays/${user.birthday_calendar_token}/calendar.ics`);
+
+        const feedRes = await request(publicApp).get(res.body.birthday_calendar_ics_url);
+        expect(feedRes.status).toBe(200);
+        expect(feedRes.text).toContain('BEGIN:VCALENDAR');
+      });
+
+      it('differs per user, unlike the old shared-secret URL', async () => {
+        const userA = await createMember();
+        const userB = await createMember();
+        await appConfig.set('birthday_calendar_available', true);
+
+        const resA = await request(app).get('/api/v1/me').set(authHeaders(userA));
+        const resB = await request(app).get('/api/v1/me').set(authHeaders(userB));
+
+        expect(resA.body.birthday_calendar_ics_url).not.toBe(resB.body.birthday_calendar_ics_url);
+      });
     });
   });
 

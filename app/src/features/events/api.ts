@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../api/client';
 import { useToast } from '../../notifications/useToast';
 import { formatDate } from '../../utils/formatDate';
-import type { BirthdayList, BirthdayListRow, Event, EventInput, EventList, EventWithParticipants, ExternalEvent, ExternalEventList, PublicLandingConfig } from '../../api/types';
+import type { BirthdayList, BirthdayListRow, Event, EventInput, EventList, EventWithParticipants, ExternalEvent, ExternalEventList } from '../../api/types';
 
 export function useEvents(page: number, pageSize: number, sort: string, from?: string, to?: string) {
   return useQuery({
@@ -201,22 +201,6 @@ export function useCalendarBirthdays() {
       }
       return rows;
     },
-  });
-}
-
-/**
- * Local duplicate of features/public-landing/api.ts's useLandingConfig,
- * narrowed to the one field this page needs - see this plan's Global
- * Constraints on the no-cross-feature-import convention (features/events
- * must not import from features/public-landing). Same queryKey as the
- * original on purpose, so the two hooks share one cache entry if both ever
- * happen to be mounted in the same session.
- */
-export function useBirthdayCalendarIcsUrl() {
-  return useQuery({
-    queryKey: ['public-landing-config'],
-    queryFn: () => apiFetch<PublicLandingConfig>('/api/v1/public/landing'),
-    select: (data) => data.birthday_calendar_ics_url,
   });
 }
 

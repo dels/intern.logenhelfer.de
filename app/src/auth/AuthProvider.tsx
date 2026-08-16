@@ -17,6 +17,7 @@ interface AuthContextValue {
   abilities: Record<string, string[]>;
   impersonating: boolean;
   mfaSetupRequired: boolean;
+  birthdayCalendarIcsUrl: string | null;
   login: (email: string, password: string) => Promise<LoginResult>;
   completeMfaChallenge: (mfaPendingToken: string, input: { method: string; code: string; remember_device: boolean }) => Promise<void>;
   loginWithPasskey: (options?: { useBrowserAutofill?: boolean }) => Promise<void>;
@@ -35,11 +36,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [abilities, setAbilities] = useState<Record<string, string[]>>({});
   const [impersonating, setImpersonating] = useState(false);
   const [mfaSetupRequired, setMfaSetupRequired] = useState(false);
+  const [birthdayCalendarIcsUrl, setBirthdayCalendarIcsUrl] = useState<string | null>(null);
 
   const applyMe = useCallback((me: Me) => {
     setUser(me.user);
     setAbilities(me.abilities);
     setMfaSetupRequired(me.mfa_setup_required);
+    setBirthdayCalendarIcsUrl(me.birthday_calendar_ics_url);
   }, []);
 
   // Named separately from the `logout` field on `value` below so the
@@ -51,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(null);
     setUser(null);
     setAbilities({});
+    setBirthdayCalendarIcsUrl(null);
     setStatus('anonymous');
   }, []);
 
@@ -114,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     abilities,
     impersonating,
     mfaSetupRequired,
+    birthdayCalendarIcsUrl,
     setUser,
     async login(email, password) {
       const response = await apiFetch<MfaLoginResult>('/api/v1/session', {
@@ -178,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await apiFetch<Me>('/api/v1/me');
       applyMe(me);
     },
-  }), [status, user, abilities, impersonating, mfaSetupRequired, performLogout, applyMe]);
+  }), [status, user, abilities, impersonating, mfaSetupRequired, birthdayCalendarIcsUrl, performLogout, applyMe]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

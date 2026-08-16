@@ -1,23 +1,16 @@
 import { Box, Button, Paper, Stack, Typography } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfRounded';
 import RssFeedIcon from '@mui/icons-material/RssFeedRounded';
-import CakeIcon from '@mui/icons-material/CakeRounded';
 import { useTranslation } from 'react-i18next';
 import { usePublicWorkingplan } from '../features/public-calendar/api';
-import { useLandingConfig } from '../features/public-landing/api';
-import { copyToClipboard } from '../utils/copyToClipboard';
-import { useToast } from '../notifications/useToast';
 
 export default function PublicCalendarPage() {
   const { t, i18n } = useTranslation();
-  const toast = useToast();
   const { data, isLoading } = usePublicWorkingplan();
-  const { data: landing } = useLandingConfig();
 
   if (isLoading) return null;
 
   const hasRows = Boolean(data?.rows.length);
-  const birthdayCalendarIcsUrl = landing?.birthday_calendar_ics_url;
 
   return (
     <Box sx={{ maxWidth: 720, mx: 'auto', p: 3 }}>
@@ -29,22 +22,8 @@ export default function PublicCalendarPage() {
         <Button size="small" startIcon={<RssFeedIcon />} component="a" href="/arbeitsplan.ics">
           {t('publicCalendar.icsSubscribe')}
         </Button>
-        {birthdayCalendarIcsUrl && (
-          <Button
-            size="small"
-            startIcon={<CakeIcon />}
-            onClick={async () => {
-              try {
-                await copyToClipboard(new URL(birthdayCalendarIcsUrl, window.location.origin).href);
-                toast.success(t('publicCalendar.birthdayCalendarCopied'));
-              } catch {
-                toast.error(t('publicCalendar.birthdayCalendarCopyFailed'));
-              }
-            }}
-          >
-            {t('publicCalendar.birthdayCalendarSubscribe')}
-          </Button>
-        )}
+        {/* ponytail: birthday-calendar link intentionally NOT here - it must
+            only be reachable by logged-in users, see EventsListPage.tsx */}
       </Stack>
       {hasRows && data ? (
         <Stack spacing={2}>

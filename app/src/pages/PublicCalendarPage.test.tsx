@@ -1,6 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeAll, afterEach, afterAll } from 'vitest';
+import { describe, expect, it, beforeAll, afterEach, afterAll } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -19,24 +18,13 @@ const server = setupServer(
     }),
   ),
   http.get('/api/v1/public/landing', () =>
-    HttpResponse.json({ calendar_as_landing_page: true, lodge: 'Zur Standhaftigkeit', language: 'de', logo_version: null, birthday_calendar_ics_url: '/api/v1/public/birthdays/some-secret/calendar.ics' }),
+    HttpResponse.json({ calendar_as_landing_page: true, lodge: 'Zur Standhaftigkeit', language: 'de', logo_version: null }),
   ),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => {
-  server.resetHandlers();
-  Reflect.deleteProperty(navigator, 'clipboard');
-});
+afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
-
-// jsdom has no Clipboard implementation - define it directly on the real
-// `navigator` (rather than `vi.stubGlobal('navigator', {...})`) so every
-// other property (userAgent, language, ...) stays intact for the rest of
-// the test. Cleaned up in the afterEach above, even on assertion failure.
-function stubClipboardWriteText(writeText: (text: string) => Promise<void>) {
-  Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-}
 
 function renderPage() {
   const queryClient = new QueryClient();
@@ -86,35 +74,11 @@ describe('PublicCalendarPage', () => {
     expect(screen.getByRole('link', { name: 'Als PDF herunterladen' })).toHaveAttribute('href', '/arbeitsplan.pdf');
   });
 
-  it('copies the absolute birthday-calendar URL to the clipboard and shows a toast, instead of navigating', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    stubClipboardWriteText(writeText);
-    renderPage();
-    await waitFor(() => expect(screen.getByText('Sommerfest')).toBeInTheDocument());
-
-    const button = screen.getByRole('button', { name: 'Geburtstagkalender' });
-    expect(button.tagName).not.toBe('A');
-    await userEvent.click(button);
-
-    expect(writeText).toHaveBeenCalledWith(new URL('/api/v1/public/birthdays/some-secret/calendar.ics', window.location.origin).href);
-    await waitFor(() => expect(screen.getByText('Link kopiert. Füge ihn in deiner Kalender-App als Kalenderabo hinzu.')).toBeInTheDocument());
-  });
-
-  it('shows an error toast when the clipboard write fails', async () => {
-    stubClipboardWriteText(vi.fn().mockRejectedValue(new Error('denied')));
-    renderPage();
-    await waitFor(() => expect(screen.getByText('Sommerfest')).toBeInTheDocument());
-
-    await userEvent.click(screen.getByRole('button', { name: 'Geburtstagkalender' }));
-
-    await waitFor(() => expect(screen.getByText('Kopieren des Links fehlgeschlagen.')).toBeInTheDocument());
-  });
-
-  it('does not show a birthday calendar button when the backend returns null', async () => {
-    server.use(
-      http.get('/api/v1/public/landing', () =>
-        HttpResponse.json({ calendar_as_landing_page: true, lodge: 'Zur Standhaftigkeit', language: 'de', logo_version: null, birthday_calendar_ics_url: null })),
-    );
+  // Security fix regression: the birthday-calendar link must NOT be
+  // reachable from this fully-unauthenticated page, at all, regardless of
+  // AppConfig/backend state - see EventsListPage.test.tsx for the
+  // authenticated-only equivalent.
+  it('never shows a birthday-calendar button, logged out', async () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Sommerfest')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Geburtstagkalender' })).not.toBeInTheDocument();
