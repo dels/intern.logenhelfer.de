@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, beforeAll, afterEach, afterAll } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import DashboardPage from './DashboardPage';
 import { AuthProvider } from '../auth/AuthProvider';
 import { setAccessToken } from '../api/token';
@@ -38,12 +39,18 @@ beforeEach(() => setAccessToken('test-token'));
 afterEach(() => { server.resetHandlers(); setAccessToken(null); });
 afterAll(() => server.close());
 
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="current-path">{location.pathname}</div>;
+}
+
 function renderPage() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <MemoryRouter>
+          <LocationProbe />
           <DashboardPage />
         </MemoryRouter>
       </AuthProvider>
@@ -117,6 +124,26 @@ describe('DashboardPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('09.07.2026 · Tempelarbeit im I. Grad')).toBeInTheDocument());
     expect(screen.getByText('19:30 · Logenhaus, Große Str. 12')).toBeInTheDocument();
+  });
+
+  it('navigates to the event detail page when an upcoming event is clicked', async () => {
+    server.use(
+      http.get('/api/v1/events', () =>
+        HttpResponse.json({
+          rows: [
+            {
+              uuid: 'ev-1', title: 'Tempelarbeit im I. Grad', date: '2026-07-09', time: '19:30',
+              whole_day: false, location: 'Logenhaus, Große Str. 12',
+            },
+          ],
+          row_count: 1,
+        }),
+      ),
+    );
+    renderPage();
+    await waitFor(() => expect(screen.getByText('09.07.2026 · Tempelarbeit im I. Grad')).toBeInTheDocument());
+    await userEvent.click(screen.getByText('09.07.2026 · Tempelarbeit im I. Grad'));
+    expect(screen.getByTestId('current-path')).toHaveTextContent('/events/ev-1');
   });
 
   it('renders "Ganztägig" instead of a time for a whole-day event', async () => {
