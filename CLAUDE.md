@@ -749,11 +749,10 @@ allow side misses that.
 
 - **`GET /api/v1/public/status/:token` has no AppConfig toggle**, unlike
   every other route in `api/src/routes/public.ts`. This is deliberate
-  (YAGNI) — `STATUS_ENDPOINT_TOKEN` (provisioned like `MFA_ENCRYPTION_KEY`/
-  `BIRTHDAY_CALENDAR_SECRET` — see `bin/init-env`/`bin/deploy-to`) is the
-  only on/off switch. To revoke a leaked/previously-issued monitoring URL,
-  rotate the token in `.env.<env>` and redeploy — don't add a second
-  AppConfig flag for this.
+  (YAGNI) — `STATUS_ENDPOINT_TOKEN` (provisioned like `MFA_ENCRYPTION_KEY` —
+  see `bin/init-env`/`bin/deploy-to`) is the only on/off switch. To revoke a
+  leaked/previously-issued monitoring URL, rotate the token in `.env.<env>`
+  and redeploy — don't add a second AppConfig flag for this.
 - **`uptime_seconds` in that response is `process.uptime()`, not a real
   deploy-timestamp mechanism.** It resets whenever the process restarts,
   not necessarily in lockstep with a blue/green cutover. Don't build a
@@ -780,6 +779,43 @@ allow side misses that.
   `api/test/routes/public.test.ts` since that file bypasses the validator
   entirely; only `api/test/app.integration.test.ts`, which exercises the
   real wired `app`, catches this class of bug).
+
+### Birthday calendar feed
+
+- **`GET /api/v1/public/birthdays/:token/calendar.ics` is gated by a
+  per-user token (`users.birthday_calendar_token`), not a single shared
+  secret.** It used to be a single env-provisioned `BIRTHDAY_CALENDAR_SECRET`
+  (same one URL, same token, for the whole org) — replaced 2026-08-16 after
+  it was found leaking via the fully-unauthenticated `GET
+  /api/v1/public/landing` (any anonymous caller could read the org-wide
+  secret URL straight out of that response's JSON, regardless of whether the
+  frontend button that used it was ever shown). The column is DB-generated
+  (`@default(dbgenerated("gen_random_uuid()::text"))` in `schema.prisma`,
+  Postgres core `gen_random_uuid()`, no pgcrypto extension needed) — every
+  insert path (member creation, demo seed, factories) gets one for free, no
+  app code has to generate or lazily provision it.
+- **The token only controls *access*, not *content*.** The feed itself is
+  still the same org-wide, consent-filtered roster for every caller
+  regardless of whose token fetched it (see `birthdayCalendarIcsUrl`'s own
+  comment in `api/src/routes/public.ts`) — a per-user token buys per-person
+  *revocation* (offboarding a member, which sets `deleted`, breaks only
+  their own link — `findBirthdayCalendarTokenOwner`'s lookup filters on
+  `deleted: false`), not narrower data exposure. Don't describe this as
+  "scoping the data to that user" in any future doc or UI copy — it doesn't.
+- **The URL is only ever handed out via the authenticated `GET
+  /api/v1/me`** (`birthday_calendar_ics_url`, built from the caller's own
+  `birthday_calendar_token`), never via `/landing` or any other
+  unauthenticated route. The frontend button for it lives only on the
+  internal `/events` page (`EventsListPage.tsx`, reading `useAuth()`'s
+  `birthdayCalendarIcsUrl`) — the public, logged-out `/calendar` page
+  (`PublicCalendarPage.tsx`) must never grow one back. If a future change
+  needs the URL somewhere new, it must come from an authenticated read, not
+  a new field on an unauthenticated route.
+- **`BIRTHDAY_CALENDAR_SECRET` no longer exists** — removed from
+  `bin/init-env`, `bin/deploy-to`, `bin/test-gate`, both compose files, and
+  `.env.example` alongside this fix. An old `.env.<env>` may still have a
+  stray `BIRTHDAY_CALENDAR_SECRET=...` line from before this change; it's
+  inert (nothing reads it any more) and safe to leave or delete by hand.
 
 ## General Advices
 

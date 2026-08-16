@@ -6,7 +6,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CakeIcon from '@mui/icons-material/CakeRounded';
 import { useTranslation } from 'react-i18next';
-import { useDeleteEvent, downloadInternalWorkingplanPdf, useBirthdayCalendarIcsUrl } from './api';
+import { useDeleteEvent, downloadInternalWorkingplanPdf } from './api';
 import { addMonths } from './calendarGrid';
 import { useCalendarRangeData } from './useCalendarRangeData';
 import EventsCalendarView from './EventsCalendarView';
@@ -23,14 +23,13 @@ export default function EventsListPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
-  const { abilities } = useAuth();
+  const { abilities, birthdayCalendarIcsUrl } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [anchor, setAnchor] = useState<Date>(new Date());
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set(['birthdays']));
   const { mutate: deleteEvent, isPending: deleting } = useDeleteEvent();
 
   const range = useCalendarRangeData(anchor, selectedFilters);
-  const { data: birthdayCalendarIcsUrl } = useBirthdayCalendarIcsUrl();
   const monthLabel = formatDate(anchor, i18n.language, { month: 'long', year: 'numeric' });
 
   const goPrev = () => setAnchor((a) => addMonths(a, -1));

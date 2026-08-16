@@ -61,15 +61,32 @@ const eventRow = { uuid: 'e1', title: 'Stiftungsfest', date: '2026-08-01', time:
 
 const server = setupServer(
   http.get('/api/v1/me', () =>
-    HttpResponse.json({ user: { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster' }, abilities: { event: ['read', 'create', 'update', 'destroy'], external_event: ['create'] } }),
+    HttpResponse.json({
+      user: { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster' },
+      abilities: { event: ['read', 'create', 'update', 'destroy'], external_event: ['create'] },
+      // Security fix: this URL now comes from the authenticated /me response
+      // (see AuthProvider.tsx), not the unauthenticated /public/landing one -
+      // see PublicCalendarPage.test.tsx for that route's own coverage.
+      birthday_calendar_ics_url: null,
+    }),
   ),
   http.get('/api/v1/events', () => HttpResponse.json({ rows: [eventRow], row_count: 1 })),
   http.delete('/api/v1/events/e1', () => new HttpResponse(null, { status: 204 })),
   http.get('/api/v1/external_events', () => HttpResponse.json({ rows: [], row_count: 0 })),
   http.get('/api/v1/external_event_ics_sources/options', () => HttpResponse.json({ rows: [] })),
   http.get('/api/v1/members/birthday_list', () => HttpResponse.json({ rows: [], row_count: 0 })),
-  http.get('/api/v1/public/landing', () => HttpResponse.json({ birthday_calendar_ics_url: null })),
 );
+
+/** Same base /me shape as the server's own default handler above, but with a real birthday_calendar_ics_url - used by the two tests below that need the button present. */
+function meWithBirthdayUrl(url: string) {
+  return http.get('/api/v1/me', () =>
+    HttpResponse.json({
+      user: { id: 1, email: 'a@b.de', firstname: 'Max', lastname: 'Muster' },
+      abilities: { event: ['read', 'create', 'update', 'destroy'], external_event: ['create'] },
+      birthday_calendar_ics_url: url,
+    }),
+  );
+}
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
 // AuthProvider's cold-boot bootstrap effect (Task 4's sub-fix (a)) refreshes
@@ -378,14 +395,14 @@ describe('EventsListPage', () => {
     createObjectURLSpy.mockRestore();
   });
 
-  it('shows the birthday-calendar button only when the public landing config provides a URL', async () => {
+  it('shows the birthday-calendar button only when /me provides a URL', async () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Geburtstagskalender einbinden' })).not.toBeInTheDocument();
   });
 
   it('copies the absolute birthday-calendar URL to the clipboard and shows a toast, instead of navigating', async () => {
-    server.use(http.get('/api/v1/public/landing', () => HttpResponse.json({ birthday_calendar_ics_url: '/api/v1/public/birthdays/secret/calendar.ics' })));
+    server.use(meWithBirthdayUrl('/api/v1/public/birthdays/secret/calendar.ics'));
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboardWriteText(writeText);
     renderPage();
@@ -399,7 +416,7 @@ describe('EventsListPage', () => {
   });
 
   it('shows an error toast when the clipboard write fails', async () => {
-    server.use(http.get('/api/v1/public/landing', () => HttpResponse.json({ birthday_calendar_ics_url: '/api/v1/public/birthdays/secret/calendar.ics' })));
+    server.use(meWithBirthdayUrl('/api/v1/public/birthdays/secret/calendar.ics'));
     stubClipboardWriteText(vi.fn().mockRejectedValue(new Error('denied')));
     renderPage();
 

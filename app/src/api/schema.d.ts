@@ -1403,7 +1403,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/public/birthdays/{secret}/calendar.ics": {
+    "/api/v1/public/birthdays/{token}/calendar.ics": {
         parameters: {
             query?: never;
             header?: never;
@@ -1772,7 +1772,6 @@ export interface components {
             lodge: string;
             language: string;
             logo_version: number | null;
-            birthday_calendar_ics_url: string | null;
         };
         CustomLogoMeta: {
             content_type: string;
@@ -3162,6 +3161,7 @@ export interface operations {
                             [key: string]: ("read" | "create" | "update" | "destroy" | "index" | "user_stats" | "downloads" | "file_stats" | "user_file_stats" | "mem_stats" | "names_list")[];
                         };
                         mfa_setup_required: boolean;
+                        birthday_calendar_ics_url: string | null;
                     };
                 };
             };
@@ -5618,6 +5618,7 @@ export interface operations {
                             [key: string]: ("read" | "create" | "update" | "destroy" | "index" | "user_stats" | "downloads" | "file_stats" | "user_file_stats" | "mem_stats" | "names_list")[];
                         };
                         mfa_setup_required: boolean;
+                        birthday_calendar_ics_url: string | null;
                     };
                 };
             };
@@ -5646,6 +5647,7 @@ export interface operations {
                             [key: string]: ("read" | "create" | "update" | "destroy" | "index" | "user_stats" | "downloads" | "file_stats" | "user_file_stats" | "mem_stats" | "names_list")[];
                         };
                         mfa_setup_required: boolean;
+                        birthday_calendar_ics_url: string | null;
                     };
                 };
             };
@@ -5678,6 +5680,7 @@ export interface operations {
                             [key: string]: ("read" | "create" | "update" | "destroy" | "index" | "user_stats" | "downloads" | "file_stats" | "user_file_stats" | "mem_stats" | "names_list")[];
                         };
                         mfa_setup_required: boolean;
+                        birthday_calendar_ics_url: string | null;
                     };
                 };
             };
@@ -5714,6 +5717,7 @@ export interface operations {
                             [key: string]: ("read" | "create" | "update" | "destroy" | "index" | "user_stats" | "downloads" | "file_stats" | "user_file_stats" | "mem_stats" | "names_list")[];
                         };
                         mfa_setup_required: boolean;
+                        birthday_calendar_ics_url: string | null;
                     };
                 };
             };
@@ -5780,7 +5784,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                secret: string;
+                /** @description A member's own birthday_calendar_token (see GET /api/v1/me) - a per-user token, not a shared secret, so one member's link can be revoked (offboarding) without affecting anyone else's. */
+                token: string;
             };
             cookie?: never;
         };

@@ -92,9 +92,8 @@ GATE_ENV_FILE="$(mktemp)"
 # back, so the two steps must agree on MFA_ENCRYPTION_KEY within one run -
 # nothing requires either value to be STABLE *across* runs, so there's no
 # reason to hardcode one.
-command -v openssl >/dev/null 2>&1 || { echo "Error: openssl not found in PATH — cannot generate MFA_ENCRYPTION_KEY/BIRTHDAY_CALENDAR_SECRET/STATUS_ENDPOINT_TOKEN." >&2; exit 1; }
+command -v openssl >/dev/null 2>&1 || { echo "Error: openssl not found in PATH — cannot generate MFA_ENCRYPTION_KEY/STATUS_ENDPOINT_TOKEN." >&2; exit 1; }
 MFA_ENCRYPTION_KEY="$(openssl rand -hex 32)"
-BIRTHDAY_CALENDAR_SECRET="$(openssl rand -hex 32)"
 STATUS_ENDPOINT_TOKEN="$(openssl rand -hex 32)"
 
 dcg() { docker compose -f infra/docker-compose.yml -p "$GATE_PROJECT" --env-file "$GATE_ENV_FILE" "$@"; }
@@ -138,7 +137,6 @@ NODE_ENV=test
 # --wait api` below would fail outright rather than silently omit the key.
 # Generated fresh above, not hardcoded - see that comment for why.
 MFA_ENCRYPTION_KEY=$MFA_ENCRYPTION_KEY
-BIRTHDAY_CALENDAR_SECRET=$BIRTHDAY_CALENDAR_SECRET
 STATUS_ENDPOINT_TOKEN=$STATUS_ENDPOINT_TOKEN
 EOF
 
@@ -229,19 +227,17 @@ dcg up -d --wait postgres-db redis
 # invisible to it - e.g. the public Impressum page silently falling back to
 # its "not yet configured" placeholder instead of the seeded content.
 #
-# MFA_ENCRYPTION_KEY/BIRTHDAY_CALENDAR_SECRET/STATUS_ENDPOINT_TOKEN are set
-# explicitly here for the same reason JWT_SECRET is above: api/test/setup.ts
-# also loads the repo-root .env (`config()`, non-overriding) as a fallback for
-# whatever a given checkout already has there - which is exactly the footgun
-# this hit. A deploy host's root .env predating BIRTHDAY_CALENDAR_SECRET had
-# MFA_ENCRYPTION_KEY but not it, so mfaEncryption.test.ts passed while every
-# public.test.ts birthday-feed spec failed (secret compared against '',
-# producing a null feed URL / an empty-secret request path). Setting all
-# three explicitly here makes this gate self-contained regardless of what a
-# given host's root .env happens to have. Values come from the fresh
-# openssl-generated variables above (same ones GATE_ENV_FILE uses for step
-# 3's api container) - not a hardcoded literal, so there is nothing
-# secret-shaped to leak from this script itself.
+# MFA_ENCRYPTION_KEY/STATUS_ENDPOINT_TOKEN are set explicitly here for the
+# same reason JWT_SECRET is above: api/test/setup.ts also loads the
+# repo-root .env (`config()`, non-overriding) as a fallback for whatever a
+# given checkout already has there - which is exactly the footgun this hit
+# for MFA_ENCRYPTION_KEY on a host whose root .env predated it (see git
+# history for the incident this fixed). Setting both explicitly here makes
+# this gate self-contained regardless of what a given host's root .env
+# happens to have. Values come from the fresh openssl-generated variables
+# above (same ones GATE_ENV_FILE uses for step 3's api container) - not a
+# hardcoded literal, so there is nothing secret-shaped to leak from this
+# script itself.
 docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
   --network "${GATE_PROJECT}_default" \
   -e CI=true \
@@ -250,7 +246,6 @@ docker run --rm --cpus "$GATE_CPUS" -v "$PWD:/work" -w /work/api \
   -e NODE_ENV=test \
   -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
   -e MFA_ENCRYPTION_KEY="$MFA_ENCRYPTION_KEY" \
-  -e BIRTHDAY_CALENDAR_SECRET="$BIRTHDAY_CALENDAR_SECRET" \
   -e STATUS_ENDPOINT_TOKEN="$STATUS_ENDPOINT_TOKEN" \
   -e TEST_REDIS_PROTOCOL=redis \
   -e TEST_REDIS_HOST=redis \

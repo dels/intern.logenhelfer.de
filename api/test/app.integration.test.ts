@@ -1197,6 +1197,33 @@ describe('app.ts integration', () => {
     });
   });
 
+  // Regression coverage for the birthday-calendar-link security fix: both
+  // test/routes/me.test.ts and test/routes/public.test.ts mount their
+  // router bare (no express-openapi-validator), so neither can see a
+  // response-shape mismatch against openapi.yaml. `birthday_calendar_ics_url`
+  // moved from PublicLandingConfig's `required` list onto five separate
+  // inline schemas under GET/PATCH /api/v1/me* - a field left in `required`
+  // but missing from the real response (or vice versa, given
+  // `additionalProperties: false`) 500s here even though it can pass a
+  // bare-router test - same class of bug as the 2026-08-09 demo incident
+  // documented above this block.
+  describe('birthday_calendar_ics_url contract validation', () => {
+    it('GET /api/v1/me returns 200 with the field present (not a validator 500)', async () => {
+      const user = await createUser({ uuid: randomUUID() });
+      const res = await request(app).get('/api/v1/me').set({ Authorization: `Bearer ${issueAccessToken(user.id)}` });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('birthday_calendar_ics_url');
+    });
+
+    it('GET /api/v1/public/landing returns 200 with the field absent (not a validator 500)', async () => {
+      const res = await request(app).get('/api/v1/public/landing');
+
+      expect(res.status).toBe(200);
+      expect(res.body).not.toHaveProperty('birthday_calendar_ics_url');
+    });
+  });
+
   // Regression coverage for the final-whole-branch-review finding: the
   // getPublicDemoAccounts operation's 404 in openapi.yaml used to be a bare
   // `description` with no `content`, meaning the spec claimed this 404 has no

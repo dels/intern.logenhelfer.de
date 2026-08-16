@@ -558,7 +558,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                required: [user, abilities, mfa_setup_required]
+                required: [user, abilities, mfa_setup_required, birthday_calendar_ics_url]
                 properties:
                   user: { $ref: '#/components/schemas/MeUser' }
                   abilities:
@@ -567,6 +567,7 @@ paths:
                       type: array
                       items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
                   mfa_setup_required: { type: boolean }
+                  birthday_calendar_ics_url: { type: string, nullable: true }
         '401':
           $ref: '#/components/responses/Unauthorized'
   /api/v1/events:
@@ -2446,7 +2447,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                required: [user, abilities, mfa_setup_required]
+                required: [user, abilities, mfa_setup_required, birthday_calendar_ics_url]
                 properties:
                   user: { $ref: '#/components/schemas/MeUser' }
                   abilities:
@@ -2455,6 +2456,7 @@ paths:
                       type: array
                       items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
                   mfa_setup_required: { type: boolean }
+                  birthday_calendar_ics_url: { type: string, nullable: true }
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2470,7 +2472,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                required: [user, abilities, mfa_setup_required]
+                required: [user, abilities, mfa_setup_required, birthday_calendar_ics_url]
                 properties:
                   user: { $ref: '#/components/schemas/MeUser' }
                   abilities:
@@ -2479,6 +2481,7 @@ paths:
                       type: array
                       items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
                   mfa_setup_required: { type: boolean }
+                  birthday_calendar_ics_url: { type: string, nullable: true }
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2499,7 +2502,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                required: [user, abilities, mfa_setup_required]
+                required: [user, abilities, mfa_setup_required, birthday_calendar_ics_url]
                 properties:
                   user: { $ref: '#/components/schemas/MeUser' }
                   abilities:
@@ -2508,6 +2511,7 @@ paths:
                       type: array
                       items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
                   mfa_setup_required: { type: boolean }
+                  birthday_calendar_ics_url: { type: string, nullable: true }
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2535,7 +2539,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                required: [user, abilities, mfa_setup_required]
+                required: [user, abilities, mfa_setup_required, birthday_calendar_ics_url]
                 properties:
                   user: { $ref: '#/components/schemas/MeUser' }
                   abilities:
@@ -2544,6 +2548,7 @@ paths:
                       type: array
                       items: { type: string, enum: [read, create, update, destroy, index, user_stats, downloads, file_stats, user_file_stats, mem_stats, names_list] }
                   mfa_setup_required: { type: boolean }
+                  birthday_calendar_ics_url: { type: string, nullable: true }
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2582,14 +2587,15 @@ paths:
               schema: { type: string }
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/public/birthdays/{secret}/calendar.ics:
+  /api/v1/public/birthdays/{token}/calendar.ics:
     get:
       operationId: getPublicBirthdayCalendarIcs
       security: []
       parameters:
-        - name: secret
+        - name: token
           in: path
           required: true
+          description: A member's own birthday_calendar_token (see GET /api/v1/me) - a per-user token, not a shared secret, so one member's link can be revoked (offboarding) without affecting anyone else's.
           schema: { type: string }
       responses:
         '200':
@@ -3125,13 +3131,12 @@ components:
     PublicLandingConfig:
       type: object
       additionalProperties: false
-      required: [calendar_as_landing_page, lodge, language, logo_version, birthday_calendar_ics_url]
+      required: [calendar_as_landing_page, lodge, language, logo_version]
       properties:
         calendar_as_landing_page: { type: boolean }
         lodge: { type: string }
         language: { type: string }
         logo_version: { type: integer, nullable: true }
-        birthday_calendar_ics_url: { type: string, nullable: true }
     CustomLogoMeta:
       type: object
       additionalProperties: false

@@ -85,29 +85,10 @@ async function birthdayCalendarAvailable(): Promise<boolean> {
 }
 
 /**
- * Constant-time comparison against BIRTHDAY_CALENDAR_SECRET (provisioned
- * like MFA_ENCRYPTION_KEY - see bin/init-env/bin/deploy-to). Unlike
- * workingplan.ics, birthday data is sensitive enough that "anyone who knows
- * this URL path pattern exists" isn't an acceptable audience - only "anyone
- * who was given this exact URL" - so this needs its own secret, not just the
- * AppConfig toggle.
- */
-function birthdayCalendarSecretMatches(candidate: string): boolean {
-  const expected = process.env.BIRTHDAY_CALENDAR_SECRET ?? '';
-  if (expected.length === 0) {
-    return false;
-  }
-  const a = Buffer.from(candidate);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
-/**
  * Constant-time comparison against STATUS_ENDPOINT_TOKEN (provisioned like
- * MFA_ENCRYPTION_KEY/BIRTHDAY_CALENDAR_SECRET - see bin/init-env/bin/deploy-to).
- * No AppConfig toggle backs this route - the token is the entire
- * access-control surface; rotating it in .env.<env> is how monitoring
- * access gets revoked.
+ * MFA_ENCRYPTION_KEY - see bin/init-env/bin/deploy-to). No AppConfig toggle
+ * backs this route - the token is the entire access-control surface;
+ * rotating it in .env.<env> is how monitoring access gets revoked.
  */
 function statusEndpointTokenMatches(candidate: string): boolean {
   const expected = process.env.STATUS_ENDPOINT_TOKEN ?? '';
@@ -119,15 +100,40 @@ function statusEndpointTokenMatches(candidate: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-async function birthdayCalendarIcsUrl(): Promise<string | null> {
+/**
+ * Looks up the feed's caller by their own per-user
+ * `users.birthday_calendar_token` (DB-generated, unique - see
+ * schema.prisma's comment on that column). Unlike the single shared
+ * BIRTHDAY_CALENDAR_SECRET this replaced, this makes the feed link
+ * per-person-revocable: offboarding a member (which sets `deleted`) breaks
+ * *only* their own link, not everyone else's, without anyone having to
+ * rotate a shared secret. A plain indexed-equality DB lookup (not a
+ * constant-time compare) is the right tool here, same as every other
+ * `:uuid`-keyed lookup in this codebase (events.ts's findVisibleEvent etc.)
+ * - timingSafeEqual matters for a single fixed in-process secret string
+ * compared byte-by-byte in JS, not for a keyed index lookup against a
+ * random 128-bit value.
+ *
+ * Deliberately does NOT scope content to this specific user - the feed
+ * itself is still the same org-wide, consent-filtered roster for every
+ * caller. The per-user token is an access-control/revocation mechanism
+ * only, not a content filter.
+ */
+async function findBirthdayCalendarTokenOwner(token: string): Promise<{ id: number } | null> {
+  return prisma.users.findFirst({ where: { birthday_calendar_token: token, deleted: { not: true } }, select: { id: true } });
+}
+
+/**
+ * Exported for me.ts: the ICS URL is only ever handed to an *authenticated*
+ * caller now (via GET /api/v1/me, built from that caller's own token) - see
+ * this file's own /landing handler's comment for why it must never be
+ * surfaced on the fully-unauthenticated public/landing route.
+ */
+export async function birthdayCalendarIcsUrl(userToken: string): Promise<string | null> {
   if (!(await birthdayCalendarAvailable())) {
     return null;
   }
-  const secret = process.env.BIRTHDAY_CALENDAR_SECRET;
-  if (!secret) {
-    return null;
-  }
-  return `/api/v1/public/birthdays/${secret}/calendar.ics`;
+  return `/api/v1/public/birthdays/${userToken}/calendar.ics`;
 }
 
 function isLeapYear(year: number): boolean {
@@ -361,13 +367,12 @@ function publicEventJson(event: { title: string | null; location: string | null;
 // GET /api/v1/public/landing
 router.get('/landing', async (_req, res, next) => {
   try {
-    const [startPage, anonEnabled, lodge, language, logoVersion, birthdayIcsUrl] = await Promise.all([
+    const [startPage, anonEnabled, lodge, language, logoVersion] = await Promise.all([
       getBoolean('working_plan_as_start_page'),
       getBoolean('public_wp_available_to_anon_users'),
       getConfigString('lodge'),
       getConfigString('language'),
       currentLogoVersion(),
-      birthdayCalendarIcsUrl(),
     ]);
 
     res.status(200).json({
@@ -375,16 +380,6 @@ router.get('/landing', async (_req, res, next) => {
       lodge: lodge ?? '',
       language: language ?? 'de',
       logo_version: logoVersion,
-      // Security fix: this endpoint is fully unauthenticated - only surface
-      // the birthday-feed secret URL here when the org has already decided
-      // its calendar can be seen anonymously at all (same anonEnabled gate
-      // as calendar_as_landing_page above), never unconditionally just
-      // because birthday_calendar_available is on. Otherwise this endpoint
-      // hands the "secret" URL to literally any anonymous caller regardless
-      // of the org's own anon-access decision - and since this repo is
-      // public, the fact that this field exists at all is discoverable by
-      // anyone, so the secret would protect nothing once the feature is on.
-      birthday_calendar_ics_url: anonEnabled ? birthdayIcsUrl : null,
     });
   } catch (err) {
     next(err);
@@ -511,17 +506,17 @@ router.get('/workingplan.ics', async (_req, res, next) => {
   }
 });
 
-// GET /api/v1/public/birthdays/:secret/calendar.ics
+// GET /api/v1/public/birthdays/:token/calendar.ics
 //
 // Net-new, no Rails precedent (unlike the rest of this file). Gated on two
 // independent things, both required: birthday_calendar_available (an admin
-// decision, like every other flag here) AND the secret path segment,
-// constant-time-compared against BIRTHDAY_CALENDAR_SECRET - see
-// birthdayCalendarSecretMatches's own comment for why this feed needs a
-// secret and workingplan.ics doesn't.
-router.get('/birthdays/:secret/calendar.ics', async (req, res, next) => {
+// decision, like every other flag here) AND the token path segment matching
+// some non-deleted user's own birthday_calendar_token - see
+// findBirthdayCalendarTokenOwner's own comment for why this feed needs a
+// per-user token and workingplan.ics doesn't.
+router.get('/birthdays/:token/calendar.ics', async (req, res, next) => {
   try {
-    if (!(await birthdayCalendarAvailable()) || !birthdayCalendarSecretMatches(req.params.secret)) {
+    if (!(await birthdayCalendarAvailable()) || !(await findBirthdayCalendarTokenOwner(req.params.token))) {
       throw ApiError.notFound();
     }
 
@@ -727,7 +722,7 @@ router.get('/logo/:file', async (req, res, next) => {
 // other route in this file - the token is the only on/off switch (rotate
 // STATUS_ENDPOINT_TOKEN in .env.<env> to revoke a previously-issued
 // monitoring URL). Wrong/missing token -> uniform 404, same rationale as
-// birthdayCalendarSecretMatches: this must not confirm the route even
+// findBirthdayCalendarTokenOwner: this must not confirm the route even
 // exists to an unauthenticated prober.
 router.get<{ token: string }>('/status/:token', statusRateLimiter, async (req, res, next) => {
   try {

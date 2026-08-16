@@ -123,7 +123,7 @@ describe('GET /api/v1/public/landing', () => {
   it('is false when working_plan_as_start_page is off (default)', async () => {
     const res = await request(app).get('/api/v1/public/landing');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null, birthday_calendar_ics_url: null });
+    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null });
   });
 
   it('is true when both flags are on', async () => {
@@ -131,7 +131,7 @@ describe('GET /api/v1/public/landing', () => {
     await setAppConfig('public_wp_available_to_anon_users', true);
 
     const res = await request(app).get('/api/v1/public/landing');
-    expect(res.body).toEqual({ calendar_as_landing_page: true, lodge: 'Logenhelfer', language: 'de', logo_version: null, birthday_calendar_ics_url: null });
+    expect(res.body).toEqual({ calendar_as_landing_page: true, lodge: 'Logenhelfer', language: 'de', logo_version: null });
   });
 
   it('is false when working_plan_as_start_page is on but anon access is off', async () => {
@@ -139,7 +139,7 @@ describe('GET /api/v1/public/landing', () => {
     await setAppConfig('public_wp_available_to_anon_users', false);
 
     const res = await request(app).get('/api/v1/public/landing');
-    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null, birthday_calendar_ics_url: null });
+    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null });
   });
 
   it('is false when working_plan_as_start_page is off even if anon access is on', async () => {
@@ -147,7 +147,7 @@ describe('GET /api/v1/public/landing', () => {
     await setAppConfig('public_wp_available_to_anon_users', true);
 
     const res = await request(app).get('/api/v1/public/landing');
-    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null, birthday_calendar_ics_url: null });
+    expect(res.body).toEqual({ calendar_as_landing_page: false, lodge: 'Logenhelfer', language: 'de', logo_version: null });
   });
 
   it('reflects a configured lodge name', async () => {
@@ -175,28 +175,20 @@ describe('GET /api/v1/public/landing', () => {
     expect(res.body.logo_version).toBe(stored.updated_at.getTime());
   });
 
-  it('returns birthday_calendar_ics_url as null when the birthday calendar feature is disabled (default)', async () => {
-    const res = await request(app).get('/api/v1/public/landing');
-    expect(res.body.birthday_calendar_ics_url).toBeNull();
-  });
-
-  it('returns a working birthday_calendar_ics_url pointing at the real feed once the feature is enabled', async () => {
+  // Regression test: this endpoint is fully unauthenticated (no
+  // Authorization header above) - the birthday-feed URL must never appear
+  // here, for anyone, regardless of AppConfig state. It moved to the
+  // authenticated GET /api/v1/me (see me.test.ts) precisely because this
+  // route used to leak it to any anonymous caller. See openapi.yaml's
+  // PublicLandingConfig (additionalProperties: false) for the schema-level
+  // guarantee this pairs with.
+  it('never includes birthday_calendar_ics_url, even when the feature is enabled', async () => {
     await setAppConfig('birthday_calendar_available', true);
-    const landingRes = await request(app).get('/api/v1/public/landing');
-    expect(landingRes.body.birthday_calendar_ics_url).toMatch(/^\/api\/v1\/public\/birthdays\/.+\/calendar\.ics$/);
-
-    const feedRes = await request(app).get(landingRes.body.birthday_calendar_ics_url);
-    expect(feedRes.status).toBe(200);
-    expect(feedRes.text).toContain('BEGIN:VCALENDAR');
-  });
-
-  it('returns birthday_calendar_ics_url as null when anon access is disabled, even if the birthday feature itself is enabled', async () => {
-    await setAppConfig('birthday_calendar_available', true);
-    await setAppConfig('public_wp_available_to_anon_users', false);
+    await setAppConfig('public_wp_available_to_anon_users', true);
 
     const res = await request(app).get('/api/v1/public/landing');
 
-    expect(res.body.birthday_calendar_ics_url).toBeNull();
+    expect(res.body).not.toHaveProperty('birthday_calendar_ics_url');
   });
 });
 
@@ -397,19 +389,41 @@ describe('GET /api/v1/public/workingplan.ics', () => {
 
 // -- GET /api/v1/public/birthdays/:secret/calendar.ics -----------------------
 
-describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
-  const REAL_SECRET = process.env.BIRTHDAY_CALENDAR_SECRET ?? '';
+describe('GET /api/v1/public/birthdays/:token/calendar.ics', () => {
+  // Any non-deleted user's own token is valid - the feed's content is the
+  // same org-wide roster regardless of which member's token fetched it (see
+  // findBirthdayCalendarTokenOwner's comment in public.ts). A fresh
+  // "subscriber" user, distinct from whichever birthday-having member each
+  // test creates, stands in for "some member's real link".
+  let subscriber: Awaited<ReturnType<typeof createUser>>;
 
-  it('404s when the feature is disabled, even with the real secret', async () => {
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+  beforeEach(async () => {
+    subscriber = await createUser({ firstname: 'Sub', lastname: 'Scriber' });
+  });
+
+  it('404s when the feature is disabled, even with a real subscriber token', async () => {
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'not_found' });
   });
 
-  it('404s with a wrong secret even when the feature is enabled', async () => {
+  it('404s with a wrong token even when the feature is enabled', async () => {
     await setAppConfig('birthday_calendar_available', true);
-    const res = await request(app).get('/api/v1/public/birthdays/definitely-wrong-secret/calendar.ics');
+    const res = await request(app).get('/api/v1/public/birthdays/definitely-wrong-token/calendar.ics');
     expect(res.status).toBe(404);
+  });
+
+  // The whole point of a per-user token over the old shared secret: revoking
+  // one member's link (offboarding sets `deleted`) must not need rotating
+  // anyone else's.
+  it('404s once the token\'s owning user is soft-deleted (offboarded)', async () => {
+    await setAppConfig('birthday_calendar_available', true);
+    const url = `/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`;
+    expect((await request(app).get(url)).status).toBe(200);
+
+    await prisma.users.update({ where: { id: subscriber.id }, data: { deleted: true } });
+
+    expect((await request(app).get(url)).status).toBe(404);
   });
 
   it('returns initials-only VEVENTs for consenting members in individual mode', async () => {
@@ -422,7 +436,7 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
       firstname: 'Carl', lastname: 'Deutlich', date_of_birth: new Date(Date.UTC(1980, 4, 15)), birthday_calendar_consent: false,
     });
 
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
 
     expect(res.status).toBe(200);
     expect(res.text).toContain('BEGIN:VCALENDAR');
@@ -439,7 +453,7 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
       firstname: 'Carl', lastname: 'Deutlich', date_of_birth: new Date(Date.UTC(1980, 4, 15)), birthday_calendar_consent: false,
     });
 
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
 
     expect(res.text).toMatch(/C\. D\.s \d+\. Geburtstag/);
   });
@@ -451,7 +465,7 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
       firstname: 'Erik', lastname: 'Fort', date_of_birth: new Date(Date.UTC(1990, 4, 15)), deleted: true,
     });
 
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
 
     expect(res.text).not.toContain('E. F.');
   });
@@ -461,7 +475,7 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
     await setAppConfig('birthday_calendar_consent_mode', 'blanket');
     await createUser({ firstname: 'Greta', lastname: 'Hoch', date_of_birth: new Date(Date.UTC(1990, 0, 1)) });
 
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
 
     const matches = res.text.match(/G\. H\.s (\d+)\. Geburtstag/g) ?? [];
     expect(matches).toHaveLength(3);
@@ -475,7 +489,7 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
     // 2000 was a leap year, so Feb 29 is a valid date_of_birth to store.
     await createUser({ firstname: 'Ida', lastname: 'Jung', date_of_birth: new Date(Date.UTC(2000, 1, 29)) });
 
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
 
     expect(res.status).toBe(200);
     expect(res.text).toContain('I. J.');
@@ -493,7 +507,7 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
     const admin = await createUser({ firstname: 'Kurt', lastname: 'Leiter', date_of_birth: new Date(Date.UTC(1975, 4, 15)) });
     await assignRole(admin.id, adminRole.id);
 
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
 
     expect(res.text).not.toContain('K. L.');
   });
@@ -506,7 +520,7 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
     const admin = await createUser({ firstname: 'Mona', lastname: 'Nord', date_of_birth: new Date(Date.UTC(1975, 4, 15)) });
     await assignRole(admin.id, adminRole.id);
 
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
 
     expect(res.text).toMatch(/M\. N\.s \d+\. Geburtstag/);
   });
@@ -521,7 +535,7 @@ describe('GET /api/v1/public/birthdays/:secret/calendar.ics', () => {
     });
     await assignRole(admin.id, adminRole.id);
 
-    const res = await request(app).get(`/api/v1/public/birthdays/${REAL_SECRET}/calendar.ics`);
+    const res = await request(app).get(`/api/v1/public/birthdays/${subscriber.birthday_calendar_token}/calendar.ics`);
 
     expect(res.text).toMatch(/O\. P\.s \d+\. Geburtstag/);
   });

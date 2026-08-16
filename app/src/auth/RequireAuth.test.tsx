@@ -14,6 +14,7 @@ function mockAuth(overrides: Partial<ReturnType<typeof useAuth>>) {
     abilities: {},
     impersonating: false,
     mfaSetupRequired: false,
+    birthdayCalendarIcsUrl: null,
     login: vi.fn(),
     completeMfaChallenge: vi.fn(),
     loginWithPasskey: vi.fn(),

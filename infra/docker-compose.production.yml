@@ -40,7 +40,6 @@ services:
       # real deploy, not just by checking .env.<env>'s own content - the file
       # being correct proves nothing about the container.
       MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:?set MFA_ENCRYPTION_KEY in .env}
-      BIRTHDAY_CALENDAR_SECRET: ${BIRTHDAY_CALENDAR_SECRET:?set BIRTHDAY_CALENDAR_SECRET in .env}
       STATUS_ENDPOINT_TOKEN: ${STATUS_ENDPOINT_TOKEN:?set STATUS_ENDPOINT_TOKEN in .env}
       RATE_LIMIT_LOGIN_MAX: ${RATE_LIMIT_LOGIN_MAX:-10}
       RATE_LIMIT_LOGIN_WINDOW_MS: ${RATE_LIMIT_LOGIN_WINDOW_MS:-60000}
