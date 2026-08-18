@@ -28,6 +28,9 @@ minimumReleaseAgeExclude:
   - valibot@1.4.2
   - undici@7.29.0
   - ip-address@10.3.1
+  - dompurify@3.4.13
+  - nanoid@3.3.18
+  - deepmerge-ts@8.0.0
 # Security-patch overrides for transitive deps flagged by `pnpm audit`/Dependabot
 # (2026-08-05) — pin to the lowest version that fixes the advisory, staying
 # within the same major to avoid an unreviewed breaking upgrade. Drop an
