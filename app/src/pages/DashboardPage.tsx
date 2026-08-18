@@ -1,6 +1,6 @@
 import { Link as RouterLink, useNavigate } from 'react-router';
 import {
-  Alert, Box, Button, Card, CardContent, LinearProgress, Link, List, ListItemButton, ListItemText, Skeleton, Stack, Typography,
+  Alert, Box, Button, Card, CardContent, LinearProgress, Link, List, ListItem, ListItemButton, ListItemText, Skeleton, Stack, Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useAnnouncements } from '../features/announcements/api';
@@ -118,9 +118,9 @@ function UpcomingEventsCard({ eventsData, isLoading }: { eventsData?: EventList;
               const whenLabel = event.whole_day ? t('events.wholeDay') : (event.time ?? '');
               const secondary = [whenLabel, event.location].filter(Boolean).join(' · ');
               return (
-                <ListItemButton key={event.uuid} divider={i < rows.length - 1} disableGutters onClick={() => navigate(`/events/${event.uuid}`)}>
+                <ListItem key={event.uuid} divider={i < rows.length - 1} disableGutters>
                   <ListItemText primary={`${dateLabel} · ${event.title}`} secondary={secondary || undefined} />
-                </ListItemButton>
+                </ListItem>
               );
             })}
           </List>
