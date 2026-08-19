@@ -276,9 +276,16 @@ describe('GET /api/v1/public/help', () => {
     expect(res.status).toBe(200);
   });
 
-  it('shows a friendly placeholder when unconfigured', async () => {
+  it('shows the compiled-in default help text when unconfigured', async () => {
     const res = await request(app).get('/api/v1/public/help');
     expect(res.status).toBe(200);
+    expect(res.body.html).toContain('<h2>Hilfe</h2>');
+  });
+
+  it('falls back to the placeholder if an admin explicitly blanks it out', async () => {
+    await setAppConfig('help', '');
+
+    const res = await request(app).get('/api/v1/public/help');
     expect(res.body.html).toContain('Hilfe noch nicht konfiguriert');
   });
 

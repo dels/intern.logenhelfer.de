@@ -76,6 +76,46 @@ export const KNOWN_KEYS: Record<string, ConfigType> = {
  * Ruby source (its `case` falls through to a `Rails.logger.warn` with no
  * assigned record).
  */
+/**
+ * Starter content for the `help` key (see below) - one paragraph per
+ * top-level app section, using the exact German nav labels
+ * (i18n/de.json's `nav.*`/`account.navLabel`/`topNav.*`) so it stays
+ * recognizable next to the sidebar/top nav it's describing. Kept in this
+ * repo's neutral-gender convention (see CLAUDE.md "General Advices").
+ */
+const HELP_DEFAULT_HTML = `<h2>Hilfe</h2>
+<p>Diese Seite erklärt kurz, was sich hinter den einzelnen Bereichen der Anwendung verbirgt. Welche Punkte in der Seitenleiste sichtbar sind, hängt von den eigenen Berechtigungen ab - fehlt ein Punkt, fehlt in der Regel nur die passende Berechtigung.</p>
+
+<h3>Übersicht</h3>
+<p>Die Startseite nach der Anmeldung. Zeigt die letzten Ankündigungen, die nächsten anstehenden Termine sowie Mitglieder- und Suchenden-Zahlen mit direktem Sprung zur jeweiligen Liste.</p>
+
+<h3>Aktuelles</h3>
+<p>Ankündigungen für die Loge. Wer eine Ankündigung erstellt, kann Abonnenten automatisch per E-Mail benachrichtigen.</p>
+
+<h3>Arbeitsplan</h3>
+<p>Kalender- und Listenansicht aller Termine. Termine (auch außer Haus) können angelegt, nach Quelle gefiltert (z. B. Geburtstage oder externe Logenkalender) und als PDF exportiert werden. Über "Geburtstagskalender einbinden" lässt sich der persönliche Geburtstagskalender per ICS-Link in einer externen Kalender-App abonnieren.</p>
+
+<h3>Mitglieder</h3>
+<p>Die Mitgliederverwaltung mit Profilen, Kontaktdaten und Rollen.</p>
+
+<h3>Suchende</h3>
+<p>Die Aufnahme-/Vetting-Pipeline für Aufnahmesuchende - nur mit entsprechender Berechtigung sichtbar.</p>
+
+<h3>Statistiken</h3>
+<p>Auswertungen in drei Kategorien: Mitglieder (Anmeldeaktivität, Downloads pro Mitglied), Dateien (Downloads, Downloads pro Datei) und Meta (Speichernutzung der Anwendung).</p>
+
+<h3>Dateien</h3>
+<p>Der untere Bereich der Seitenleiste listet alle Datei-Kategorien mit ihren Unterverzeichnissen zum Hoch- und Herunterladen von Dokumenten. Der verbleibende Speicherplatz wird oben im Bereich Übersicht angezeigt.</p>
+
+<h3>Mein Konto</h3>
+<p>Eigene Stammdaten, Passwort und die Einrichtung der Zwei-Faktor-Authentifizierung (Authenticator-App, E-Mail-Code, Passkey oder Backup-Codes).</p>
+
+<h3>Konfiguration</h3>
+<p>Nur für Administratoren: Logen verwalten, Datei-Kategorien anlegen, allgemeine Einstellungen der Anwendung sowie externe ICS-Kalender anderer Logen einbinden.</p>
+
+<h3>Impressum &amp; Hilfe</h3>
+<p>Über die Links oben in der Kopfzeile jederzeit erreichbar, auch ohne Anmeldung.</p>`;
+
 const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   public_wp_available_to_anon_users: true,
   public_workingplan_html_timespan: '6m',
@@ -125,6 +165,13 @@ const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   // opt-in unless an admin explicitly attests consent was obtained some
   // other way (see docs/superpowers/specs/2026-08-05-pseudonymized-birthday-calendar-design.md).
   birthday_calendar_consent_mode: 'individual',
+  // Compiled-in starter text for the public/authenticated "Hilfe" page
+  // (rendered via renderHelp() in routes/public.ts, no :token substitution
+  // unlike impressum). Unlike every other DEFAULT_RAW_VALUES entry above,
+  // this one exists purely so the page isn't blank/placeholder-only out of
+  // the box - an admin can freely rewrite it via the Konfiguration page at
+  // any time, same as impressum.
+  help: HELP_DEFAULT_HTML,
 };
 
 /** Port of ActiveModel::Type::Boolean::FALSE_VALUES. */
