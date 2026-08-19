@@ -1499,6 +1499,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/public/datenschutz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicDatenschutz"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/public/help": {
         parameters: {
             query?: never;
@@ -1806,6 +1822,9 @@ export interface components {
             };
         };
         PublicImpressum: {
+            html: string;
+        };
+        PublicDatenschutz: {
             html: string;
         };
         PublicHelp: {
@@ -2468,10 +2487,14 @@ export interface components {
             mvst_email?: string | null;
             zip?: string | null;
             location?: string | null;
+            street?: string | null;
+            content_responsible_name?: string | null;
+            technical_responsible_name?: string | null;
             max_db_mem_size?: string | null;
             max_upload_file_size?: string | null;
             workingplan_footer?: string | null;
             impressum?: string | null;
+            datenschutz?: string | null;
             help?: string | null;
             robots_txt?: string | null;
             public_workingplan_html_timespan?: number | null;
@@ -5917,6 +5940,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicImpressum"];
+                };
+            };
+        };
+    };
+    getPublicDatenschutz: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Fully admin-configurable Datenschutzerklärung content, rendered server-side */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicDatenschutz"];
                 };
             };
         };

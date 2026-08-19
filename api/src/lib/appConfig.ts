@@ -46,10 +46,14 @@ export const KNOWN_KEYS: Record<string, ConfigType> = {
   mvst_email: 'string',
   zip: 'string',
   location: 'string',
+  street: 'string',
+  content_responsible_name: 'string',
+  technical_responsible_name: 'string',
   max_db_mem_size: 'string',
   max_upload_file_size: 'string',
   workingplan_footer: 'text',
   impressum: 'text',
+  datenschutz: 'text',
   help: 'text',
   robots_txt: 'text',
   public_workingplan_html_timespan: 'integer',
@@ -116,6 +120,113 @@ const HELP_DEFAULT_HTML = `<h2>Hilfe</h2>
 <h3>Impressum &amp; Hilfe</h3>
 <p>Über die Links oben in der Kopfzeile jederzeit erreichbar, auch ohne Anmeldung.</p>`;
 
+/**
+ * Compiled-in standard Impressum text (Anbieterkennzeichnung gemäß § 5 DDG,
+ * successor to the former TMG/MDStV regime), assembled from the same
+ * `:token` mechanism `renderImpressum` (routes/public.ts) already resolves
+ * against other AppConfig keys - `:content_responsible_name` and
+ * `:technical_responsible_name` are net-new keys (see KNOWN_KEYS above)
+ * added specifically to fill the "Inhaltlich verantwortlich"/"Technisch
+ * verantwortlich" lines a valid Impressum needs; `:street` is likewise new,
+ * since `:zip`/`:location` alone were never a complete postal address.
+ * Exported so routes/appConfig.ts's own duplicate `DEFAULT_RAW_VALUES` can
+ * reuse this exact string rather than re-typing a legal text block twice.
+ * Deliberately cites "§ 18 Abs. 2 MStV" rather than the older "§ 10 Abs. 3
+ * MDStV" - the MDStV was abolished in 2020 (superseded by the RStV, itself
+ * since replaced by the Medienstaatsvertrag/MStV); citing it in a document
+ * dated 2026 would be an outdated, incorrect legal reference. An admin who
+ * needs the old wording for some reason can still edit the `impressum` text
+ * freely - this is only the compiled-in starting default.
+ */
+export const DEFAULT_IMPRESSUM_HTML = [
+  '<h2>Impressum</h2>',
+  '<h3>Angaben gemäß § 5 DDG</h3>',
+  '<p>:organisation<br>:street<br>:zip :location</p>',
+  '<h3>Kontakt</h3>',
+  '<p>E-Mail: :mvst_email</p>',
+  '<h3>Inhaltlich verantwortlich gemäß § 18 Abs. 2 MStV</h3>',
+  '<p>:content_responsible_name<br>:street<br>:zip :location</p>',
+  '<h3>Technisch verantwortlich</h3>',
+  '<p>:technical_responsible_name<br>E-Mail: :technical_contact_email</p>',
+  '<h3>EU-Streitschlichtung</h3>',
+  '<p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: '
+    + '<a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr/</a>. '
+    + 'Unsere E-Mail-Adresse finden Sie oben im Impressum. Zur Teilnahme an einem Streitbeilegungsverfahren vor einer '
+    + 'Verbraucherschlichtungsstelle sind wir nicht verpflichtet und nicht bereit.</p>',
+  '<h3>Haftung für Inhalte</h3>',
+  '<p>Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen '
+    + 'verantwortlich. Nach §§ 8 bis 10 DDG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder '
+    + 'gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige '
+    + 'Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den '
+    + 'allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der '
+    + 'Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden '
+    + 'wir diese Inhalte umgehend entfernen.</p>',
+  '<h3>Haftung für Links</h3>',
+  '<p>Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb '
+    + 'können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets '
+    + 'der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der '
+    + 'Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht '
+    + 'erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist ohne konkrete Anhaltspunkte einer '
+    + 'Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend '
+    + 'entfernen.</p>',
+  '<h3>Urheberrecht</h3>',
+  '<p>Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen '
+    + 'Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des '
+    + 'Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien '
+    + 'dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet.</p>',
+].join('\n');
+
+/**
+ * Compiled-in standard Datenschutzerklärung (DSGVO Art. 13/Art. 12 ff.),
+ * reusing the same organisation/address/contact tokens as
+ * `DEFAULT_IMPRESSUM_HTML` above rather than introducing a second,
+ * redundant set of "who is responsible" config fields - the data
+ * controller (Verantwortlicher, Art. 4 Nr. 7 DSGVO) for this site is the
+ * same entity named in the Impressum. Covers only what's generically true
+ * for any deployment of this app (server logs, technically-necessary
+ * session cookies, member-data processing, data-subject rights) - it does
+ * not attempt to enumerate every third-party processor a given deployment
+ * might add later; an admin extending the site (e.g. adding analytics)
+ * must extend this text accordingly, same as any other AppConfig text
+ * field.
+ */
+export const DEFAULT_DATENSCHUTZ_HTML = [
+  '<h2>Datenschutzerklärung</h2>',
+  '<h3>1. Verantwortlicher</h3>',
+  '<p>Verantwortlicher im Sinne der Datenschutz-Grundverordnung (DSGVO) ist:</p>',
+  '<p>:organisation<br>:street<br>:zip :location<br>E-Mail: :mvst_email</p>',
+  '<h3>2. Erhebung und Speicherung personenbezogener Daten beim Besuch dieser Website</h3>',
+  '<p>Beim Aufruf dieser Website erhebt der Browser automatisch Informationen und speichert diese in sogenannten '
+    + 'Server-Log-Dateien. Erfasst werden: Browsertyp und -version, verwendetes Betriebssystem, Referrer-URL, Hostname '
+    + 'des zugreifenden Rechners, Uhrzeit der Serveranfrage sowie die IP-Adresse. Diese Daten sind nicht bestimmten '
+    + 'Personen zuordenbar und werden nicht mit anderen Datenquellen zusammengeführt. Rechtsgrundlage für die '
+    + 'vorübergehende Speicherung ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der technisch fehlerfreien '
+    + 'Darstellung und Sicherheit dieser Website). Die Daten werden gelöscht, sobald sie für den Zweck ihrer Erhebung '
+    + 'nicht mehr erforderlich sind.</p>',
+  '<h3>3. Technisch notwendige Cookies</h3>',
+  '<p>Diese Website verwendet ausschließlich technisch notwendige Cookies bzw. vergleichbare Speichertechnologien '
+    + '(z.B. zur Aufrechterhaltung einer Anmelde-Sitzung). Diese sind gemäß § 25 Abs. 2 TTDSG bzw. Art. 6 Abs. 1 lit. f '
+    + 'DSGVO erforderlich, um den Betrieb der Website und der darüber angebotenen Funktionen zu ermöglichen, und bedürfen '
+    + 'keiner gesonderten Einwilligung. Es werden keine Cookies zu Analyse- oder Marketingzwecken eingesetzt.</p>',
+  '<h3>4. Verarbeitung personenbezogener Daten von Mitgliedern</h3>',
+  '<p>Für angemeldete Mitglieder verarbeiten wir die im Rahmen der Mitgliedschaft erforderlichen Daten (u.a. Name, '
+    + 'Kontaktdaten, Angaben zu Ämtern und Terminen) auf Grundlage von Art. 6 Abs. 1 lit. b und lit. f DSGVO zur '
+    + 'Verwaltung der Mitgliedschaft und zur Organisation des Vereinslebens. Eine Weitergabe an Dritte erfolgt nicht, '
+    + 'soweit dies nicht zur Erfüllung des Vereinszwecks oder aufgrund gesetzlicher Verpflichtungen erforderlich ist.</p>',
+  '<h3>5. SSL-/TLS-Verschlüsselung</h3>',
+  '<p>Diese Website nutzt aus Sicherheitsgründen eine SSL-/TLS-Verschlüsselung. Eine verschlüsselte Verbindung erkennen '
+    + 'Sie daran, dass die Adresszeile des Browsers von "http://" auf "https://" wechselt.</p>',
+  '<h3>6. Ihre Rechte als betroffene Person</h3>',
+  '<p>Sie haben jederzeit das Recht auf Auskunft über Ihre bei uns gespeicherten personenbezogenen Daten (Art. 15 '
+    + 'DSGVO), auf Berichtigung (Art. 16 DSGVO), auf Löschung (Art. 17 DSGVO), auf Einschränkung der Verarbeitung '
+    + '(Art. 18 DSGVO), auf Datenübertragbarkeit (Art. 20 DSGVO) sowie auf Widerspruch gegen die Verarbeitung (Art. 21 '
+    + 'DSGVO). Eine erteilte Einwilligung können Sie jederzeit mit Wirkung für die Zukunft widerrufen. Wenden Sie sich '
+    + 'hierzu bitte an die oben genannte Kontaktadresse.</p>',
+  '<h3>7. Beschwerderecht bei einer Aufsichtsbehörde</h3>',
+  '<p>Ihnen steht zudem ein Beschwerderecht bei der für Sie zuständigen Datenschutz-Aufsichtsbehörde zu, wenn Sie der '
+    + 'Ansicht sind, dass die Verarbeitung Ihrer personenbezogenen Daten gegen die DSGVO verstößt.</p>',
+].join('\n');
+
 const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   public_wp_available_to_anon_users: true,
   public_workingplan_html_timespan: '6m',
@@ -149,6 +260,8 @@ const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   default_from_email: 'website@logenhelfer.de',
   technical_contact_email: 'technik@logenhelfer.de',
   robots_txt: 'User-Agent: *\nDisallow: /',
+  impressum: DEFAULT_IMPRESSUM_HTML,
+  datenschutz: DEFAULT_DATENSCHUTZ_HTML,
   domain: 'logenhelfer.de',
   default_event_duration_minutes: '60',
   mfa_mode: 'optional',

@@ -38,9 +38,12 @@ describe('FIELDS', () => {
     expect(field).toEqual({ key: 'max_upload_file_size', type: 'string', category: 'konfiguration', unit: 'mb' });
   });
 
-  it('groups the legal-notice text and its source fields under Impressum', () => {
+  it('groups the legal-notice/privacy-policy text and its source fields under Impressum', () => {
     const impressumKeys = FIELDS.filter((f) => f.category === 'impressum').map((f) => f.key);
-    expect(impressumKeys).toEqual(expect.arrayContaining(['impressum', 'mvst_email', 'zip', 'location']));
+    expect(impressumKeys).toEqual(expect.arrayContaining([
+      'impressum', 'datenschutz', 'mvst_email', 'zip', 'location', 'street',
+      'content_responsible_name', 'technical_responsible_name',
+    ]));
   });
 
   it('groups the four MFA settings under Sicherheit', () => {

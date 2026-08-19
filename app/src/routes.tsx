@@ -38,6 +38,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const PublicCalendarPage = lazy(() => import('./pages/PublicCalendarPage'));
 const ImpressumPage = lazy(() => import('./pages/ImpressumPage'));
+const DatenschutzPage = lazy(() => import('./pages/DatenschutzPage'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
 const EventsListPage = lazy(() => import('./features/events/EventsListPage'));
 const EventCreatePage = lazy(() => import('./features/events/EventCreatePage'));
@@ -111,6 +112,7 @@ export const routes: RouteObject[] = [
         element: <LazyRouteBoundary />,
         children: [
           { path: '/impressum', element: <ImpressumPage /> },
+          { path: '/datenschutz', element: <DatenschutzPage /> },
           { path: '/help', element: <HelpPage /> },
         ],
       },

@@ -255,6 +255,46 @@ describe('App Config API', () => {
       expect(res.body.help).toBe('<p>So funktioniert die App</p>');
     });
 
+    it('persists and reads back the datenschutz text field', async () => {
+      const admin = await makeApplicationAdmin();
+
+      const res = await request(app)
+        .patch('/api/v1/app_config')
+        .send({ datenschutz: '<p>Wir verarbeiten keine Daten.</p>' })
+        .set(authHeaders(admin));
+
+      expect(res.status).toBe(200);
+      expect(res.body.datenschutz).toBe('<p>Wir verarbeiten keine Daten.</p>');
+    });
+
+    it('writes and reads back the street/content_responsible_name/technical_responsible_name fields, defaulting to null before any write', async () => {
+      const admin = await makeApplicationAdmin();
+
+      const beforeRes = await request(app).get('/api/v1/app_config').set(authHeaders(admin));
+      expect(beforeRes.body.street).toBeNull();
+      expect(beforeRes.body.content_responsible_name).toBeNull();
+      expect(beforeRes.body.technical_responsible_name).toBeNull();
+
+      const res = await request(app)
+        .patch('/api/v1/app_config')
+        .send({ street: 'Musterstraße 1', content_responsible_name: 'Max Mustermann', technical_responsible_name: 'Erika Musterfrau' })
+        .set(authHeaders(admin));
+
+      expect(res.status).toBe(200);
+      expect(res.body.street).toBe('Musterstraße 1');
+      expect(res.body.content_responsible_name).toBe('Max Mustermann');
+      expect(res.body.technical_responsible_name).toBe('Erika Musterfrau');
+    });
+
+    it('GET returns the compiled-in German-law-compliant defaults for impressum/datenschutz before any admin writes them', async () => {
+      const admin = await makeApplicationAdmin();
+
+      const res = await request(app).get('/api/v1/app_config').set(authHeaders(admin));
+
+      expect(res.body.impressum).toContain('Inhaltlich verantwortlich gemäß § 18 Abs. 2 MStV');
+      expect(res.body.datenschutz).toContain('DSGVO');
+    });
+
     it('rejects an unknown key', async () => {
       const admin = await makeApplicationAdmin();
 

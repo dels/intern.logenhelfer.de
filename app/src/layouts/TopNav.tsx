@@ -4,6 +4,7 @@ import { AppBar, Box, Button, IconButton, Stack, Toolbar, Typography } from '@mu
 import MenuIcon from '@mui/icons-material/MenuRounded';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonthRounded';
 import InfoIcon from '@mui/icons-material/InfoRounded';
+import PrivacyTipIcon from '@mui/icons-material/PrivacyTipRounded';
 import HelpIcon from '@mui/icons-material/HelpRounded';
 import AccountCircleIcon from '@mui/icons-material/AccountCircleRounded';
 import LoginIcon from '@mui/icons-material/LoginRounded';
@@ -54,6 +55,9 @@ export default function TopNav({ variant, onMenuClick }: { variant: 'authenticat
           )}
           <Button component={NavLink} to="/impressum" startIcon={<InfoIcon />} aria-label={t('publicLayout.impressumLink')} sx={navActionSx}>
             <ActionLabel label={t('publicLayout.impressumLink')} />
+          </Button>
+          <Button component={NavLink} to="/datenschutz" startIcon={<PrivacyTipIcon />} aria-label={t('publicLayout.datenschutzLink')} sx={navActionSx}>
+            <ActionLabel label={t('publicLayout.datenschutzLink')} />
           </Button>
           <Button component={NavLink} to="/help" startIcon={<HelpIcon />} aria-label={t('topNav.helpLink')} sx={navActionSx}>
             <ActionLabel label={t('topNav.helpLink')} />

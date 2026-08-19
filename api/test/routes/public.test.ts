@@ -245,7 +245,17 @@ describe('GET /api/v1/public/impressum', () => {
     expect(res.status).toBe(200);
   });
 
-  it('shows a friendly placeholder when unconfigured', async () => {
+  it('ships a full German-law-compliant default template even before any admin configures one', async () => {
+    const res = await request(app).get('/api/v1/public/impressum');
+    expect(res.status).toBe(200);
+    expect(res.body.html).toContain('Angaben gemäß § 5 DDG');
+    expect(res.body.html).toContain('Inhaltlich verantwortlich gemäß § 18 Abs. 2 MStV');
+    expect(res.body.html).not.toContain('MDStV');
+  });
+
+  it('shows a friendly placeholder when explicitly configured to be empty', async () => {
+    await setAppConfig('impressum', '');
+
     const res = await request(app).get('/api/v1/public/impressum');
     expect(res.status).toBe(200);
     expect(res.body.html).toContain('Impressum noch nicht konfiguriert');
@@ -259,11 +269,60 @@ describe('GET /api/v1/public/impressum', () => {
     expect(res.body.html).toBe('<p>Testloge</p>');
   });
 
+  it('substitutes the content/technical responsible-person tokens', async () => {
+    await setAppConfig('content_responsible_name', 'Max Mustermann');
+    await setAppConfig('technical_responsible_name', 'Erika Musterfrau');
+    await setAppConfig('impressum', '<p>:content_responsible_name / :technical_responsible_name</p>');
+
+    const res = await request(app).get('/api/v1/public/impressum');
+    expect(res.body.html).toBe('<p>Max Mustermann / Erika Musterfrau</p>');
+  });
+
   it('renders the four email-field tokens as mailto links, not plain text', async () => {
     await setAppConfig('mvst_email', 'mvst@example.org');
     await setAppConfig('impressum', '<p>:mvst_email</p>');
 
     const res = await request(app).get('/api/v1/public/impressum');
+    expect(res.body.html).toContain('<a href="mailto:mvst@example.org">mvst@example.org</a>');
+  });
+});
+
+// -- GET /api/v1/public/datenschutz ------------------------------------------
+
+describe('GET /api/v1/public/datenschutz', () => {
+  it('is reachable with no Authorization header at all', async () => {
+    const res = await request(app).get('/api/v1/public/datenschutz');
+    expect(res.status).toBe(200);
+  });
+
+  it('ships a full GDPR-compliant default template even before any admin configures one', async () => {
+    const res = await request(app).get('/api/v1/public/datenschutz');
+    expect(res.status).toBe(200);
+    expect(res.body.html).toContain('Verantwortlicher');
+    expect(res.body.html).toContain('DSGVO');
+  });
+
+  it('shows a friendly placeholder when explicitly configured to be empty', async () => {
+    await setAppConfig('datenschutz', '');
+
+    const res = await request(app).get('/api/v1/public/datenschutz');
+    expect(res.status).toBe(200);
+    expect(res.body.html).toContain('Datenschutzerklärung noch nicht konfiguriert');
+  });
+
+  it('substitutes plain :key tokens with the matching AppConfig value, same as the impressum', async () => {
+    await setAppConfig('location', 'Teststadt');
+    await setAppConfig('datenschutz', '<p>:location</p>');
+
+    const res = await request(app).get('/api/v1/public/datenschutz');
+    expect(res.body.html).toBe('<p>Teststadt</p>');
+  });
+
+  it('renders the four email-field tokens as mailto links, not plain text', async () => {
+    await setAppConfig('mvst_email', 'mvst@example.org');
+    await setAppConfig('datenschutz', '<p>:mvst_email</p>');
+
+    const res = await request(app).get('/api/v1/public/datenschutz');
     expect(res.body.html).toContain('<a href="mailto:mvst@example.org">mvst@example.org</a>');
   });
 });

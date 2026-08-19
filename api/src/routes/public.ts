@@ -278,17 +278,19 @@ function mailtoLink(address: string): string {
 }
 
 /**
- * Port of PublicImpressumController#rendered_impressum. Single pass over the
- * raw text (matching the Rails comment's rationale: substituting a mail
- * field introduces a literal ":" via "mailto:", so a second generic pass
- * would re-match and clobber it) - every `:token` found is resolved via one
- * batched set of AppConfig lookups first, then substituted back in with a
- * single non-async `String#replace`.
+ * Port of PublicImpressumController#rendered_impressum, generalized to any
+ * AppConfig text key so the Datenschutzerklärung (below) can reuse the exact
+ * same `:token` substitution instead of a second copy of this logic. Single
+ * pass over the raw text (matching the Rails comment's rationale:
+ * substituting a mail field introduces a literal ":" via "mailto:", so a
+ * second generic pass would re-match and clobber it) - every `:token` found
+ * is resolved via one batched set of AppConfig lookups first, then
+ * substituted back in with a single non-async `String#replace`.
  */
-async function renderImpressum(): Promise<string> {
-  const raw = await getConfigString('impressum');
+async function renderTemplatedConfig(configKey: string, placeholder: string): Promise<string> {
+  const raw = await getConfigString(configKey);
   if (raw === null || raw.trim().length === 0) {
-    return IMPRESSUM_PLACEHOLDER;
+    return placeholder;
   }
 
   const tokenPattern = /:(\w+)/g;
@@ -312,6 +314,19 @@ async function renderImpressum(): Promise<string> {
     }
     return value ?? '';
   });
+}
+
+async function renderImpressum(): Promise<string> {
+  return renderTemplatedConfig('impressum', IMPRESSUM_PLACEHOLDER);
+}
+
+// -- datenschutz ----------------------------------------------------------
+
+const DATENSCHUTZ_PLACEHOLDER = '<h2>Datenschutzerklärung noch nicht konfiguriert</h2><br />Bitte in der Anwendungskonfiguration hinterlegen.';
+
+/** Same `:token`/mailto-link substitution as the Impressum - see renderTemplatedConfig above. */
+async function renderDatenschutz(): Promise<string> {
+  return renderTemplatedConfig('datenschutz', DATENSCHUTZ_PLACEHOLDER);
 }
 
 // -- help -----------------------------------------------------------------
@@ -404,6 +419,15 @@ router.get('/logo', async (_req, res, next) => {
 router.get('/impressum', async (_req, res, next) => {
   try {
     res.status(200).json({ html: await renderImpressum() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/public/datenschutz
+router.get('/datenschutz', async (_req, res, next) => {
+  try {
+    res.status(200).json({ html: await renderDatenschutz() });
   } catch (err) {
     next(err);
   }
