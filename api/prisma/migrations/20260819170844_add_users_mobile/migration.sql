@@ -26,8 +26,14 @@ ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "mobile" VARCHAR(255);
 -- COALESCE(deleted, false) treats a NULL `deleted` the same as `false`
 -- (i.e. NOT deleted) rather than silently excluding those rows, matching
 -- `computeUserMobile`'s own `deleted !== true` check exactly. A blank or
--- whitespace-only mobile is treated as absent via `trim(mobile) <> ''`,
--- mirroring the `isPresent()` convention used throughout this codebase.
+-- whitespace-only mobile is treated as absent via `a.mobile !~ '^\s*$'`,
+-- mirroring the `isPresent()` convention used throughout this codebase -
+-- deliberately a regex `\s` check, not `trim(mobile) <> ''`: Postgres's
+-- `trim()` only strips ASCII space, while JS's `String.prototype.trim()`
+-- (used by `isPresent`/`computeUserMobile`) strips all Unicode whitespace
+-- (tabs, newlines, etc.) - a mobile value that's only a tab/newline must be
+-- scored "absent" by both the SQL backfill and the JS sync, or the two
+-- silently disagree for that one row.
 -- Every user row is considered here regardless of the user's own `deleted`
 -- flag - `computeUserMobile`'s contract only inspects addresses, not the
 -- owning user's own deleted state, so the backfill mirrors that exactly.
@@ -38,7 +44,7 @@ SET "mobile" = COALESCE(
     WHERE a.addressable_type = 'User' AND a.addressable_id = u.id
       AND COALESCE(a.deleted, false) = false
       AND a.type_of_address = 0
-      AND a.mobile IS NOT NULL AND trim(a.mobile) <> ''
+      AND a.mobile IS NOT NULL AND a.mobile !~ '^\s*$'
     ORDER BY a.id ASC LIMIT 1
   ),
   (
@@ -46,14 +52,14 @@ SET "mobile" = COALESCE(
     WHERE a.addressable_type = 'User' AND a.addressable_id = u.id
       AND COALESCE(a.deleted, false) = false
       AND a.type_of_address = 1
-      AND a.mobile IS NOT NULL AND trim(a.mobile) <> ''
+      AND a.mobile IS NOT NULL AND a.mobile !~ '^\s*$'
     ORDER BY a.id ASC LIMIT 1
   ),
   (
     SELECT a.mobile FROM "addresses" a
     WHERE a.addressable_type = 'User' AND a.addressable_id = u.id
       AND COALESCE(a.deleted, false) = false
-      AND a.mobile IS NOT NULL AND trim(a.mobile) <> ''
+      AND a.mobile IS NOT NULL AND a.mobile !~ '^\s*$'
     ORDER BY a.id ASC LIMIT 1
   )
 );
