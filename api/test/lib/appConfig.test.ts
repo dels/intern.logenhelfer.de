@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { AppConfigService, KNOWN_KEYS } from '../../src/lib/appConfig.js';
+import { AppConfigService, KNOWN_KEYS, appConfig, getConfigString, getBoolean, getTimespanDays } from '../../src/lib/appConfig.js';
 import { prisma } from '../../src/db.js';
 import { resetDb } from '../helpers/db.js';
 
@@ -268,6 +268,69 @@ describe('AppConfigService', () => {
       const service = new AppConfigService({ now: () => 0 });
       await service.set('default_event_duration_minutes', '90');
       await expect(service.get('default_event_duration_minutes')).resolves.toBe(90);
+    });
+  });
+
+  describe('wrapper functions (getConfigString, getBoolean, getTimespanDays)', () => {
+    describe('getConfigString', () => {
+      it('returns null when the config value is null (unconfigured key with no default)', async () => {
+        // organisation has no compiled-in default
+        const result = await getConfigString('organisation');
+        expect(result).toBeNull();
+      });
+
+      it('returns String(value) when the config value is set to a string', async () => {
+        // Use the shared appConfig instance and dirty the cache to ensure fresh reads
+        await appConfig.set('organisation', 'Test Organization');
+        const result = await getConfigString('organisation');
+        expect(result).toBe('Test Organization');
+      });
+
+      it('coerces non-string values to their string representation', async () => {
+        // Set a numeric key and read it back via getConfigString
+        await appConfig.set('default_event_duration_minutes', '90');
+        const result = await getConfigString('default_event_duration_minutes');
+        expect(result).toBe('90');
+      });
+    });
+
+    describe('getBoolean', () => {
+      it('returns false when the config value is null (unconfigured key with no default)', async () => {
+        // organisation is a string key with no default - dirty it to ensure it's null
+        appConfig.dirty('organisation');
+        const result = await getBoolean('organisation');
+        expect(result).toBe(false);
+      });
+
+      it('returns false when the config value is falsy', async () => {
+        await appConfig.set('public_wp_available_to_anon_users', false);
+        const result = await getBoolean('public_wp_available_to_anon_users');
+        expect(result).toBe(false);
+      });
+
+      it('returns true when the config value is truthy', async () => {
+        await appConfig.set('public_wp_available_to_anon_users', true);
+        const result = await getBoolean('public_wp_available_to_anon_users');
+        expect(result).toBe(true);
+      });
+    });
+
+    describe('getTimespanDays', () => {
+      it('returns the numeric value when the stored value is a number', async () => {
+        await appConfig.set('default_workingplan_timespan', '180');
+        const result = await getTimespanDays('default_workingplan_timespan');
+        expect(result).toBe(180);
+      });
+
+      it('returns the parsed default (4*30=120) fallback when the value is not a number (currently unreachable in practice since all timespan keys have compiled-in defaults)', async () => {
+        // All timespan keys have compiled-in defaults that are parsed to numbers,
+        // so this branch is "currently unreachable" as the function comment states.
+        // We test the fallback by verifying the function returns 120 when appConfig.get
+        // returns null. We call with an unknown key that has no default - unknown keys
+        // return null from appConfig.get, and getTimespanDays converts that to 120.
+        const result = await getTimespanDays('nonexistent_timespan_key');
+        expect(result).toBe(120); // Falls back to 4 * 30
+      });
     });
   });
 });
