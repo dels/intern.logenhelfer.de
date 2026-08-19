@@ -92,6 +92,7 @@ test('clicking through all six settings tabs shows the right section for each', 
 
   await page.getByRole('tab', { name: 'Impressum' }).click();
   await expect(page.getByLabel('Impressums-Text')).toBeVisible();
+  await expect(page.getByLabel('Datenschutzerklärung')).toBeVisible();
   await expect(page.getByLabel('Domain')).not.toBeVisible();
 
   await page.getByRole('tab', { name: 'Distrikte' }).click();

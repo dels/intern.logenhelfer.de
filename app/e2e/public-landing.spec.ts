@@ -23,4 +23,15 @@ test.describe('public landing page', () => {
     await expect(page).toHaveURL(/\/calendar$/);
     await expect(page.getByRole('link', { name: 'Impressum' })).toBeVisible();
   });
+
+  test('datenschutz page is reachable, logged out, and ships the German-law default content', async ({ page, context }) => {
+    await context.clearCookies();
+    await page.goto('/login');
+    await expect(page.getByRole('link', { name: 'Datenschutz' })).toBeVisible();
+
+    await page.getByRole('link', { name: 'Datenschutz' }).click();
+    await expect(page).toHaveURL(/\/datenschutz$/);
+    await expect(page.getByText('Datenschutzerklärung')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Anmelden' })).toBeVisible();
+  });
 });

@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import { authenticateApiUser } from '../auth/middleware.js';
 import { prisma } from '../db.js';
-import { appConfig } from '../lib/appConfig.js';
+import { appConfig, DEFAULT_IMPRESSUM_HTML, DEFAULT_DATENSCHUTZ_HTML } from '../lib/appConfig.js';
 import { ApiError } from '../lib/errors.js';
 import { MULTIPART_FILE_SIZE_LIMIT_BYTES } from '../middleware/contractValidation.js';
 
@@ -69,10 +69,14 @@ const KNOWN_KEYS: Record<string, ConfigType> = {
   mvst_email: 'string',
   zip: 'string',
   location: 'string',
+  street: 'string',
+  content_responsible_name: 'string',
+  technical_responsible_name: 'string',
   max_db_mem_size: 'string',
   max_upload_file_size: 'string',
   workingplan_footer: 'text',
   impressum: 'text',
+  datenschutz: 'text',
   help: 'text',
   robots_txt: 'text',
   public_workingplan_html_timespan: 'integer',
@@ -119,6 +123,8 @@ const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   default_from_email: 'website@logenhelfer.de',
   technical_contact_email: 'technik@logenhelfer.de',
   robots_txt: 'User-Agent: *\nDisallow: /',
+  impressum: DEFAULT_IMPRESSUM_HTML,
+  datenschutz: DEFAULT_DATENSCHUTZ_HTML,
   domain: 'logenhelfer.de',
   default_event_duration_minutes: '60',
   mfa_mode: 'optional',

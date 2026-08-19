@@ -65,11 +65,15 @@ export const FIELDS: AppConfigFieldDef[] = [
   { key: 'help', type: 'text', category: 'konfiguration' },
   { key: 'robots_txt', type: 'text', category: 'konfiguration' },
 
-  // Impressum - legal notice content and the fields it's assembled from.
+  // Impressum - legal notice / privacy notice content and the fields they're assembled from.
   { key: 'mvst_email', type: 'string', category: 'impressum' },
+  { key: 'street', type: 'string', category: 'impressum' },
   { key: 'zip', type: 'string', category: 'impressum' },
   { key: 'location', type: 'string', category: 'impressum' },
+  { key: 'content_responsible_name', type: 'string', category: 'impressum' },
+  { key: 'technical_responsible_name', type: 'string', category: 'impressum' },
   { key: 'impressum', type: 'text', category: 'impressum' },
+  { key: 'datenschutz', type: 'text', category: 'impressum' },
 
   // Sicherheit - MFA enforcement settings.
   { key: 'mfa_mode', type: 'enum', category: 'sicherheit', options: ['optional', 'mandatory'] },

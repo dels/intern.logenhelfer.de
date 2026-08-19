@@ -82,6 +82,7 @@ export type PublicWorkingplan = components['schemas']['PublicWorkingplan'];
 export type PublicEventSummary = components['schemas']['PublicEventSummary'];
 export type PublicLandingConfig = components['schemas']['PublicLandingConfig'];
 export type PublicImpressum = components['schemas']['PublicImpressum'];
+export type PublicDatenschutz = components['schemas']['PublicDatenschutz'];
 export type PublicHelp = components['schemas']['PublicHelp'];
 export type AppConfigValues = components['schemas']['AppConfigValues'];
 export type ExportRow = components['schemas']['ExportRow'];

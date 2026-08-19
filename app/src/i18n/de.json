@@ -457,15 +457,27 @@
       },
       "mvst_email": {
         "name": "Kontakt-Adresse des MvSt.",
-        "description": "Kann im Impressum ausgegeben werden."
+        "description": "Kann im Impressum und in der Datenschutzerklärung ausgegeben werden."
+      },
+      "street": {
+        "name": "Straße und Hausnummer",
+        "description": "Wird (u.a.) im Impressum und in der Datenschutzerklärung verwendet."
       },
       "zip": {
         "name": "PLZ",
-        "description": "Wird (u.a.) im Impressum verwendet."
+        "description": "Wird (u.a.) im Impressum und in der Datenschutzerklärung verwendet."
       },
       "location": {
         "name": "Ort",
-        "description": "Wird (u.a.) im Impressum verwendet."
+        "description": "Wird (u.a.) im Impressum und in der Datenschutzerklärung verwendet."
+      },
+      "content_responsible_name": {
+        "name": "Inhaltlich Verantwortlicher (§ 18 Abs. 2 MStV)",
+        "description": "Name (und ggf. Anschrift, falls abweichend) der für den Inhalt verantwortlichen Person. Erscheint im Impressum."
+      },
+      "technical_responsible_name": {
+        "name": "Technisch Verantwortlicher",
+        "description": "Name der für den technischen Betrieb der Anwendung verantwortlichen Person. Erscheint im Impressum."
       },
       "max_db_mem_size": {
         "name": "maximaler Datenbankspeicherplatz",
@@ -482,7 +494,11 @@
       },
       "impressum": {
         "name": "Impressums-Text",
-        "description": "HTML-Formatierung. E-Mail-Adressen werden dabei obfuskiert."
+        "description": "HTML-Formatierung. E-Mail-Adressen werden dabei obfuskiert. Ist standardmäßig mit einem rechtskonformen Muster-Impressum vorausgefüllt - bitte die Platzhalter-Felder oben (Anschrift, verantwortliche Personen) ausfüllen."
+      },
+      "datenschutz": {
+        "name": "Datenschutzerklärung",
+        "description": "HTML-Formatierung. E-Mail-Adressen werden dabei obfuskiert. Ist standardmäßig mit einer allgemeinen DSGVO-konformen Muster-Datenschutzerklärung vorausgefüllt - bei zusätzlichen Diensten (z.B. Analyse-Tools) bitte ergänzen."
       },
       "help": {
         "name": "Hilfe-Inhalt",
@@ -648,7 +664,8 @@
   "publicLayout": {
     "loginLink": "Anmelden",
     "calendarLink": "Öffentlicher Terminplan",
-    "impressumLink": "Impressum"
+    "impressumLink": "Impressum",
+    "datenschutzLink": "Datenschutz"
   },
   "topNav": {
     "helpLink": "Hilfe"

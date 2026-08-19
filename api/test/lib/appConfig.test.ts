@@ -41,6 +41,21 @@ describe('AppConfigService', () => {
       const svc = new AppConfigService();
       expect(await svc.get('organisation')).toBeNull();
       expect(await svc.get('default_workingplan_timespan')).toBeNull();
+      // Person/address fields have no universal default, same rationale as
+      // organisation/zip/location above - an admin must fill these in.
+      expect(await svc.get('street')).toBeNull();
+      expect(await svc.get('content_responsible_name')).toBeNull();
+      expect(await svc.get('technical_responsible_name')).toBeNull();
+    });
+
+    it('compiles in a full German-law-compliant default for impressum/datenschutz, citing current (not obsolete) law', async () => {
+      const svc = new AppConfigService();
+      const impressum = await svc.get('impressum');
+      const datenschutz = await svc.get('datenschutz');
+      expect(impressum).toContain('Inhaltlich verantwortlich gemäß § 18 Abs. 2 MStV');
+      expect(impressum).not.toContain('MDStV');
+      expect(datenschutz).toContain('DSGVO');
+      expect(datenschutz).toContain('Verantwortlicher');
     });
 
     it('returns null for an entirely unknown key', async () => {

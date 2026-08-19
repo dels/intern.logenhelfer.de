@@ -2678,6 +2678,16 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PublicImpressum' }
+  /api/v1/public/datenschutz:
+    get:
+      operationId: getPublicDatenschutz
+      security: []
+      responses:
+        '200':
+          description: Fully admin-configurable Datenschutzerklärung content, rendered server-side
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicDatenschutz' }
   /api/v1/public/help:
     get:
       operationId: getPublicHelp
@@ -3186,6 +3196,12 @@ components:
                 port: { type: integer, nullable: true }
                 username: { type: string, nullable: true }
     PublicImpressum:
+      type: object
+      additionalProperties: false
+      required: [html]
+      properties:
+        html: { type: string }
+    PublicDatenschutz:
       type: object
       additionalProperties: false
       required: [html]
@@ -4239,10 +4255,14 @@ components:
         mvst_email: { type: string, nullable: true }
         zip: { type: string, nullable: true }
         location: { type: string, nullable: true }
+        street: { type: string, nullable: true }
+        content_responsible_name: { type: string, nullable: true }
+        technical_responsible_name: { type: string, nullable: true }
         max_db_mem_size: { type: string, nullable: true }
         max_upload_file_size: { type: string, nullable: true }
         workingplan_footer: { type: string, nullable: true }
         impressum: { type: string, nullable: true }
+        datenschutz: { type: string, nullable: true }
         help: { type: string, nullable: true }
         robots_txt: { type: string, nullable: true }
         public_workingplan_html_timespan: { type: integer, nullable: true }

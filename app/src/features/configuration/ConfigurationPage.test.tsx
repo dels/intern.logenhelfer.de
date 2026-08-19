@@ -326,14 +326,18 @@ describe('ConfigurationPage', () => {
     expect(screen.queryByRole('switch', { name: 'Arbeitsplan als Startseite' })).not.toBeInTheDocument();
   });
 
-  it('shows the legal-notice fields on the Impressum tab', async () => {
+  it('shows the legal-notice and privacy-policy fields on the Impressum tab', async () => {
     const user = userEvent.setup();
     renderPage();
     await user.click(await screen.findByRole('tab', { name: 'Impressum' }));
     expect(screen.getByLabelText('Impressums-Text')).toBeInTheDocument();
+    expect(screen.getByLabelText('Datenschutzerklärung')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'PLZ' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Ort' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Straße und Hausnummer' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Kontakt-Adresse des MvSt.' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Inhaltlich Verantwortlicher (§ 18 Abs. 2 MStV)' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Technisch Verantwortlicher' })).toBeInTheDocument();
     // Konfiguration-only field must not be present while on the Impressum tab.
     expect(screen.queryByRole('textbox', { name: 'Domain' })).not.toBeInTheDocument();
   });

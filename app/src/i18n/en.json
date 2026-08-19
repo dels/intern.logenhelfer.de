@@ -457,15 +457,27 @@
       },
       "mvst_email": {
         "name": "Worshipful Master contact address",
-        "description": "Can be shown in the legal notice (Impressum)."
+        "description": "Can be shown in the legal notice (Impressum) and the privacy policy."
+      },
+      "street": {
+        "name": "Street and house number",
+        "description": "Used (among other things) in the legal notice (Impressum) and the privacy policy."
       },
       "zip": {
         "name": "ZIP code",
-        "description": "Used (among other things) in the legal notice (Impressum)."
+        "description": "Used (among other things) in the legal notice (Impressum) and the privacy policy."
       },
       "location": {
         "name": "Location",
-        "description": "Used (among other things) in the legal notice (Impressum)."
+        "description": "Used (among other things) in the legal notice (Impressum) and the privacy policy."
+      },
+      "content_responsible_name": {
+        "name": "Person responsible for content (§ 18(2) MStV)",
+        "description": "Name (and address, if different) of the person responsible for content per German media law. Shown in the legal notice."
+      },
+      "technical_responsible_name": {
+        "name": "Person responsible for technical operation",
+        "description": "Name of the person responsible for the application's technical operation. Shown in the legal notice."
       },
       "max_db_mem_size": {
         "name": "Maximum database storage size",
@@ -482,7 +494,11 @@
       },
       "impressum": {
         "name": "Legal notice (Impressum) text",
-        "description": "HTML formatting. Email addresses are obfuscated."
+        "description": "HTML formatting. Email addresses are obfuscated. Pre-filled with a legally compliant German-law template by default - please fill in the placeholder fields above (address, responsible persons)."
+      },
+      "datenschutz": {
+        "name": "Privacy policy (Datenschutzerklärung)",
+        "description": "HTML formatting. Email addresses are obfuscated. Pre-filled with a general GDPR-compliant German-law template by default - extend it if you add further services (e.g. analytics)."
       },
       "help": {
         "name": "Help content",
@@ -647,7 +663,8 @@
   "publicLayout": {
     "loginLink": "Sign in",
     "calendarLink": "Public Calendar",
-    "impressumLink": "Legal Notice"
+    "impressumLink": "Legal Notice",
+    "datenschutzLink": "Privacy Policy"
   },
   "topNav": {
     "helpLink": "Help"
