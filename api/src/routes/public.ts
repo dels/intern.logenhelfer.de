@@ -10,7 +10,7 @@ import { autoTable } from 'jspdf-autotable';
 
 import { prisma, databaseConnectionDetails } from '../db.js';
 import { ApiError } from '../lib/errors.js';
-import { appConfig } from '../lib/appConfig.js';
+import { getConfigString, getBoolean, getTimespanDays } from '../lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
 import { redisConfigured } from '../lib/mailQueue.js';
 import { deriveLogoVariants, type LogoVariants } from '../lib/logoVariants.js';
@@ -36,45 +36,6 @@ import { statusRateLimiter } from '../middleware/rateLimit.js';
  */
 
 const router = Router();
-
-// -- AppConfig helpers --------------------------------------------------
-
-/**
- * Reads an AppConfig key and coerces whatever the shared service resolves
- * (boolean/number/string) to its string representation, mirroring Ruby's
- * implicit `to_s` call on a `String#gsub` block's return value - the
- * mechanism `PublicImpressumController#rendered_impressum` relies on when a
- * template token happens to resolve to a non-string AppConfig value.
- * `null` (an unconfigured key with no default) stays `null`.
- */
-async function getConfigString(key: string): Promise<string | null> {
-  const value = await appConfig.get(key);
-  return value === null ? null : String(value);
-}
-
-/**
- * Port of `ActiveModel::Type::Boolean.new.cast(AppConfig[...])` used by both
- * PublicLandingController and PublicWorkingplanController - the shared
- * service already applies the ActiveModel::Type::Boolean cast for
- * `boolean`-typed keys; `Boolean(...)` here just folds the `nil` case (no
- * row, no default) to `false`, matching every actual call site's use of the
- * result in a boolean context (`&&`/`unless`).
- */
-async function getBoolean(key: string): Promise<boolean> {
-  return Boolean(await appConfig.get(key));
-}
-
-/**
- * Port of `AppConfig::Adapter#getter_default_workingplan_timespan` as
- * exposed by the shared service (already parses "Nm"/"Nw"/"Nd" into a plain
- * day count) - falls back to Ruby's `4 * 30` only in the (currently
- * unreachable, since both timespan keys have compiled-in defaults) case
- * where the service has nothing to resolve.
- */
-async function getTimespanDays(key: string): Promise<number> {
-  const value = await appConfig.get(key);
-  return typeof value === 'number' ? value : 4 * 30;
-}
 
 async function anonAccessEnabled(): Promise<boolean> {
   return getBoolean('public_wp_available_to_anon_users');
