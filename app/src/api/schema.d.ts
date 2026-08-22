@@ -1969,6 +1969,7 @@ export interface components {
             lastname: string | null;
             matriculation_number: number | null;
             job_title: string | null;
+            mobile: string | null;
             /** Format: date */
             date_of_birth: string | null;
             /** Format: date */
@@ -2176,6 +2177,7 @@ export interface components {
             date_of_birth?: string;
             matriculation_number?: number;
             job_title?: string | null;
+            mobile?: string | null;
             /** Format: date */
             entered_apprentice_since?: string | null;
             /** Format: date */

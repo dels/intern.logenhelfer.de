@@ -8,6 +8,14 @@
  * `api/src/routes/members.ts`) agree on exactly the same rule.
  */
 
+import { Prisma } from '../generated/prisma/client.js';
+
+/** Same `Prisma.TransactionClient` alias `members.ts` keeps under its own
+ *  local name `PrismaTx` - duplicated rather than imported for the same
+ *  file-boundary reason as `isPresent` above (`lib/` never imports from
+ *  `routes/`). */
+type PrismaTx = Prisma.TransactionClient;
+
 /** Port of Ruby's `#present?` (see the identical helper in
  *  `api/src/routes/members.ts`, which predates this module and is not
  *  imported from here on purpose - `lib/` modules never import from
@@ -61,4 +69,28 @@ export function computeUserMobile(addresses: MobileCandidateAddress[]): string |
   if (other.length > 0) return other[0]!.mobile;
 
   return null;
+}
+
+/**
+ * Re-derives `users.mobile` for `userId` from that user's current `User`-
+ * typed addresses and writes the result, inside the caller's transaction.
+ * Wired into `applyAddresses` (`api/src/routes/members.ts`) - called once,
+ * right after that function's address create/update/(hard-)delete loop -
+ * so every address write for a user keeps `users.mobile` in sync
+ * automatically, exactly mirroring the migration backfill's priority.
+ *
+ * Exported (not called from anywhere else in this plan) in case a future
+ * task needs the same recompute-and-write outside `applyAddresses`.
+ *
+ * ponytail: users.mobile is address-derived and gets overwritten on every
+ * address save - a direct edit to the base mobile field survives until the
+ * next address write touches this user, then loses. Accepted trade-off, not
+ * a bug.
+ */
+export async function syncUserMobile(tx: PrismaTx, userId: number): Promise<void> {
+  const addresses = await tx.addresses.findMany({
+    where: { addressable_id: userId, addressable_type: 'User' },
+    select: { id: true, type_of_address: true, mobile: true, deleted: true },
+  });
+  await tx.users.update({ where: { id: userId }, data: { mobile: computeUserMobile(addresses) } });
 }

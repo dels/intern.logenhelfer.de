@@ -47,6 +47,7 @@ function memberFixture(overrides: Partial<Member> = {}): Member {
     lastname: 'Mitglied',
     matriculation_number: 42,
     job_title: 'Zimmermann',
+    mobile: null,
     date_of_birth: '1980-01-01',
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',

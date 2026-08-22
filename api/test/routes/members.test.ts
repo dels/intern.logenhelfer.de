@@ -204,76 +204,45 @@ describe('Members API - core CRUD', () => {
       expect(res.status).toBe(401);
     });
 
-    // Net-new coverage for MembersListPage's "Mobile" column: there is no
-    // `mobile` column on `users` itself, only on `addresses` - the row's
-    // `mobile` field is derived from the member's addresses (ordered by id
-    // asc, same ordering as loadAddressesForUser/loadAddressesForUsers).
-    describe('derived `mobile` field', () => {
-      const now = new Date();
-
-      async function addAddress(userId: number, overrides: Partial<Parameters<typeof prisma.addresses.create>[0]['data']> = {}) {
-        return prisma.addresses.create({
-          data: {
-            addressable_id: userId, addressable_type: 'User', type_of_address: 0, purpose: 'Privat',
-            street1: 'Teststr. 1', deleted: false, created_at: now, updated_at: now, ...overrides,
-          },
-        });
-      }
-
+    // Task 3: `mobile` is now a real, sync-on-write column on `users`
+    // itself (see `syncUserMobile` in lib/userMobile.ts, wired into
+    // `applyAddresses` in members.ts) - the list row's `mobile` field
+    // reads that column directly, no longer derived ad hoc from "first two
+    // addresses" here.
+    describe('`mobile` field (users.mobile)', () => {
       function mobileOf(body: { rows: { uuid: string; mobile: string }[] }, uuid: string | null): string | undefined {
         return body.rows.find((r) => r.uuid === uuid)?.mobile;
       }
 
-      it('uses the first address\'s mobile when present', async () => {
-        await addAddress(member.id, { mobile: '0170 111' });
-        await addAddress(member.id, { mobile: '0170 222' });
+      it('reflects users.mobile directly', async () => {
+        await prisma.users.update({ where: { id: member.id }, data: { mobile: '0170 999' } });
 
         const res = await request(app).get('/api/v1/members').set(authHeaders(admin));
 
-        expect(mobileOf(res.body, member.uuid)).toBe('0170 111');
+        expect(mobileOf(res.body, member.uuid)).toBe('0170 999');
       });
 
-      it('falls back to the second address\'s mobile when only the second address has one', async () => {
-        await addAddress(member.id, { mobile: null });
-        await addAddress(member.id, { mobile: '0170 222' });
-
-        const res = await request(app).get('/api/v1/members').set(authHeaders(admin));
-
-        expect(mobileOf(res.body, member.uuid)).toBe('0170 222');
-      });
-
-      it('treats an empty-string mobile as absent and falls through to the second address', async () => {
-        await addAddress(member.id, { mobile: '' });
-        await addAddress(member.id, { mobile: '0170 222' });
-
-        const res = await request(app).get('/api/v1/members').set(authHeaders(admin));
-
-        expect(mobileOf(res.body, member.uuid)).toBe('0170 222');
-      });
-
-      it('is blank when the member has no addresses at all', async () => {
+      it('is "" (not null) when users.mobile is null', async () => {
         const res = await request(app).get('/api/v1/members').set(authHeaders(admin));
 
         expect(mobileOf(res.body, member.uuid)).toBe('');
       });
 
-      it('is blank when neither of the first two addresses has a mobile number', async () => {
-        await addAddress(member.id, { mobile: null });
-        await addAddress(member.id, { mobile: '' });
+      it('follows the address-derived priority rule (private wins over business) once addresses are saved via PATCH', async () => {
+        const patchRes = await request(app)
+          .patch(`/api/v1/members/${member.uuid}`)
+          .set(authHeaders(admin))
+          .send({
+            addresses: [
+              { type_of_address: 1, purpose: 'geschäftlich', mobile: '0170 business' },
+              { type_of_address: 0, purpose: 'Privat', mobile: '0170 private' },
+            ],
+          });
+        expect(patchRes.status).toBe(200);
 
         const res = await request(app).get('/api/v1/members').set(authHeaders(admin));
 
-        expect(mobileOf(res.body, member.uuid)).toBe('');
-      });
-
-      it('ignores a third address\'s mobile - only the first two are considered', async () => {
-        await addAddress(member.id, { mobile: null });
-        await addAddress(member.id, { mobile: null });
-        await addAddress(member.id, { mobile: '0170 333' });
-
-        const res = await request(app).get('/api/v1/members').set(authHeaders(admin));
-
-        expect(mobileOf(res.body, member.uuid)).toBe('');
+        expect(mobileOf(res.body, member.uuid)).toBe('0170 private');
       });
     });
   });
@@ -470,6 +439,36 @@ describe('Members API - core CRUD', () => {
       expect(res.body.master_mason_since).toBe('2011-01-01');
     });
 
+    it('persists a direct mobile value supplied at creation (Task 3, no addresses in the same request)', async () => {
+      const res = await request(app)
+        .post('/api/v1/members')
+        .set(authHeaders(admin))
+        .send({ ...createParams, email: 'new-member-with-mobile@example.org', matriculation_number: 9103, mobile: '0170 create-direct' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.mobile).toBe('0170 create-direct');
+      const created = await prisma.users.findFirstOrThrow({ where: { uuid: res.body.uuid as string } });
+      expect(created.mobile).toBe('0170 create-direct');
+    });
+
+    it('a direct mobile value is overwritten by syncUserMobile when addresses are supplied in the same create request', async () => {
+      const res = await request(app)
+        .post('/api/v1/members')
+        .set(authHeaders(admin))
+        .send({
+          ...createParams,
+          email: 'new-member-with-address-mobile@example.org',
+          matriculation_number: 9104,
+          mobile: '0170 create-direct',
+          addresses: [{ type_of_address: 0, purpose: 'Privat', mobile: '0170 from-address' }],
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.mobile).toBe('0170 from-address');
+      const created = await prisma.users.findFirstOrThrow({ where: { uuid: res.body.uuid as string } });
+      expect(created.mobile).toBe('0170 from-address');
+    });
+
     it('creates a member with the full field set for a UserAdmin who is not Admin/Secretary', async () => {
       // Regression coverage: UserAdmin is granted :create via
       // reachesUserAdminAbilities, but editable_fields must gate on
@@ -542,7 +541,7 @@ describe('Members API - core CRUD', () => {
       expect(roleDisplayNames(res.body)).toContain('Lehrling');
       expect(res.body.can_edit).toBe(true);
       expect(res.body.can_destroy).toBe(false);
-      expect(res.body.editable_fields).toEqual(['job_title', 'addresses', 'email']);
+      expect(res.body.editable_fields).toEqual(['job_title', 'mobile', 'addresses', 'email']);
     });
 
     it('splits roles into kind: "administrational" vs kind: "positions" (mirrors GET /api/v1/roles\'s ?scope=positions|administrational split)', async () => {
@@ -926,6 +925,123 @@ describe('Members API - core CRUD', () => {
       expect(res.status).toBe(404);
       const reloaded = await prisma.addresses.findUniqueOrThrow({ where: { id: otherAddress.id } });
       expect(reloaded.city).toBe('Original');
+    });
+  });
+
+  // Task 3: `users.mobile` supports two independent write paths - (a) a
+  // direct edit via the top-level `mobile` scalar (same editable_fields
+  // gate as job_title/email), and (b) an automatic recompute-and-overwrite
+  // by `syncUserMobile` whenever any address for that user is created,
+  // updated, or deleted. (b) always wins on the next address write, even
+  // over a manual (a)-edit - accepted, by-design behavior, not a bug.
+  describe('PATCH /api/v1/members/:uuid - mobile scalar + sync-on-write (Task 3)', () => {
+    it('lets an admin set mobile directly when no addresses are touched', async () => {
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ mobile: '0170 direct' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.mobile).toBe('0170 direct');
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.mobile).toBe('0170 direct');
+    });
+
+    it('lets a plain member set their own mobile directly (LIMITED_FIELDS, same pattern as job_title/email)', async () => {
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(member))
+        .send({ mobile: '0170 self' });
+
+      expect(res.status).toBe(200);
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.mobile).toBe('0170 self');
+    });
+
+    it('can clear mobile back to null via an explicit null', async () => {
+      await prisma.users.update({ where: { id: member.id }, data: { mobile: '0170 old' } });
+
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ mobile: null });
+
+      expect(res.status).toBe(200);
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.mobile).toBeNull();
+    });
+
+    it('creating a new address recomputes users.mobile per the priority rule', async () => {
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ addresses: [{ type_of_address: 0, purpose: 'Privat', mobile: '0170 new-private' }] });
+
+      expect(res.status).toBe(200);
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.mobile).toBe('0170 new-private');
+    });
+
+    it('updating an existing address changes users.mobile', async () => {
+      const now = new Date();
+      const address = await prisma.addresses.create({
+        data: {
+          addressable_id: member.id, addressable_type: 'User', type_of_address: 0, purpose: 'Privat',
+          mobile: '0170 old', deleted: false, created_at: now, updated_at: now,
+        },
+      });
+      await prisma.users.update({ where: { id: member.id }, data: { mobile: '0170 old' } });
+
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ addresses: [{ id: address.id, mobile: '0170 changed' }] });
+
+      expect(res.status).toBe(200);
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.mobile).toBe('0170 changed');
+    });
+
+    it('deleting the address that held the mobile recomputes users.mobile back to null', async () => {
+      const now = new Date();
+      const address = await prisma.addresses.create({
+        data: {
+          addressable_id: member.id, addressable_type: 'User', type_of_address: 0, purpose: 'Privat',
+          mobile: '0170 only', deleted: false, created_at: now, updated_at: now,
+        },
+      });
+      await prisma.users.update({ where: { id: member.id }, data: { mobile: '0170 only' } });
+
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ addresses: [{ id: address.id, _destroy: true }] });
+
+      expect(res.status).toBe(200);
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.mobile).toBeNull();
+    });
+
+    it('a direct mobile edit followed by a later, separate address save gets clobbered (accepted, by-design behavior)', async () => {
+      const directRes = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ mobile: '0170 direct-edit' });
+      expect(directRes.status).toBe(200);
+      const afterDirectEdit = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(afterDirectEdit.mobile).toBe('0170 direct-edit');
+
+      // A later, separate request that only touches addresses - no `mobile`
+      // field in this request's body at all - still overwrites the direct
+      // edit from the request above, via syncUserMobile.
+      const addressRes = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ addresses: [{ type_of_address: 1, purpose: 'geschäftlich', mobile: '0170 from-address' }] });
+      expect(addressRes.status).toBe(200);
+
+      const afterAddressSave = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(afterAddressSave.mobile).toBe('0170 from-address');
     });
   });
 

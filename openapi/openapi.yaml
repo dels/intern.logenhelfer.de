@@ -3402,10 +3402,11 @@ components:
         lastname: { type: string, nullable: true }
         matriculation_number: { type: integer, nullable: true }
         job_title: { type: string, nullable: true }
-        # Derived, not a column on `users` - the first non-empty `mobile`
-        # value from the member's addresses (ordered by id asc), falling
-        # back to the second address, else "". See memberListRowJson/
-        # firstMobile in members.ts.
+        # Mirrors the `users.mobile` column (kept in sync on every address
+        # create/update/delete for this member by `syncUserMobile` - see
+        # lib/userMobile.ts), coalesced to "" for this field's existing
+        # non-nullable `string` contract. See memberListRowJson in
+        # members.ts.
         mobile: { type: string }
         can_edit: { type: boolean }
         can_destroy: { type: boolean }
@@ -3427,6 +3428,7 @@ components:
         - lastname
         - matriculation_number
         - job_title
+        - mobile
         - date_of_birth
         - created_at
         - updated_at
@@ -3447,6 +3449,13 @@ components:
         lastname: { type: string, nullable: true }
         matriculation_number: { type: integer, nullable: true }
         job_title: { type: string, nullable: true }
+        # `users.mobile` directly (Task 3) - a real, directly-settable
+        # base-data scalar (see MemberInput below), also silently
+        # overwritten on every address write for this member by
+        # `syncUserMobile` (lib/userMobile.ts). Unlike MemberSummary.mobile
+        # above, nullable here (no "" coalescing) since this is the raw
+        # column value.
+        mobile: { type: string, nullable: true }
         date_of_birth: { type: string, format: date, nullable: true }
         entered_apprentice_since: { type: string, format: date, nullable: true }
         fellow_craft_since: { type: string, format: date, nullable: true }
@@ -3765,6 +3774,12 @@ components:
         date_of_birth: { type: string, format: date }
         matriculation_number: { type: integer }
         job_title: { type: string, nullable: true }
+        # Top-level, directly-settable base-data scalar (Task 3) - a sibling
+        # of `job_title`, NOT part of the nested `addresses` array schema
+        # below (`MemberAddressInput.mobile` is a distinct, per-address
+        # field). Gets silently overwritten by `syncUserMobile` on the next
+        # address write for this member - see that function's own comment.
+        mobile: { type: string, nullable: true }
         entered_apprentice_since: { type: string, format: date, nullable: true }
         fellow_craft_since: { type: string, format: date, nullable: true }
         master_mason_since: { type: string, format: date, nullable: true }
