@@ -1022,6 +1022,25 @@ describe('Members API - core CRUD', () => {
       expect(reloaded.mobile).toBeNull();
     });
 
+    it('within a single request, an address-derived mobile wins over a direct mobile value sent in the same body', async () => {
+      // Proves the second syncUserMobile call in the PATCH handler (after
+      // the scalar `data` write) actually matters: applyAddresses runs
+      // before the scalar write in this handler's transaction, so without
+      // that second call the scalar write below would be the last word and
+      // this test would see '0170 direct-in-same-request' instead.
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({
+          mobile: '0170 direct-in-same-request',
+          addresses: [{ type_of_address: 0, purpose: 'Privat', mobile: '0170 address-in-same-request' }],
+        });
+
+      expect(res.status).toBe(200);
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.mobile).toBe('0170 address-in-same-request');
+    });
+
     it('a direct mobile edit followed by a later, separate address save gets clobbered (accepted, by-design behavior)', async () => {
       const directRes = await request(app)
         .patch(`/api/v1/members/${member.uuid}`)
