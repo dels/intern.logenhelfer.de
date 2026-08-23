@@ -14,6 +14,7 @@ export function buildMemberFormDefaults(member: Member): MemberInput {
     date_of_birth: member.date_of_birth ?? '',
     matriculation_number: member.matriculation_number ?? undefined,
     job_title: member.job_title,
+    mobile: member.mobile,
     entered_apprentice_since: member.entered_apprentice_since ?? '',
     fellow_craft_since: member.fellow_craft_since ?? '',
     master_mason_since: member.master_mason_since ?? '',

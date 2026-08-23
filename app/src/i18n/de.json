@@ -217,6 +217,7 @@
     "phone": "Telefon",
     "fax": "Fax",
     "mobile": "Mobil",
+    "mobileInfo": "Diese Nummer wird normalerweise automatisch aus der Mobilnummer der privaten (oder geschäftlichen) Adresse übernommen. Eine manuelle Änderung hier wird beim nächsten Bearbeiten einer Adresse wieder überschrieben.",
     "brotherName": "Br. {{firstname}} {{lastname}}",
     "motherLodge": "Mutterloge",
     "acceptedAt": "Angenommen am",

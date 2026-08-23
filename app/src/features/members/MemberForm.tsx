@@ -1,7 +1,8 @@
 import { useForm, Controller, useFieldArray, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Alert, Autocomplete, Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, MenuItem, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useRoles } from '../categories/api';
@@ -18,6 +19,7 @@ const memberSchema = z.object({
   date_of_birth: z.string().optional(),
   matriculation_number: z.coerce.number().optional(),
   job_title: z.string().nullable().optional(),
+  mobile: z.string().nullable().optional(),
   entered_apprentice_since: z.string().nullable().optional(),
   fellow_craft_since: z.string().nullable().optional(),
   master_mason_since: z.string().nullable().optional(),
@@ -117,6 +119,23 @@ export default function MemberForm({ defaultValues, editableFields, onSubmit, su
               <TextField {...field} value={field.value ?? ''} label={t('members.email')} error={!!fieldState.error} required />
             )}
           />
+        )}
+        {canEdit('mobile') && (
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Controller
+              name="mobile"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField {...field} value={field.value ?? ''} label={t('members.mobile')} error={!!fieldState.error} sx={{ flex: 1 }} />
+              )}
+            />
+            <Tooltip title={t('members.mobileInfo')}>
+              <InfoOutlinedIcon
+                data-testid="mobile-field-info-icon"
+                sx={{ cursor: 'default', fontSize: 20, color: 'text.secondary' }}
+              />
+            </Tooltip>
+          </Stack>
         )}
         {canEdit('date_of_birth') && (
           <Controller

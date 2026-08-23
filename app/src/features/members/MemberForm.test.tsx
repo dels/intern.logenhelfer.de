@@ -304,4 +304,73 @@ describe('MemberForm', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
     expect(onSubmit).not.toHaveBeenCalled();
   });
+
+  it('renders a base-data mobile field independent of the per-address mobile fields, and submits both separately', async () => {
+    // Regression guard for conflating the new top-level `mobile` scalar with
+    // the pre-existing per-address `addresses.${index}.mobile` field - both
+    // render with the same "Mobil" label text, so they're disambiguated here
+    // by their `name` attribute rather than by label alone.
+    const onSubmit = vi.fn();
+    const { container } = renderForm({
+      defaultValues: {
+        ...emptyValues,
+        firstname: 'Max',
+        lastname: 'Mustermann',
+        email: 'max@example.org',
+        mobile: '0151-1111111',
+        addresses: [{ id: 1, type_of_address: 0, purpose: 'Privat', mobile: '0170-2222222' }],
+      },
+      editableFields: ['job_title', 'mobile', 'addresses'],
+      onSubmit,
+      submitting: false,
+    });
+
+    const baseMobileInput = container.querySelector('input[name="mobile"]') as HTMLInputElement;
+    const addressMobileInput = container.querySelector('input[name="addresses.0.mobile"]') as HTMLInputElement;
+    expect(baseMobileInput).toBeInTheDocument();
+    expect(addressMobileInput).toBeInTheDocument();
+    expect(baseMobileInput).toHaveValue('0151-1111111');
+    expect(addressMobileInput).toHaveValue('0170-2222222');
+
+    await userEvent.clear(baseMobileInput);
+    await userEvent.type(baseMobileInput, '0151-9999999');
+    // Editing the base-data field must not touch the address field's value.
+    expect(addressMobileInput).toHaveValue('0170-2222222');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
+      mobile: '0151-9999999',
+      addresses: [expect.objectContaining({ mobile: '0170-2222222' })],
+    });
+  });
+
+  it('does not render the base-data mobile field when not editable', () => {
+    renderForm({
+      defaultValues: emptyValues,
+      editableFields: ['job_title'],
+      onSubmit: vi.fn(),
+      submitting: false,
+    });
+    expect(document.querySelector('input[name="mobile"]')).not.toBeInTheDocument();
+  });
+
+  it('shows a non-interactive info tooltip next to the base-data mobile field explaining it is normally derived from an address', async () => {
+    renderForm({
+      defaultValues: { ...emptyValues, mobile: '' },
+      editableFields: ['job_title', 'mobile'],
+      onSubmit: vi.fn(),
+      submitting: false,
+    });
+
+    const infoIcon = screen.getByTestId('mobile-field-info-icon');
+    // Plain style assertion, not a hover simulation - this must hold
+    // regardless of whether the tooltip is currently shown.
+    expect(getComputedStyle(infoIcon).cursor).toBe('default');
+
+    await userEvent.hover(infoIcon);
+    const tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent(/Adresse/);
+  });
 });
