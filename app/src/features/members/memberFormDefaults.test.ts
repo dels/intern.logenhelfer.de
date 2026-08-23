@@ -10,6 +10,7 @@ function memberFixture(overrides: Partial<Member> = {}): Member {
     lastname: 'Mitglied',
     matriculation_number: 42,
     job_title: 'Zimmermann',
+    mobile: '0151-0000000',
     date_of_birth: '1980-01-01',
     entered_apprentice_since: '2000-01-01',
     fellow_craft_since: '2001-01-01',
@@ -38,6 +39,7 @@ describe('buildMemberFormDefaults', () => {
       lastname: 'Mitglied',
       matriculation_number: 42,
       job_title: 'Zimmermann',
+      mobile: '0151-0000000',
       date_of_birth: '1980-01-01',
       role_ids: [1, 2],
     });
@@ -54,6 +56,23 @@ describe('buildMemberFormDefaults', () => {
       id: 7, type_of_address: 0, purpose: 'Privat', street1: 'Teststr. 1',
       zip: '28203', city: 'Bremen', phone: '0421', fax: null, mobile: null, email: null,
     }]);
+  });
+
+  it('maps the top-level mobile scalar independently of any per-address mobile value', () => {
+    // Regression guard: the top-level `mobile` (base-data, directly
+    // editable) and each address's own `mobile` are two different source
+    // fields (`member.mobile` vs. `address.mobile`) that must not get
+    // conflated in this mapping - here they're deliberately given
+    // different values to prove neither overwrites the other.
+    const result = buildMemberFormDefaults(memberFixture({
+      mobile: '0151-0000000',
+      addresses: [{
+        id: 7, type_of_address: 0, purpose: 'Privat', street: 'Teststr. 1',
+        zip: '28203', city: 'Bremen', phone: '0421', fax: null, mobile: '0170-9999999', email: null,
+      }],
+    }));
+    expect(result.mobile).toBe('0151-0000000');
+    expect(result.addresses?.[0]?.mobile).toBe('0170-9999999');
   });
 
   it('defaults matriculation_number to undefined when absent, not null', () => {
