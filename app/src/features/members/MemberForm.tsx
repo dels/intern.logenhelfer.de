@@ -56,7 +56,11 @@ export interface MemberFormProps {
 export default function MemberForm({ defaultValues, editableFields, onSubmit, submitting, submitError, onCancel }: MemberFormProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { control, handleSubmit } = useForm<MemberInput>({
+  const {
+    control,
+    handleSubmit,
+    formState: { dirtyFields },
+  } = useForm<MemberInput>({
     resolver: zodResolver(memberSchema) as Resolver<MemberInput>,
     defaultValues,
   });
@@ -85,6 +89,20 @@ export default function MemberForm({ defaultValues, editableFields, onSubmit, su
       if (normalized[field] === '') {
         delete normalized[field];
       }
+    }
+    // Only resubmit `addresses` when the user actually touched an address
+    // (added/removed/edited a row) - `defaultValues.addresses` is otherwise
+    // carried through unchanged on every save (e.g. editing only the
+    // base-data mobile field below), and the backend's syncUserMobile runs
+    // whenever `addresses` is present with length > 0, silently overwriting
+    // a same-request direct `mobile` edit. Omitting the key entirely (not
+    // just sending `[]`) lets the backend's existing
+    // `addressInputs.length > 0` gate correctly treat this as "no address
+    // changes" - see MemberForm.test.tsx and members.test.ts for the
+    // regression coverage.
+    const addressesDirty = Array.isArray(dirtyFields.addresses) ? dirtyFields.addresses.length > 0 : !!dirtyFields.addresses;
+    if (!addressesDirty) {
+      delete normalized.addresses;
     }
     onSubmit(normalized);
   };

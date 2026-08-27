@@ -217,7 +217,7 @@
     "phone": "Phone",
     "fax": "Fax",
     "mobile": "Mobile",
-    "mobileInfo": "This number is normally taken automatically from the mobile number of the private (or business) address. Editing it here directly will be overwritten the next time an address is edited.",
+    "mobileInfo": "This number is normally taken from the mobile number of the private (or business, or any other) address. Editing it here directly will be overwritten the next time an address is added, changed, or removed.",
     "brotherName": "Br. {{firstname}} {{lastname}}",
     "motherLodge": "Mother lodge",
     "acceptedAt": "Accepted on",

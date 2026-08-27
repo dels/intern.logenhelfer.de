@@ -947,6 +947,35 @@ describe('Members API - core CRUD', () => {
       expect(reloaded.mobile).toBe('0170 direct');
     });
 
+    it('final-review regression: a PATCH with only `mobile` and no `addresses` key at all persists the direct value even when the member already has an address (matches the fixed frontend, which now omits `addresses` from the body unless an address was actually touched)', async () => {
+      // Before the frontend fix, MemberForm always resubmitted the member's
+      // full current `addresses` array on every save - which, combined with
+      // this handler's `addressInputs.length > 0` gate, re-triggered
+      // syncUserMobile (and silently overwrote a same-request direct
+      // `mobile` edit) on every save, not just a real address edit. This
+      // test proves the backend side of the fix already behaves correctly
+      // once the request genuinely omits `addresses`: the existing address's
+      // mobile must NOT win over the direct scalar value.
+      const now = new Date();
+      await prisma.addresses.create({
+        data: {
+          addressable_id: member.id, addressable_type: 'User', type_of_address: 0, purpose: 'Privat',
+          mobile: '0170 from-existing-address', deleted: false, created_at: now, updated_at: now,
+        },
+      });
+      await prisma.users.update({ where: { id: member.id }, data: { mobile: '0170 from-existing-address' } });
+
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ mobile: '0170 direct-no-addresses-key' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.mobile).toBe('0170 direct-no-addresses-key');
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.mobile).toBe('0170 direct-no-addresses-key');
+    });
+
     it('lets a plain member set their own mobile directly (LIMITED_FIELDS, same pattern as job_title/email)', async () => {
       const res = await request(app)
         .patch(`/api/v1/members/${member.uuid}`)
@@ -980,6 +1009,20 @@ describe('Members API - core CRUD', () => {
       expect(res.status).toBe(200);
       const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
       expect(reloaded.mobile).toBe('0170 new-private');
+    });
+
+    it('bumps users.updated_at when syncUserMobile runs, consistent with every other write path in this file', async () => {
+      const staleTimestamp = new Date('2020-01-01T00:00:00Z');
+      await prisma.users.update({ where: { id: member.id }, data: { updated_at: staleTimestamp } });
+
+      const res = await request(app)
+        .patch(`/api/v1/members/${member.uuid}`)
+        .set(authHeaders(admin))
+        .send({ addresses: [{ type_of_address: 0, purpose: 'Privat', mobile: '0170 bump-check' }] });
+
+      expect(res.status).toBe(200);
+      const reloaded = await prisma.users.findUniqueOrThrow({ where: { id: member.id } });
+      expect(reloaded.updated_at.getTime()).toBeGreaterThan(staleTimestamp.getTime());
     });
 
     it('updating an existing address changes users.mobile', async () => {

@@ -305,11 +305,18 @@ describe('MemberForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('renders a base-data mobile field independent of the per-address mobile fields, and submits both separately', async () => {
+  it('renders a base-data mobile field independent of the per-address mobile fields, and submits the base field without resubmitting untouched addresses', async () => {
     // Regression guard for conflating the new top-level `mobile` scalar with
     // the pre-existing per-address `addresses.${index}.mobile` field - both
     // render with the same "Mobil" label text, so they're disambiguated here
     // by their `name` attribute rather than by label alone.
+    //
+    // Also the regression test for the final-review fix: editing ONLY the
+    // base-data mobile field must NOT resubmit the (untouched) `addresses`
+    // array - the backend's syncUserMobile runs whenever `addresses` is
+    // present with length > 0 and would otherwise silently overwrite this
+    // same-request direct `mobile` edit. See members.test.ts for the
+    // matching backend-level coverage.
     const onSubmit = vi.fn();
     const { container } = renderForm({
       defaultValues: {
@@ -340,9 +347,38 @@ describe('MemberForm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ mobile: '0151-9999999' });
+    expect(onSubmit.mock.calls[0]?.[0]).not.toHaveProperty('addresses');
+  });
+
+  it('editing an address field DOES resubmit addresses, even alongside an untouched base-data mobile field', async () => {
+    // Inverse of the test above: a real address edit must keep triggering
+    // the backend's sync-on-write behavior as designed.
+    const onSubmit = vi.fn();
+    const { container } = renderForm({
+      defaultValues: {
+        ...emptyValues,
+        firstname: 'Max',
+        lastname: 'Mustermann',
+        email: 'max@example.org',
+        mobile: '0151-1111111',
+        addresses: [{ id: 1, type_of_address: 0, purpose: 'Privat', city: 'Bremen', mobile: '0170-2222222' }],
+      },
+      editableFields: ['job_title', 'mobile', 'addresses'],
+      onSubmit,
+      submitting: false,
+    });
+
+    const addressMobileInput = container.querySelector('input[name="addresses.0.mobile"]') as HTMLInputElement;
+    await userEvent.clear(addressMobileInput);
+    await userEvent.type(addressMobileInput, '0170-3333333');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
-      mobile: '0151-9999999',
-      addresses: [expect.objectContaining({ mobile: '0170-2222222' })],
+      mobile: '0151-1111111',
+      addresses: [expect.objectContaining({ id: 1, mobile: '0170-3333333' })],
     });
   });
 

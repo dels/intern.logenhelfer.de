@@ -181,8 +181,10 @@ const FOOTER_ROLE_ORDER = ['WorshipfulMaster', 'Secretary'] as const;
  * When both `<pdfType>_wp_footer_show_secretary` and
  * `<pdfType>_wp_footer_show_worshipful_master` are off, falls back to the
  * Secretary role's static `email` (or no footer at all if that's unset) -
- * this mirrors the pre-existing behavior of always being able to reach the
- * lodge via the Secretary, even with no per-officer footer configured.
+ * this keeps the lodge reachable via the Secretary even with no per-officer
+ * footer configured (there was no PDF footer at all before this feature, so
+ * there's no prior behavior being mirrored here - this is this feature's own
+ * default).
  * Otherwise, for each of WorshipfulMaster/Secretary (in that order) whose
  * toggle is on, resolves the role's first non-deleted holder
  * (`prisma.roles.findFirst` -> `prisma.user_roles.findMany` ->

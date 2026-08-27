@@ -92,5 +92,5 @@ export async function syncUserMobile(tx: PrismaTx, userId: number): Promise<void
     where: { addressable_id: userId, addressable_type: 'User' },
     select: { id: true, type_of_address: true, mobile: true, deleted: true },
   });
-  await tx.users.update({ where: { id: userId }, data: { mobile: computeUserMobile(addresses) } });
+  await tx.users.update({ where: { id: userId }, data: { mobile: computeUserMobile(addresses), updated_at: new Date() } });
 }
