@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { Box, Paper, TextField, Button, Typography, Alert, FormControlLabel, Switch } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useUpdatePassword } from './api';
@@ -26,9 +27,20 @@ type FormValues = z.infer<typeof schema>;
 function ProfileSection() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [profileSuccess, setProfileSuccess] = useState(false);
-  const { data: member, isLoading } = useMember(user?.uuid ?? '');
-  const { mutate, isPending, error } = useUpdateMember(user?.uuid ?? '');
+  // Bumped only after a successful save (below) to force MemberForm to fully
+  // unmount/remount - react-hook-form's dirtyFields is computed against
+  // mount-time defaultValues and nothing else resets it, so without this a
+  // member who edits their address, saves, then edits their base-data mobile
+  // field and saves again (same page visit, form never unmounted) would
+  // still resubmit the untouched `addresses` array on the second save,
+  // re-triggering the backend's syncUserMobile overwrite - see
+  // AccountPage.test.tsx's "second save in the same session" regression.
+  const [formKey, setFormKey] = useState(0);
+  const uuid = user?.uuid ?? '';
+  const { data: member, isLoading } = useMember(uuid);
+  const { mutate, isPending, error } = useUpdateMember(uuid);
 
   if (!user || isLoading || !member) return null;
 
@@ -63,12 +75,27 @@ function ProfileSection() {
       {profileSuccess && <Alert severity="success" sx={{ mb: 2 }}>{t('account.profileSuccess')}</Alert>}
       {error && <Alert severity="error" sx={{ mb: 2 }}>{apiErrorMessage(error)}</Alert>}
       <MemberForm
+        key={formKey}
         defaultValues={defaultValues}
         editableFields={member.editable_fields}
         submitting={isPending}
         onSubmit={(values) => {
           setProfileSuccess(false);
-          mutate(values, { onSuccess: () => setProfileSuccess(true) });
+          mutate(values, {
+            onSuccess: (updated) => {
+              // Seed the cache synchronously with the PATCH response before
+              // remounting - useUpdateMember's own onSuccess only fires an
+              // async invalidateQueries, which wouldn't have landed yet by
+              // the time the remount below reads `member` for its fresh
+              // defaultValues. Without this, the remounted form would
+              // briefly (or, since the key wouldn't bump again on the
+              // later refetch, permanently) show the pre-save values -
+              // the user's just-saved edit appearing to revert.
+              queryClient.setQueryData(['members', uuid], updated);
+              setProfileSuccess(true);
+              setFormKey((k) => k + 1);
+            },
+          });
         }}
       />
     </Paper>

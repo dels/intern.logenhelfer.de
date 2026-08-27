@@ -409,4 +409,122 @@ describe('MemberForm', () => {
     const tooltip = await screen.findByRole('tooltip');
     expect(tooltip).toHaveTextContent(/Adresse/);
   });
+
+  it('characterization: a second save in the SAME mounted instance still resubmits addresses left dirty by an earlier edit', async () => {
+    // dirtyFields is computed against react-hook-form's mount-time
+    // _defaultValues and nothing in MemberForm itself ever resets it after a
+    // successful submit (see submitWithNormalizedDates's own comment for why
+    // resetting inside the submit handler is deliberately NOT done - it
+    // would also clear dirty state on a FAILED save, silently dropping a
+    // real edit on retry). So within one mount, an earlier address edit
+    // keeps `addresses` marked dirty forever, even across an unrelated
+    // later save that only touches the base-data mobile field. This is not
+    // a bug in MemberForm - every consumer is expected to unmount/remount
+    // the form after a successful save to get fresh dirty-state (see
+    // AccountPage.tsx's `key`-bump fix and AccountPage.test.tsx's matching
+    // regression test for the one consumer where staying mounted across
+    // saves is possible).
+    const onSubmit = vi.fn();
+    const { container } = renderForm({
+      defaultValues: {
+        ...emptyValues,
+        firstname: 'Max',
+        lastname: 'Mustermann',
+        email: 'max@example.org',
+        mobile: '0151-1111111',
+        addresses: [{ id: 1, type_of_address: 0, purpose: 'Privat', mobile: '0170-2222222' }],
+      },
+      editableFields: ['job_title', 'mobile', 'addresses'],
+      onSubmit,
+      submitting: false,
+    });
+
+    const addressMobile = container.querySelector('input[name="addresses.0.mobile"]') as HTMLInputElement;
+    await userEvent.clear(addressMobile);
+    await userEvent.type(addressMobile, '0170-3333333');
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+
+    const baseMobile = container.querySelector('input[name="mobile"]') as HTMLInputElement;
+    await userEvent.clear(baseMobile);
+    await userEvent.type(baseMobile, '0151-9999999');
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+
+    // Documents the actual (unfixed-at-this-layer) behavior: addresses is
+    // still present on the second call, still carrying the FIRST edit's
+    // value, unrelated to the second save's base-data mobile edit.
+    expect(onSubmit.mock.calls[1]![0]).toHaveProperty('addresses');
+    expect(onSubmit.mock.calls[1]![0]).toMatchObject({
+      mobile: '0151-9999999',
+      addresses: [expect.objectContaining({ mobile: '0170-3333333' })],
+    });
+  });
+
+  it('remounting between saves (matching the AccountPage fix) genuinely resets dirty state, so a second save omits untouched addresses', async () => {
+    // Pins the actual fix mechanism at this layer: unlike the
+    // characterization test above, this simulates AccountPage's `key`-bump
+    // by re-rendering MemberForm with a fresh key (and fresh defaultValues,
+    // as AccountPage's remount also picks up post-save data) between the
+    // two saves.
+    const onSubmit = vi.fn();
+    const firstDefaults = {
+      ...emptyValues,
+      firstname: 'Max',
+      lastname: 'Mustermann',
+      email: 'max@example.org',
+      mobile: '0151-1111111',
+      addresses: [{ id: 1, type_of_address: 0, purpose: 'Privat', mobile: '0170-2222222' }],
+    };
+    const queryClient = new QueryClient();
+    const { container, rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <MemberForm
+            key={0}
+            defaultValues={firstDefaults}
+            editableFields={['job_title', 'mobile', 'addresses']}
+            onSubmit={onSubmit}
+            submitting={false}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const addressMobile = container.querySelector('input[name="addresses.0.mobile"]') as HTMLInputElement;
+    await userEvent.clear(addressMobile);
+    await userEvent.type(addressMobile, '0170-3333333');
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+
+    // Remount with fresh defaultValues carrying the just-saved address
+    // mobile forward - exactly what AccountPage's re-derived defaultValues
+    // (built from the now-updated `member`) would look like post-save.
+    const secondDefaults = {
+      ...firstDefaults,
+      addresses: [{ id: 1, type_of_address: 0, purpose: 'Privat', mobile: '0170-3333333' }],
+    };
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <MemberForm
+            key={1}
+            defaultValues={secondDefaults}
+            editableFields={['job_title', 'mobile', 'addresses']}
+            onSubmit={onSubmit}
+            submitting={false}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    const baseMobile = container.querySelector('input[name="mobile"]') as HTMLInputElement;
+    await userEvent.clear(baseMobile);
+    await userEvent.type(baseMobile, '0151-9999999');
+    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+
+    expect(onSubmit.mock.calls[1]![0]).not.toHaveProperty('addresses');
+    expect(onSubmit.mock.calls[1]![0]).toMatchObject({ mobile: '0151-9999999' });
+  });
 });
