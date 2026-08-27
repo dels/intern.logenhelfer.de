@@ -2473,6 +2473,10 @@ export interface components {
             max_db_mem_size?: string | null;
             max_upload_file_size?: string | null;
             workingplan_footer?: string | null;
+            public_wp_footer_show_secretary?: boolean | null;
+            public_wp_footer_show_worshipful_master?: boolean | null;
+            internal_wp_footer_show_secretary?: boolean | null;
+            internal_wp_footer_show_worshipful_master?: boolean | null;
             impressum?: string | null;
             help?: string | null;
             robots_txt?: string | null;

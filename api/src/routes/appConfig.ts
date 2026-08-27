@@ -77,6 +77,10 @@ const KNOWN_KEYS: Record<string, ConfigType> = {
   robots_txt: 'text',
   public_workingplan_html_timespan: 'integer',
   public_workingplan_ics_timespan: 'integer',
+  public_wp_footer_show_secretary: 'boolean',
+  public_wp_footer_show_worshipful_master: 'boolean',
+  internal_wp_footer_show_secretary: 'boolean',
+  internal_wp_footer_show_worshipful_master: 'boolean',
   mfa_mode: 'string',
   mfa_enforce_for_officers: 'boolean',
   mfa_grace_period_days: 'integer',
@@ -127,6 +131,10 @@ const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   mfa_trusted_device_days: '30',
   birthday_calendar_available: false,
   birthday_calendar_consent_mode: 'individual',
+  public_wp_footer_show_secretary: false,
+  public_wp_footer_show_worshipful_master: false,
+  internal_wp_footer_show_secretary: false,
+  internal_wp_footer_show_worshipful_master: false,
 };
 
 // Port of ActiveModel::Type::Boolean::FALSE_VALUES.

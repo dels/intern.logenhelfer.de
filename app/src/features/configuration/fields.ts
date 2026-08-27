@@ -62,6 +62,10 @@ export const FIELDS: AppConfigFieldDef[] = [
   { key: 'max_db_mem_size', type: 'string', category: 'konfiguration', unit: 'mb' },
   { key: 'max_upload_file_size', type: 'string', category: 'konfiguration', unit: 'mb' },
   { key: 'workingplan_footer', type: 'text', category: 'konfiguration' },
+  { key: 'public_wp_footer_show_secretary', type: 'boolean', category: 'konfiguration' },
+  { key: 'public_wp_footer_show_worshipful_master', type: 'boolean', category: 'konfiguration' },
+  { key: 'internal_wp_footer_show_secretary', type: 'boolean', category: 'konfiguration' },
+  { key: 'internal_wp_footer_show_worshipful_master', type: 'boolean', category: 'konfiguration' },
   { key: 'help', type: 'text', category: 'konfiguration' },
   { key: 'robots_txt', type: 'text', category: 'konfiguration' },
 

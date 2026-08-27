@@ -220,6 +220,66 @@ describe('App Config API', () => {
       expect(res.body.notify_user_on_login_activity).toBe(true);
     });
 
+    it('writes and reads back the public_wp_footer_show_secretary key, defaulting to false before any write', async () => {
+      const admin = await makeApplicationAdmin();
+
+      const beforeRes = await request(app).get('/api/v1/app_config').set(authHeaders(admin));
+      expect(beforeRes.body.public_wp_footer_show_secretary).toBe(false);
+
+      const res = await request(app)
+        .patch('/api/v1/app_config')
+        .send({ public_wp_footer_show_secretary: true })
+        .set(authHeaders(admin));
+
+      expect(res.status).toBe(200);
+      expect(res.body.public_wp_footer_show_secretary).toBe(true);
+    });
+
+    it('writes and reads back the public_wp_footer_show_worshipful_master key, defaulting to false before any write', async () => {
+      const admin = await makeApplicationAdmin();
+
+      const beforeRes = await request(app).get('/api/v1/app_config').set(authHeaders(admin));
+      expect(beforeRes.body.public_wp_footer_show_worshipful_master).toBe(false);
+
+      const res = await request(app)
+        .patch('/api/v1/app_config')
+        .send({ public_wp_footer_show_worshipful_master: true })
+        .set(authHeaders(admin));
+
+      expect(res.status).toBe(200);
+      expect(res.body.public_wp_footer_show_worshipful_master).toBe(true);
+    });
+
+    it('writes and reads back the internal_wp_footer_show_secretary key, defaulting to false before any write', async () => {
+      const admin = await makeApplicationAdmin();
+
+      const beforeRes = await request(app).get('/api/v1/app_config').set(authHeaders(admin));
+      expect(beforeRes.body.internal_wp_footer_show_secretary).toBe(false);
+
+      const res = await request(app)
+        .patch('/api/v1/app_config')
+        .send({ internal_wp_footer_show_secretary: true })
+        .set(authHeaders(admin));
+
+      expect(res.status).toBe(200);
+      expect(res.body.internal_wp_footer_show_secretary).toBe(true);
+    });
+
+    it('writes and reads back the internal_wp_footer_show_worshipful_master key, defaulting to false before any write', async () => {
+      const admin = await makeApplicationAdmin();
+
+      const beforeRes = await request(app).get('/api/v1/app_config').set(authHeaders(admin));
+      expect(beforeRes.body.internal_wp_footer_show_worshipful_master).toBe(false);
+
+      const res = await request(app)
+        .patch('/api/v1/app_config')
+        .send({ internal_wp_footer_show_worshipful_master: true })
+        .set(authHeaders(admin));
+
+      expect(res.status).toBe(200);
+      expect(res.body.internal_wp_footer_show_worshipful_master).toBe(true);
+    });
+
     it('stores an unset string field as empty, not the literal string "null"', async () => {
       // Regression: castForWrite's `String(value)` fallback stringified JS
       // null/undefined into "null"/"undefined" (unlike Ruby's `nil.to_s ==

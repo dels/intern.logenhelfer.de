@@ -4257,6 +4257,10 @@ components:
         max_db_mem_size: { type: string, nullable: true }
         max_upload_file_size: { type: string, nullable: true }
         workingplan_footer: { type: string, nullable: true }
+        public_wp_footer_show_secretary: { type: boolean, nullable: true }
+        public_wp_footer_show_worshipful_master: { type: boolean, nullable: true }
+        internal_wp_footer_show_secretary: { type: boolean, nullable: true }
+        internal_wp_footer_show_worshipful_master: { type: boolean, nullable: true }
         impressum: { type: string, nullable: true }
         help: { type: string, nullable: true }
         robots_txt: { type: string, nullable: true }
