@@ -707,6 +707,74 @@ function birthdaySortComparator(sortParam: unknown): (a: BirthdaySortKey, b: Bir
   };
 }
 
+export interface WorkingplanBirthdayRow {
+  lastname: string | null;
+  firstname: string | null;
+  date_of_birth: string | null;
+  age: number | null;
+}
+
+/**
+ * All-non-deleted-members birthday query, with the exact same class-level
+ * ability gate (`canMembersListClass`) and per-row visibility filter
+ * (`canListRow(ctx, 'birthday_list', ...)`) that backs
+ * `GET /api/v1/members/birthday_list` above - exported so
+ * `GET /api/v1/events/workingplan.pdf` (`routes/events.ts`) can build its
+ * birthdays page from the identical authorized dataset instead of a second,
+ * potentially-drifting copy of `canOn`/`reachesDefaultUserAbilities`/
+ * `reachesUserAdminAbilities`/`showAdminsConfig`/`canListRow` (none of which
+ * are otherwise exported - deliberately, per this file's own top-of-file
+ * comment on why that visibility logic lives only here). Returns `[]` for a
+ * caller lacking `canMembersListClass` rather than throwing, mirroring
+ * `birthday_list`'s own 403-at-the-route-boundary shape - the class check is
+ * folded in here so no future caller of this function can skip it by
+ * accident. (Today this is implied by `internal_workingplan` - only granted
+ * in `defaultUserAbilities`, which also satisfies `reachesDefaultUserAbilities`
+ * - so this guard is currently always true for a caller who already passed
+ * `events.ts`'s own `internal_workingplan` gate; kept explicit anyway so this
+ * function stays correct on its own if that ever changes.)
+ *
+ * Sorted the same way `birthday_list`'s own default sort
+ * (`DEFAULT_BIRTHDAY_SORT = 'date_of_birth'`) orders it - soonest-upcoming-
+ * birthday-first via `daysUntilNextBirthday`, nulls last - since that's the
+ * order the client's now-replaced `fetchAllBirthdayListRows()` (no `sort`
+ * param) always received, and the internal PDF's birthdays page should keep
+ * looking the same.
+ */
+export async function loadVisibleBirthdaysForWorkingplan(
+  ability: AppAbility,
+  currentUserId: number,
+  today: Date = new Date(),
+): Promise<WorkingplanBirthdayRow[]> {
+  if (!canMembersListClass(ability)) return [];
+
+  const callerRoleNames = await loadUserRoleNames(currentUserId);
+  const showAdmins = await showAdminsConfig();
+  const ctx: VisibilityContext = { ability, callerRoleNames, showAdmins };
+
+  const users = await prisma.users.findMany({ where: { deleted: false } });
+  const roleRowsByUser = await loadRoleRowsForUsers(users.map((u) => u.id));
+  const visible = users.filter((u) => canListRow(ctx, 'birthday_list', u, roleNamesOf(roleRowsByUser.get(u.id) ?? [])));
+
+  const withSortKey = visible.map((u) => ({
+    row: {
+      lastname: u.lastname,
+      firstname: u.firstname,
+      date_of_birth: u.date_of_birth ? formatDateOnly(u.date_of_birth) : null,
+      age: computeAge(u.date_of_birth, today),
+    },
+    sortKey: u.date_of_birth ? daysUntilNextBirthday(u.date_of_birth, today) : null,
+  }));
+
+  withSortKey.sort((a, b) => {
+    if (a.sortKey === null) return b.sortKey === null ? 0 : 1;
+    if (b.sortKey === null) return -1;
+    return a.sortKey - b.sortKey;
+  });
+
+  return withSortKey.map((entry) => entry.row);
+}
+
 function fullname(user: Pick<UserRow, 'firstname' | 'lastname'>): string {
   return [user.firstname, user.lastname].filter((v): v is string => isPresent(v)).join(' ');
 }

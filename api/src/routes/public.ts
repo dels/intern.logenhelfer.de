@@ -1,7 +1,4 @@
 import { timingSafeEqual } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import ical, { ICalEventTransparency } from 'ical-generator';
 import { Router } from 'express';
@@ -11,6 +8,7 @@ import { ApiError } from '../lib/errors.js';
 import { getConfigString, getBoolean, getTimespanDays } from '../lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
 import { redisConfigured } from '../lib/mailQueue.js';
+import { currentLogoSource } from '../lib/logoSource.js';
 import { deriveLogoVariants, type LogoVariants } from '../lib/logoVariants.js';
 import { buildWorkingplanPdf, resolveFooterLines, type PdfEventRow } from '../lib/workingplanPdf.js';
 import { statusRateLimiter } from '../middleware/rateLimit.js';
@@ -171,23 +169,6 @@ async function adminUserIds(userIds: number[]): Promise<Set<number>> {
 async function currentLogoVersion(): Promise<number | null> {
   const row = await prisma.custom_logos.findUnique({ where: { id: 1 }, select: { updated_at: true } });
   return row ? row.updated_at.getTime() : null;
-}
-
-const DEFAULT_LOGO_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../assets/bijou-large.png');
-
-/**
- * Derives every PWA icon variant on the fly from whichever image is
- * currently authoritative: the admin-uploaded `custom_logos` row if one
- * exists, otherwise the same bundled default crest the frontend's own
- * `<BijouLogo>` falls back to (`app/src/assets/bijou-large.png`, bundled
- * here as `api/assets/bijou-large.png` for visual consistency between the
- * in-app fallback and the installed PWA's icon) - see this route's own
- * comment for why there's no caching/storage of the derived bytes.
- */
-async function currentLogoSource(): Promise<Buffer> {
-  const row = await prisma.custom_logos.findUnique({ where: { id: 1 } });
-  if (row) return Buffer.from(row.content);
-  return readFile(DEFAULT_LOGO_PATH);
 }
 
 const LOGO_VARIANT_NAMES: Record<string, keyof LogoVariants> = {

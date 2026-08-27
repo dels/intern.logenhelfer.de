@@ -743,6 +743,20 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/events/workingplan.pdf:
+    get:
+      operationId: getInternalWorkingplanPdf
+      summary: PDF export of upcoming events (private_description) plus a birthdays page, for authenticated members with the internal_workingplan ability
+      responses:
+        '200':
+          description: PDF export of the internal working plan
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/events/defaults:
     get:
       operationId: getEventDefaults

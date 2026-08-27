@@ -484,6 +484,24 @@ describe('app.ts integration', () => {
     });
   });
 
+  describe('GET /api/v1/events/workingplan.pdf (internal PDF) response-validation exclusion', () => {
+    it('returns a real PDF through the fully-wired app, same excludeResponseValidationPaths treatment as public workingplan.pdf', async () => {
+      const now = new Date();
+      const role = await prisma.roles.create({
+        data: { name: 'EnteredApprentice', display_name: 'Lehrling', created_at: now, updated_at: now },
+      });
+      const user = await createUser();
+      await prisma.user_roles.create({ data: { user_id: user.id, role_id: role.id, created_at: now, updated_at: now, role_added_at: now } });
+
+      const res = await request(app).get('/api/v1/events/workingplan.pdf').set('Authorization', `Bearer ${issueAccessToken(user.id)}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+      const body: Buffer = Buffer.isBuffer(res.body) ? res.body : Buffer.from(res.text, 'binary');
+      expect(body.slice(0, 5).toString('latin1')).toBe('%PDF-');
+    });
+  });
+
   // Regression guard: express-openapi-validator's own default when no
   // `fileUploader` option is passed at all is `{}` (see
   // openapi.validator.js's constructor), which flows into

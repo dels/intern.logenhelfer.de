@@ -5,9 +5,12 @@ import { Router } from 'express';
 
 import { authenticateApiUser } from '../auth/middleware.js';
 import { prisma } from '../db.js';
-import { appConfig } from '../lib/appConfig.js';
+import { appConfig, getConfigString, getTimespanDays } from '../lib/appConfig.js';
 import { ApiError } from '../lib/errors.js';
+import { currentLogoSource } from '../lib/logoSource.js';
 import { buildListResponse, parsePageParams } from '../lib/pagination.js';
+import { buildWorkingplanPdf, resolveFooterLines, type PdfEventRow, type PdfBirthdayRow } from '../lib/workingplanPdf.js';
+import { loadVisibleBirthdaysForWorkingplan, type WorkingplanBirthdayRow } from './members.js';
 
 /**
  * Port of rails-app/app/controllers/api/v1/events_controller.rb.
@@ -63,6 +66,49 @@ function parseDateOnlyParam(value: unknown): Date | undefined {
 
 function formatDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+// -- date helpers for GET /workingplan.pdf ---------------------------------
+// Duplicated from public.ts (this file's own formatDateOnly/formatTime just
+// above are already duplicated the same way, no shared date-utils module
+// exists in this codebase) rather than importing route-file internals
+// across files.
+
+/** UTC midnight for "today" - matches this file's own date-only conventions (formatDateOnly/parseDateOnlyParam). */
+function todayUtc(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+function addDaysUtc(date: Date, days: number): Date {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+/** MM+DD of a 'YYYY-MM-DD' string - port of app/src/features/events/api.ts's monthDay, applied server-side now that this route builds the internal PDF itself instead of the client. */
+function monthDay(dateStr: string): string {
+  return dateStr.slice(5, 7) + dateStr.slice(8, 10);
+}
+
+/**
+ * Port of app/src/features/events/api.ts's filterBirthdaysInRange, applied
+ * server-side. `days >= 365` short-circuits to "every birthday matches" -
+ * without it, an admin-configured `default_workingplan_timespan` spanning a
+ * full year or more would make the wrap-comparison below silently exclude
+ * rows once `fromMMDD`/`toMMDD` wrap all the way back around to the same
+ * value, rather than correctly matching everyone.
+ */
+function filterBirthdaysInRange(rows: WorkingplanBirthdayRow[], fromStr: string, toStr: string, days: number): WorkingplanBirthdayRow[] {
+  if (days >= 365) {
+    return rows.filter((r) => r.date_of_birth !== null);
+  }
+  const fromMMDD = monthDay(fromStr);
+  const toMMDD = monthDay(toStr);
+  const wraps = toMMDD < fromMMDD;
+  return rows.filter((r) => {
+    if (!r.date_of_birth) return false;
+    const mmdd = monthDay(r.date_of_birth);
+    return wraps ? mmdd <= toMMDD || mmdd >= fromMMDD : mmdd >= fromMMDD && mmdd <= toMMDD;
+  });
 }
 
 /**
@@ -345,6 +391,85 @@ router.post('/record_export', async (req, res, next) => {
     });
 
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/events/workingplan.pdf
+// Authenticated sibling of the public GET /api/v1/public/workingplan.pdf
+// route, replacing the frontend's former client-side jsPDF generation
+// (app/src/features/events/api.ts's downloadInternalWorkingplanPdf, Task 9) -
+// server-rendered so the PDF's private_description rows and birthdays page
+// never leave the server unauthorized. Registered before /:uuid, same as
+// /defaults just below - unlike record_export just above (a POST, with no
+// GET /:uuid route to collide with), a GET here genuinely would be silently
+// swallowed by /:uuid matching uuid='workingplan.pdf' if this were registered
+// after it.
+router.get('/workingplan.pdf', async (req, res, next) => {
+  try {
+    if (!req.ability?.can('internal_workingplan', 'Event')) {
+      res.status(403).json({ error: 'forbidden' });
+      return;
+    }
+    const currentUser = req.currentUser;
+    if (!currentUser) {
+      throw ApiError.unauthorized();
+    }
+
+    const days = await getTimespanDays('default_workingplan_timespan');
+    const from = todayUtc();
+    const to = addDaysUtc(from, days);
+    const fromStr = formatDateOnly(from);
+    const toStr = formatDateOnly(to);
+
+    const events = await prisma.events.findMany({
+      where: { deleted: false, date: { gte: from, lte: to } },
+      orderBy: [{ date: 'asc' }, { whole_day: 'asc' }, { time: 'asc' }],
+    });
+    const eventRows: PdfEventRow[] = events.map((event) => ({
+      date: formatDateOnly(event.date),
+      time: event.whole_day ? null : formatTime(event.time),
+      whole_day: event.whole_day,
+      description: event.private_description,
+    }));
+
+    // Reuses members.ts's own ability-gated birthday_list query/visibility
+    // filter (see loadVisibleBirthdaysForWorkingplan's own doc comment) -
+    // deliberately NOT the anon/consent-filtered ICS logic in public.ts,
+    // and NOT a second, potentially-drifting copy of that visibility logic.
+    const allVisibleBirthdays = await loadVisibleBirthdaysForWorkingplan(req.ability, currentUser.id);
+    const birthdayRows: PdfBirthdayRow[] = filterBirthdaysInRange(allVisibleBirthdays, fromStr, toStr, days).map((row) => ({
+      lastname: row.lastname ?? '',
+      firstname: row.firstname ?? '',
+      date_of_birth: row.date_of_birth ?? '',
+      age: row.age ?? '',
+    }));
+
+    const logo = await currentLogoSource();
+    const lodgeName = (await getConfigString('lodge')) ?? 'Logenhelfer';
+    const footerLines = await resolveFooterLines('internal');
+    const language = (await getConfigString('language')) ?? 'de';
+
+    const pdf = buildWorkingplanPdf(eventRows, language, { logo, lodgeName, footerLines, birthdayRows });
+
+    // Server-driven download now, so the export is logged inline here
+    // instead of via a separate client POST to /record_export (see Task 9's
+    // note on recordWorkingplanExport) - same file_downloads shape
+    // POST /record_export already writes for 'workingplan_internal' above.
+    const now = new Date();
+    await prisma.file_downloads.create({
+      data: {
+        user_id: currentUser.id,
+        attached_file_id: null,
+        filename: 'Arbeitsplan (intern)',
+        remote_ip: currentUser.current_sign_in_ip,
+        created_at: now,
+        updated_at: now,
+      },
+    });
+
+    res.status(200).type('application/pdf').send(pdf);
   } catch (err) {
     next(err);
   }
