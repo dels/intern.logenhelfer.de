@@ -149,6 +149,50 @@ describe('resolveFooterLines', () => {
 
     expect(await resolveFooterLines('internal')).toEqual(['Meister vom Stuhl: Neu Zweiter']);
   });
+
+  it('holder with null firstname and lastname produces only role display_name, no literal "null"', async () => {
+    await appConfig.set('internal_wp_footer_show_worshipful_master', true);
+    await appConfig.set('internal_wp_footer_show_secretary', false);
+    const role = await createRole('WorshipfulMaster', { display_name: 'Meister vom Stuhl' });
+    const holder = await createUser({ firstname: null, lastname: null, mobile: null });
+    await assignRole(holder.id, role.id);
+
+    const result = await resolveFooterLines('internal');
+    expect(result).toEqual(['Meister vom Stuhl']);
+    expect(result[0]).not.toContain('null');
+  });
+
+  it('holder with only firstname set includes only firstname in footer line', async () => {
+    await appConfig.set('internal_wp_footer_show_worshipful_master', true);
+    await appConfig.set('internal_wp_footer_show_secretary', false);
+    const role = await createRole('WorshipfulMaster', { display_name: 'Meister vom Stuhl' });
+    const holder = await createUser({ firstname: 'Karl', lastname: null, mobile: null });
+    await assignRole(holder.id, role.id);
+
+    expect(await resolveFooterLines('internal')).toEqual(['Meister vom Stuhl: Karl']);
+  });
+
+  it('holder with only lastname set includes only lastname in footer line', async () => {
+    await appConfig.set('internal_wp_footer_show_worshipful_master', true);
+    await appConfig.set('internal_wp_footer_show_secretary', false);
+    const role = await createRole('WorshipfulMaster', { display_name: 'Meister vom Stuhl' });
+    const holder = await createUser({ firstname: null, lastname: 'Koenig', mobile: null });
+    await assignRole(holder.id, role.id);
+
+    expect(await resolveFooterLines('internal')).toEqual(['Meister vom Stuhl: Koenig']);
+  });
+
+  it('holder with blank firstname and lastname produces only role display_name, no literal "null"', async () => {
+    await appConfig.set('internal_wp_footer_show_worshipful_master', true);
+    await appConfig.set('internal_wp_footer_show_secretary', false);
+    const role = await createRole('WorshipfulMaster', { display_name: 'Meister vom Stuhl' });
+    const holder = await createUser({ firstname: '', lastname: '', mobile: null });
+    await assignRole(holder.id, role.id);
+
+    const result = await resolveFooterLines('internal');
+    expect(result).toEqual(['Meister vom Stuhl']);
+    expect(result[0]).not.toContain('null');
+  });
 });
 
 describe('buildWorkingplanPdf / buildWorkingplanPdfDocument', () => {

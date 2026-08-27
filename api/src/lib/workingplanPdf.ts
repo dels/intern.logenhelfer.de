@@ -235,7 +235,8 @@ export async function resolveFooterLines(pdfType: FooterPdfType): Promise<string
 
     // `role.display_name ?? ''` mirrors the same null-guard `members_of_council`
     // already applies to this nullable column (routes/members.ts's `role_display_name`).
-    let line = `${role.display_name ?? ''}: ${holder.firstname} ${holder.lastname}`;
+    const holderName = [holder.firstname, holder.lastname].filter((v): v is string => isPresent(v)).join(' ');
+    let line = holderName ? `${role.display_name ?? ''}: ${holderName}` : role.display_name ?? '';
     if (isPresent(holder.mobile)) {
       line += ` · ${holder.mobile}`;
     }
