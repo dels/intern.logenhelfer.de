@@ -5,8 +5,6 @@ import { fileURLToPath } from 'node:url';
 
 import ical, { ICalEventTransparency } from 'ical-generator';
 import { Router } from 'express';
-import { jsPDF } from 'jspdf';
-import { autoTable } from 'jspdf-autotable';
 
 import { prisma, databaseConnectionDetails } from '../db.js';
 import { ApiError } from '../lib/errors.js';
@@ -14,6 +12,7 @@ import { getConfigString, getBoolean, getTimespanDays } from '../lib/appConfig.j
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
 import { redisConfigured } from '../lib/mailQueue.js';
 import { deriveLogoVariants, type LogoVariants } from '../lib/logoVariants.js';
+import { buildWorkingplanPdf, type PdfEventRow } from '../lib/workingplanPdf.js';
 import { statusRateLimiter } from '../middleware/rateLimit.js';
 
 /**
@@ -544,60 +543,6 @@ router.get('/birthdays/:token/calendar.ics', async (req, res, next) => {
   }
 });
 
-interface PdfLabels {
-  locale: string;
-  weekday: string;
-  date: string;
-  time: string;
-  description: string;
-  allDay: string;
-}
-
-/** Static (non-user-authored) PDF chrome in both supported languages — the row content itself (title/description) is admin/member-authored and not translated. */
-const PDF_LABELS: Record<string, PdfLabels> = {
-  de: { locale: 'de-DE', weekday: 'Wochentag', date: 'Datum', time: 'Uhrzeit', description: 'Beschreibung', allDay: 'ganztags' },
-  en: { locale: 'en-US', weekday: 'Weekday', date: 'Date', time: 'Time', description: 'Description', allDay: 'all day' },
-};
-
-/** Exported standalone so its selection logic is unit-testable without rendering a full PDF (jsPDF's output isn't practically assertable in a unit test). */
-export function pdfLabelsFor(language: string): PdfLabels {
-  return PDF_LABELS[language] ?? PDF_LABELS.de!;
-}
-
-function pdfMonthLabel(dateStr: string, labels: PdfLabels): string {
-  return new Date(`${dateStr}T00:00:00`).toLocaleDateString(labels.locale, { month: 'long', year: 'numeric' });
-}
-
-/** Server-side port of app/src/features/public-calendar/api.ts's downloadPublicWorkingplanPdf, so /arbeitsplan.pdf can be a stable, linkable URL instead of a client-side-only blob download. */
-function buildWorkingplanPdf(rows: PublicEventRow[], language: string): Buffer {
-  const labels = pdfLabelsFor(language);
-  const doc = new jsPDF({ orientation: 'portrait', format: 'a4' });
-  let lastMonth = '';
-  let lastDate = '';
-  const body: string[][] = [];
-  for (const row of rows) {
-    const month = pdfMonthLabel(row.date, labels);
-    if (month !== lastMonth) {
-      body.push([`— ${month} —`, '', '', '']);
-      lastMonth = month;
-      lastDate = '';
-    }
-    const weekday = new Date(`${row.date}T00:00:00`).toLocaleDateString(labels.locale, { weekday: 'long' });
-    const dateCell = row.date === lastDate ? '' : new Date(`${row.date}T00:00:00`).toLocaleDateString(labels.locale);
-    lastDate = row.date;
-    const timeCell = row.whole_day ? labels.allDay : (row.time ?? '');
-    body.push([weekday, dateCell, timeCell, row.public_description ?? '']);
-  }
-  autoTable(doc, {
-    head: [[labels.weekday, labels.date, labels.time, labels.description]],
-    body,
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.5 },
-    alternateRowStyles: { fillColor: [221, 221, 221] },
-  });
-  return Buffer.from(doc.output('arraybuffer'));
-}
-
 // GET /api/v1/public/workingplan.pdf
 router.get('/workingplan.pdf', async (_req, res, next) => {
   try {
@@ -610,9 +555,25 @@ router.get('/workingplan.pdf', async (_req, res, next) => {
     const to = addDaysUtc(from, days);
 
     const events = await visiblePublicEvents(from, to);
-    const rows = events.map(publicEventJson);
+    const rows: PdfEventRow[] = events.map(publicEventJson).map((row) => ({
+      date: row.date,
+      time: row.time,
+      whole_day: row.whole_day,
+      description: row.public_description,
+    }));
     const language = (await getConfigString('language')) ?? 'de';
-    const pdf = buildWorkingplanPdf(rows, language);
+    // NOTE (Task 6, pure-relocation shim): the public route's own
+    // footer/officer wiring (resolveFooterLines) is Task 7's job, not this
+    // one - this call intentionally passes an empty footer for now so the
+    // route keeps compiling and returning a valid PDF. logo/lodgeName reuse
+    // the same sources the rest of this file already uses for the exact
+    // same purpose (currentLogoSource/AppConfig `lodge`), so the header is
+    // real, not a placeholder.
+    const pdf = buildWorkingplanPdf(rows, language, {
+      logo: await currentLogoSource(),
+      lodgeName: (await getConfigString('lodge')) ?? 'Logenhelfer',
+      footerLines: [],
+    });
 
     res.status(200).type('application/pdf').send(pdf);
   } catch (err) {

@@ -573,24 +573,8 @@ describe('GET /api/v1/public/workingplan.pdf', () => {
   });
 });
 
-// -- pdfLabelsFor (pure label-selection logic, not exercised via the PDF route since jsPDF's binary output isn't practically assertable) --
-
-describe('pdfLabelsFor', () => {
-  it('returns German labels for "de"', async () => {
-    const { pdfLabelsFor } = await import('../../src/routes/public.js');
-    expect(pdfLabelsFor('de')).toMatchObject({ weekday: 'Wochentag', allDay: 'ganztags' });
-  });
-
-  it('returns English labels for "en"', async () => {
-    const { pdfLabelsFor } = await import('../../src/routes/public.js');
-    expect(pdfLabelsFor('en')).toMatchObject({ weekday: 'Weekday', allDay: 'all day' });
-  });
-
-  it('falls back to German labels for an unrecognized language', async () => {
-    const { pdfLabelsFor } = await import('../../src/routes/public.js');
-    expect(pdfLabelsFor('fr')).toMatchObject({ weekday: 'Wochentag' });
-  });
-});
+// pdfLabelsFor/buildWorkingplanPdf moved to ../../src/lib/workingplanPdf.ts
+// (Task 6) - their unit coverage moved with them, to test/lib/workingplanPdf.test.ts.
 
 // -- GET /api/v1/public/demo-accounts ---------------------------------------
 
