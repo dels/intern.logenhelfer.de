@@ -12,7 +12,7 @@ import { getConfigString, getBoolean, getTimespanDays } from '../lib/appConfig.j
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
 import { redisConfigured } from '../lib/mailQueue.js';
 import { deriveLogoVariants, type LogoVariants } from '../lib/logoVariants.js';
-import { buildWorkingplanPdf, type PdfEventRow } from '../lib/workingplanPdf.js';
+import { buildWorkingplanPdf, resolveFooterLines, type PdfEventRow } from '../lib/workingplanPdf.js';
 import { statusRateLimiter } from '../middleware/rateLimit.js';
 
 /**
@@ -562,17 +562,14 @@ router.get('/workingplan.pdf', async (_req, res, next) => {
       description: row.public_description,
     }));
     const language = (await getConfigString('language')) ?? 'de';
-    // NOTE (Task 6, pure-relocation shim): the public route's own
-    // footer/officer wiring (resolveFooterLines) is Task 7's job, not this
-    // one - this call intentionally passes an empty footer for now so the
-    // route keeps compiling and returning a valid PDF. logo/lodgeName reuse
-    // the same sources the rest of this file already uses for the exact
-    // same purpose (currentLogoSource/AppConfig `lodge`), so the header is
-    // real, not a placeholder.
+    // logo/lodgeName/footerLines all reuse the same sources the rest of this
+    // file (currentLogoSource/AppConfig `lodge`) and workingplanPdf.ts's own
+    // resolveFooterLines already use for the exact same purpose elsewhere -
+    // no birthdayRows here, the public PDF has never had a birthdays page.
     const pdf = buildWorkingplanPdf(rows, language, {
       logo: await currentLogoSource(),
       lodgeName: (await getConfigString('lodge')) ?? 'Logenhelfer',
-      footerLines: [],
+      footerLines: await resolveFooterLines('public'),
     });
 
     res.status(200).type('application/pdf').send(pdf);
