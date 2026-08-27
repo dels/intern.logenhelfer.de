@@ -493,6 +493,12 @@ model user_roles {
 model users {
   id                        Int       @id @default(autoincrement())
   email                     String    @unique(map: "index_users_on_email") @default("") @db.VarChar(255)
+  // Derived, address-backed field kept in sync by `syncUserMobile`
+  // (api/src/lib/userMobile.ts) on every address create/update/delete for
+  // this user - see that module's doc comment for the full priority rule.
+  // Nullable, no DEFAULT: unlike birthday_calendar_token there is no
+  // "every row needs one" invariant here - NULL is a valid final answer.
+  mobile                    String?   @db.VarChar(255)
   encrypted_password        String    @default("") @db.VarChar(255)
   reset_password_token      String?   @unique(map: "index_users_on_reset_password_token") @db.VarChar(255)
   reset_password_sent_at    DateTime? @db.Timestamp(6)

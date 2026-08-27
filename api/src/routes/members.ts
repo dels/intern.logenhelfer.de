@@ -19,6 +19,7 @@ import { getUsersWithVerifiedMfa, userHasVerifiedMfa } from '../lib/mfaStatus.js
 import { buildListResponse, parsePageParams } from '../lib/pagination.js';
 import { prisma } from '../db.js';
 import { generateUniqueUuid } from '../lib/uuid.js';
+import { syncUserMobile } from '../lib/userMobile.js';
 
 /**
  * Port of rails-app/app/controllers/api/v1/members_controller.rb - the
@@ -90,6 +91,7 @@ const ADMIN_FIELDS = [
   'date_of_birth',
   'matriculation_number',
   'job_title',
+  'mobile',
   'entered_apprentice_since',
   'fellow_craft_since',
   'master_mason_since',
@@ -102,8 +104,12 @@ const ADMIN_FIELDS = [
 // account editing (a caller updating their own record via
 // `PATCH /api/v1/members/:uuid`) - this is a product change on top of the
 // Rails port, not part of the ADMIN_FIELDS/LIMITED_FIELDS fidelity split
-// documented above.
-const LIMITED_FIELDS = ['job_title', 'addresses', 'email'] as const;
+// documented above. `mobile` (Task 3, users.mobile) follows the exact same
+// self-service-plus-admin pattern as `job_title`/`email` - a plain,
+// directly-settable string-or-null scalar, present in both lists. Note it's
+// also silently overwritten by `syncUserMobile` on the next address write
+// for this user - see that function's own doc comment.
+const LIMITED_FIELDS = ['job_title', 'mobile', 'addresses', 'email'] as const;
 
 const DEGREE_ROLE_NAMES = ['EnteredApprentice', 'FellowCraft', 'MasterMason'] as const;
 
@@ -457,12 +463,6 @@ function faxNumbersPrintable(addresses: AddressRow[]): string {
     .map((a) => `${addressPurpose(a)}:\n${a.fax}`)
     .join('\n');
 }
-function mobileNumbersPrintable(addresses: AddressRow[]): string {
-  return addresses
-    .filter((a) => isPresent(a.mobile))
-    .map((a) => `${addressPurpose(a)}:\n${a.mobile}`)
-    .join('\n');
-}
 
 // --- member JSON builders ---------------------------------------------------
 
@@ -500,26 +500,17 @@ interface MemberListRowJson extends MemberSummaryJson {
 }
 
 /**
- * Port of the members-list page's "Mobile" column: there is no `mobile`
- * field on `users` itself (only on `addresses`), so this derives it from
- * the same per-user address ordering `loadAddressesForUser`/
- * `loadAddressesForUsers` already use (`orderBy: { id: 'asc' }`) - first
- * address's mobile if non-empty, else second's, else blank. Only the first
- * two addresses are considered, matching the spec ("first... else
- * second... else blank"), not a scan of every address.
+ * List-row JSON for `GET /api/v1/members` - MemberSummary plus the
+ * `users.mobile` column value (Task 3: `mobile` is now a real, sync-on-write
+ * column on `users` itself - see `syncUserMobile` in `lib/userMobile.ts` -
+ * no longer derived ad hoc from the first two addresses here). `?? ''`
+ * matches this field's existing non-nullable `string` contract
+ * (`MemberSummary.mobile` in openapi.yaml).
  */
-function firstMobile(addresses: AddressRow[]): string {
-  for (const address of addresses.slice(0, 2)) {
-    if (isPresent(address.mobile)) return address.mobile as string;
-  }
-  return '';
-}
-
-/** List-row JSON for `GET /api/v1/members` - MemberSummary plus the derived `mobile` column value. */
-function memberListRowJson(user: UserRow, ctx: VisibilityContext, roleRows: RoleRow[], addresses: AddressRow[], mfaEnabled: boolean): MemberListRowJson {
+function memberListRowJson(user: UserRow, ctx: VisibilityContext, roleRows: RoleRow[], mfaEnabled: boolean): MemberListRowJson {
   return {
     ...memberSummaryJson(user, ctx, roleRows, mfaEnabled),
-    mobile: firstMobile(addresses),
+    mobile: user.mobile ?? '',
   };
 }
 
@@ -546,6 +537,7 @@ async function memberDetailJson(
 
   return {
     ...memberSummaryJson(user, ctx, roleRows, mfaEnabled),
+    mobile: user.mobile,
     date_of_birth: user.date_of_birth ? formatDateOnly(user.date_of_birth) : null,
     entered_apprentice_since: eas ? formatDateOnly(eas) : null,
     fellow_craft_since: fcs ? formatDateOnly(fcs) : null,
@@ -564,6 +556,7 @@ async function memberDetailJson(
   };
 }
 
+/** `mobile` reads `users.mobile` directly (Task 3) - `phone`/`fax` stay address-derived/multi-address-printable, unaffected by this feature. */
 function phoneListRowJson(user: UserRow, addresses: AddressRow[]): { uuid: string | null; lastname: string | null; firstname: string | null; phone: string; fax: string; mobile: string } {
   return {
     uuid: user.uuid,
@@ -571,7 +564,7 @@ function phoneListRowJson(user: UserRow, addresses: AddressRow[]): { uuid: strin
     firstname: user.firstname,
     phone: phoneNumbersPrintable(addresses),
     fax: faxNumbersPrintable(addresses),
-    mobile: mobileNumbersPrintable(addresses),
+    mobile: user.mobile ?? '',
   };
 }
 
@@ -712,6 +705,74 @@ function birthdaySortComparator(sortParam: unknown): (a: BirthdaySortKey, b: Bir
     else cmp = String(av) < String(bv) ? -1 : String(av) > String(bv) ? 1 : 0;
     return desc ? -cmp : cmp;
   };
+}
+
+export interface WorkingplanBirthdayRow {
+  lastname: string | null;
+  firstname: string | null;
+  date_of_birth: string | null;
+  age: number | null;
+}
+
+/**
+ * All-non-deleted-members birthday query, with the exact same class-level
+ * ability gate (`canMembersListClass`) and per-row visibility filter
+ * (`canListRow(ctx, 'birthday_list', ...)`) that backs
+ * `GET /api/v1/members/birthday_list` above - exported so
+ * `GET /api/v1/events/workingplan.pdf` (`routes/events.ts`) can build its
+ * birthdays page from the identical authorized dataset instead of a second,
+ * potentially-drifting copy of `canOn`/`reachesDefaultUserAbilities`/
+ * `reachesUserAdminAbilities`/`showAdminsConfig`/`canListRow` (none of which
+ * are otherwise exported - deliberately, per this file's own top-of-file
+ * comment on why that visibility logic lives only here). Returns `[]` for a
+ * caller lacking `canMembersListClass` rather than throwing, mirroring
+ * `birthday_list`'s own 403-at-the-route-boundary shape - the class check is
+ * folded in here so no future caller of this function can skip it by
+ * accident. (Today this is implied by `internal_workingplan` - only granted
+ * in `defaultUserAbilities`, which also satisfies `reachesDefaultUserAbilities`
+ * - so this guard is currently always true for a caller who already passed
+ * `events.ts`'s own `internal_workingplan` gate; kept explicit anyway so this
+ * function stays correct on its own if that ever changes.)
+ *
+ * Sorted the same way `birthday_list`'s own default sort
+ * (`DEFAULT_BIRTHDAY_SORT = 'date_of_birth'`) orders it - soonest-upcoming-
+ * birthday-first via `daysUntilNextBirthday`, nulls last - since that's the
+ * order the client's now-replaced `fetchAllBirthdayListRows()` (no `sort`
+ * param) always received, and the internal PDF's birthdays page should keep
+ * looking the same.
+ */
+export async function loadVisibleBirthdaysForWorkingplan(
+  ability: AppAbility,
+  currentUserId: number,
+  today: Date = new Date(),
+): Promise<WorkingplanBirthdayRow[]> {
+  if (!canMembersListClass(ability)) return [];
+
+  const callerRoleNames = await loadUserRoleNames(currentUserId);
+  const showAdmins = await showAdminsConfig();
+  const ctx: VisibilityContext = { ability, callerRoleNames, showAdmins };
+
+  const users = await prisma.users.findMany({ where: { deleted: false } });
+  const roleRowsByUser = await loadRoleRowsForUsers(users.map((u) => u.id));
+  const visible = users.filter((u) => canListRow(ctx, 'birthday_list', u, roleNamesOf(roleRowsByUser.get(u.id) ?? [])));
+
+  const withSortKey = visible.map((u) => ({
+    row: {
+      lastname: u.lastname,
+      firstname: u.firstname,
+      date_of_birth: u.date_of_birth ? formatDateOnly(u.date_of_birth) : null,
+      age: computeAge(u.date_of_birth, today),
+    },
+    sortKey: u.date_of_birth ? daysUntilNextBirthday(u.date_of_birth, today) : null,
+  }));
+
+  withSortKey.sort((a, b) => {
+    if (a.sortKey === null) return b.sortKey === null ? 0 : 1;
+    if (b.sortKey === null) return -1;
+    return a.sortKey - b.sortKey;
+  });
+
+  return withSortKey.map((entry) => entry.row);
 }
 
 function fullname(user: Pick<UserRow, 'firstname' | 'lastname'>): string {
@@ -967,6 +1028,15 @@ async function applyAddresses(
   if (remaining.filter((a) => a.type_of_address === ADDRESS_TYPE_BUSINESS).length > 1) {
     errors.push(MSG_MAX_BUSINESS_ADDRESSES);
   }
+
+  // ponytail: users.mobile is address-derived and gets overwritten on every
+  // address save - a direct edit to the base mobile field survives until
+  // the next address write touches this user, then loses. Accepted
+  // trade-off, not a bug. Runs even when the block above just pushed a
+  // validation error - the whole transaction (including this write) is
+  // rolled back by the caller in that case, same as every other write in
+  // this function.
+  await syncUserMobile(tx, userId);
 }
 
 /**
@@ -1142,7 +1212,9 @@ router.get('/members_of_council', async (req: Request, res: Response, next: Next
           holder_uuid: holder.uuid ?? '',
           holder_fullname: fullname(holder),
           holder_phone: phoneNumbersPrintable(addresses),
-          holder_mobile: mobileNumbersPrintable(addresses),
+          // `users.mobile` directly (Task 3) - unlike holder_phone, no
+          // longer a multi-address printable string.
+          holder_mobile: holder.mobile ?? '',
         });
       }
     }
@@ -1355,18 +1427,19 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const { page, perPage } = parsePageParams(req.query as Record<string, unknown>);
     const paged = visible.slice(page * perPage, page * perPage + perPage);
 
-    // Only the paged slice's addresses/MFA status are needed here - this is
-    // for response display (the "Mobile"/mfa_enabled columns), a separate
-    // concern from the full-candidate-set load above needed for the search
-    // filter itself. Batched (one query per credential table for the whole
-    // page), not per-row, to avoid an N+1.
-    const addressesByUser = await loadAddressesForUsers(paged.map((u) => u.id));
+    // Only the paged slice's MFA status is needed here - this is for
+    // response display (the mfa_enabled column), a separate concern from
+    // the full-candidate-set load above needed for the search filter
+    // itself. Batched (one query for the whole page), not per-row, to avoid
+    // an N+1. (Addresses no longer need a separate batched load here for
+    // display purposes - "Mobile" now reads `users.mobile` directly, see
+    // memberListRowJson.)
     const mfaEnabledIds = await getUsersWithVerifiedMfa(paged.map((u) => u.id));
 
     res
       .status(200)
       .json(buildListResponse(
-        paged.map((u) => memberListRowJson(u, ctx, roleRowsByUser.get(u.id) ?? [], addressesByUser.get(u.id) ?? [], mfaEnabledIds.has(u.id))),
+        paged.map((u) => memberListRowJson(u, ctx, roleRowsByUser.get(u.id) ?? [], mfaEnabledIds.has(u.id))),
         visible.length,
       ));
   } catch (err) {
@@ -1424,6 +1497,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
           date_of_birth: parseDateOnly(scalarUpdates.date_of_birth),
           matriculation_number: matriculationNumber,
           job_title: (scalarUpdates.job_title as string | null | undefined) ?? null,
+          mobile: (scalarUpdates.mobile as string | null | undefined) ?? null,
           mother_lodge: (scalarUpdates.mother_lodge as string | null | undefined) ?? null,
           accepted_at: isPresent(scalarUpdates.accepted_at) ? parseDateOnly(scalarUpdates.accepted_at) : null,
           encrypted_password: encryptedPassword,
@@ -1439,6 +1513,12 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
         if (addrErrors.length > 0) {
           throw new RollbackError(addrErrors);
         }
+        // applyAddresses just ran syncUserMobile, which may have overwritten
+        // the direct `mobile` scalar just written above (accepted, by-design
+        // clobber - see syncUserMobile's own comment) - re-read so the
+        // response reflects the actual post-sync value, not the stale
+        // in-memory `user` from before the address write.
+        return tx.users.findUniqueOrThrow({ where: { id: user.id } });
       }
 
       return user;
@@ -1658,6 +1738,19 @@ router.patch('/:uuid', async (req: Request, res: Response, next: NextFunction) =
         if (Object.keys(data).length > 0) {
           data.updated_at = new Date();
           await tx.users.update({ where: { id: target.id }, data });
+        }
+
+        if (addressInputs.length > 0 && editableFields.includes('addresses')) {
+          // applyAddresses above already ran syncUserMobile once, before
+          // this transaction's own scalar `data` write - if that write
+          // included a direct `mobile` edit (same request as an address
+          // save), it would otherwise be the last word instead of the
+          // address-derived value. Re-sync here so an address write always
+          // has the last word regardless of what else the same request
+          // touched, matching the create handler's precedent above and
+          // this feature's accepted design (see syncUserMobile's own
+          // comment).
+          await syncUserMobile(tx, target.id);
         }
       });
     } catch (err) {

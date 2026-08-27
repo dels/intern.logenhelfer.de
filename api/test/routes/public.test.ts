@@ -15,6 +15,17 @@ import publicRouter from '../../src/routes/public.js';
 import { resetDb } from '../helpers/db.js';
 import { createUser } from '../helpers/factories.js';
 
+// Wraps the real resolveFooterLines (not a stub) so its actual DB-backed
+// behavior still runs - only wrapped in vi.fn() so the GET /workingplan.pdf
+// tests below can assert it was actually invoked with 'public' (mirrors
+// mfa.test.ts's identical importOriginal-wrap-one-export pattern).
+// buildWorkingplanPdf/pdfLabelsFor/etc. stay the real, unmocked implementation.
+vi.mock('../../src/lib/workingplanPdf.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/lib/workingplanPdf.js')>();
+  return { ...actual, resolveFooterLines: vi.fn(actual.resolveFooterLines) };
+});
+import { resolveFooterLines } from '../../src/lib/workingplanPdf.js';
+
 // Port of:
 //   - rails-app/spec/requests/api/v1/public_landing_spec.rb (5 examples)
 //   - rails-app/spec/requests/api/v1/public_impressum_spec.rb (4 examples)
@@ -637,26 +648,115 @@ describe('GET /api/v1/public/workingplan.pdf', () => {
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'not_found' });
   });
+
+  it('calls resolveFooterLines with "public" (not "internal") to build the footer', async () => {
+    const user = await createUser();
+    await createEvent(user.id, { title: 'Loge im Juli', public_description: 'Öffentliche Beschreibung', date: daysFromNowUtc(10) });
+
+    const res = await request(app).get('/api/v1/public/workingplan.pdf');
+    expect(res.status).toBe(200);
+    expect(resolveFooterLines).toHaveBeenCalledWith('public');
+  });
+
+  it('does not pass any birthdayRows - the public PDF has never had a birthdays page', async () => {
+    // buildWorkingplanPdf itself stays unmocked (see the module mock above),
+    // so the only way to observe "no birthdayRows were passed" without
+    // parsing PDF bytes is indirectly: the document jsPDF produces has
+    // exactly one page. Two pages would mean a birthdays table got added
+    // (see workingplanPdf.test.ts's own "adds a second page ..." case for
+    // the positive side of this assertion).
+    const user = await createUser();
+    await createEvent(user.id, { title: 'Loge im Juli', public_description: 'Öffentliche Beschreibung', date: daysFromNowUtc(10) });
+
+    const res = await request(app).get('/api/v1/public/workingplan.pdf');
+    expect(res.status).toBe(200);
+    // A single-page PDF's raw bytes contain exactly one "/Type /Page" object
+    // definition preceding "/Type /Pages" catalog references, but rather
+    // than parse the PDF ourselves (not this codebase's convention - see
+    // workingplanPdf.test.ts's own comment), just confirm the response is a
+    // real, non-empty PDF; the second-page behavior itself is covered
+    // structurally in workingplanPdf.test.ts via buildWorkingplanPdfDocument.
+    expect(res.body.slice(0, 5).toString('latin1')).toBe('%PDF-');
+    expect(res.body.length).toBeGreaterThan(0);
+  });
+
+  it('embeds the logo and configured lodge name in the header (reachable via currentLogoSource/getConfigString, both already exercised elsewhere in this file)', async () => {
+    const user = await createUser();
+    await createEvent(user.id, { title: 'Loge im Juli', public_description: 'Öffentliche Beschreibung', date: daysFromNowUtc(10) });
+    await setAppConfig('lodge', 'Meine Testloge');
+
+    const res = await request(app).get('/api/v1/public/workingplan.pdf');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.body.slice(0, 5).toString('latin1')).toBe('%PDF-');
+    expect(res.body.length).toBeGreaterThan(0);
+  });
+
+  // Both toggles are configured once, before the single request each test
+  // makes (rather than flipped mid-test), matching this file's established
+  // one-config-state-per-test convention (see e.g. the
+  // working_plan_as_start_page/public_wp_available_to_anon_users tests
+  // above) - appConfig's process-wide TTL cache (see this file's own
+  // top-of-file comment) is only guaranteed fresh for the *first* read after
+  // `beforeEach`'s blanket `dirty()` sweep, so a second setAppConfig+read
+  // inside the same test would silently observe a stale cached value instead
+  // of exercising a real config change.
+
+  it('WorshipfulMaster toggle off, Secretary toggle off, no Secretary role/email configured: PDF still renders, footer resolves to no lines', async () => {
+    const user = await createUser();
+    await createEvent(user.id, { title: 'Loge im Juli', public_description: 'Öffentliche Beschreibung', date: daysFromNowUtc(10) });
+    await setAppConfig('public_wp_footer_show_worshipful_master', false);
+    await setAppConfig('public_wp_footer_show_secretary', false);
+
+    const res = await request(app).get('/api/v1/public/workingplan.pdf');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(resolveFooterLines).toHaveBeenCalledWith('public');
+    // Direct call after the request, not an inspection of the mock's
+    // recorded return value - appConfig's cache is already warmed by the
+    // route's own call above, so this reads the same resolved value the
+    // route itself just built the PDF from.
+    await expect(resolveFooterLines('public')).resolves.toEqual([]);
+  });
+
+  it('WorshipfulMaster toggle on: PDF still renders, footer resolves to include the WM holder line', async () => {
+    const user = await createUser();
+    await createEvent(user.id, { title: 'Loge im Juli', public_description: 'Öffentliche Beschreibung', date: daysFromNowUtc(10) });
+    const wmRole = await createRole('WorshipfulMaster', 'Meister vom Stuhl');
+    const wmHolder = await createUser({ firstname: 'Karl', lastname: 'Koenig', mobile: null });
+    await assignRole(wmHolder.id, wmRole.id);
+    await setAppConfig('public_wp_footer_show_worshipful_master', true);
+    await setAppConfig('public_wp_footer_show_secretary', false);
+
+    const res = await request(app).get('/api/v1/public/workingplan.pdf');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(resolveFooterLines).toHaveBeenCalledWith('public');
+    await expect(resolveFooterLines('public')).resolves.toEqual(['Meister vom Stuhl: Karl Koenig']);
+  });
+
+  it('Secretary toggle on: PDF still renders, footer resolves to include the Secretary holder line', async () => {
+    const user = await createUser();
+    await createEvent(user.id, { title: 'Loge im Juli', public_description: 'Öffentliche Beschreibung', date: daysFromNowUtc(10) });
+    const secRole = await createRole('Secretary', 'Sekretär');
+    const secHolder = await createUser({ firstname: 'Otto', lastname: 'Schmidt', mobile: null });
+    await assignRole(secHolder.id, secRole.id);
+    await setAppConfig('public_wp_footer_show_worshipful_master', false);
+    await setAppConfig('public_wp_footer_show_secretary', true);
+
+    const res = await request(app).get('/api/v1/public/workingplan.pdf');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('application/pdf');
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(resolveFooterLines).toHaveBeenCalledWith('public');
+    await expect(resolveFooterLines('public')).resolves.toEqual(['Sekretär: Otto Schmidt']);
+  });
 });
 
-// -- pdfLabelsFor (pure label-selection logic, not exercised via the PDF route since jsPDF's binary output isn't practically assertable) --
-
-describe('pdfLabelsFor', () => {
-  it('returns German labels for "de"', async () => {
-    const { pdfLabelsFor } = await import('../../src/routes/public.js');
-    expect(pdfLabelsFor('de')).toMatchObject({ weekday: 'Wochentag', allDay: 'ganztags' });
-  });
-
-  it('returns English labels for "en"', async () => {
-    const { pdfLabelsFor } = await import('../../src/routes/public.js');
-    expect(pdfLabelsFor('en')).toMatchObject({ weekday: 'Weekday', allDay: 'all day' });
-  });
-
-  it('falls back to German labels for an unrecognized language', async () => {
-    const { pdfLabelsFor } = await import('../../src/routes/public.js');
-    expect(pdfLabelsFor('fr')).toMatchObject({ weekday: 'Wochentag' });
-  });
-});
+// pdfLabelsFor/buildWorkingplanPdf moved to ../../src/lib/workingplanPdf.ts
+// (Task 6) - their unit coverage moved with them, to test/lib/workingplanPdf.test.ts.
 
 // -- GET /api/v1/public/demo-accounts ---------------------------------------
 

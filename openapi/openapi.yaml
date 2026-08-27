@@ -743,6 +743,20 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/events/workingplan.pdf:
+    get:
+      operationId: getInternalWorkingplanPdf
+      summary: PDF export of upcoming events (private_description) plus a birthdays page, for authenticated members with the internal_workingplan ability
+      responses:
+        '200':
+          description: PDF export of the internal working plan
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/events/defaults:
     get:
       operationId: getEventDefaults
@@ -3418,10 +3432,11 @@ components:
         lastname: { type: string, nullable: true }
         matriculation_number: { type: integer, nullable: true }
         job_title: { type: string, nullable: true }
-        # Derived, not a column on `users` - the first non-empty `mobile`
-        # value from the member's addresses (ordered by id asc), falling
-        # back to the second address, else "". See memberListRowJson/
-        # firstMobile in members.ts.
+        # Mirrors the `users.mobile` column (kept in sync on every address
+        # create/update/delete for this member by `syncUserMobile` - see
+        # lib/userMobile.ts), coalesced to "" for this field's existing
+        # non-nullable `string` contract. See memberListRowJson in
+        # members.ts.
         mobile: { type: string }
         can_edit: { type: boolean }
         can_destroy: { type: boolean }
@@ -3443,6 +3458,7 @@ components:
         - lastname
         - matriculation_number
         - job_title
+        - mobile
         - date_of_birth
         - created_at
         - updated_at
@@ -3463,6 +3479,13 @@ components:
         lastname: { type: string, nullable: true }
         matriculation_number: { type: integer, nullable: true }
         job_title: { type: string, nullable: true }
+        # `users.mobile` directly (Task 3) - a real, directly-settable
+        # base-data scalar (see MemberInput below), also silently
+        # overwritten on every address write for this member by
+        # `syncUserMobile` (lib/userMobile.ts). Unlike MemberSummary.mobile
+        # above, nullable here (no "" coalescing) since this is the raw
+        # column value.
+        mobile: { type: string, nullable: true }
         date_of_birth: { type: string, format: date, nullable: true }
         entered_apprentice_since: { type: string, format: date, nullable: true }
         fellow_craft_since: { type: string, format: date, nullable: true }
@@ -3781,6 +3804,12 @@ components:
         date_of_birth: { type: string, format: date }
         matriculation_number: { type: integer }
         job_title: { type: string, nullable: true }
+        # Top-level, directly-settable base-data scalar (Task 3) - a sibling
+        # of `job_title`, NOT part of the nested `addresses` array schema
+        # below (`MemberAddressInput.mobile` is a distinct, per-address
+        # field). Gets silently overwritten by `syncUserMobile` on the next
+        # address write for this member - see that function's own comment.
+        mobile: { type: string, nullable: true }
         entered_apprentice_since: { type: string, format: date, nullable: true }
         fellow_craft_since: { type: string, format: date, nullable: true }
         master_mason_since: { type: string, format: date, nullable: true }
@@ -4261,6 +4290,10 @@ components:
         max_db_mem_size: { type: string, nullable: true }
         max_upload_file_size: { type: string, nullable: true }
         workingplan_footer: { type: string, nullable: true }
+        public_wp_footer_show_secretary: { type: boolean, nullable: true }
+        public_wp_footer_show_worshipful_master: { type: boolean, nullable: true }
+        internal_wp_footer_show_secretary: { type: boolean, nullable: true }
+        internal_wp_footer_show_worshipful_master: { type: boolean, nullable: true }
         impressum: { type: string, nullable: true }
         datenschutz: { type: string, nullable: true }
         help: { type: string, nullable: true }

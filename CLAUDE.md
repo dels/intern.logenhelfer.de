@@ -500,10 +500,38 @@ Key facts to hold onto while working on or around this mechanism:
   api's `/api/v1/public/workingplan.ics` / `.pdf` routes, so
   `https://<domain>/arbeitsplan.ics` and `.pdf` are shareable/bookmarkable
   without exposing the API's own route shape. `workingplan.pdf` is generated
-  server-side (`api/src/routes/public.ts`'s `buildWorkingplanPdf`, a port of
-  the frontend's former client-side `jsPDF`/`jspdf-autotable` generator,
-  which was removed once the server-side route existed) — gated by the same
+  server-side (`api/src/lib/workingplanPdf.ts`'s `buildWorkingplanPdf` —
+  relocated here from `api/src/routes/public.ts`, its original home, so the
+  authenticated `GET /api/v1/events/workingplan.pdf` route in
+  `api/src/routes/events.ts` could reuse the same builder instead of a
+  second copy; originally a port of the frontend's former client-side
+  `jsPDF`/`jspdf-autotable` generator, which was removed once the
+  server-side route existed) — this public route is gated by the same
   `public_wp_available_to_anon_users` AppConfig flag as the `.ics` route.
+  The authenticated route has no nginx alias of its own (it's a normal
+  `/api/v1/*` endpoint, downloaded via the app's existing authenticated
+  blob-download helper, not a bookmarkable top-level URL like the two
+  above) and is gated instead by `req.ability.can('internal_workingplan',
+  'Event')` (not by the `public_wp_available_to_anon_users` flag above,
+  which only applies to the public route) — it additionally renders a
+  birthdays page and an officer-name/mobile footer (`resolveFooterLines`,
+  same module, whose own doc comment names the four
+  `<pdfType>_wp_footer_show_secretary`/`_worshipful_master` AppConfig keys
+  governing it).
+- **A new AppConfig key needs a *fifth* place, beyond the four already
+  called out for this repo's schema/route wiring (see e.g. this file's own
+  MFA/status-endpoint sections for that four-place pattern):
+  `app/src/i18n/de.json`/`en.json` need matching
+  `configuration.options.<key>.name`/`.description` entries whenever the
+  key gets a `fields.ts` `FIELDS` entry.** `ConfigField`'s `label = t(...)`
+  call (`app/src/features/configuration/ConfigurationPage.tsx`) has no
+  `defaultValue`, so a missing translation doesn't fail loudly or fall back
+  to something readable — it silently renders the raw i18n key path itself
+  (e.g. `configuration.options.some_new_key.name`) as the switch/field's
+  visible label and accessible name. Found live via the four
+  `*_wp_footer_show_*` keys, which had `fields.ts` entries but no matching
+  translations until a `ConfigurationPage.test.tsx` regression test (using
+  the real, non-mocked i18n module, not a stub) caught it.
 
 ## Styled error pages
 

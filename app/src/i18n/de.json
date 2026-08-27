@@ -217,6 +217,7 @@
     "phone": "Telefon",
     "fax": "Fax",
     "mobile": "Mobil",
+    "mobileInfo": "Diese Nummer wird normalerweise automatisch aus der Mobilnummer der privaten (oder geschäftlichen oder einer anderen) Adresse übernommen. Eine manuelle Änderung hier wird überschrieben, sobald eine Adresse hinzugefügt, geändert oder entfernt wird.",
     "brotherName": "Br. {{firstname}} {{lastname}}",
     "motherLodge": "Mutterloge",
     "acceptedAt": "Angenommen am",
@@ -491,6 +492,22 @@
       "workingplan_footer": {
         "name": "Footer Arbeitsplan",
         "description": "Der hier angegebene Text wird als Footer unter den Arbeitsplan geschrieben."
+      },
+      "public_wp_footer_show_secretary": {
+        "name": "Sekretär im Footer des öffentlichen Arbeitsplans anzeigen",
+        "description": "Zeigt Name und Mobilnummer des Sekretärs im Footer des öffentlichen (nicht angemeldeten) Arbeitsplan-PDFs an. Sind beide Schalter für den öffentlichen Footer ausgeschaltet, wird stattdessen die hinterlegte E-Mail-Adresse der Sekretär-Rolle angezeigt, sofern vorhanden."
+      },
+      "public_wp_footer_show_worshipful_master": {
+        "name": "Meister vom Stuhl im Footer des öffentlichen Arbeitsplans anzeigen",
+        "description": "Zeigt Name und Mobilnummer des Meisters vom Stuhl im Footer des öffentlichen (nicht angemeldeten) Arbeitsplan-PDFs an."
+      },
+      "internal_wp_footer_show_secretary": {
+        "name": "Sekretär im Footer des internen Arbeitsplans anzeigen",
+        "description": "Zeigt Name und Mobilnummer des Sekretärs im Footer des internen (angemeldeten) Arbeitsplan-PDFs an. Sind beide Schalter für den internen Footer ausgeschaltet, wird stattdessen die hinterlegte E-Mail-Adresse der Sekretär-Rolle angezeigt, sofern vorhanden."
+      },
+      "internal_wp_footer_show_worshipful_master": {
+        "name": "Meister vom Stuhl im Footer des internen Arbeitsplans anzeigen",
+        "description": "Zeigt Name und Mobilnummer des Meisters vom Stuhl im Footer des internen (angemeldeten) Arbeitsplan-PDFs an."
       },
       "impressum": {
         "name": "Impressums-Text",

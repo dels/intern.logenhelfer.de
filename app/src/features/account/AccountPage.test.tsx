@@ -211,4 +211,79 @@ describe('AccountPage', () => {
 
     await waitFor(() => expect(toggle).toBeChecked());
   });
+
+  it('a second profile save in the same session, after an earlier address edit, still omits the untouched addresses array (regression: dirtyFields must not survive across saves within one mount)', async () => {
+    // Regression for the residual bug in the prior fix wave (c875302a):
+    // MemberForm only omits `addresses` from the PATCH payload when
+    // formState.dirtyFields.addresses is falsy, but nothing ever reset that
+    // dirty flag - it's computed against react-hook-form's mount-time
+    // defaultValues. MemberEditPage/MemberAccordionList are safe because
+    // their form unmounts after a successful save; AccountPage is the one
+    // consumer whose form stays mounted (self-service profile page), so
+    // without a remount-on-success fix, editing the address mobile field,
+    // saving, then editing the base-data mobile field and saving again
+    // (same page visit) would still resubmit `addresses` on the second
+    // save, re-triggering the backend's syncUserMobile overwrite of the
+    // second edit. See AccountPage.tsx's `formKey` bump for the fix.
+    const mobileMemberFixture = {
+      ...memberFixture,
+      editable_fields: ['job_title', 'mobile', 'addresses', 'email'],
+      mobile: '0151-1111111',
+      addresses: [
+        { id: 1, type_of_address: 0, purpose: 'Privat', street: null, zip: null, city: null, phone: null, fax: null, mobile: '0170-2222222', email: null },
+      ],
+    };
+    const patchBodies: Record<string, unknown>[] = [];
+    server.use(
+      http.get('/api/v1/members/m1', () => HttpResponse.json(mobileMemberFixture)),
+      http.patch('/api/v1/members/m1', async ({ request }) => {
+        const body = await request.json() as Record<string, unknown>;
+        patchBodies.push(body);
+        // Mirror the real backend's own last-word-wins address sync: only
+        // update what was actually present in this request's body, and
+        // persist it for the next request's GET-equivalent (setQueryData)
+        // to build on - matching how the real server would have the
+        // second save's mobile edit reach a database row whose address
+        // mobile was already updated by the first save.
+        if ('addresses' in body) mobileMemberFixture.addresses = body.addresses as typeof mobileMemberFixture.addresses;
+        if ('mobile' in body) mobileMemberFixture.mobile = body.mobile as string;
+        return HttpResponse.json({ ...mobileMemberFixture });
+      }),
+    );
+
+    const { container } = renderPage();
+    const user = userEvent.setup();
+
+    // Both the base-data email field and the address row's own email field
+    // render with the same "E-Mail" label - disambiguate by `name` (same
+    // convention MemberForm.test.tsx already uses for its own base/address
+    // mobile-field pair) rather than screen.findByLabelText, which would
+    // throw on the resulting duplicate match.
+    await waitFor(() => expect(container.querySelector('input[name="email"]')).toBeInTheDocument());
+    const addressMobileInput = container.querySelector('input[name="addresses.0.mobile"]') as HTMLInputElement;
+    expect(addressMobileInput).toBeInTheDocument();
+    await user.clear(addressMobileInput);
+    await user.type(addressMobileInput, '0170-3333333');
+
+    await user.click(screen.getAllByRole('button', { name: 'Speichern' })[0]!);
+    await waitFor(() => expect(patchBodies).toHaveLength(1));
+    expect(patchBodies[0]).toHaveProperty('addresses');
+
+    // Wait for the post-save remount: a fresh MemberForm instance whose
+    // baseline already carries the just-saved address mobile forward.
+    await waitFor(() => {
+      const input = container.querySelector('input[name="addresses.0.mobile"]') as HTMLInputElement;
+      expect(input).toHaveValue('0170-3333333');
+    });
+
+    const baseMobileInput = container.querySelector('input[name="mobile"]') as HTMLInputElement;
+    await user.clear(baseMobileInput);
+    await user.type(baseMobileInput, '0151-9999999');
+
+    await user.click(screen.getAllByRole('button', { name: 'Speichern' })[0]!);
+    await waitFor(() => expect(patchBodies).toHaveLength(2));
+
+    expect(patchBodies[1]).not.toHaveProperty('addresses');
+    expect(patchBodies[1]).toMatchObject({ mobile: '0151-9999999' });
+  });
 });

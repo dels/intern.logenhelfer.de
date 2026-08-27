@@ -80,10 +80,10 @@ app.get('/api/v1/health', (_req, res) => {
 
 // Contract validation against openapi/openapi.yaml for the whole /api/v1
 // surface, mirroring the Rails suite's pervasive assert_response_schema_confirm
-// pattern. attached_files' /download endpoint, public workingplan.pdf, and
-// public/logo return raw binary (not JSON), so they're excluded from
-// *response* validation only - requests to them are still request-validated
-// normally.
+// pattern. attached_files' /download endpoint, both the public and the
+// authenticated internal workingplan.pdf, and public/logo return raw binary
+// (not JSON), so they're excluded from *response* validation only - requests
+// to them are still request-validated normally.
 app.use(
   '/api/v1',
   createContractValidationMiddleware({
@@ -93,6 +93,7 @@ app.use(
       /\/public\/logo$/,
       /\/public\/manifest\.webmanifest$/,
       /\/public\/logo\/[^/]+$/,
+      /\/events\/workingplan\.pdf$/,
     ],
   }),
 );

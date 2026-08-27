@@ -58,6 +58,10 @@ export const KNOWN_KEYS: Record<string, ConfigType> = {
   robots_txt: 'text',
   public_workingplan_html_timespan: 'integer',
   public_workingplan_ics_timespan: 'integer',
+  public_wp_footer_show_secretary: 'boolean',
+  public_wp_footer_show_worshipful_master: 'boolean',
+  internal_wp_footer_show_secretary: 'boolean',
+  internal_wp_footer_show_worshipful_master: 'boolean',
   mfa_mode: 'string',
   mfa_enforce_for_officers: 'boolean',
   mfa_grace_period_days: 'integer',
@@ -285,6 +289,10 @@ const DEFAULT_RAW_VALUES: Partial<Record<string, string | boolean>> = {
   // the box - an admin can freely rewrite it via the Konfiguration page at
   // any time, same as impressum.
   help: HELP_DEFAULT_HTML,
+  public_wp_footer_show_secretary: false,
+  public_wp_footer_show_worshipful_master: false,
+  internal_wp_footer_show_secretary: false,
+  internal_wp_footer_show_worshipful_master: false,
 };
 
 /** Port of ActiveModel::Type::Boolean::FALSE_VALUES. */
@@ -521,3 +529,42 @@ export class AppConfigService {
 
 /** Shared singleton, analogous to Ruby's `AppConfig` module-level singleton. */
 export const appConfig = new AppConfigService();
+
+// -- Public helper functions ------------------------------------------------
+
+/**
+ * Reads an AppConfig key and coerces whatever the shared service resolves
+ * (boolean/number/string) to its string representation, mirroring Ruby's
+ * implicit `to_s` call on a `String#gsub` block's return value - the
+ * mechanism `PublicImpressumController#rendered_impressum` relies on when a
+ * template token happens to resolve to a non-string AppConfig value.
+ * `null` (an unconfigured key with no default) stays `null`.
+ */
+export async function getConfigString(key: string): Promise<string | null> {
+  const value = await appConfig.get(key);
+  return value === null ? null : String(value);
+}
+
+/**
+ * Port of `ActiveModel::Type::Boolean.new.cast(AppConfig[...])` used by both
+ * PublicLandingController and PublicWorkingplanController - the shared
+ * service already applies the ActiveModel::Type::Boolean cast for
+ * `boolean`-typed keys; `Boolean(...)` here just folds the `nil` case (no
+ * row, no default) to `false`, matching every actual call site's use of the
+ * result in a boolean context (`&&`/`unless`).
+ */
+export async function getBoolean(key: string): Promise<boolean> {
+  return Boolean(await appConfig.get(key));
+}
+
+/**
+ * Port of `AppConfig::Adapter#getter_default_workingplan_timespan` as
+ * exposed by the shared service (already parses "Nm"/"Nw"/"Nd" into a plain
+ * day count) - falls back to Ruby's `4 * 30` only in the (currently
+ * unreachable, since both timespan keys have compiled-in defaults) case
+ * where the service has nothing to resolve.
+ */
+export async function getTimespanDays(key: string): Promise<number> {
+  const value = await appConfig.get(key);
+  return typeof value === 'number' ? value : 4 * 30;
+}

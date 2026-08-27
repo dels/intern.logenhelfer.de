@@ -1,19 +1,16 @@
 import { timingSafeEqual } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import ical, { ICalEventTransparency } from 'ical-generator';
 import { Router } from 'express';
-import { jsPDF } from 'jspdf';
-import { autoTable } from 'jspdf-autotable';
 
 import { prisma, databaseConnectionDetails } from '../db.js';
 import { ApiError } from '../lib/errors.js';
-import { appConfig } from '../lib/appConfig.js';
+import { getConfigString, getBoolean, getTimespanDays } from '../lib/appConfig.js';
 import { DEMO_ACCOUNTS } from '../lib/demoSeed.js';
 import { redisConfigured } from '../lib/mailQueue.js';
+import { currentLogoSource } from '../lib/logoSource.js';
 import { deriveLogoVariants, type LogoVariants } from '../lib/logoVariants.js';
+import { buildWorkingplanPdf, resolveFooterLines, type PdfEventRow } from '../lib/workingplanPdf.js';
 import { statusRateLimiter } from '../middleware/rateLimit.js';
 
 /**
@@ -36,45 +33,6 @@ import { statusRateLimiter } from '../middleware/rateLimit.js';
  */
 
 const router = Router();
-
-// -- AppConfig helpers --------------------------------------------------
-
-/**
- * Reads an AppConfig key and coerces whatever the shared service resolves
- * (boolean/number/string) to its string representation, mirroring Ruby's
- * implicit `to_s` call on a `String#gsub` block's return value - the
- * mechanism `PublicImpressumController#rendered_impressum` relies on when a
- * template token happens to resolve to a non-string AppConfig value.
- * `null` (an unconfigured key with no default) stays `null`.
- */
-async function getConfigString(key: string): Promise<string | null> {
-  const value = await appConfig.get(key);
-  return value === null ? null : String(value);
-}
-
-/**
- * Port of `ActiveModel::Type::Boolean.new.cast(AppConfig[...])` used by both
- * PublicLandingController and PublicWorkingplanController - the shared
- * service already applies the ActiveModel::Type::Boolean cast for
- * `boolean`-typed keys; `Boolean(...)` here just folds the `nil` case (no
- * row, no default) to `false`, matching every actual call site's use of the
- * result in a boolean context (`&&`/`unless`).
- */
-async function getBoolean(key: string): Promise<boolean> {
-  return Boolean(await appConfig.get(key));
-}
-
-/**
- * Port of `AppConfig::Adapter#getter_default_workingplan_timespan` as
- * exposed by the shared service (already parses "Nm"/"Nw"/"Nd" into a plain
- * day count) - falls back to Ruby's `4 * 30` only in the (currently
- * unreachable, since both timespan keys have compiled-in defaults) case
- * where the service has nothing to resolve.
- */
-async function getTimespanDays(key: string): Promise<number> {
-  const value = await appConfig.get(key);
-  return typeof value === 'number' ? value : 4 * 30;
-}
 
 async function anonAccessEnabled(): Promise<boolean> {
   return getBoolean('public_wp_available_to_anon_users');
@@ -211,23 +169,6 @@ async function adminUserIds(userIds: number[]): Promise<Set<number>> {
 async function currentLogoVersion(): Promise<number | null> {
   const row = await prisma.custom_logos.findUnique({ where: { id: 1 }, select: { updated_at: true } });
   return row ? row.updated_at.getTime() : null;
-}
-
-const DEFAULT_LOGO_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../assets/bijou-large.png');
-
-/**
- * Derives every PWA icon variant on the fly from whichever image is
- * currently authoritative: the admin-uploaded `custom_logos` row if one
- * exists, otherwise the same bundled default crest the frontend's own
- * `<BijouLogo>` falls back to (`app/src/assets/bijou-large.png`, bundled
- * here as `api/assets/bijou-large.png` for visual consistency between the
- * in-app fallback and the installed PWA's icon) - see this route's own
- * comment for why there's no caching/storage of the derived bytes.
- */
-async function currentLogoSource(): Promise<Buffer> {
-  const row = await prisma.custom_logos.findUnique({ where: { id: 1 } });
-  if (row) return Buffer.from(row.content);
-  return readFile(DEFAULT_LOGO_PATH);
 }
 
 const LOGO_VARIANT_NAMES: Record<string, keyof LogoVariants> = {
@@ -607,60 +548,6 @@ router.get('/birthdays/:token/calendar.ics', async (req, res, next) => {
   }
 });
 
-interface PdfLabels {
-  locale: string;
-  weekday: string;
-  date: string;
-  time: string;
-  description: string;
-  allDay: string;
-}
-
-/** Static (non-user-authored) PDF chrome in both supported languages — the row content itself (title/description) is admin/member-authored and not translated. */
-const PDF_LABELS: Record<string, PdfLabels> = {
-  de: { locale: 'de-DE', weekday: 'Wochentag', date: 'Datum', time: 'Uhrzeit', description: 'Beschreibung', allDay: 'ganztags' },
-  en: { locale: 'en-US', weekday: 'Weekday', date: 'Date', time: 'Time', description: 'Description', allDay: 'all day' },
-};
-
-/** Exported standalone so its selection logic is unit-testable without rendering a full PDF (jsPDF's output isn't practically assertable in a unit test). */
-export function pdfLabelsFor(language: string): PdfLabels {
-  return PDF_LABELS[language] ?? PDF_LABELS.de!;
-}
-
-function pdfMonthLabel(dateStr: string, labels: PdfLabels): string {
-  return new Date(`${dateStr}T00:00:00`).toLocaleDateString(labels.locale, { month: 'long', year: 'numeric' });
-}
-
-/** Server-side port of app/src/features/public-calendar/api.ts's downloadPublicWorkingplanPdf, so /arbeitsplan.pdf can be a stable, linkable URL instead of a client-side-only blob download. */
-function buildWorkingplanPdf(rows: PublicEventRow[], language: string): Buffer {
-  const labels = pdfLabelsFor(language);
-  const doc = new jsPDF({ orientation: 'portrait', format: 'a4' });
-  let lastMonth = '';
-  let lastDate = '';
-  const body: string[][] = [];
-  for (const row of rows) {
-    const month = pdfMonthLabel(row.date, labels);
-    if (month !== lastMonth) {
-      body.push([`— ${month} —`, '', '', '']);
-      lastMonth = month;
-      lastDate = '';
-    }
-    const weekday = new Date(`${row.date}T00:00:00`).toLocaleDateString(labels.locale, { weekday: 'long' });
-    const dateCell = row.date === lastDate ? '' : new Date(`${row.date}T00:00:00`).toLocaleDateString(labels.locale);
-    lastDate = row.date;
-    const timeCell = row.whole_day ? labels.allDay : (row.time ?? '');
-    body.push([weekday, dateCell, timeCell, row.public_description ?? '']);
-  }
-  autoTable(doc, {
-    head: [[labels.weekday, labels.date, labels.time, labels.description]],
-    body,
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', lineWidth: 0.5 },
-    alternateRowStyles: { fillColor: [221, 221, 221] },
-  });
-  return Buffer.from(doc.output('arraybuffer'));
-}
-
 // GET /api/v1/public/workingplan.pdf
 router.get('/workingplan.pdf', async (_req, res, next) => {
   try {
@@ -673,9 +560,22 @@ router.get('/workingplan.pdf', async (_req, res, next) => {
     const to = addDaysUtc(from, days);
 
     const events = await visiblePublicEvents(from, to);
-    const rows = events.map(publicEventJson);
+    const rows: PdfEventRow[] = events.map(publicEventJson).map((row) => ({
+      date: row.date,
+      time: row.time,
+      whole_day: row.whole_day,
+      description: row.public_description,
+    }));
     const language = (await getConfigString('language')) ?? 'de';
-    const pdf = buildWorkingplanPdf(rows, language);
+    // logo/lodgeName/footerLines all reuse the same sources the rest of this
+    // file (currentLogoSource/AppConfig `lodge`) and workingplanPdf.ts's own
+    // resolveFooterLines already use for the exact same purpose elsewhere -
+    // no birthdayRows here, the public PDF has never had a birthdays page.
+    const pdf = buildWorkingplanPdf(rows, language, {
+      logo: await currentLogoSource(),
+      lodgeName: (await getConfigString('lodge')) ?? 'Logenhelfer',
+      footerLines: await resolveFooterLines('public'),
+    });
 
     res.status(200).type('application/pdf').send(pdf);
   } catch (err) {

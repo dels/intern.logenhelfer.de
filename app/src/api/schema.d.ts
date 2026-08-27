@@ -469,6 +469,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/workingplan.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** PDF export of upcoming events (private_description) plus a birthdays page, for authenticated members with the internal_workingplan ability */
+        get: operations["getInternalWorkingplanPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/defaults": {
         parameters: {
             query?: never;
@@ -1988,6 +2005,7 @@ export interface components {
             lastname: string | null;
             matriculation_number: number | null;
             job_title: string | null;
+            mobile: string | null;
             /** Format: date */
             date_of_birth: string | null;
             /** Format: date */
@@ -2195,6 +2213,7 @@ export interface components {
             date_of_birth?: string;
             matriculation_number?: number;
             job_title?: string | null;
+            mobile?: string | null;
             /** Format: date */
             entered_apprentice_since?: string | null;
             /** Format: date */
@@ -2493,6 +2512,10 @@ export interface components {
             max_db_mem_size?: string | null;
             max_upload_file_size?: string | null;
             workingplan_footer?: string | null;
+            public_wp_footer_show_secretary?: boolean | null;
+            public_wp_footer_show_worshipful_master?: boolean | null;
+            internal_wp_footer_show_secretary?: boolean | null;
+            internal_wp_footer_show_worshipful_master?: boolean | null;
             impressum?: string | null;
             datenschutz?: string | null;
             help?: string | null;
@@ -3406,6 +3429,28 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    getInternalWorkingplanPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PDF export of the internal working plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
         };

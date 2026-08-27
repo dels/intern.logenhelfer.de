@@ -3,14 +3,27 @@ import { randomUUID } from 'node:crypto';
 import type { events, users } from '../../src/generated/prisma/client.js';
 import express from 'express';
 import request from 'supertest';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { issueAccessToken } from '../../src/auth/jwt.js';
+import { appConfig, KNOWN_KEYS } from '../../src/lib/appConfig.js';
 import { prisma } from '../../src/db.js';
 import { apiErrorHandler } from '../../src/lib/errors.js';
 import eventsRouter from '../../src/routes/events.js';
 import { resetDb } from '../helpers/db.js';
 import { createUser } from '../helpers/factories.js';
+
+// GET /api/v1/events/workingplan.pdf's own tests below need to observe that
+// resolveFooterLines/buildWorkingplanPdf were actually invoked (and with
+// what arguments) - same vi.mock-wrap-two-exports pattern public.test.ts
+// uses for the sibling public route's identical assertion need. Every other
+// export (buildWorkingplanPdfDocument, pdfLabelsFor, etc.) stays the real,
+// unmocked implementation.
+vi.mock('../../src/lib/workingplanPdf.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/lib/workingplanPdf.js')>();
+  return { ...actual, resolveFooterLines: vi.fn(actual.resolveFooterLines), buildWorkingplanPdf: vi.fn(actual.buildWorkingplanPdf) };
+});
+import { resolveFooterLines, buildWorkingplanPdf } from '../../src/lib/workingplanPdf.js';
 
 // Port of rails-app/spec/requests/api/v1/events_spec.rb (17 examples), plus a
 // small number of net-new security tests (see the bottom describe block).
@@ -86,7 +99,16 @@ let eventCounter = 0;
 /** Mirrors FactoryBot's `factory :event` (rails-app/spec/factories.rb L29-35). */
 async function createEvent(
   createdById: number,
-  overrides: Partial<{ title: string; date: Date; time: Date | null; whole_day: boolean; location: string | null; deleted: boolean }> = {},
+  overrides: Partial<{
+    title: string;
+    date: Date;
+    time: Date | null;
+    whole_day: boolean;
+    location: string | null;
+    deleted: boolean;
+    private_description: string | null;
+    public_description: string | null;
+  }> = {},
 ): Promise<events> {
   eventCounter += 1;
   const now = new Date();
@@ -100,6 +122,8 @@ async function createEvent(
       whole_day: wholeDay,
       location: overrides.location ?? 'Logenhaus',
       deleted: overrides.deleted ?? false,
+      private_description: 'private_description' in overrides ? (overrides.private_description ?? null) : null,
+      public_description: 'public_description' in overrides ? (overrides.public_description ?? null) : null,
       created_by_id: createdById,
       created_at: now,
       updated_at: now,
@@ -118,9 +142,40 @@ function utcDate(year: number, month: number, day: number): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+function daysFromNowUtc(days: number): Date {
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+/** A date_of_birth whose month/day falls `daysFromToday` from now (birth year arbitrary/in the past) - mirrors membersLists.test.ts's identically-named helper, for exercising the internal PDF's birthdays-window filter. */
+function dobForUpcomingDays(daysFromToday: number, birthYearsAgo = 30): Date {
+  const now = new Date();
+  const target = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysFromToday));
+  return new Date(Date.UTC(target.getUTCFullYear() - birthYearsAgo, target.getUTCMonth(), target.getUTCDate()));
+}
+
+/** Mirrors `AppConfig[key] = value` closely enough for these tests - same helper as public.test.ts/membersLists.test.ts. */
+async function setAppConfig(key: string, value: string | number | boolean): Promise<void> {
+  const env = process.env.NODE_ENV ?? 'development';
+  const stringValue = String(value);
+  await prisma.app_config_adapters.upsert({
+    where: { key: `${env}_${key}` },
+    update: { value: stringValue },
+    create: { key: `${env}_${key}`, value: stringValue },
+  });
+}
+
 describe('Events API', () => {
   beforeEach(async () => {
     await resetDb();
+    // appConfig caches records process-wide - resetDb() truncates
+    // app_config_adapters but doesn't itself invalidate that in-memory
+    // cache, so every known key is explicitly dirtied to force a fresh
+    // (post-truncate, default) read. Same pattern as public.test.ts/
+    // membersLists.test.ts; only load-bearing for the workingplan.pdf tests
+    // below, harmless for every other test in this file.
+    for (const key of Object.keys(KNOWN_KEYS)) appConfig.dirty(key);
   });
 
   describe('GET /api/v1/events', () => {
@@ -383,6 +438,115 @@ describe('Events API', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.error).toBe('bad_request');
+    });
+  });
+
+  describe('GET /api/v1/events/workingplan.pdf', () => {
+    it('401s without a token', async () => {
+      const res = await request(app).get('/api/v1/events/workingplan.pdf');
+
+      expect(res.status).toBe(401);
+      expect(res.body).toEqual({ error: 'unauthorized' });
+    });
+
+    it('403s a caller without the internal_workingplan ability', async () => {
+      const fileAdmin = await makeFileAdmin();
+
+      const res = await request(app).get('/api/v1/events/workingplan.pdf').set(authHeaders(fileAdmin));
+
+      expect(res.status).toBe(403);
+      expect(res.body).toEqual({ error: 'forbidden' });
+    });
+
+    it('200s for an authorized member, returns a real PDF body, and records the export the same way record_export does', async () => {
+      const member = await makeMember();
+      await createEvent(member.id, { title: 'Loge im Juli', private_description: 'Interne Beschreibung', date: daysFromNowUtc(10) });
+      const before = await prisma.file_downloads.count();
+
+      const res = await request(app).get('/api/v1/events/workingplan.pdf').set(authHeaders(member));
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+      expect(res.body.slice(0, 5).toString('latin1')).toBe('%PDF-');
+      expect(res.body.length).toBeGreaterThan(0);
+
+      const after = await prisma.file_downloads.count();
+      expect(after).toBe(before + 1);
+      const fd = await prisma.file_downloads.findFirstOrThrow({ orderBy: { id: 'desc' } });
+      expect(fd.user_id).toBe(member.id);
+      expect(fd.filename).toBe('Arbeitsplan (intern)');
+      expect(fd.attached_file_id).toBeNull();
+    });
+
+    it('uses private_description (not public_description) for the event rows - this is the internal, authenticated PDF', async () => {
+      const member = await makeMember();
+      await createEvent(member.id, {
+        title: 'Loge im Juli',
+        private_description: 'Interne Beschreibung',
+        public_description: 'Öffentliche Beschreibung',
+        date: daysFromNowUtc(10),
+      });
+
+      const res = await request(app).get('/api/v1/events/workingplan.pdf').set(authHeaders(member));
+
+      expect(res.status).toBe(200);
+      expect(buildWorkingplanPdf).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ description: 'Interne Beschreibung' })]),
+        'de',
+        expect.anything(),
+      );
+    });
+
+    it('calls resolveFooterLines with "internal" (not "public") to build the footer', async () => {
+      const member = await makeMember();
+
+      const res = await request(app).get('/api/v1/events/workingplan.pdf').set(authHeaders(member));
+
+      expect(res.status).toBe(200);
+      expect(resolveFooterLines).toHaveBeenCalledWith('internal');
+    });
+
+    it('includes a birthday inside the default timespan window, excludes one far outside it', async () => {
+      const member = await makeMember();
+      await createUser({ lastname: 'Bald', firstname: 'Geburtstag', date_of_birth: dobForUpcomingDays(10) });
+      await createUser({ lastname: 'Spaet', firstname: 'Geburtstag', date_of_birth: dobForUpcomingDays(200) });
+
+      const res = await request(app).get('/api/v1/events/workingplan.pdf').set(authHeaders(member));
+
+      expect(res.status).toBe(200);
+      const call = vi.mocked(buildWorkingplanPdf).mock.calls.at(-1);
+      const options = call?.[2] as { birthdayRows?: Array<{ lastname: string }> };
+      const lastnames = (options.birthdayRows ?? []).map((r) => r.lastname);
+      expect(lastnames).toContain('Bald');
+      expect(lastnames).not.toContain('Spaet');
+    });
+
+    it('includes every birthday when the configured timespan spans a full year or more (no month/day-wrap exclusion)', async () => {
+      await setAppConfig('default_workingplan_timespan', 400);
+      const member = await makeMember();
+      await createUser({ lastname: 'Irgendwann', firstname: 'Geburtstag', date_of_birth: dobForUpcomingDays(200) });
+
+      const res = await request(app).get('/api/v1/events/workingplan.pdf').set(authHeaders(member));
+
+      expect(res.status).toBe(200);
+      const call = vi.mocked(buildWorkingplanPdf).mock.calls.at(-1);
+      const options = call?.[2] as { birthdayRows?: Array<{ lastname: string }> };
+      const lastnames = (options.birthdayRows ?? []).map((r) => r.lastname);
+      expect(lastnames).toContain('Irgendwann');
+    });
+
+    it('does not include a soft-deleted event in the range', async () => {
+      const member = await makeMember();
+      await createEvent(member.id, { title: 'Geloescht', private_description: 'Sollte fehlen', date: daysFromNowUtc(10), deleted: true });
+
+      const res = await request(app).get('/api/v1/events/workingplan.pdf').set(authHeaders(member));
+
+      expect(res.status).toBe(200);
+      expect(buildWorkingplanPdf).toHaveBeenCalledWith(
+        expect.not.arrayContaining([expect.objectContaining({ description: 'Sollte fehlen' })]),
+        expect.anything(),
+        expect.anything(),
+      );
     });
   });
 

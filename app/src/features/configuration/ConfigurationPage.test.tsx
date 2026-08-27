@@ -36,6 +36,10 @@ function appConfigFixture(overrides: Partial<Record<string, unknown>> = {}) {
     location: '',
     max_db_mem_size: '104857600',
     workingplan_footer: '',
+    public_wp_footer_show_secretary: false,
+    public_wp_footer_show_worshipful_master: false,
+    internal_wp_footer_show_secretary: false,
+    internal_wp_footer_show_worshipful_master: false,
     impressum: '',
     help: '',
     robots_txt: 'User-Agent: *\nDisallow: /',
@@ -324,6 +328,38 @@ describe('ConfigurationPage', () => {
     expect(screen.getByRole('textbox', { name: 'Abkürzung Loge' })).toBeInTheDocument();
     // Funktionen-only toggles must not be present while on the Konfiguration tab.
     expect(screen.queryByRole('switch', { name: 'Arbeitsplan als Startseite' })).not.toBeInTheDocument();
+  });
+
+  // Regression test: fields.ts's FIELDS array wired these four keys in, but
+  // de.json/en.json never got matching `configuration.options.<key>.name`
+  // entries added alongside them (Task 5 of the working-plan PDF
+  // header/footer plan only touched the AppConfig plumbing, not i18n) -
+  // ConfigField's `label = t(...)` call has no `defaultValue`, so a missing
+  // key falls back to i18next's own default missing-key behavior (the raw
+  // key path string itself), not a blank/graceful label. Caught by
+  // rendering with the real (non-mocked) i18n module, same as every other
+  // test in this file - a label assertion below fails with the literal
+  // "configuration.options.<key>.name" string if the translation is ever
+  // removed again.
+  it('shows real German labels (not raw i18n key paths) for the four PDF-footer toggle switches on the Konfiguration tab', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole('tab', { name: 'Konfiguration' }));
+
+    for (const key of [
+      'public_wp_footer_show_secretary',
+      'public_wp_footer_show_worshipful_master',
+      'internal_wp_footer_show_secretary',
+      'internal_wp_footer_show_worshipful_master',
+    ]) {
+      const rawKeyPath = `configuration.options.${key}.name`;
+      expect(screen.queryByRole('switch', { name: rawKeyPath })).not.toBeInTheDocument();
+    }
+
+    expect(screen.getByRole('switch', { name: 'Sekretär im Footer des öffentlichen Arbeitsplans anzeigen' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Meister vom Stuhl im Footer des öffentlichen Arbeitsplans anzeigen' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Sekretär im Footer des internen Arbeitsplans anzeigen' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Meister vom Stuhl im Footer des internen Arbeitsplans anzeigen' })).toBeInTheDocument();
   });
 
   it('shows the legal-notice and privacy-policy fields on the Impressum tab', async () => {

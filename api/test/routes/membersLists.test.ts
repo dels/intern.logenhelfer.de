@@ -327,6 +327,62 @@ describe('Members API - lists/export/impersonate', () => {
       );
       expect(rows.map((r) => r.holder_uuid).sort()).toEqual([member.uuid, secondHolder.uuid].sort());
     });
+
+    // Task 3: holder_mobile now reads users.mobile directly, not a
+    // mobileNumbersPrintable(addresses) multi-address string.
+    it("reports holder_mobile as the holder's users.mobile, not a multi-address printable string", async () => {
+      const council = await createRole(`CouncilPosition${Date.now()}`, {
+        display_name: 'Ratsposten2',
+        administrational_role: false,
+        group: false,
+        ordering_number: 3,
+      });
+      await assignRole(member.id, council.id);
+      const now = new Date();
+      // Two addresses with mobiles - a mobileNumbersPrintable(addresses)
+      // implementation would join both with their purpose labels; reading
+      // users.mobile directly must instead report exactly the single
+      // synced value.
+      await prisma.addresses.createMany({
+        data: [
+          {
+            addressable_id: member.id, addressable_type: 'User', type_of_address: 1, purpose: 'geschäftlich',
+            mobile: '0170 business', deleted: false, created_at: now, updated_at: now,
+          },
+          {
+            addressable_id: member.id, addressable_type: 'User', type_of_address: 0, purpose: 'Privat',
+            mobile: '0170 private', deleted: false, created_at: now, updated_at: now,
+          },
+        ],
+      });
+      await prisma.users.update({ where: { id: member.id }, data: { mobile: '0170 private' } });
+
+      const res = await request(app).get('/api/v1/members/members_of_council').set(authHeaders(member));
+
+      expect(res.status).toBe(200);
+      const row = (res.body.rows as Array<{ role_display_name: string; holder_mobile: string }>).find(
+        (r) => r.role_display_name === council.display_name,
+      );
+      expect(row?.holder_mobile).toBe('0170 private');
+    });
+
+    it('reports holder_mobile as "" (not null) when the holder has no users.mobile', async () => {
+      const council = await createRole(`CouncilPosition${Date.now()}`, {
+        display_name: 'Ratsposten3',
+        administrational_role: false,
+        group: false,
+        ordering_number: 4,
+      });
+      await assignRole(member.id, council.id);
+
+      const res = await request(app).get('/api/v1/members/members_of_council').set(authHeaders(member));
+
+      expect(res.status).toBe(200);
+      const row = (res.body.rows as Array<{ role_display_name: string; holder_mobile: string }>).find(
+        (r) => r.role_display_name === council.display_name,
+      );
+      expect(row?.holder_mobile).toBe('');
+    });
   });
 
   describe('GET /api/v1/members/export_data', () => {
