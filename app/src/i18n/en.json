@@ -481,6 +481,22 @@
         "name": "Working plan footer",
         "description": "This text is written as a footer below the working plan."
       },
+      "public_wp_footer_show_secretary": {
+        "name": "Show Secretary in the public working-plan footer",
+        "description": "Shows the Secretary's name and mobile number in the footer of the public (not logged-in) working-plan PDF. If both public-footer switches are off, the Secretary role's stored e-mail address is shown instead, if set."
+      },
+      "public_wp_footer_show_worshipful_master": {
+        "name": "Show Worshipful Master in the public working-plan footer",
+        "description": "Shows the Worshipful Master's name and mobile number in the footer of the public (not logged-in) working-plan PDF."
+      },
+      "internal_wp_footer_show_secretary": {
+        "name": "Show Secretary in the internal working-plan footer",
+        "description": "Shows the Secretary's name and mobile number in the footer of the internal (logged-in) working-plan PDF. If both internal-footer switches are off, the Secretary role's stored e-mail address is shown instead, if set."
+      },
+      "internal_wp_footer_show_worshipful_master": {
+        "name": "Show Worshipful Master in the internal working-plan footer",
+        "description": "Shows the Worshipful Master's name and mobile number in the footer of the internal (logged-in) working-plan PDF."
+      },
       "impressum": {
         "name": "Legal notice (Impressum) text",
         "description": "HTML formatting. Email addresses are obfuscated."
