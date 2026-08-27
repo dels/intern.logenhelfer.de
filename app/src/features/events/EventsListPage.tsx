@@ -6,13 +6,14 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CakeIcon from '@mui/icons-material/CakeRounded';
 import { useTranslation } from 'react-i18next';
-import { useDeleteEvent, downloadInternalWorkingplanPdf } from './api';
+import { useDeleteEvent, toLocalDateString } from './api';
 import { addMonths } from './calendarGrid';
 import { useCalendarRangeData } from './useCalendarRangeData';
 import EventsCalendarView from './EventsCalendarView';
 import EventsListTable from './EventsListTable';
 import CalendarFilter from './CalendarFilter';
 import { useAuth } from '../../auth/AuthProvider';
+import { downloadFile } from '../../api/client';
 import { formatDate } from '../../utils/formatDate';
 import { copyToClipboard } from '../../utils/copyToClipboard';
 import { useToast } from '../../notifications/useToast';
@@ -59,7 +60,9 @@ export default function EventsListPage() {
               {t('events.birthdayCalendarIncludeLink')}
             </Button>
           )}
-          <Button onClick={() => void downloadInternalWorkingplanPdf()}>{t('events.exportWorkingplanPdf')}</Button>
+          <Button onClick={() => void downloadFile('/api/v1/events/workingplan.pdf', `${toLocalDateString(new Date())}-Arbeitsplan-intern.pdf`)}>
+            {t('events.exportWorkingplanPdf')}
+          </Button>
           {abilities.event?.includes('create') && (
             <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/events/new')}>
               {t('events.create')}

@@ -24,15 +24,17 @@ test('public visitor and admin both export the working-plan PDF', async ({ page 
   await page.goto('/events');
   await expect(page.getByRole('heading', { name: 'Arbeitsplan' })).toBeVisible();
   const internalPdfDownloadPromise = page.waitForEvent('download');
-  // record_export fires after the download click (see events/api.ts) - assert
-  // it actually succeeds too, not just that a download happened, since a
-  // silently-broken audit-log call wouldn't otherwise fail this test.
-  const recordExportResponsePromise = page.waitForResponse(
-    (res) => res.url().includes('/api/v1/events/record_export') && res.request().method() === 'POST',
+  // Task 9: the button now downloads GET /api/v1/events/workingplan.pdf
+  // directly (via the shared authenticated downloadFile() blob helper) -
+  // that server-side handler logs the export inline itself (see
+  // api/src/routes/events.ts's workingplan.pdf route), so there's no
+  // separate client-triggered POST /record_export call to wait on any more.
+  const internalPdfResponsePromise = page.waitForResponse(
+    (res) => res.url().includes('/api/v1/events/workingplan.pdf') && res.request().method() === 'GET',
   );
   await page.getByRole('button', { name: 'Arbeitsplan als PDF exportieren' }).click();
   const internalPdfDownload = await internalPdfDownloadPromise;
   expect(internalPdfDownload.suggestedFilename()).toMatch(/\.pdf$/);
-  const recordExportResponse = await recordExportResponsePromise;
-  expect(recordExportResponse.status()).toBe(204);
+  const internalPdfResponse = await internalPdfResponsePromise;
+  expect(internalPdfResponse.status()).toBe(200);
 });

@@ -13,50 +13,6 @@ import { setAccessToken } from '../../api/token';
 import '../../i18n';
 import i18n from '../../i18n';
 
-// The working-plan PDF export's window is `today` -> `today + 120 days`,
-// computed the same way EventsListPage's api.ts does it internally
-// (downloadInternalWorkingplanPdf). Used below to distinguish the export's
-// GET /api/v1/events?...&to=... request from the page's own background
-// month-range fetch (useCalendarRangeData), which never sends this exact
-// 120-day-out `to`.
-function expectedWorkingplanTo(from: Date): string {
-  const to = new Date(from);
-  to.setDate(to.getDate() + 120);
-  return toLocalDateString(to);
-}
-
-const autoTableCalls: unknown[] = [];
-vi.mock('jspdf-autotable', async () => {
-  const actual = await vi.importActual<typeof import('jspdf-autotable')>('jspdf-autotable');
-  return {
-    ...actual,
-    autoTable: (doc: unknown, options: unknown) => {
-      autoTableCalls.push(options);
-      return actual.autoTable(doc as never, options as never);
-    },
-  };
-});
-
-// Task 3 (dynamic-import jspdf/jspdf-autotable out of events/api.ts).
-// `moduleLoadCount` distinguishes eager (static) from lazy (dynamic)
-// import: vi.mock's factory only runs once, the first time the 'jspdf'
-// specifier is actually resolved - see the identical rationale in
-// members/BirthdayListPage.test.tsx's counterpart mock. Declared via
-// vi.hoisted since vi.mock's factory is hoisted above ordinary top-level
-// statements.
-const jsPDFTracking = vi.hoisted(() => ({ moduleLoadCount: 0, constructorCalls: [] as unknown[] }));
-vi.mock('jspdf', async () => {
-  jsPDFTracking.moduleLoadCount += 1;
-  const actual = await vi.importActual<typeof import('jspdf')>('jspdf');
-  class SpyJsPDF extends actual.jsPDF {
-    constructor(...args: ConstructorParameters<typeof actual.jsPDF>) {
-      jsPDFTracking.constructorCalls.push(args);
-      super(...args);
-    }
-  }
-  return { ...actual, jsPDF: SpyJsPDF };
-});
-
 const eventRow = { uuid: 'e1', title: 'Stiftungsfest', date: '2026-08-01', time: '19:00', whole_day: false, location: 'Festsaal', created_by_id: 1, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' };
 
 const server = setupServer(
@@ -257,142 +213,52 @@ describe('EventsListPage', () => {
     await waitFor(() => expect(screen.queryByTestId('external-events-spinner')).not.toBeInTheDocument());
   });
 
-  // Must run before "builds and downloads an internal working-plan PDF..."
-  // / "accumulates the working-plan PDF..." below - jsPDFTracking's
-  // module-load count is a one-shot signal that would already be non-zero
-  // once any earlier test in this file has actually triggered a real
-  // download.
-  it('does not load the jspdf module at all until the working-plan PDF export button is actually clicked', async () => {
-    expect(jsPDFTracking.moduleLoadCount).toBe(0);
-    let recordExportCalled = false;
-    server.use(http.post('/api/v1/events/record_export', () => {
-      recordExportCalled = true;
-      return new HttpResponse(null, { status: 204 });
-    }));
-    renderPage();
-    await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
-    expect(jsPDFTracking.moduleLoadCount).toBe(0);
-
-    const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Arbeitsplan als PDF exportieren' }));
-    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled());
-    expect(jsPDFTracking.moduleLoadCount).toBe(1);
-    expect(jsPDFTracking.constructorCalls).toHaveLength(1);
-    // Wait for the recordWorkingplanExport call this download triggers to
-    // settle before the test ends - see the identical rationale in
-    // members/BirthdayListPage.test.tsx's counterpart test.
-    await waitFor(() => expect(recordExportCalled).toBe(true));
-    createObjectURLSpy.mockRestore();
-  });
-
-  it('builds and downloads an internal working-plan PDF with a birthday-list page, and records the export', async () => {
+  // Task 9: the export button now downloads the server-rendered PDF from
+  // GET /api/v1/events/workingplan.pdf via the shared authenticated
+  // downloadFile() blob helper (app/src/api/client.ts), rather than
+  // building the PDF client-side with jsPDF and separately POSTing
+  // /record_export (the server route now logs the export inline - see
+  // api/src/routes/events.ts's workingplan.pdf handler).
+  it('downloads the working-plan PDF from GET /api/v1/events/workingplan.pdf with a dated filename, and does not call the old record_export endpoint', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-07-15T00:00:00'));
-    const workingplanTo = expectedWorkingplanTo(new Date('2026-07-15T00:00:00'));
+    let requestedPath: string | null = null;
     let recordExportCalled = false;
-    let recordExportBody: unknown;
-    let birthdayListCalled = false;
-    autoTableCalls.length = 0;
     server.use(
-      http.get('/api/v1/events', ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get('to') !== workingplanTo) {
-          return HttpResponse.json({ rows: [eventRow], row_count: 1 });
-        }
-        expect(url.searchParams.get('from')).toBeTruthy();
-        expect(url.searchParams.get('to')).toBeTruthy();
-        return HttpResponse.json({
-          rows: [{ uuid: 'e1', title: 'Loge', date: '2026-08-15', time: null, whole_day: true, location: 'Vereinshaus', public_description: 'Öffentlicher Text', private_description: 'Interne Sitzung' }],
-          row_count: 1,
+      http.get('/api/v1/events/workingplan.pdf', ({ request }) => {
+        requestedPath = new URL(request.url).pathname;
+        return new HttpResponse(new Blob(['%PDF-mock'], { type: 'application/pdf' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/pdf' },
         });
       }),
-      http.get('/api/v1/members/birthday_list', () => {
-        birthdayListCalled = true;
-        return HttpResponse.json({
-          rows: [
-            { uuid: 'u1', lastname: 'Muster', firstname: 'Max', date_of_birth: '1980-08-15', age: 46, twentyfifth_jubilee: null, fortieth_jubilee: null },
-            { uuid: 'u2', lastname: 'Ausserhalb', firstname: 'Anna', date_of_birth: '1980-01-01', age: 46, twentyfifth_jubilee: null, fortieth_jubilee: null },
-          ],
-          row_count: 2,
-        });
-      }),
-      http.post('/api/v1/events/record_export', async ({ request }) => {
+      http.post('/api/v1/events/record_export', () => {
         recordExportCalled = true;
-        recordExportBody = await request.json();
         return new HttpResponse(null, { status: 204 });
       }),
     );
     const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     renderPage();
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Arbeitsplan als PDF exportieren' }));
-    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled());
-    await waitFor(() => expect(recordExportCalled).toBe(true));
-    expect(recordExportBody).toEqual({ kind: 'workingplan_internal' });
-    expect(birthdayListCalled).toBe(true);
 
-    expect(autoTableCalls).toHaveLength(2);
-    const eventsTable = autoTableCalls[0] as { body: string[][] };
-    const flatEventRow = eventsTable.body.flat().join(' ');
-    expect(flatEventRow).toContain('Interne Sitzung');
-    expect(flatEventRow).not.toContain('Öffentlicher Text');
-    const birthdayTable = autoTableCalls[1] as { head: string[][]; body: string[][] };
-    expect(birthdayTable.head[0]).toEqual(['Nachname', 'Vorname', 'Geburtstag', 'Alter']);
-    const flatBirthdayRows = birthdayTable.body.flat().join(' ');
-    expect(flatBirthdayRows).toContain('Muster');
-    expect(flatBirthdayRows).not.toContain('Ausserhalb');
-    const expectedBirthDate = new Date('1980-08-15T00:00:00').toLocaleString('de-DE', { dateStyle: 'medium' });
-    expect(flatBirthdayRows).toContain(expectedBirthDate);
-    expect(flatBirthdayRows).not.toContain('1980-08-15');
+    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled());
+    expect(requestedPath).toBe('/api/v1/events/workingplan.pdf');
+    expect(recordExportCalled).toBe(false);
+    // The `${today}-Arbeitsplan-intern.pdf` filename shape is carried over
+    // from the old client-side jsPDF code path, but `today` itself is a
+    // deliberate change: the old code used
+    // `new Date().toISOString().slice(0, 10)` (UTC), which could roll the
+    // filename's date back a day during early-morning hours in a timezone
+    // ahead of UTC (e.g. Germany). This now uses toLocalDateString (local
+    // midnight semantics, already exported for exactly this kind of
+    // date-only computation elsewhere in this file) instead.
+    const clickedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement;
+    expect(clickedAnchor.download).toBe(`${toLocalDateString(new Date())}-Arbeitsplan-intern.pdf`);
 
     createObjectURLSpy.mockRestore();
-  });
-
-  it('accumulates the working-plan PDF across multiple pages of events', async () => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date('2026-07-15T00:00:00'));
-    const workingplanTo = expectedWorkingplanTo(new Date('2026-07-15T00:00:00'));
-    autoTableCalls.length = 0;
-    const requestedPages: number[] = [];
-    server.use(
-      http.get('/api/v1/events', ({ request }) => {
-        const url = new URL(request.url);
-        if (url.searchParams.get('to') !== workingplanTo) {
-          return HttpResponse.json({ rows: [eventRow], row_count: 1 });
-        }
-        const page = Number(url.searchParams.get('page'));
-        requestedPages.push(page);
-        if (page === 0) {
-          const rows = Array.from({ length: 100 }, (_, i) => ({
-            uuid: `e${i}`, title: `Termin ${i}`, date: '2026-08-15', time: null, whole_day: true,
-            location: 'Vereinshaus', private_description: `Beschreibung ${i}`,
-          }));
-          return HttpResponse.json({ rows, row_count: 150 });
-        }
-        const rows = Array.from({ length: 50 }, (_, i) => ({
-          uuid: `e${100 + i}`, title: `Termin ${100 + i}`, date: '2026-08-16', time: null, whole_day: true,
-          location: 'Vereinshaus', private_description: `Beschreibung ${100 + i}`,
-        }));
-        return HttpResponse.json({ rows, row_count: 150 });
-      }),
-      http.get('/api/v1/members/birthday_list', () => HttpResponse.json({ rows: [], row_count: 0 })),
-      http.post('/api/v1/events/record_export', () => new HttpResponse(null, { status: 204 })),
-    );
-    const createObjectURLSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock');
-    renderPage();
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: 'Arbeitsplan als PDF exportieren' }));
-    await waitFor(() => expect(createObjectURLSpy).toHaveBeenCalled());
-    await waitFor(() => expect(requestedPages).toEqual([0, 1]));
-
-    const eventsTable = autoTableCalls[0] as { body: string[][] };
-    const flatEventRows = eventsTable.body.flat().join(' ');
-    expect(flatEventRows).toContain('Beschreibung 0');
-    expect(flatEventRows).toContain('Beschreibung 99');
-    expect(flatEventRows).toContain('Beschreibung 149');
-
-    createObjectURLSpy.mockRestore();
+    clickSpy.mockRestore();
   });
 
   it('shows the birthday-calendar button only when /me provides a URL', async () => {
