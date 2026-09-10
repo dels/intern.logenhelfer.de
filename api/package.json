@@ -35,7 +35,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "node-ical": "^0.26.1",
-    "nodemailer": "^9.0.3",
+    "nodemailer": "^9.1.1",
     "otplib": "12.0.1",
     "pg": "^8.22.0",
     "qrcode": "^1.5.4",
