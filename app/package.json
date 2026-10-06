@@ -26,7 +26,7 @@
     "@pdfsmaller/pdf-encrypt-lite": "^1.0.2",
     "@simplewebauthn/browser": "^13.3.0",
     "@tanstack/react-query": "^5.101.2",
-    "dompurify": "^3.4.13",
+    "dompurify": "^3.4.16",
     "i18next": "^26.3.4",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
@@ -56,6 +56,6 @@
     "typescript": "~6.0.3",
     "vite": "^8.1.3",
     "vite-plugin-pwa": "^1.3.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
