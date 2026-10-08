@@ -40,6 +40,13 @@ describe('MFA challenge', () => {
     process.env.MFA_ENCRYPTION_KEY = 'a'.repeat(64);
     for (const key of Object.keys(KNOWN_KEYS)) appConfig.dirty(key);
     vi.mocked(sendMail).mockClear();
+    // A test's own queued vi.mocked(verifyAuthentication).mockResolvedValueOnce(...)
+    // must never leak into a later test's mock queue - mockReset (not just
+    // mockClear) also drops any queued one-time implementations, not just
+    // call-history, since a leftover `verified: true` consumed by surprise in
+    // an unrelated test would make a security-relevant attempt silently
+    // succeed instead of failing the way that test expects.
+    vi.mocked(verifyAuthentication).mockReset();
   });
 
   it('lists enrolled methods for a valid pending token', async () => {
@@ -297,29 +304,47 @@ describe('MFA challenge', () => {
     it('rejects a passkey belonging to a different account (cross-account confusion)', async () => {
       const pendingUser = await createUser();
       const credentialOwner = await createUser({ email: 'owner@example.test' });
+      await enrollPasskey(pendingUser.id, 'pending-users-own-credential');
       await enrollPasskey(credentialOwner.id, 'someone-elses-credential');
-      // The pending user has no passkey of their own, but must still be able
-      // to request options (e.g. they have another method enrolled too) -
-      // this test drives the attack path where a forged/replayed assertion
-      // for a REAL, valid, but WRONG-OWNER credential is submitted directly,
-      // bypassing allowCredentials entirely (a malicious client can send any
-      // credential id regardless of what the options response offered).
       const token = issueMfaPendingToken(pendingUser.id);
+
+      // Drive a real options call for the pending user so a real,
+      // server-side-stored challenge exists - otherwise the route's
+      // `if (challenge && response?.id)` guard would short-circuit before
+      // ever reaching the user_id check, and this test would only prove
+      // "missing challenge -> 401" (already covered elsewhere), not the
+      // cross-account property it's named for.
+      const optionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+      const challenge: string = optionsRes.body.challenge;
 
       vi.mocked(verifyAuthentication).mockResolvedValueOnce({
         verified: true,
         authenticationInfo: { newCounter: 1 },
       } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
-      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge: 'any-challenge' })).toString('base64');
+      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
 
+      // Clear right before the request under test so the assertion below
+      // only reflects this call, not the (never-reached) mock queued above.
+      vi.mocked(verifyAuthentication).mockClear();
+
+      // This drives the attack path where a forged/replayed assertion for a
+      // REAL, valid, but WRONG-OWNER credential is submitted directly,
+      // bypassing allowCredentials entirely (a malicious client can send any
+      // credential id regardless of what the options response offered).
       const res = await request(app)
         .post('/api/v1/mfa/challenge/passkey/verify')
         .set('Authorization', `Bearer ${token}`)
         .send({ response: { id: 'someone-elses-credential', response: { clientDataJSON } } });
 
       expect(res.status).toBe(401);
+      expect(res.body).toEqual({ error: 'unauthorized' });
       const stillPending = await prisma.refresh_tokens.count({ where: { user_id: pendingUser.id } });
       expect(stillPending).toBe(0);
+      // Proves the route rejects based on the user_id mismatch BEFORE ever
+      // attempting cryptographic verification, matching production code's
+      // actual check order (stored.user_id === user.id gates entry into the
+      // verifyAuthentication call entirely).
+      expect(vi.mocked(verifyAuthentication)).not.toHaveBeenCalled();
     });
 
     it('locks out after 5 failed passkey verification attempts', async () => {
@@ -330,6 +355,11 @@ describe('MFA challenge', () => {
         const optionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
         const challenge: string = optionsRes.body.challenge;
         const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+        // Explicit, intentional per-attempt mock - each of the 5 failed
+        // attempts must genuinely fail verification, not merely exhaust an
+        // unrelated mock and fall through to an unmocked vi.fn() returning
+        // undefined (which, pre-Finding-1-fix, would throw inside the
+        // route's verifyAuthentication call entirely uncaught).
         vi.mocked(verifyAuthentication).mockResolvedValueOnce({ verified: false } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
         await request(app)
           .post('/api/v1/mfa/challenge/passkey/verify')
@@ -340,11 +370,74 @@ describe('MFA challenge', () => {
       const optionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
       const challenge: string = optionsRes.body.challenge;
       const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+      // Clear right before the 6th (locked-out) request so the assertion
+      // below proves the lockout check short-circuits BEFORE ever reaching
+      // verifyAuthentication - this is what actually proves lockout is
+      // enforced, not just "got a 401" (a 401 alone doesn't distinguish
+      // "locked out" from "verification failed again").
+      vi.mocked(verifyAuthentication).mockClear();
       const res = await request(app)
         .post('/api/v1/mfa/challenge/passkey/verify')
         .set('Authorization', `Bearer ${token}`)
         .send({ response: { id: 'lockout-credential', response: { clientDataJSON } } });
       expect(res.status).toBe(401);
+      expect(vi.mocked(verifyAuthentication)).not.toHaveBeenCalled();
+    });
+
+    it('returns 401 (not 500) and counts toward lockout when verifyAuthentication throws instead of resolving verified:false', async () => {
+      // @simplewebauthn/server's verifyAuthenticationResponse THROWS for most
+      // failure modes (challenge/origin mismatch, missing user verification,
+      // counter regression, malformed clientDataJSON/authenticatorData)
+      // rather than resolving { verified: false } - only an outright bad
+      // signature takes the resolve-false path. Before Finding 1's fix, this
+      // throw escaped to the outer catch's next(err), producing a generic
+      // 500 (via apiErrorHandler) instead of the identical 401 every other
+      // failure mode on this route returns, and skipped
+      // recordFailedMfaAttempt entirely.
+      const user = await createUser();
+      await enrollPasskey(user.id, 'throwing-credential');
+      const token = issueMfaPendingToken(user.id);
+
+      const optionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+      const challenge: string = optionsRes.body.challenge;
+      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+
+      vi.mocked(verifyAuthentication).mockRejectedValueOnce(new Error('Unexpected authentication response challenge'));
+
+      const res = await request(app)
+        .post('/api/v1/mfa/challenge/passkey/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ response: { id: 'throwing-credential', response: { clientDataJSON } } });
+
+      expect(res.status).toBe(401);
+      expect(res.body).toEqual({ error: 'unauthorized' });
+
+      // Prove this failed attempt counted toward lockout - 4 more identical
+      // throwing attempts should bring the total to 5, locking the account
+      // out on the 6th attempt entirely (verifyAuthentication never even
+      // called once locked out).
+      for (let i = 0; i < 4; i++) {
+        const nextOptionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+        const nextChallenge: string = nextOptionsRes.body.challenge;
+        const nextClientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge: nextChallenge })).toString('base64');
+        vi.mocked(verifyAuthentication).mockRejectedValueOnce(new Error('Unexpected authentication response challenge'));
+        await request(app)
+          .post('/api/v1/mfa/challenge/passkey/verify')
+          .set('Authorization', `Bearer ${token}`)
+          .send({ response: { id: 'throwing-credential', response: { clientDataJSON: nextClientDataJSON } } });
+      }
+
+      const finalOptionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+      const finalChallenge: string = finalOptionsRes.body.challenge;
+      const finalClientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge: finalChallenge })).toString('base64');
+      vi.mocked(verifyAuthentication).mockClear();
+      const lockedOutRes = await request(app)
+        .post('/api/v1/mfa/challenge/passkey/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ response: { id: 'throwing-credential', response: { clientDataJSON: finalClientDataJSON } } });
+      expect(lockedOutRes.status).toBe(401);
+      expect(lockedOutRes.body).toEqual({ error: 'unauthorized' });
+      expect(vi.mocked(verifyAuthentication)).not.toHaveBeenCalled();
     });
   });
 });

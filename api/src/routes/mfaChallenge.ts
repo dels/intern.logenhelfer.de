@@ -206,12 +206,35 @@ router.post('/passkey/verify', async (req, res, next) => {
       // enforcement. Matches mfa.ts's verifyExistingMfaProof precedent.
       const stored = await prisma.mfa_passkey_credentials.findUnique({ where: { credential_id: response.id } });
       if (stored && stored.user_id === user.id) {
-        const verification = await verifyAuthentication(response, challenge, {
-          id: stored.credential_id,
-          publicKey: Buffer.from(stored.public_key, 'base64url'),
-          counter: stored.sign_count,
-        });
-        if (verification.verified) {
+        // Security: verifyAuthentication (wrapping @simplewebauthn/server's
+        // verifyAuthenticationResponse) THROWS for most failure modes
+        // (challenge/origin mismatch, missing user verification, counter
+        // regression, malformed clientDataJSON/authenticatorData) rather than
+        // resolving { verified: false } - only an outright bad signature
+        // takes the resolve-false path. Without this try/catch, a throw here
+        // would escape to the outer catch's next(err), producing a generic
+        // 500 instead of the same 401 every other failure mode on this route
+        // returns, and - just as importantly - would skip
+        // recordFailedMfaAttempt entirely, letting an attacker retry
+        // malformed/forged assertions without ever counting toward the
+        // 5-attempt lockout. Treat any throw exactly like verified: false.
+        // Deliberately scoped to ONLY the verifyAuthentication call, not the
+        // sign_count update below it - a DB write failure after a genuine
+        // verified:true must surface as a real 500 via the outer catch, not
+        // get silently reinterpreted as a failed login attempt (which would
+        // both hide a real server fault and wrongly charge the user a
+        // lockout strike for it).
+        let verification: Awaited<ReturnType<typeof verifyAuthentication>> | undefined;
+        try {
+          verification = await verifyAuthentication(response, challenge, {
+            id: stored.credential_id,
+            publicKey: Buffer.from(stored.public_key, 'base64url'),
+            counter: stored.sign_count,
+          });
+        } catch {
+          verification = undefined;
+        }
+        if (verification?.verified) {
           verified = true;
           await prisma.mfa_passkey_credentials.update({
             where: { id: stored.id },
