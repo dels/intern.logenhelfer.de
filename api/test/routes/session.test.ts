@@ -196,6 +196,53 @@ describe('Session API', () => {
       expect(unchanged.current_sign_in_at).toBeNull();
       expect(unchanged.current_sign_in_ip).toBeNull();
     });
+
+    // Regression coverage for the passwordless passkey-login branch of
+    // session.ts's `POST /api/v1/session/passkey/verify` handler, which calls
+    // recordSuccessfulSignIn right after the `user.deleted` check - this
+    // branch never called it before that fix, so passkey-login users had
+    // these fields frozen forever. Drives a full passkey login the same way
+    // the 'Passwordless passkey login' describe block below does (real
+    // challenge from /session/passkey/options, mocked verifyAuthentication),
+    // then asserts on the same trackable fields the password-login tests
+    // above assert on.
+    it('sets sign_in_count, current_sign_in_at, and current_sign_in_ip on a successful passkey login', async () => {
+      const user = await createLoginableUser();
+      const credentialId = 'e2e-sign-in-tracking-credential';
+      await prisma.mfa_passkey_credentials.create({
+        data: {
+          user_id: user.id,
+          credential_id: credentialId,
+          public_key: Buffer.from('fake-public-key-bytes').toString('base64url'),
+          sign_count: 0,
+          name: 'Test passkey',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+
+      const optionsRes = await request(app).post('/api/v1/session/passkey/options').send({});
+      const challenge: string = optionsRes.body.challenge;
+      expect(challenge).toBeDefined();
+
+      vi.mocked(verifyAuthentication).mockResolvedValueOnce({
+        verified: true,
+        authenticationInfo: { newCounter: 1 },
+      } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+
+      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+
+      const res = await request(app)
+        .post('/api/v1/session/passkey/verify')
+        .set('X-Forwarded-For', '203.0.113.9')
+        .send({ response: { id: credentialId, response: { clientDataJSON } } });
+
+      expect(res.status).toBe(200);
+      const updated = await prisma.users.findUniqueOrThrow({ where: { id: user.id } });
+      expect(updated.sign_in_count).toBe(1);
+      expect(updated.current_sign_in_at).not.toBeNull();
+      expect(updated.current_sign_in_ip).toBe('203.0.113.9');
+    });
   });
 
   describe('POST /api/v1/session/refresh', () => {
