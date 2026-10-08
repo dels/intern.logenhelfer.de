@@ -154,6 +154,7 @@ async function mfaPendingFetch<T>(path: string, mfaPendingToken: string, init: R
     }
     throw new ApiError(res.status, `${init.method ?? 'GET'} ${path} → ${res.status}`, body);
   }
+  if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
