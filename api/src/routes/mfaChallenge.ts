@@ -6,14 +6,18 @@ import { verifyAccessToken } from '../auth/jwt.js';
 import { issueRefreshToken } from '../auth/refreshToken.js';
 import { isMfaLockedOut, recordFailedMfaAttempt, resetMfaLockout } from '../auth/mfaLockout.js';
 import { issueTrustedDeviceToken } from '../auth/deviceTrust.js';
+import { recordSuccessfulSignIn } from '../auth/signInTracking.js';
 import { DEVICE_TOKEN_COOKIE_NAME } from './session.js';
 import { prisma } from '../db.js';
+import { ApiError } from '../lib/errors.js';
 import { verifyEncryptedTotpCode } from '../lib/mfaTotp.js';
 import { verifyEmailOtp } from '../lib/mfaEmailOtp.js';
 import { consumeBackupCode } from '../lib/mfaBackupCodes.js';
 import { getUserMfaMethods, computeGracePeriodEndsAt } from '../lib/mfaStatus.js';
 import { getMfaSettings } from '../lib/mfaSettings.js';
+import { buildAuthenticationOptions, verifyAuthentication } from '../lib/mfaPasskeys.js';
 import { sendLoginLockoutEmail, sendLoginSuccessEmail, type LoginMethod } from '../lib/loginNotification.js';
+import type { AuthenticationResponseJSON } from '@simplewebauthn/server';
 import type { users } from '../generated/prisma/client.js';
 
 declare global {
@@ -42,6 +46,16 @@ async function requireMfaPendingToken(req: Request, res: Response, next: NextFun
 
 const router = Router();
 router.use(requireMfaPendingToken);
+
+// Same in-memory, per-pending-user, single-use-ceremony pattern as mfa.ts's
+// pendingProofChallenges - bounded by "how many users are mid-login-
+// challenge right now" (reachable only with a valid, 15-minute-TTL
+// mfa_pending bearer token), unlike session.ts's public, unauthenticated
+// passkeyLoginChallenges map, which needs its own TTL+prune for exactly
+// that reason. Kept separate from mfa.ts's own maps so a login challenge
+// and an unrelated proof-of-control ceremony for the same user id can never
+// clobber each other's challenge.
+const pendingLoginPasskeyChallenges = new Map<number, string>();
 
 router.get('/methods', async (req, res, next) => {
   try {
@@ -126,11 +140,103 @@ router.post('/verify', async (req, res, next) => {
     }
 
     await resetMfaLockout(lockoutKey);
+    await recordSuccessfulSignIn(user, req.ip ?? null);
     // Fire-and-forget - see the comment on the lockout branch above.
     void sendLoginSuccessEmail(user, req, toLoginMethod(body.method));
     const { rawToken } = await issueRefreshToken(user.id);
     setRefreshTokenCookie(res, rawToken);
 
+    if (body.remember_device === true) {
+      const { trustedDeviceDays } = await getMfaSettings();
+      const deviceToken = await issueTrustedDeviceToken(user.id, req, trustedDeviceDays);
+      res.cookie(DEVICE_TOKEN_COOKIE_NAME, deviceToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: trustedDeviceDays * 86_400_000,
+      });
+    }
+
+    res.status(200).json(await sessionPayloadFor(user));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/passkey/options', async (req, res, next) => {
+  try {
+    const user = req.mfaPendingUser!;
+    const credentials = await prisma.mfa_passkey_credentials.findMany({
+      where: { user_id: user.id },
+      select: { credential_id: true },
+    });
+    if (credentials.length === 0) throw ApiError.notFound();
+
+    const options = await buildAuthenticationOptions({ allowCredentialIds: credentials.map((c) => c.credential_id) });
+    pendingLoginPasskeyChallenges.set(user.id, options.challenge);
+    res.status(200).json(options);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/passkey/verify', async (req, res, next) => {
+  try {
+    const user = req.mfaPendingUser!;
+    const lockoutKey = `mfa:${user.email}`;
+
+    if (await isMfaLockedOut(lockoutKey)) {
+      res.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+
+    // One-time consumption regardless of outcome, same as mfa.ts's
+    // pendingProofChallenges - a WebAuthn challenge must never be replayed,
+    // so a failed/missing attempt still burns it.
+    const challenge = pendingLoginPasskeyChallenges.get(user.id);
+    pendingLoginPasskeyChallenges.delete(user.id);
+
+    const response = req.body?.response as AuthenticationResponseJSON | undefined;
+    let verified = false;
+    if (challenge && response?.id) {
+      // Security: scope the credential lookup to THIS pending user, not
+      // just the credential id from the response - a client can send any
+      // credential_id regardless of what allowCredentials offered, so the
+      // user_id match below (not allowCredentials) is the actual
+      // enforcement. Matches mfa.ts's verifyExistingMfaProof precedent.
+      const stored = await prisma.mfa_passkey_credentials.findUnique({ where: { credential_id: response.id } });
+      if (stored && stored.user_id === user.id) {
+        const verification = await verifyAuthentication(response, challenge, {
+          id: stored.credential_id,
+          publicKey: Buffer.from(stored.public_key, 'base64url'),
+          counter: stored.sign_count,
+        });
+        if (verification.verified) {
+          verified = true;
+          await prisma.mfa_passkey_credentials.update({
+            where: { id: stored.id },
+            data: { sign_count: verification.authenticationInfo.newCounter, last_used_at: new Date() },
+          });
+        }
+      }
+    }
+
+    if (!verified) {
+      const { lockedOut } = await recordFailedMfaAttempt(lockoutKey);
+      res.status(401).json({ error: 'unauthorized' });
+      if (lockedOut) {
+        void sendLoginLockoutEmail(user, req, 'passkey');
+      }
+      return;
+    }
+
+    await resetMfaLockout(lockoutKey);
+    await recordSuccessfulSignIn(user, req.ip ?? null);
+    void sendLoginSuccessEmail(user, req, 'passkey');
+    const { rawToken } = await issueRefreshToken(user.id);
+    setRefreshTokenCookie(res, rawToken);
+
+    const body = req.body as { remember_device?: boolean };
     if (body.remember_device === true) {
       const { trustedDeviceDays } = await getMfaSettings();
       const deviceToken = await issueTrustedDeviceToken(user.id, req, trustedDeviceDays);

@@ -547,6 +547,55 @@ paths:
               schema: { $ref: '#/components/schemas/SessionPayload' }
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /api/v1/mfa/challenge/passkey/options:
+    post:
+      operationId: getMfaChallengePasskeyOptions
+      description: >-
+        Mints a WebAuthn authentication challenge (kept in an in-process,
+        per-pending-user map - see mfaChallenge.ts's
+        pendingLoginPasskeyChallenges) scoped to the pending login's own
+        enrolled passkey credentials, as the second factor for an
+        in-progress login challenge (see getMfaChallengeMethods). Requires
+        the `mfa_pending_token`, same as every other /mfa/challenge/* route.
+        404s if the pending user has no passkey credentials.
+      responses:
+        '200':
+          description: WebAuthn authentication options, allowCredentials scoped to the pending user's own passkeys
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MfaWebauthnAuthenticationOptions' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/mfa/challenge/passkey/verify:
+    post:
+      operationId: verifyMfaChallengePasskey
+      description: >-
+        Completes an in-progress login challenge (see getMfaChallengeMethods)
+        with a WebAuthn assertion against the pending user's own enrolled
+        passkey, issuing a full session on success - identical cookie
+        contract to createSession/verifyMfaChallenge. Every failure mode
+        returns the identical 401 body, matching this file's other routes'
+        non-enumerating contract. Optionally marks the current device as
+        trusted (`remember_device: true`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                response: { type: object }
+                remember_device: { type: boolean }
+      responses:
+        '200':
+          description: Logged in; refresh cookie (and, if requested, trusted-device cookie) set
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionPayload' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /api/v1/me:
     get:
       operationId: getMe

@@ -15,6 +15,12 @@ import { sendEmailOtp } from '../../src/lib/mfaEmailOtp.js';
 import { generateBackupCodes } from '../../src/lib/mfaBackupCodes.js';
 import { appConfig, KNOWN_KEYS } from '../../src/lib/appConfig.js';
 
+vi.mock('../../src/lib/mfaPasskeys.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/lib/mfaPasskeys.js')>();
+  return { ...actual, verifyAuthentication: vi.fn() };
+});
+const { verifyAuthentication } = await import('../../src/lib/mfaPasskeys.js');
+
 vi.mock('../../src/lib/mail.js', () => ({ sendMail: vi.fn().mockResolvedValue(undefined) }));
 const { sendMail } = await import('../../src/lib/mail.js');
 
@@ -209,6 +215,136 @@ describe('MFA challenge', () => {
     await vi.waitFor(() => {
       expect(sendMail).toHaveBeenCalledTimes(1);
       expect(sendMail).toHaveBeenCalledWith(expect.objectContaining({ to: user.email }));
+    });
+  });
+
+  describe('passkey as a second factor', () => {
+    async function enrollPasskey(userId: number, credentialId: string) {
+      await prisma.mfa_passkey_credentials.create({
+        data: {
+          user_id: userId,
+          credential_id: credentialId,
+          public_key: Buffer.from('fake-public-key-bytes').toString('base64url'),
+          sign_count: 0,
+          name: 'Test passkey',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+    }
+
+    it('today returns 401 for method=passkey with a typed code - reproduces the reported bug', async () => {
+      const user = await createUser();
+      await enrollPasskey(user.id, 'repro-credential');
+      const token = issueMfaPendingToken(user.id);
+      const res = await request(app)
+        .post('/api/v1/mfa/challenge/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ method: 'passkey', code: 'not-a-real-code' });
+      expect(res.status).toBe(401);
+    });
+
+    it("mints WebAuthn options scoped to only the pending user's own credentials", async () => {
+      const user = await createUser();
+      const otherUser = await createUser({ email: 'other@example.test' });
+      await enrollPasskey(user.id, 'my-credential');
+      await enrollPasskey(otherUser.id, 'someone-elses-credential');
+      const token = issueMfaPendingToken(user.id);
+
+      const res = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+
+      expect(res.status).toBe(200);
+      // .map to id only - the real buildAuthenticationOptions (reused as-is,
+      // not reinvented) also sets `type: 'public-key'` on each entry, which
+      // isn't the property under test here; matches mfa.test.ts's identical
+      // allowCredentials-scoping assertion precedent.
+      expect(res.body.allowCredentials.map((c: { id: string }) => c.id)).toEqual(['my-credential']);
+    });
+
+    it('404s when the pending user has no enrolled passkey', async () => {
+      const user = await createUser();
+      await prisma.mfa_totp_credentials.create({
+        data: { user_id: user.id, encrypted_secret: 'x', verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
+      });
+      const token = issueMfaPendingToken(user.id);
+      const res = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+      expect(res.status).toBe(404);
+    });
+
+    it('verifies a correct passkey assertion and issues a full session', async () => {
+      const user = await createUser();
+      await enrollPasskey(user.id, 'real-credential');
+      const token = issueMfaPendingToken(user.id);
+
+      const optionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+      const challenge: string = optionsRes.body.challenge;
+
+      vi.mocked(verifyAuthentication).mockResolvedValueOnce({
+        verified: true,
+        authenticationInfo: { newCounter: 1 },
+      } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+
+      const res = await request(app)
+        .post('/api/v1/mfa/challenge/passkey/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ response: { id: 'real-credential', response: { clientDataJSON } } });
+
+      expect(res.status).toBe(200);
+      expect(res.body.access_token).toBeDefined();
+    });
+
+    it('rejects a passkey belonging to a different account (cross-account confusion)', async () => {
+      const pendingUser = await createUser();
+      const credentialOwner = await createUser({ email: 'owner@example.test' });
+      await enrollPasskey(credentialOwner.id, 'someone-elses-credential');
+      // The pending user has no passkey of their own, but must still be able
+      // to request options (e.g. they have another method enrolled too) -
+      // this test drives the attack path where a forged/replayed assertion
+      // for a REAL, valid, but WRONG-OWNER credential is submitted directly,
+      // bypassing allowCredentials entirely (a malicious client can send any
+      // credential id regardless of what the options response offered).
+      const token = issueMfaPendingToken(pendingUser.id);
+
+      vi.mocked(verifyAuthentication).mockResolvedValueOnce({
+        verified: true,
+        authenticationInfo: { newCounter: 1 },
+      } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge: 'any-challenge' })).toString('base64');
+
+      const res = await request(app)
+        .post('/api/v1/mfa/challenge/passkey/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ response: { id: 'someone-elses-credential', response: { clientDataJSON } } });
+
+      expect(res.status).toBe(401);
+      const stillPending = await prisma.refresh_tokens.count({ where: { user_id: pendingUser.id } });
+      expect(stillPending).toBe(0);
+    });
+
+    it('locks out after 5 failed passkey verification attempts', async () => {
+      const user = await createUser();
+      await enrollPasskey(user.id, 'lockout-credential');
+      const token = issueMfaPendingToken(user.id);
+      for (let i = 0; i < 5; i++) {
+        const optionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+        const challenge: string = optionsRes.body.challenge;
+        const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+        vi.mocked(verifyAuthentication).mockResolvedValueOnce({ verified: false } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+        await request(app)
+          .post('/api/v1/mfa/challenge/passkey/verify')
+          .set('Authorization', `Bearer ${token}`)
+          .send({ response: { id: 'lockout-credential', response: { clientDataJSON } } });
+      }
+
+      const optionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+      const challenge: string = optionsRes.body.challenge;
+      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+      const res = await request(app)
+        .post('/api/v1/mfa/challenge/passkey/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ response: { id: 'lockout-credential', response: { clientDataJSON } } });
+      expect(res.status).toBe(401);
     });
   });
 });
