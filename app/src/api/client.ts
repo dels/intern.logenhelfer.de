@@ -1,6 +1,7 @@
 import { getAccessToken, setAccessToken, isImpersonating, notifyImpersonationEnded, stopImpersonation } from './token';
 import type { SessionPayload } from './types';
 import { reportFailure, reportSuccess } from './serverStatus';
+import type { PublicKeyCredentialRequestOptionsJSON, AuthenticationResponseJSON } from '@simplewebauthn/browser';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -168,6 +169,24 @@ export function verifyMfaChallenge(
     method: 'POST',
     body: JSON.stringify(input),
   });
+}
+
+export function getMfaChallengePasskeyOptions(mfaPendingToken: string): Promise<PublicKeyCredentialRequestOptionsJSON> {
+  return mfaPendingFetch('/api/v1/mfa/challenge/passkey/options', mfaPendingToken, { method: 'POST' });
+}
+
+export function verifyMfaChallengePasskey(
+  mfaPendingToken: string,
+  input: { response: AuthenticationResponseJSON; remember_device: boolean },
+): Promise<SessionPayload> {
+  return mfaPendingFetch('/api/v1/mfa/challenge/passkey/verify', mfaPendingToken, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function sendMfaChallengeEmailCode(mfaPendingToken: string): Promise<void> {
+  return mfaPendingFetch('/api/v1/mfa/challenge/email/send', mfaPendingToken, { method: 'POST' });
 }
 
 export async function downloadFile(path: string, filename: string): Promise<void> {
