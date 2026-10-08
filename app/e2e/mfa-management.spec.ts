@@ -547,3 +547,13 @@ test('removing the only enrolled method is blocked once mandatory MFA\'s grace p
   // The method was never removed - the disabled button cannot submit anything.
   await expect(totpRow).toBeVisible();
 });
+
+// Same origin-wall blocker as this file's other passkey-ceremony fixme
+// test above (api/src/lib/mfaPasskeys.ts hardcodes `https://${rpID}` as
+// the WebAuthn origin) - a real virtual-authenticator ceremony against the
+// new login-challenge passkey/verify pair (api/src/routes/mfaChallenge.ts)
+// can't run here until that origin is made dev/e2e-configurable. API-level
+// coverage (mocked verifyAuthentication) lives in
+// api/test/routes/mfaChallenge.test.ts and api/test/app.integration.test.ts
+// instead.
+test.fixme('a member with a passkey as their only MFA method can complete login using it as the second factor', async () => {});
