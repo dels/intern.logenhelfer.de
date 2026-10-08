@@ -1069,6 +1069,27 @@ describe('app.ts integration', () => {
       expect(verifyRes.status).toBe(200);
       expect(verifyRes.body.access_token).toBeDefined();
     });
+
+    // Task 3 review gap: mfaChallenge.test.ts covers this route's behavior
+    // at the router level only (bypasses express-openapi-validator entirely
+    // - see that file's own top-of-file comment), so a path-string or
+    // response-schema typo in this route's new openapi.yaml entry could 500
+    // in production while still passing every route-level test. The
+    // precedent `/passkey/options` test above already proves a bodyless POST
+    // with `.send({})` clears the validator with no requestBody defined (the
+    // same contract shape as `/email/send`); this closes the one thing that
+    // precedent doesn't prove - that THIS specific path entry is wired and
+    // schema-valid.
+    it('a bodyless POST to /email/send clears the real validated app with 204', async () => {
+      const user = await createUser();
+      await prisma.mfa_email_credentials.create({
+        data: { user_id: user.id, verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
+      });
+      const token = issueMfaPendingToken(user.id);
+
+      const res = await request(app).post('/api/v1/mfa/challenge/email/send').set('Authorization', `Bearer ${token}`).send({});
+      expect(res.status).toBe(204);
+    });
   });
 
   describe('GET /api/v1/mfa/passkeys contract validation', () => {
