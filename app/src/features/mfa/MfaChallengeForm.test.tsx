@@ -77,4 +77,51 @@ describe('MfaChallengeForm', () => {
     expect(onSendEmailCode).toHaveBeenCalled();
     expect(screen.getByLabelText(/code/i)).toBeInTheDocument();
   });
+
+  it('shows a confirmation message once the email code is sent successfully', async () => {
+    const onSendEmailCode = vi.fn().mockResolvedValue(undefined);
+    render(<MfaChallengeForm methods={['email']} onSubmit={vi.fn()} onSendEmailCode={onSendEmailCode} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /send/i }));
+    expect(await screen.findByText('Code wurde per E-Mail gesendet.')).toBeInTheDocument();
+  });
+
+  // Unhappy path: the send-code request itself can fail (rate limit, mail
+  // backend down) - the user needs to see that, not silently wait forever
+  // for a code that was never actually sent.
+  it('shows an error message when sending the email code fails', async () => {
+    const onSendEmailCode = vi.fn().mockRejectedValue(new Error('network error'));
+    render(<MfaChallengeForm methods={['email']} onSubmit={vi.fn()} onSendEmailCode={onSendEmailCode} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /send/i }));
+    expect(await screen.findByText('Code konnte nicht gesendet werden.')).toBeInTheDocument();
+    expect(screen.queryByText('Code wurde per E-Mail gesendet.')).not.toBeInTheDocument();
+  });
+
+  // Edge case: every earlier passkey/email test above only ever rendered
+  // with the target method already as the default (methods[0]) - this
+  // proves the select's onChange actually drives the passkey-button/
+  // code-field branch too, not just the initial-render branch (same gap
+  // Task 21's review found for the plain totp/email submit case above).
+  it('switches from a code field to the passkey button when the user picks passkey from the dropdown', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const onPasskeySubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <MfaChallengeForm
+        methods={['totp', 'passkey']}
+        onSubmit={onSubmit}
+        onPasskeySubmit={onPasskeySubmit}
+      />,
+    );
+
+    expect(screen.getByLabelText(/code/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText('Methode'));
+    await userEvent.click(await screen.findByRole('option', { name: 'Passkey' }));
+
+    expect(screen.queryByLabelText(/code/i)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /passkey/i }));
+    expect(onPasskeySubmit).toHaveBeenCalledWith(false);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

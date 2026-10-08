@@ -303,6 +303,30 @@ describe('LoginPage', () => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
       expect(screen.queryByText('Der Server ist momentan nicht erreichbar. Bitte versuche es später erneut.')).not.toBeInTheDocument();
     });
+
+    // Edge case: a real (non-cancellation) 401 from the passkey-verify
+    // endpoint still needs to surface an error, not get silently swallowed
+    // by the ERROR_CEREMONY_ABORTED branch above. Documents current
+    // behavior per this task's brief - see this task's own report for a
+    // flagged copy concern (mfaInvalidCode's "code" wording doesn't quite
+    // fit a passkey, which has no code).
+    it('shows an invalid-code message on a 401 from passkey verification (not a cancellation)', async () => {
+      server.use(
+        http.post('/api/v1/session', () => HttpResponse.json({ mfa_pending_token: 'ptok' })),
+        http.get('/api/v1/mfa/challenge/methods', () => HttpResponse.json({ methods: ['passkey'] })),
+        http.post('/api/v1/mfa/challenge/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })),
+        http.post('/api/v1/mfa/challenge/passkey/verify', () => new HttpResponse(null, { status: 401 })),
+      );
+      vi.mocked(startAuthentication).mockResolvedValueOnce({
+        id: 'cred-1', rawId: 'cred-1', type: 'public-key',
+        response: { clientDataJSON: '', authenticatorData: '', signature: '' },
+        clientExtensionResults: {},
+      } as never);
+      renderLoginPage();
+      await submitLoginForm();
+      await userEvent.click(await screen.findByRole('button', { name: /passkey/i }));
+      expect(await screen.findByText('Der eingegebene Code ist ungültig.')).toBeInTheDocument();
+    });
   });
 
   describe('passkey login', () => {
