@@ -11,7 +11,7 @@ import { DEVICE_TOKEN_COOKIE_NAME } from './session.js';
 import { prisma } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { verifyEncryptedTotpCode } from '../lib/mfaTotp.js';
-import { verifyEmailOtp } from '../lib/mfaEmailOtp.js';
+import { sendEmailOtp, verifyEmailOtp } from '../lib/mfaEmailOtp.js';
 import { consumeBackupCode } from '../lib/mfaBackupCodes.js';
 import { getUserMfaMethods, computeGracePeriodEndsAt } from '../lib/mfaStatus.js';
 import { getMfaSettings } from '../lib/mfaSettings.js';
@@ -272,6 +272,23 @@ router.post('/passkey/verify', async (req, res, next) => {
     }
 
     res.status(200).json(await sessionPayloadFor(user));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/email/send', async (req, res, next) => {
+  try {
+    const user = req.mfaPendingUser!;
+    const credential = await prisma.mfa_email_credentials.findUnique({ where: { user_id: user.id } });
+    if (!credential || credential.verified_at === null) throw ApiError.notFound();
+
+    // ponytail: no resend cooldown, matching /mfa/setup/start's existing
+    // (pre-existing, out of this fix's scope) unthrottled behavior for the
+    // 'setup'-purpose send - repeated calls just stack additional valid
+    // codes. Add a cooldown if this is ever abused for mail-bombing.
+    await sendEmailOtp(user.id, user.email, 'login');
+    res.status(204).send();
   } catch (err) {
     next(err);
   }

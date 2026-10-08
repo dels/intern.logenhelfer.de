@@ -440,4 +440,61 @@ describe('MFA challenge', () => {
       expect(vi.mocked(verifyAuthentication)).not.toHaveBeenCalled();
     });
   });
+
+  describe('email as a second factor', () => {
+    // Deviation from the brief: the brief's own first test here asserted a
+    // 404 "reproduces the reported gap" - but that 404 only held because no
+    // route existed yet at all, and is the exact scenario (a verified email
+    // credential) the route's happy path must turn into a 204 once
+    // implemented. Keeping it as written would make it permanently
+    // contradict the second test below (identical setup, opposite
+    // assertion) and the brief's own Step 4 ("run tests, expect PASS").
+    // Repurposed instead to cover the one branch nothing else exercises:
+    // an email credential that exists but was never verified (mid-setup,
+    // never confirmed) must not count as a usable second factor - mirrors
+    // this file's existing TOTP precedent for the identical
+    // `verified_at !== null` gate.
+    it('404s when the pending user has an email credential that was never verified', async () => {
+      const user = await createUser();
+      await prisma.mfa_email_credentials.create({
+        data: { user_id: user.id, verified_at: null, created_at: new Date(), updated_at: new Date() },
+      });
+      const token = issueMfaPendingToken(user.id);
+
+      const res = await request(app).post('/api/v1/mfa/challenge/email/send').set('Authorization', `Bearer ${token}`).send({});
+      expect(res.status).toBe(404);
+      expect(sendMail).not.toHaveBeenCalled();
+    });
+
+    it('sends a login-purpose code that the existing /verify endpoint accepts', async () => {
+      const user = await createUser();
+      await prisma.mfa_email_credentials.create({
+        data: { user_id: user.id, verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
+      });
+      const token = issueMfaPendingToken(user.id);
+
+      const sendRes = await request(app).post('/api/v1/mfa/challenge/email/send').set('Authorization', `Bearer ${token}`).send({});
+      expect(sendRes.status).toBe(204);
+
+      await vi.waitFor(() => expect(sendMail).toHaveBeenCalledTimes(1));
+      const sentText = vi.mocked(sendMail).mock.calls[0]![0].text as string;
+      const code = /(\d{6})/.exec(sentText)![1]!;
+
+      const verifyRes = await request(app)
+        .post('/api/v1/mfa/challenge/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ method: 'email', code });
+      expect(verifyRes.status).toBe(200);
+    });
+
+    it('404s when the pending user has no verified email method', async () => {
+      const user = await createUser();
+      await prisma.mfa_totp_credentials.create({
+        data: { user_id: user.id, encrypted_secret: 'x', verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
+      });
+      const token = issueMfaPendingToken(user.id);
+      const res = await request(app).post('/api/v1/mfa/challenge/email/send').set('Authorization', `Bearer ${token}`).send({});
+      expect(res.status).toBe(404);
+    });
+  });
 });

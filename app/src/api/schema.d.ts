@@ -399,6 +399,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mfa/challenge/email/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Sends a fresh 'login'-purpose email OTP code to the pending user's own email address, for use with verifyMfaChallenge's `{method: 'email', code}`. Requires the `mfa_pending_token`. 404s if the pending user has no verified email method. */
+        post: operations["sendMfaChallengeEmailCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -3268,6 +3285,26 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    sendMfaChallengeEmailCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Code sent */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     getMe: {
