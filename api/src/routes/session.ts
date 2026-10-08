@@ -16,6 +16,7 @@ import {
   RefreshTokenReuseError,
   rotateRefreshToken,
 } from '../auth/refreshToken.js';
+import { recordSuccessfulSignIn } from '../auth/signInTracking.js';
 import { prisma } from '../db.js';
 import { ApiError } from '../lib/errors.js';
 import { sendLoginLockoutEmail, sendLoginSuccessEmail } from '../lib/loginNotification.js';
@@ -113,34 +114,6 @@ async function revokeFamilyForRawToken(rawToken: string): Promise<void> {
 }
 
 /**
- * Port of Devise::Models::Trackable#update_tracked_fields! (Devise gem,
- * invoked from Devise::Models::Authenticatable#after_database_authentication
- * on every successful password sign-in) - this was never ported when
- * session.ts was rewritten from Rails, so sign_in_count/current_sign_in_at/
- * current_sign_in_ip/last_sign_in_at/last_sign_in_ip silently stayed frozen
- * at their DB defaults forever, which is what statistics.ts's `user_stats`
- * sub-report reads (see this repo's CLAUDE.md session note: "statistics
- * won't get updated ... logins are not updated"). `attachedFiles.ts`'s
- * download tracking and `events.ts`'s RSVP tracking also read
- * `current_sign_in_ip` off the current user, so this bug silently nulled
- * `remote_ip` everywhere downstream too. Same old-current-becomes-last
- * rollover Devise uses, run before the new value overwrites current_*.
- */
-async function recordSuccessfulSignIn(user: { id: number; current_sign_in_at: Date | null; current_sign_in_ip: string | null; sign_in_count: number | null }, ip: string | null): Promise<void> {
-  const now = new Date();
-  await prisma.users.update({
-    where: { id: user.id },
-    data: {
-      last_sign_in_at: user.current_sign_in_at ?? now,
-      current_sign_in_at: now,
-      last_sign_in_ip: user.current_sign_in_ip ?? ip,
-      current_sign_in_ip: ip,
-      sign_in_count: (user.sign_in_count ?? 0) + 1,
-    },
-  });
-}
-
-/**
  * Port of `params.require(:key)` - raises (here: throws ApiError.badRequest)
  * when the value is missing or blank. Rails' `.blank?` treats a
  * whitespace-only string as blank too (not just `""`), so the presence check
@@ -213,7 +186,6 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
     }
 
     await resetLoginLockout(email);
-    await recordSuccessfulSignIn(user, req.ip ?? null);
 
     const methods = await getUserMfaMethods(user.id);
 
@@ -234,6 +206,7 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
       // api/../task-21-report.md and the now-superseded
       // app/src/pages/LoginPage.test.tsx "KNOWN GAP" test this task replaces).
       const mfaSetupRequired = await isMfaSetupRequiredFor(user.id);
+      await recordSuccessfulSignIn(user, req.ip ?? null);
       const { rawToken } = await issueRefreshToken(user.id);
       setRefreshTokenCookie(res, rawToken);
       void sendLoginSuccessEmail(user, req, 'password');
@@ -243,6 +216,7 @@ router.post('/session', loginRateLimiter, async (req: Request, res: Response, ne
 
     const deviceToken: unknown = req.cookies?.[DEVICE_TOKEN_COOKIE_NAME];
     if (await isDeviceTrusted(user.id, typeof deviceToken === 'string' ? deviceToken : undefined)) {
+      await recordSuccessfulSignIn(user, req.ip ?? null);
       const { rawToken } = await issueRefreshToken(user.id);
       setRefreshTokenCookie(res, rawToken);
       void sendLoginSuccessEmail(user, req, 'password');
@@ -393,6 +367,7 @@ router.post('/session/passkey/verify', loginRateLimiter, async (req: Request, re
       res.status(401).json({ error: 'unauthorized' });
       return;
     }
+    await recordSuccessfulSignIn(user, req.ip ?? null);
     const { rawToken } = await issueRefreshToken(user.id);
     setRefreshTokenCookie(res, rawToken);
     void sendLoginSuccessEmail(user, req, 'passkey');

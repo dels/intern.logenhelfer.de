@@ -180,6 +180,22 @@ describe('Session API', () => {
       expect(unchanged.current_sign_in_at).toBeNull();
       expect(unchanged.current_sign_in_ip).toBeNull();
     });
+
+    it('does not bump sign-in tracking fields when password succeeds but MFA is still pending', async () => {
+      const user = await createLoginableUser();
+      await prisma.mfa_totp_credentials.create({
+        data: { user_id: user.id, encrypted_secret: 'x', verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
+      });
+
+      const res = await request(app).post('/api/v1/session').set('X-Forwarded-For', '203.0.113.9').send({ email: user.email, password: PASSWORD });
+
+      expect(res.status).toBe(200);
+      expect(res.body.mfa_pending_token).toBeDefined();
+      const unchanged = await prisma.users.findUniqueOrThrow({ where: { id: user.id } });
+      expect(unchanged.sign_in_count).toBe(0);
+      expect(unchanged.current_sign_in_at).toBeNull();
+      expect(unchanged.current_sign_in_ip).toBeNull();
+    });
   });
 
   describe('POST /api/v1/session/refresh', () => {
