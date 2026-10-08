@@ -590,7 +590,11 @@
       "title": "Two-factor authentication",
       "method": "Method",
       "codeLabel": "Code",
-      "rememberDevice": "Remember this device"
+      "rememberDevice": "Remember this device",
+      "verifyWithPasskey": "Verify with passkey",
+      "sendEmailCode": "Send code by email",
+      "emailCodeSent": "Code sent by email.",
+      "emailCodeSendFailed": "Failed to send code."
     },
     "method": {
       "totp": "Authenticator app",

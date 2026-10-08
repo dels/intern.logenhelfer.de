@@ -252,6 +252,57 @@ describe('LoginPage', () => {
       expect(await screen.findByText(/zwei-faktor-authentifizierung einrichten/i)).toBeInTheDocument();
       expect(screen.queryByLabelText('E-Mail')).not.toBeInTheDocument();
     });
+
+    // Task 5 integration coverage: MfaChallengeForm.test.tsx only exercises
+    // the component in isolation (a mocked onPasskeySubmit) - these two
+    // prove the real LoginPage wiring (handleMfaPasskeySubmit calling
+    // completeMfaChallengeWithPasskey) actually works end to end.
+    it('completes the MFA passkey challenge and reaches the dashboard', async () => {
+      server.use(
+        http.post('/api/v1/session', () => HttpResponse.json({ mfa_pending_token: 'ptok' })),
+        http.get('/api/v1/mfa/challenge/methods', () => HttpResponse.json({ methods: ['passkey'] })),
+        http.post('/api/v1/mfa/challenge/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })),
+        http.post('/api/v1/mfa/challenge/passkey/verify', () => HttpResponse.json({ access_token: 'full-tok', user })),
+        http.get('/api/v1/me', ({ request }) => {
+          if (request.headers.get('Authorization') === 'Bearer full-tok') return HttpResponse.json({ user, abilities: {} });
+          return new HttpResponse(null, { status: 401 });
+        }),
+      );
+      vi.mocked(startAuthentication).mockResolvedValueOnce({
+        id: 'cred-1', rawId: 'cred-1', type: 'public-key',
+        response: { clientDataJSON: '', authenticatorData: '', signature: '' },
+        clientExtensionResults: {},
+      } as never);
+      renderLoginPageWithRoutes();
+      await submitLoginForm();
+      await userEvent.click(await screen.findByRole('button', { name: /passkey/i }));
+      expect(await screen.findByText('dashboard-page')).toBeInTheDocument();
+    });
+
+    // Regression test: completeMfaChallengeWithPasskey (AuthProvider.tsx)
+    // calls startAuthentication directly, so cancelling the browser's
+    // passkey prompt throws a WebAuthnError straight out of
+    // handleMfaPasskeySubmit - not an ApiError. Without the
+    // ERROR_CEREMONY_ABORTED check added to that function's catch block, a
+    // plain cancel fell through to the generic "server unreachable" message,
+    // alarming the user over an action they took deliberately.
+    it('does not show an error when the user cancels the passkey prompt during the MFA challenge', async () => {
+      server.use(
+        http.post('/api/v1/session', () => HttpResponse.json({ mfa_pending_token: 'ptok' })),
+        http.get('/api/v1/mfa/challenge/methods', () => HttpResponse.json({ methods: ['passkey'] })),
+        http.post('/api/v1/mfa/challenge/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })),
+      );
+      vi.mocked(startAuthentication).mockRejectedValueOnce(
+        new WebAuthnError({ message: 'ceremony aborted', code: 'ERROR_CEREMONY_ABORTED', cause: new Error('AbortError') }),
+      );
+      renderLoginPage();
+      await submitLoginForm();
+      const button = await screen.findByRole('button', { name: /passkey/i });
+      await userEvent.click(button);
+      await vi.waitFor(() => expect(button).not.toBeDisabled());
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.queryByText('Der Server ist momentan nicht erreichbar. Bitte versuche es später erneut.')).not.toBeInTheDocument();
+    });
   });
 
   describe('passkey login', () => {

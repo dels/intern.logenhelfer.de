@@ -590,7 +590,11 @@
       "title": "Zwei-Faktor-Authentifizierung",
       "method": "Methode",
       "codeLabel": "Code",
-      "rememberDevice": "Dieses Gerät merken"
+      "rememberDevice": "Dieses Gerät merken",
+      "verifyWithPasskey": "Mit Passkey bestätigen",
+      "sendEmailCode": "Code per E-Mail senden",
+      "emailCodeSent": "Code wurde per E-Mail gesendet.",
+      "emailCodeSendFailed": "Code konnte nicht gesendet werden."
     },
     "method": {
       "totp": "Authenticator App",

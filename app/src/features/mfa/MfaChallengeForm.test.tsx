@@ -59,4 +59,22 @@ describe('MfaChallengeForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /bestätigen|confirm/i }));
     expect(onSubmit).toHaveBeenCalledWith({ method: 'backup_code', code: '99999999', remember_device: false });
   });
+
+  it('renders a passkey ceremony button instead of a code field when passkey is the selected method', async () => {
+    const onPasskeySubmit = vi.fn().mockResolvedValue(undefined);
+    render(<MfaChallengeForm methods={['passkey']} onSubmit={vi.fn()} onPasskeySubmit={onPasskeySubmit} />);
+
+    expect(screen.queryByLabelText(/code/i)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /passkey/i }));
+    expect(onPasskeySubmit).toHaveBeenCalledWith(false);
+  });
+
+  it('renders a send-code button for the email method that calls onSendEmailCode', async () => {
+    const onSendEmailCode = vi.fn().mockResolvedValue(undefined);
+    render(<MfaChallengeForm methods={['email']} onSubmit={vi.fn()} onSendEmailCode={onSendEmailCode} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /send/i }));
+    expect(onSendEmailCode).toHaveBeenCalled();
+    expect(screen.getByLabelText(/code/i)).toBeInTheDocument();
+  });
 });
