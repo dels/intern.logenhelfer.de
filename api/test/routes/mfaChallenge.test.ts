@@ -400,16 +400,14 @@ describe('MFA challenge', () => {
       const challenge: string = optionsRes.body.challenge;
       const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
       // Clear right before the 6th (locked-out) request so the assertion
-      // below proves verifyAuthentication is never reached - though since
-      // final-review Finding 4 added a lockout check to /passkey/options
-      // itself, the 6th options call above now ALSO 401s once locked out, so
-      // `challenge` here is undefined too; "verifyAuthentication not called"
-      // is therefore satisfied by either /passkey/verify's own lockout check
-      // OR the plain missing-challenge guard. The dedicated
-      // "still enforces lockout on /passkey/verify even with a real, valid
-      // challenge already minted" test (email-OTP hardening describe block)
-      // isolates /passkey/verify's own check specifically - this test alone
-      // no longer proves that check exists.
+      // below proves verifyAuthentication is never reached. /passkey/options
+      // deliberately has no lockout check of its own (see mfaChallenge.ts's
+      // comment on that route - a final-review fix reverted an earlier
+      // attempt to add one, since it made that route leak lockout state via
+      // a distinguishable response), so the 6th options call above still
+      // succeeds and mints a real `challenge` here; "verifyAuthentication not
+      // called" below is therefore proof of /passkey/verify's OWN lockout
+      // check specifically, not a missing-challenge side effect.
       vi.mocked(verifyAuthentication).mockClear();
       const res = await request(app)
         .post('/api/v1/mfa/challenge/passkey/verify')
@@ -462,11 +460,10 @@ describe('MFA challenge', () => {
           .send({ response: { id: 'throwing-credential', response: { clientDataJSON: nextClientDataJSON } } });
       }
 
-      // Same caveat as the preceding test: /passkey/options' own Finding-4
-      // lockout check means `finalChallenge` below is undefined too once
-      // locked out, so this probe no longer isolates /passkey/verify's own
-      // lockout check in particular - see that test's comment and the
-      // dedicated guard test for that.
+      // Same as the preceding test: /passkey/options has no lockout check of
+      // its own, so the options call below still succeeds and mints a real
+      // `finalChallenge`, isolating /passkey/verify's own lockout check as
+      // the reason verifyAuthentication is never called below.
       const finalOptionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
       const finalChallenge: string = finalOptionsRes.body.challenge;
       const finalClientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge: finalChallenge })).toString('base64');
@@ -661,8 +658,16 @@ describe('MFA challenge', () => {
   // valid pending token (i.e. someone who already has the account's
   // password) used to be able to stack unlimited valid login-purpose email
   // codes by calling /email/send repeatedly, each independently guessable
-  // via /verify; /email/send and /passkey/options also used to skip the
-  // lockout check that /verify and /passkey/verify already had.
+  // via /verify. A later fix wave then added `isMfaLockedOut` 401 gates to
+  // both /email/send and /passkey/options to stop a locked-out account from
+  // still getting codes/options - but a SUBSEQUENT final whole-branch review
+  // found that itself violated CLAUDE.md's "lockout responses must be
+  // indistinguishable from an ordinary failed attempt" invariant: both routes
+  // now returned a distinguishable 401 vs. their normal 200/204/404, leaking
+  // lockout state to anyone holding a pending token. Current, corrected
+  // state: /passkey/options has no lockout check at all (reverted - see its
+  // own comment in mfaChallenge.ts), and /email/send keeps the check but
+  // turns it into a silent no-op (still 204, email just isn't sent).
   describe('email-OTP hardening (final-review Finding 4)', () => {
     it('invalidates a prior outstanding login code when a new one is sent - only the newest code verifies', async () => {
       const user = await createUser();
@@ -692,20 +697,39 @@ describe('MFA challenge', () => {
       expect(secondAttempt.status).toBe(200);
     });
 
-    it('returns 401 from /email/send when the account is already MFA-locked-out, and sends no mail', async () => {
+    // REVISED after the final whole-branch review: the original hardening
+    // made this route return a distinguishable 401 while locked out vs. its
+    // normal 204 - letting anyone holding a pending token (i.e. the account's
+    // password) probe lockout state by polling this route. The fix keeps the
+    // lockout check but makes it a silent no-op: same 204 either way, proven
+    // here only by asserting sendMail was NOT invoked for this specific call
+    // (mockClear right before, so a send from test setup can't be mistaken
+    // for one from the locked-out request itself). Unlike the fire-and-forget
+    // notification emails elsewhere in this file, the route here `await`s
+    // sendEmailOtp (or, locked out, never calls it at all) fully before
+    // responding, so there's no async gap to race - no vi.waitFor needed to
+    // assert its absence.
+    it('silently no-ops the send (still 204, no distinguishable response) when the account is already MFA-locked-out', async () => {
       const user = await createUser();
       await prisma.mfa_email_credentials.create({
         data: { user_id: user.id, verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
       });
       const token = issueMfaPendingToken(user.id);
       for (let i = 0; i < 5; i++) await recordFailedMfaAttempt(`mfa:${user.email}`);
+      vi.mocked(sendMail).mockClear();
 
       const res = await request(app).post('/api/v1/mfa/challenge/email/send').set('Authorization', `Bearer ${token}`).send({});
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(204);
       expect(sendMail).not.toHaveBeenCalled();
     });
 
-    it('returns 401 from /passkey/options when the account is already MFA-locked-out', async () => {
+    // /passkey/options deliberately has NO lockout check (see mfaChallenge.ts's
+    // own comment on that route) - minting WebAuthn options is harmless on
+    // its own since /passkey/verify independently blocks completion for a
+    // locked-out account, and gating options too would reintroduce the exact
+    // distinguishable-401 leak this fix removes. This test proves the route
+    // still works (200, not 401) while locked out - no leak, by design.
+    it('still returns 200 from /passkey/options when the account is already MFA-locked-out (no lockout gate here by design)', async () => {
       const user = await createUser();
       await prisma.mfa_passkey_credentials.create({
         data: {
@@ -722,21 +746,20 @@ describe('MFA challenge', () => {
       for (let i = 0; i < 5; i++) await recordFailedMfaAttempt(`mfa:${user.email}`);
 
       const res = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(200);
+      expect(res.body.challenge).toBeDefined();
     });
 
-    // Dedicated guard for /passkey/verify's OWN lockout check, independent of
-    // /passkey/options' new one above. Without this, the two pre-existing
-    // "locks out after 5 failed..." tests in the "passkey as a second
-    // factor" describe block above would stay green even if /passkey/verify's
-    // own isMfaLockedOut check were deleted entirely - once /passkey/options
-    // itself started returning 401 while locked out, those tests' 6th-attempt
-    // probe never gets a real challenge, so `verifyAuthentication` already
-    // goes uncalled for the unrelated reason "no challenge in the map",
-    // regardless of whether /passkey/verify's own lockout check still exists.
-    // Minting the challenge BEFORE locking out (unlike those two tests) keeps
-    // a real, valid challenge in the map, so this test isolates /passkey/
-    // verify's own check specifically.
+    // Dedicated, explicit guard for /passkey/verify's OWN lockout check.
+    // /passkey/options has no lockout check of its own (see above), so the
+    // two pre-existing "locks out after 5 failed..." tests in the "passkey as
+    // a second factor" describe block already isolate this too - but this
+    // test keeps that proof independent of that fact: it mints the challenge
+    // and locks out in a single, minimal, impossible-to-misread sequence
+    // (challenge first, then exactly 5 failed attempts via direct
+    // recordFailedMfaAttempt calls rather than 5 real failed verify
+    // requests), so it stays correct even if those other tests' setup ever
+    // changes shape.
     it('still enforces lockout on /passkey/verify even with a real, valid challenge already minted', async () => {
       const user = await createUser();
       await prisma.mfa_passkey_credentials.create({

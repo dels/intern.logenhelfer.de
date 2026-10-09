@@ -167,17 +167,16 @@ router.post('/verify', async (req, res, next) => {
 router.post('/passkey/options', async (req, res, next) => {
   try {
     const user = req.mfaPendingUser!;
-    const lockoutKey = `mfa:${user.email}`;
 
-    // Security hardening (final-review Finding 4): this route used to skip
-    // the lockout check entirely, so a locked-out account could still mint
-    // fresh WebAuthn authentication options - matches the same check already
-    // present on /verify and /passkey/verify below.
-    if (await isMfaLockedOut(lockoutKey)) {
-      res.status(401).json({ error: 'unauthorized' });
-      return;
-    }
-
+    // Deliberately no lockout check here (reverted from a prior fix-wave
+    // hardening attempt - see final whole-branch review): minting WebAuthn
+    // options is harmless on its own, since /passkey/verify below already
+    // independently blocks a locked-out account from completing the
+    // ceremony. Adding a lockout gate here would make this route return a
+    // distinguishable 401 vs. its normal 200/404, which lets anyone holding
+    // a pending token (i.e. the account's password) probe lockout state -
+    // exactly what CLAUDE.md's "lockout responses must be indistinguishable
+    // from an ordinary failed attempt" invariant forbids.
     const credentials = await prisma.mfa_passkey_credentials.findMany({
       where: { user_id: user.id },
       select: { credential_id: true },
@@ -301,19 +300,25 @@ router.post('/passkey/verify', async (req, res, next) => {
 router.post('/email/send', loginRateLimiter, async (req, res, next) => {
   try {
     const user = req.mfaPendingUser!;
-    const lockoutKey = `mfa:${user.email}`;
-
-    // Security hardening (final-review Finding 4): this route used to skip
-    // the lockout check entirely, so a locked-out account could still have
-    // fresh codes mailed to it - matches the same check already present on
-    // /verify and /passkey/verify.
-    if (await isMfaLockedOut(lockoutKey)) {
-      res.status(401).json({ error: 'unauthorized' });
-      return;
-    }
 
     const credential = await prisma.mfa_email_credentials.findUnique({ where: { user_id: user.id } });
     if (!credential || credential.verified_at === null) throw ApiError.notFound();
+
+    const lockoutKey = `mfa:${user.email}`;
+
+    // Security hardening (final-review Finding 4), REVISED after the final
+    // whole-branch review: a locked-out account must not get a
+    // distinguishable response from this route (CLAUDE.md's MFA lockout
+    // invariant - same status/body whether locked out or not), so unlike
+    // /verify and /passkey/verify this is NOT a 401 branch. Instead, silently
+    // no-op the send while still returning the exact same 204 the success
+    // path returns below - a pending-token holder (i.e. someone who already
+    // has the account's password) gets zero signal either way; only the test
+    // harness, by asserting on the sendMail mock, can tell the difference.
+    if (await isMfaLockedOut(lockoutKey)) {
+      res.status(204).send();
+      return;
+    }
 
     // Security hardening (final-review Finding 4): invalidate every prior
     // outstanding login-purpose code before sending a new one. Without this,
