@@ -122,6 +122,11 @@ describe('EventsListPage', () => {
   });
 
   it('hides "Neuer Termin" and "Neuer Termin außer Haus" for a read-only member', async () => {
+    // Pin "today" to the fixture event's month - the calendar view's anchor
+    // defaults to the real current date, so this test silently broke once
+    // real time moved past August 2026 (eventRow is hardcoded to 2026-08-01).
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-08-01T00:00:00'));
     server.use(http.get('/api/v1/me', () => HttpResponse.json({ user: { id: 2, email: 'c@d.de', firstname: 'A', lastname: 'B' }, abilities: { event: ['read'] } })));
     renderPage();
     await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
@@ -262,6 +267,10 @@ describe('EventsListPage', () => {
   });
 
   it('shows the birthday-calendar button only when /me provides a URL', async () => {
+    // Same fix as above: pin "today" to the fixture event's month so the
+    // default calendar view actually renders it.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-08-01T00:00:00'));
     renderPage();
     await waitFor(() => expect(screen.getByText('Stiftungsfest')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Geburtstagskalender einbinden' })).not.toBeInTheDocument();
