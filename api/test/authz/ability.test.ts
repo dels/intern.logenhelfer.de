@@ -302,6 +302,22 @@ describe('buildAbility', () => {
     });
   });
 
+  describe('DedicatedMaster', () => {
+    it('manages seekers (zug. MvSt deputizes for the worshipful master on this one grant)', async () => {
+      const { ability } = await abilityFor('DedicatedMaster');
+
+      expect(ability.can('manage', 'Seeker')).toBe(true);
+    });
+
+    it('does NOT get the worshipful master\'s other grants (events, announcements, lodges)', async () => {
+      const { ability } = await abilityFor('DedicatedMaster');
+
+      expect(ability.can('manage', 'Event')).toBe(false);
+      expect(ability.can('manage', 'Announcement')).toBe(false);
+      expect(ability.can('manage', 'Lodge')).toBe(false);
+    });
+  });
+
   describe('NetDelegate', () => {
     it('manages files and users but not events, lodges, or announcements', async () => {
       const { ability } = await abilityFor('NetDelegate');

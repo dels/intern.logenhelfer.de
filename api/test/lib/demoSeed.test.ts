@@ -74,7 +74,7 @@ describe('resetAndSeedDemoData', () => {
     expect(sentinelStillExists).not.toBeNull();
   });
 
-  it('creates the 13 canonical roles and accounts with the shared password, sharing one bcrypt hash', async () => {
+  it('creates the 14 canonical roles and accounts with the shared password, sharing one bcrypt hash', async () => {
     setDemoMode('true');
 
     await resetAndSeedDemoData();
@@ -105,9 +105,9 @@ describe('resetAndSeedDemoData', () => {
     await resetAndSeedDemoData();
 
     expect(await prisma.users.count()).toBe(TOTAL_USER_COUNT);
-    // Every role used anywhere (13 canonical accounts + brothers' degree/
+    // Every role used anywhere (14 canonical accounts + brothers' degree/
     // MemberOfCouncil roles + directory/category grants) is already among
-    // the 13 canonical roles - ensureRole finds rather than duplicates.
+    // the 14 canonical roles - ensureRole finds rather than duplicates.
     expect(await prisma.roles.count()).toBe(DEMO_ACCOUNTS.length);
   });
 
@@ -237,14 +237,14 @@ describe('resetAndSeedDemoData', () => {
     // already accumulates rows for real, promoted members - so "has an
     // EnteredApprentice row" no longer means "current degree is
     // EnteredApprentice", it means "has ever been one". Counts below are the
-    // brother population who reached at least that degree, plus all 13
+    // brother population who reached at least that degree, plus all 14
     // DEMO_ACCOUNTS (Task 10): every account gets an EnteredApprentice row,
     // every account except lehrling@ also gets FellowCraft, and every
     // account except lehrling@/geselle@ also gets MasterMason (meister@ plus
-    // all 10 officer accounts, who are assumed master-mason-level).
-    expect(await userCountWithRole(apprenticeRoleId)).toBe(60 + 13);
-    expect(await userCountWithRole(fellowCraftRoleId)).toBe(56 + 12);
-    expect(await userCountWithRole(masterMasonRoleId)).toBe(50 + 11);
+    // all 11 officer accounts, who are assumed master-mason-level).
+    expect(await userCountWithRole(apprenticeRoleId)).toBe(60 + 14);
+    expect(await userCountWithRole(fellowCraftRoleId)).toBe(56 + 13);
+    expect(await userCountWithRole(masterMasonRoleId)).toBe(50 + 12);
     // +1 for the canonical beamtenrat@ account's own MemberOfCouncil
     // administrative role row (unrelated to the degree rows above).
     expect(await userCountWithRole(memberOfCouncilRoleId)).toBe(2 + 1);
@@ -253,7 +253,7 @@ describe('resetAndSeedDemoData', () => {
     const brothers = (await prisma.users.findMany()).filter((u) => !canonicalEmails.has(u.email));
     expect(brothers).toHaveLength(BROTHER_COUNT);
 
-    // bcrypt.compare at cost 12 is genuinely expensive - the "creates the 13
+    // bcrypt.compare at cost 12 is genuinely expensive - the "creates the 14
     // canonical roles and accounts" test above already proves the shared
     // hash is a valid bcrypt hash of 'Salomon333' via one real bcrypt.compare
     // call. Calling it again per brother (60 more times) is redundant
@@ -361,7 +361,7 @@ describe('resetAndSeedDemoData', () => {
     }
   });
 
-  it('gives the 13 fixed-role accounts realistic, distinct German names instead of the raw English role identifier', async () => {
+  it('gives the 14 fixed-role accounts realistic, distinct German names instead of the raw English role identifier', async () => {
     setDemoMode('true');
 
     await resetAndSeedDemoData();
@@ -389,7 +389,7 @@ describe('resetAndSeedDemoData', () => {
     }
   });
 
-  it('gives all 13 DEMO_ACCOUNTS a matriculation number, a Bremen address, and the correct degree-date exceptions', async () => {
+  it('gives all 14 DEMO_ACCOUNTS a matriculation number, a Bremen address, and the correct degree-date exceptions', async () => {
     setDemoMode('true');
 
     await resetAndSeedDemoData();
@@ -429,7 +429,7 @@ describe('resetAndSeedDemoData', () => {
         expect(fellow).not.toBeNull();
         expect(master).toBeNull();
       } else {
-        // meister@ and all 10 officer accounts: all three dates.
+        // meister@ and all 11 officer accounts: all three dates.
         expect(entered).not.toBeNull();
         expect(fellow).not.toBeNull();
         expect(master).not.toBeNull();
@@ -438,7 +438,7 @@ describe('resetAndSeedDemoData', () => {
       }
     }
 
-    // Every matriculation number across all 73 users (13 accounts + 60
+    // Every matriculation number across all 74 users (14 accounts + 60
     // brothers) stays unique.
     const allUsers = await prisma.users.findMany();
     expect(new Set(allUsers.map((u) => u.matriculation_number)).size).toBe(allUsers.length);
