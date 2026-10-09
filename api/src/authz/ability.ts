@@ -318,6 +318,17 @@ function worshipfulMasterAbilities(grant: Grant): void {
   grant.can('manage', 'Seeker');
 }
 
+/**
+ * DedicatedMaster ("zug. MvSt" / zugeordneter Meister vom Stuhl, the deputy
+ * worshipful master) has no counterpart method in ability.rb - the legacy
+ * app never granted this role any abilities beyond the implicit defaults.
+ * Net-new, requested directly: grant the same Seeker access as the
+ * worshipful master they deputize for.
+ */
+function dedicatedMasterAbilities(grant: Grant): void {
+  grant.can('manage', 'Seeker');
+}
+
 /** Port of Ability#net_delegate_abilities (ability.rb L68-72). */
 function netDelegateAbilities(grant: Grant): void {
   fileAdminAbilities(grant);
@@ -377,6 +388,7 @@ const ROLE_ABILITY_BUILDERS: Record<string, (grant: Grant, user: UserLike) => vo
   Admin: (grant) => adminAbilities(grant),
   Secretary: (grant) => secretaryAbilities(grant),
   WorshipfulMaster: (grant) => worshipfulMasterAbilities(grant),
+  DedicatedMaster: (grant) => dedicatedMasterAbilities(grant),
   NetDelegate: (grant) => netDelegateAbilities(grant),
   MemberOfCouncil: (grant) => memberOfCouncilAbilities(grant),
   FileAdmin: (grant) => fileAdminAbilities(grant),

@@ -71,6 +71,7 @@
       "Admin": "Administrator — voller Systemzugriff",
       "Secretary": "Schriftführer — Arbeitsplan, Aktuelles, Logen/Beamte, Dateien, Mitgliederverwaltung, Statistiken",
       "WorshipfulMaster": "Meister vom Stuhl — Logenleitung",
+      "DedicatedMaster": "Zugeordneter Meister vom Stuhl — Suchende",
       "NetDelegate": "Internetbeauftragter — Dateien, Mitgliederverwaltung, Statistiken",
       "MemberOfCouncil": "Beamtenrat — Statistiken, Mitgliederexport, Suchende",
       "FileAdmin": "Dateiverwaltung — nur Kategorien/Verzeichnisse/Dateien",

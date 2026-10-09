@@ -71,6 +71,7 @@
       "Admin": "Admin — full system access",
       "Secretary": "Secretary — working plan, announcements, lodges/officers, files, user roles, statistics",
       "WorshipfulMaster": "Worshipful Master — lodge leadership",
+      "DedicatedMaster": "Deputy Worshipful Master (zug. MvSt) — seekers",
       "NetDelegate": "Net Delegate — files, user roles, statistics",
       "MemberOfCouncil": "Member of Council — statistics, member export, seekers",
       "FileAdmin": "File Admin — categories/directories/files only",

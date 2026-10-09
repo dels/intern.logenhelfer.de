@@ -18,7 +18,7 @@ export interface DemoAccount {
 }
 
 /**
- * Canonical 13-account list — keep in sync with
+ * Canonical 14-account list — keep in sync with
  * docs/superpowers/specs/2026-07-30-demo-environment-accounts.md. Degree
  * accounts hold only their degree role; office/admin accounts hold only
  * their office role (no stacking), matching that doc exactly. firstname/
@@ -34,6 +34,7 @@ export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
   { email: 'admin@logenhelfer.de', role: 'Admin', firstname: 'Simon', lastname: 'Brandt' },
   { email: 'sekretaer@logenhelfer.de', role: 'Secretary', firstname: 'Lukas', lastname: 'Haas' },
   { email: 'mvst@logenhelfer.de', role: 'WorshipfulMaster', firstname: 'Jonas', lastname: 'Graf' },
+  { email: 'zugmvst@logenhelfer.de', role: 'DedicatedMaster', firstname: 'Tobias', lastname: 'Vogelsang' },
   { email: 'internetbeauftrager@logenhelfer.de', role: 'NetDelegate', firstname: 'Felix', lastname: 'Pohl' },
   { email: 'beamtenrat@logenhelfer.de', role: 'MemberOfCouncil', firstname: 'David', lastname: 'Sauer' },
   { email: 'nurdateien@logenhelfer.de', role: 'FileAdmin', firstname: 'Niklas', lastname: 'Arnold' },
@@ -54,6 +55,7 @@ const ROLE_DISPLAY_NAMES: Record<string, string> = {
   Admin: 'Administrator',
   Secretary: 'Schriftführer',
   WorshipfulMaster: 'Meister vom Stuhl',
+  DedicatedMaster: 'Zugeordneter Meister vom Stuhl',
   NetDelegate: 'Internetbeauftragter',
   MemberOfCouncil: 'Beamtenrat',
   FileAdmin: 'Dateiverwaltung',
