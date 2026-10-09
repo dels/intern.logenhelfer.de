@@ -27,7 +27,7 @@ interface PendingMfaChallenge {
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { login, completeMfaChallenge, loginWithPasskey } = useAuth();
+  const { login, completeMfaChallenge, completeMfaChallengeWithPasskey, sendMfaChallengeEmailCode, loginWithPasskey } = useAuth();
   const { data: landingConfig } = useLandingConfig();
   const navigate = useNavigate();
   const [failedMessage, setFailedMessage] = useState<string | null>(null);
@@ -79,6 +79,61 @@ export default function LoginPage() {
         setFailedMessage(t('auth.networkError'));
       }
     }
+  }
+
+  async function handleMfaPasskeySubmit(rememberDevice: boolean) {
+    if (!pendingMfa) return;
+    setFailedMessage(null);
+    try {
+      await completeMfaChallengeWithPasskey(pendingMfa.token, { rememberDevice });
+      navigate('/', { replace: true });
+    } catch (err) {
+      // completeMfaChallengeWithPasskey calls startAuthentication directly
+      // (AuthProvider.tsx), so a user cancelling/dismissing the browser's
+      // passkey prompt throws a WebAuthnError here, not an ApiError.
+      //
+      // Final-review Finding 2: per @simplewebauthn/browser's own
+      // identifyAuthenticationError (helpers/identifyAuthenticationError.js),
+      // a REAL user clicking "Cancel" in the browser's WebAuthn dialog throws
+      // a `NotAllowedError`, which that library maps to code
+      // 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY' - NOT 'ERROR_CEREMONY_ABORTED'
+      // (that code only fires for a programmatic AbortSignal-triggered abort,
+      // e.g. the page's own WebAuthnAbortService superseding a still-pending
+      // ceremony with a new one). On this MFA-challenge screen specifically,
+      // nothing can start a second ceremony while this one is still pending
+      // (the page-mount-only autofill effect's own ceremony, if still
+      // in-flight, would itself be the one superseded, throwing into
+      // attemptPasskeyLogin's catch below, not into this function) - so
+      // ERROR_CEREMONY_ABORTED is not a distinct, reachable case here and is
+      // treated the same as a real cancel/no-matching-credential, rather than
+      // silently no-op'd (silence would also hide the genuinely useful "no
+      // passkey available on this device" case, which NotAllowedError also
+      // covers).
+      if (
+        err instanceof WebAuthnError &&
+        (err.code === 'ERROR_CEREMONY_ABORTED' ||
+          (err.code === 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY' && (err.cause as Error | undefined)?.name === 'NotAllowedError'))
+      ) {
+        setFailedMessage(t('auth.mfaPasskeyNotAvailable'));
+      } else if (err instanceof ApiError && err.status === 401) {
+        // A real 401 from the server here means passkey verification itself
+        // failed (wrong/forged assertion, cross-account credential, etc.) -
+        // auth.mfaInvalidCode's "code" wording doesn't fit a passkey (which
+        // has no typed code), so this reuses the existing passkey-specific
+        // failure copy instead (already shown by attemptPasskeyLogin for the
+        // same class of server-side passkey rejection).
+        setFailedMessage(t('auth.passkeyLoginFailed'));
+      } else if (err instanceof ApiError && err.status < 500) {
+        setFailedMessage(apiErrorMessage(err));
+      } else {
+        setFailedMessage(t('auth.networkError'));
+      }
+    }
+  }
+
+  async function handleSendMfaEmailCode() {
+    if (!pendingMfa) return;
+    await sendMfaChallengeEmailCode(pendingMfa.token);
   }
 
   async function attemptPasskeyLogin(opts?: { useBrowserAutofill?: boolean }) {
@@ -160,7 +215,12 @@ export default function LoginPage() {
         {pendingMfa ? (
           <Box>
             <Typography variant="h6" component="h2" sx={{ mb: 2 }}>{t('mfa.challenge.title')}</Typography>
-            <MfaChallengeForm methods={pendingMfa.methods} onSubmit={handleMfaSubmit} />
+            <MfaChallengeForm
+              methods={pendingMfa.methods}
+              onSubmit={handleMfaSubmit}
+              onPasskeySubmit={handleMfaPasskeySubmit}
+              onSendEmailCode={handleSendMfaEmailCode}
+            />
             <Box sx={{ mt: 2, textAlign: 'center' }}>
               <Link component="button" type="button" variant="body2" onClick={() => { setPendingMfa(null); setFailedMessage(null); }}>
                 {t('auth.backToLogin')}

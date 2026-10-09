@@ -18,6 +18,8 @@ function mockAuth(overrides: Partial<ReturnType<typeof useAuth>>) {
     login: vi.fn(),
     completeMfaChallenge: vi.fn(),
     loginWithPasskey: vi.fn(),
+    completeMfaChallengeWithPasskey: vi.fn(),
+    sendMfaChallengeEmailCode: vi.fn(),
     logout: vi.fn(),
     setUser: vi.fn(),
     refreshUser: vi.fn(),

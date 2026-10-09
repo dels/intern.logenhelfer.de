@@ -247,3 +247,108 @@ test('loginWithPasskey forwards useBrowserAutofill through to startAuthenticatio
   );
   await waitFor(() => expect(auth?.status).toBe('authenticated'));
 });
+
+function mockPasskeyAssertion() {
+  vi.mocked(startAuthentication).mockResolvedValueOnce({
+    id: 'cred-1', rawId: 'cred-1', type: 'public-key',
+    response: { clientDataJSON: '', authenticatorData: '', signature: '' },
+    clientExtensionResults: {},
+  } as never);
+}
+
+test('completeMfaChallengeWithPasskey authenticates against the mfa-pending-scoped endpoints and defaults remember_device to false', async () => {
+  let verifyBody: unknown;
+  server.use(
+    http.post('/api/v1/mfa/challenge/passkey/options', ({ request }) => {
+      expect(request.headers.get('Authorization')).toBe('Bearer pending-tok');
+      return HttpResponse.json({ challenge: 'chal', allowCredentials: [] });
+    }),
+    http.post('/api/v1/mfa/challenge/passkey/verify', async ({ request }) => {
+      expect(request.headers.get('Authorization')).toBe('Bearer pending-tok');
+      verifyBody = await request.json();
+      return HttpResponse.json({ access_token: 'mfa-passkey-tok', user });
+    }),
+    http.get('/api/v1/me', ({ request }) => {
+      if (request.headers.get('Authorization') === 'Bearer mfa-passkey-tok') return HttpResponse.json({ user, abilities: {} });
+      return new HttpResponse(null, { status: 401 });
+    }),
+  );
+  mockPasskeyAssertion();
+
+  let auth: ReturnType<typeof useAuth> | undefined;
+  function Probe() { auth = useAuth(); return null; }
+  render(<AuthProvider><Probe /></AuthProvider>);
+  await waitFor(() => expect(auth?.status).toBe('anonymous'));
+
+  await act(() => auth!.completeMfaChallengeWithPasskey('pending-tok'));
+
+  expect(verifyBody).toMatchObject({ remember_device: false });
+  await waitFor(() => expect(auth?.status).toBe('authenticated'));
+});
+
+test('completeMfaChallengeWithPasskey forwards rememberDevice: true as remember_device: true (camelCase -> snake_case only at the API boundary)', async () => {
+  let verifyBody: unknown;
+  server.use(
+    http.post('/api/v1/mfa/challenge/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })),
+    http.post('/api/v1/mfa/challenge/passkey/verify', async ({ request }) => {
+      verifyBody = await request.json();
+      return HttpResponse.json({ access_token: 'mfa-passkey-tok', user });
+    }),
+    http.get('/api/v1/me', () => HttpResponse.json({ user, abilities: {} })),
+  );
+  mockPasskeyAssertion();
+
+  let auth: ReturnType<typeof useAuth> | undefined;
+  function Probe() { auth = useAuth(); return null; }
+  render(<AuthProvider><Probe /></AuthProvider>);
+  await waitFor(() => expect(auth?.status).toBe('anonymous'));
+
+  await act(() => auth!.completeMfaChallengeWithPasskey('pending-tok', { rememberDevice: true }));
+
+  expect(verifyBody).toMatchObject({ remember_device: true });
+});
+
+test('completeMfaChallengeWithPasskey rejects and leaves status anonymous when the verify step fails', async () => {
+  server.use(
+    http.post('/api/v1/mfa/challenge/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })),
+    http.post('/api/v1/mfa/challenge/passkey/verify', () => new HttpResponse(null, { status: 401 })),
+  );
+  mockPasskeyAssertion();
+
+  let auth: ReturnType<typeof useAuth> | undefined;
+  function Probe() { auth = useAuth(); return null; }
+  render(<AuthProvider><Probe /></AuthProvider>);
+  await waitFor(() => expect(auth?.status).toBe('anonymous'));
+
+  await expect(act(() => auth!.completeMfaChallengeWithPasskey('pending-tok'))).rejects.toThrow();
+  expect(auth?.status).toBe('anonymous');
+});
+
+test('sendMfaChallengeEmailCode resolves on the endpoint\'s 204 response, scoped to the pending token', async () => {
+  server.use(
+    http.post('/api/v1/mfa/challenge/email/send', ({ request }) => {
+      expect(request.headers.get('Authorization')).toBe('Bearer pending-tok');
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+
+  let auth: ReturnType<typeof useAuth> | undefined;
+  function Probe() { auth = useAuth(); return null; }
+  render(<AuthProvider><Probe /></AuthProvider>);
+  await waitFor(() => expect(auth?.status).toBe('anonymous'));
+
+  await act(() => auth!.sendMfaChallengeEmailCode('pending-tok'));
+});
+
+test('sendMfaChallengeEmailCode propagates a server error (e.g. no verified email method)', async () => {
+  server.use(
+    http.post('/api/v1/mfa/challenge/email/send', () => new HttpResponse(null, { status: 404 })),
+  );
+
+  let auth: ReturnType<typeof useAuth> | undefined;
+  function Probe() { auth = useAuth(); return null; }
+  render(<AuthProvider><Probe /></AuthProvider>);
+  await waitFor(() => expect(auth?.status).toBe('anonymous'));
+
+  await expect(act(() => auth!.sendMfaChallengeEmailCode('pending-tok'))).rejects.toThrow();
+});

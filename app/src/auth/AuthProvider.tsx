@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { startAuthentication } from '@simplewebauthn/browser';
 import type { PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/browser';
-import { apiFetch, refreshSession, verifyMfaChallenge } from '../api/client';
+import { apiFetch, refreshSession, verifyMfaChallenge, getMfaChallengePasskeyOptions, verifyMfaChallengePasskey, sendMfaChallengeEmailCode as sendMfaChallengeEmailCodeRequest } from '../api/client';
 import { getAccessToken, setAccessToken, startImpersonation, stopImpersonation, onImpersonationEnded } from '../api/token';
 import type { Me, MeUser, MfaLoginResult, SessionPayload } from '../api/types';
 import { useIdleTimeout } from './useIdleTimeout';
@@ -21,6 +21,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<LoginResult>;
   completeMfaChallenge: (mfaPendingToken: string, input: { method: string; code: string; remember_device: boolean }) => Promise<void>;
   loginWithPasskey: (options?: { useBrowserAutofill?: boolean }) => Promise<void>;
+  completeMfaChallengeWithPasskey: (mfaPendingToken: string, opts?: { rememberDevice?: boolean }) => Promise<void>;
+  sendMfaChallengeEmailCode: (mfaPendingToken: string) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: MeUser) => void;
   refreshUser: () => Promise<void>;
@@ -164,6 +166,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await apiFetch<Me>('/api/v1/me');
       applyMe(me);
       setStatus('authenticated');
+    },
+    async completeMfaChallengeWithPasskey(mfaPendingToken, opts) {
+      // Same shape as loginWithPasskey above, but against the pending-
+      // challenge-scoped options/verify pair (Task 2) instead of the
+      // passwordless-login pair - the pending user's identity is already
+      // fixed by mfaPendingToken, so allowCredentials comes back scoped to
+      // just their own passkeys rather than an empty discoverable-credential
+      // list.
+      const options = await getMfaChallengePasskeyOptions(mfaPendingToken);
+      const assertion = await startAuthentication({ optionsJSON: options });
+      const session = await verifyMfaChallengePasskey(mfaPendingToken, {
+        response: assertion,
+        remember_device: opts?.rememberDevice ?? false,
+      });
+      setAccessToken(session.access_token);
+      const me = await apiFetch<Me>('/api/v1/me');
+      applyMe(me);
+      setStatus('authenticated');
+    },
+    async sendMfaChallengeEmailCode(mfaPendingToken) {
+      await sendMfaChallengeEmailCodeRequest(mfaPendingToken);
     },
     logout: performLogout,
     async refreshUser() {

@@ -54,7 +54,8 @@
     "resetPasswordInvalidToken": "Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.",
     "signInWithPasskey": "Mit Passkey anmelden",
     "mfaInvalidCode": "Der eingegebene Code ist ungültig.",
-    "passkeyLoginFailed": "Die Anmeldung mit dem Passkey ist fehlgeschlagen."
+    "passkeyLoginFailed": "Die Anmeldung mit dem Passkey ist fehlgeschlagen.",
+    "mfaPasskeyNotAvailable": "Es wurde kein passender Passkey gefunden, oder der Vorgang wurde abgebrochen."
   },
   "demoBanner": {
     "text": "Dies ist eine Demo-Umgebung und wird unregelmäßig zurückgesetzt.",
@@ -591,7 +592,11 @@
       "title": "Zwei-Faktor-Authentifizierung",
       "method": "Methode",
       "codeLabel": "Code",
-      "rememberDevice": "Dieses Gerät merken"
+      "rememberDevice": "Dieses Gerät merken",
+      "verifyWithPasskey": "Mit Passkey bestätigen",
+      "sendEmailCode": "Code per E-Mail senden",
+      "emailCodeSent": "Code wurde per E-Mail gesendet.",
+      "emailCodeSendFailed": "Code konnte nicht gesendet werden."
     },
     "method": {
       "totp": "Authenticator App",

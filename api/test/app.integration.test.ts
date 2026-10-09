@@ -15,6 +15,16 @@ import sharp from 'sharp';
 // offline-safe rather than depending on real network access.
 vi.mock('node:dns/promises', () => ({ lookup: vi.fn().mockResolvedValue([{ address: '93.184.216.34', family: 4 }]) }));
 
+// Same rationale as session.test.ts/mfaChallenge.test.ts's identical mock -
+// verifyAuthentication needs a real signature from a real authenticator
+// private key that no test fixture here has; buildAuthenticationOptions
+// stays genuine via importOriginal.
+vi.mock('../src/lib/mfaPasskeys.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../src/lib/mfaPasskeys.js')>();
+  return { ...actual, verifyAuthentication: vi.fn() };
+});
+const { verifyAuthentication } = await import('../src/lib/mfaPasskeys.js');
+
 import { app } from '../src/app.js';
 import { issueAccessToken, issueMfaPendingToken } from '../src/auth/jwt.js';
 import { prisma } from '../src/db.js';
@@ -1025,6 +1035,60 @@ describe('app.ts integration', () => {
         mode: 'optional',
         grace_period_ends_at: null,
       });
+    });
+
+    it('passkey second-factor options/verify round-trip through the real validated app', async () => {
+      const user = await createUser();
+      await prisma.mfa_passkey_credentials.create({
+        data: {
+          user_id: user.id,
+          credential_id: 'integration-credential',
+          public_key: Buffer.from('fake-public-key-bytes').toString('base64url'),
+          sign_count: 0,
+          name: 'Test passkey',
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+      const token = issueMfaPendingToken(user.id);
+
+      const optionsRes = await request(app).post('/api/v1/mfa/challenge/passkey/options').set('Authorization', `Bearer ${token}`).send({});
+      expect(optionsRes.status).toBe(200);
+
+      const challenge: string = optionsRes.body.challenge;
+      vi.mocked(verifyAuthentication).mockResolvedValueOnce({
+        verified: true,
+        authenticationInfo: { newCounter: 1 },
+      } as unknown as Awaited<ReturnType<typeof verifyAuthentication>>);
+      const clientDataJSON = Buffer.from(JSON.stringify({ type: 'webauthn.get', challenge })).toString('base64');
+
+      const verifyRes = await request(app)
+        .post('/api/v1/mfa/challenge/passkey/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ response: { id: 'integration-credential', response: { clientDataJSON } } });
+      expect(verifyRes.status).toBe(200);
+      expect(verifyRes.body.access_token).toBeDefined();
+    });
+
+    // Task 3 review gap: mfaChallenge.test.ts covers this route's behavior
+    // at the router level only (bypasses express-openapi-validator entirely
+    // - see that file's own top-of-file comment), so a path-string or
+    // response-schema typo in this route's new openapi.yaml entry could 500
+    // in production while still passing every route-level test. The
+    // precedent `/passkey/options` test above already proves a bodyless POST
+    // with `.send({})` clears the validator with no requestBody defined (the
+    // same contract shape as `/email/send`); this closes the one thing that
+    // precedent doesn't prove - that THIS specific path entry is wired and
+    // schema-valid.
+    it('a bodyless POST to /email/send clears the real validated app with 204', async () => {
+      const user = await createUser();
+      await prisma.mfa_email_credentials.create({
+        data: { user_id: user.id, verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
+      });
+      const token = issueMfaPendingToken(user.id);
+
+      const res = await request(app).post('/api/v1/mfa/challenge/email/send').set('Authorization', `Bearer ${token}`).send({});
+      expect(res.status).toBe(204);
     });
   });
 

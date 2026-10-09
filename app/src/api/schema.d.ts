@@ -365,6 +365,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mfa/challenge/passkey/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Mints a WebAuthn authentication challenge (kept in an in-process, per-pending-user map - see mfaChallenge.ts's pendingLoginPasskeyChallenges) scoped to the pending login's own enrolled passkey credentials, as the second factor for an in-progress login challenge (see getMfaChallengeMethods). Requires the `mfa_pending_token`, same as every other /mfa/challenge/* route. 404s if the pending user has no passkey credentials. */
+        post: operations["getMfaChallengePasskeyOptions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/challenge/passkey/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Completes an in-progress login challenge (see getMfaChallengeMethods) with a WebAuthn assertion against the pending user's own enrolled passkey, issuing a full session on success - identical cookie contract to createSession/verifyMfaChallenge. Every failure mode returns the identical 401 body, matching this file's other routes' non-enumerating contract. Optionally marks the current device as trusted (`remember_device: true`). */
+        post: operations["verifyMfaChallengePasskey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mfa/challenge/email/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Sends a fresh 'login'-purpose email OTP code to the pending user's own email address, for use with verifyMfaChallenge's `{method: 'email', code}`. Requires the `mfa_pending_token`. 404s if the pending user has no verified email method. Any prior outstanding 'login'-purpose code for this user is invalidated before the new one is sent, so only the most recently sent code ever verifies. Subject to both the per-IP `loginRateLimiter` (see the shared 429 response) and the per-email MFA lockout (see the shared 401 response). */
+        post: operations["sendMfaChallengeEmailCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -3184,6 +3235,77 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    getMfaChallengePasskeyOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description WebAuthn authentication options, allowCredentials scoped to the pending user's own passkeys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MfaWebauthnAuthenticationOptions"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    verifyMfaChallengePasskey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    response?: Record<string, never>;
+                    remember_device?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Logged in; refresh cookie (and, if requested, trusted-device cookie) set */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionPayload"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    sendMfaChallengeEmailCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Code sent */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     getMe: {
