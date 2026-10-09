@@ -54,7 +54,8 @@
     "resetPasswordInvalidToken": "This link is invalid or has expired. Please request a new one.",
     "signInWithPasskey": "Sign in with a passkey",
     "mfaInvalidCode": "The code you entered is invalid.",
-    "passkeyLoginFailed": "Signing in with the passkey failed."
+    "passkeyLoginFailed": "Signing in with the passkey failed.",
+    "mfaPasskeyNotAvailable": "No matching passkey was found, or the prompt was cancelled."
   },
   "demoBanner": {
     "text": "This is a demo environment and gets reset irregularly.",

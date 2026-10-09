@@ -54,7 +54,8 @@
     "resetPasswordInvalidToken": "Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.",
     "signInWithPasskey": "Mit Passkey anmelden",
     "mfaInvalidCode": "Der eingegebene Code ist ungültig.",
-    "passkeyLoginFailed": "Die Anmeldung mit dem Passkey ist fehlgeschlagen."
+    "passkeyLoginFailed": "Die Anmeldung mit dem Passkey ist fehlgeschlagen.",
+    "mfaPasskeyNotAvailable": "Es wurde kein passender Passkey gefunden, oder der Vorgang wurde abgebrochen."
   },
   "demoBanner": {
     "text": "Dies ist eine Demo-Umgebung und wird unregelmäßig zurückgesetzt.",

@@ -408,7 +408,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description Sends a fresh 'login'-purpose email OTP code to the pending user's own email address, for use with verifyMfaChallenge's `{method: 'email', code}`. Requires the `mfa_pending_token`. 404s if the pending user has no verified email method. */
+        /** @description Sends a fresh 'login'-purpose email OTP code to the pending user's own email address, for use with verifyMfaChallenge's `{method: 'email', code}`. Requires the `mfa_pending_token`. 404s if the pending user has no verified email method. Any prior outstanding 'login'-purpose code for this user is invalidated before the new one is sent, so only the most recently sent code ever verifies. Subject to both the per-IP `loginRateLimiter` (see the shared 429 response) and the per-email MFA lockout (see the shared 401 response). */
         post: operations["sendMfaChallengeEmailCode"];
         delete?: never;
         options?: never;
@@ -3305,6 +3305,7 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     getMe: {

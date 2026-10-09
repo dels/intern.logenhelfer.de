@@ -5,6 +5,7 @@ import { setRefreshTokenCookie } from '../auth/cookies.js';
 import { verifyAccessToken } from '../auth/jwt.js';
 import { issueRefreshToken } from '../auth/refreshToken.js';
 import { isMfaLockedOut, recordFailedMfaAttempt, resetMfaLockout } from '../auth/mfaLockout.js';
+import { loginRateLimiter } from '../middleware/rateLimit.js';
 import { issueTrustedDeviceToken } from '../auth/deviceTrust.js';
 import { recordSuccessfulSignIn } from '../auth/signInTracking.js';
 import { DEVICE_TOKEN_COOKIE_NAME } from './session.js';
@@ -166,6 +167,17 @@ router.post('/verify', async (req, res, next) => {
 router.post('/passkey/options', async (req, res, next) => {
   try {
     const user = req.mfaPendingUser!;
+    const lockoutKey = `mfa:${user.email}`;
+
+    // Security hardening (final-review Finding 4): this route used to skip
+    // the lockout check entirely, so a locked-out account could still mint
+    // fresh WebAuthn authentication options - matches the same check already
+    // present on /verify and /passkey/verify below.
+    if (await isMfaLockedOut(lockoutKey)) {
+      res.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+
     const credentials = await prisma.mfa_passkey_credentials.findMany({
       where: { user_id: user.id },
       select: { credential_id: true },
@@ -198,7 +210,16 @@ router.post('/passkey/verify', async (req, res, next) => {
 
     const response = req.body?.response as AuthenticationResponseJSON | undefined;
     let verified = false;
-    if (challenge && response?.id) {
+    // Security (final-review Finding 3): openapi.yaml only declares
+    // `response: { type: object }` - no constraint on `response.id`'s type -
+    // so a malformed `{ response: { id: 123 } }` passes contract validation
+    // and reaches here. Without the explicit `typeof ... === 'string'` check,
+    // the credential_id lookup below throws a Prisma validation error (wrong
+    // argument type), which escapes this block's "treat any failure as
+    // unverified" handling entirely and reaches the outer catch's next(err) -
+    // a 500, breaking this route's documented "every failure mode returns
+    // the identical 401" contract, and skipping recordFailedMfaAttempt.
+    if (challenge && typeof response?.id === 'string') {
       // Security: scope the credential lookup to THIS pending user, not
       // just the credential id from the response - a client can send any
       // credential_id regardless of what allowCredentials offered, so the
@@ -277,16 +298,38 @@ router.post('/passkey/verify', async (req, res, next) => {
   }
 });
 
-router.post('/email/send', async (req, res, next) => {
+router.post('/email/send', loginRateLimiter, async (req, res, next) => {
   try {
     const user = req.mfaPendingUser!;
+    const lockoutKey = `mfa:${user.email}`;
+
+    // Security hardening (final-review Finding 4): this route used to skip
+    // the lockout check entirely, so a locked-out account could still have
+    // fresh codes mailed to it - matches the same check already present on
+    // /verify and /passkey/verify.
+    if (await isMfaLockedOut(lockoutKey)) {
+      res.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+
     const credential = await prisma.mfa_email_credentials.findUnique({ where: { user_id: user.id } });
     if (!credential || credential.verified_at === null) throw ApiError.notFound();
 
-    // ponytail: no resend cooldown, matching /mfa/setup/start's existing
-    // (pre-existing, out of this fix's scope) unthrottled behavior for the
-    // 'setup'-purpose send - repeated calls just stack additional valid
-    // codes. Add a cooldown if this is ever abused for mail-bombing.
+    // Security hardening (final-review Finding 4): invalidate every prior
+    // outstanding login-purpose code before sending a new one. Without this,
+    // a holder of a valid pending token (i.e. someone who already has the
+    // account's password) could stack unlimited valid login-purpose codes by
+    // calling this route repeatedly, each independently guessable via
+    // /mfa/challenge/verify. Deliberately scoped to purpose: 'login' only -
+    // sendEmailOtp's 'setup'-purpose codes (used elsewhere, during initial
+    // MFA enrollment) are untouched and keep their existing unthrottled
+    // behavior; that path isn't reachable from a stolen-password-only
+    // attacker the way this login-challenge route is.
+    await prisma.mfa_email_otp_codes.updateMany({
+      where: { user_id: user.id, purpose: 'login', consumed_at: null },
+      data: { consumed_at: new Date() },
+    });
+
     await sendEmailOtp(user.id, user.email, 'login');
     res.status(204).send();
   } catch (err) {

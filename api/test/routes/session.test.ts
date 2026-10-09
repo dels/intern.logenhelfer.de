@@ -243,6 +243,46 @@ describe('Session API', () => {
       expect(updated.current_sign_in_at).not.toBeNull();
       expect(updated.current_sign_in_ip).toBe('203.0.113.9');
     });
+
+    // Final-review Finding 1 (mfa-passkey-second-factor branch): the
+    // trusted-device-cookie login skip branch of POST /api/v1/session (right
+    // after the MFA-gated `isDeviceTrusted` check) also calls
+    // recordSuccessfulSignIn, same as the plain-password and passkey-login
+    // branches above - nothing asserted on this branch specifically before.
+    // Mirrors the existing "skips the challenge when a trusted-device cookie
+    // matches" test's own setup (MFA-gated login describe block below).
+    it('sets sign_in_count, current_sign_in_at, and current_sign_in_ip on a trusted-device login skip', async () => {
+      const user = await createLoginableUser();
+      await prisma.mfa_totp_credentials.create({
+        data: { user_id: user.id, encrypted_secret: 'x', verified_at: new Date(), created_at: new Date(), updated_at: new Date() },
+      });
+      const raw = 'a'.repeat(64);
+      await prisma.mfa_trusted_devices.create({
+        data: {
+          user_id: user.id,
+          device_token_hash: createHash('sha256').update(raw).digest('hex'),
+          expires_at: new Date(Date.now() + 86_400_000),
+          created_at: new Date(),
+        },
+      });
+
+      const res = await request(app)
+        .post('/api/v1/session')
+        .set('Cookie', [`mfa_device_token=${raw}`])
+        .set('X-Forwarded-For', '203.0.113.9')
+        .send({ email: user.email, password: PASSWORD });
+
+      expect(res.status).toBe(200);
+      // Proves this actually took the trusted-device branch (a full session,
+      // not an mfa_pending_token) rather than falling through to the normal
+      // MFA-gated path.
+      expect(res.body.access_token).toBeDefined();
+      expect(res.body.mfa_pending_token).toBeUndefined();
+      const updated = await prisma.users.findUniqueOrThrow({ where: { id: user.id } });
+      expect(updated.sign_in_count).toBe(1);
+      expect(updated.current_sign_in_at).not.toBeNull();
+      expect(updated.current_sign_in_ip).toBe('203.0.113.9');
+    });
   });
 
   describe('POST /api/v1/session/refresh', () => {

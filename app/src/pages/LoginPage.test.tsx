@@ -279,14 +279,46 @@ describe('LoginPage', () => {
       expect(await screen.findByText('dashboard-page')).toBeInTheDocument();
     });
 
-    // Regression test: completeMfaChallengeWithPasskey (AuthProvider.tsx)
-    // calls startAuthentication directly, so cancelling the browser's
-    // passkey prompt throws a WebAuthnError straight out of
-    // handleMfaPasskeySubmit - not an ApiError. Without the
-    // ERROR_CEREMONY_ABORTED check added to that function's catch block, a
-    // plain cancel fell through to the generic "server unreachable" message,
-    // alarming the user over an action they took deliberately.
-    it('does not show an error when the user cancels the passkey prompt during the MFA challenge', async () => {
+    // Final-review Finding 2: per @simplewebauthn/browser's own
+    // identifyAuthenticationError, a REAL user clicking "Cancel" in the
+    // browser's WebAuthn dialog throws a NotAllowedError, which that library
+    // maps to code 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY' - NOT
+    // 'ERROR_CEREMONY_ABORTED' (the original version of this test mocked the
+    // wrong code and so never actually proved real-cancel behavior).
+    // WebAuthnError's constructor sets `name` from `cause.name` when no
+    // explicit `name` is given (see its constructor), so the cause must
+    // itself carry name: 'NotAllowedError', not just an 'AbortError'-worded
+    // message - a plain `new Error('NotAllowedError')` would NOT reproduce
+    // this (its `.name` stays 'Error').
+    it('shows a neutral not-available message (not the generic network error) when the user cancels the real passkey prompt during the MFA challenge', async () => {
+      server.use(
+        http.post('/api/v1/session', () => HttpResponse.json({ mfa_pending_token: 'ptok' })),
+        http.get('/api/v1/mfa/challenge/methods', () => HttpResponse.json({ methods: ['passkey'] })),
+        http.post('/api/v1/mfa/challenge/passkey/options', () => HttpResponse.json({ challenge: 'chal', allowCredentials: [] })),
+      );
+      const notAllowedError = Object.assign(new Error('The operation either timed out or was not allowed.'), { name: 'NotAllowedError' });
+      vi.mocked(startAuthentication).mockRejectedValueOnce(
+        new WebAuthnError({ message: 'not allowed', code: 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY', cause: notAllowedError }),
+      );
+      renderLoginPage();
+      await submitLoginForm();
+      const button = await screen.findByRole('button', { name: /passkey/i });
+      await userEvent.click(button);
+      await vi.waitFor(() => expect(button).not.toBeDisabled());
+      expect(await screen.findByText('Es wurde kein passender Passkey gefunden, oder der Vorgang wurde abgebrochen.')).toBeInTheDocument();
+      expect(screen.queryByText('Der Server ist momentan nicht erreichbar. Bitte versuche es später erneut.')).not.toBeInTheDocument();
+    });
+
+    // ERROR_CEREMONY_ABORTED only fires for a programmatic AbortSignal-
+    // triggered abort (e.g. this page's own WebAuthnAbortService superseding
+    // a still-pending ceremony with a new one) - on this MFA-challenge screen
+    // specifically, nothing can start a second ceremony while this one is
+    // still pending (the mount-only autofill effect's own ceremony, if still
+    // in-flight, would itself be the one superseded, not this one), so this
+    // code isn't actually reachable here in practice. Handling is still
+    // unified with the real-cancel case above for consistency/simplicity
+    // (same neutral message either way) rather than silently no-op'd.
+    it('also shows the neutral not-available message for a superseded-ceremony error (ERROR_CEREMONY_ABORTED) during the MFA challenge', async () => {
       server.use(
         http.post('/api/v1/session', () => HttpResponse.json({ mfa_pending_token: 'ptok' })),
         http.get('/api/v1/mfa/challenge/methods', () => HttpResponse.json({ methods: ['passkey'] })),
@@ -300,17 +332,18 @@ describe('LoginPage', () => {
       const button = await screen.findByRole('button', { name: /passkey/i });
       await userEvent.click(button);
       await vi.waitFor(() => expect(button).not.toBeDisabled());
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-      expect(screen.queryByText('Der Server ist momentan nicht erreichbar. Bitte versuche es später erneut.')).not.toBeInTheDocument();
+      expect(await screen.findByText('Es wurde kein passender Passkey gefunden, oder der Vorgang wurde abgebrochen.')).toBeInTheDocument();
     });
 
     // Edge case: a real (non-cancellation) 401 from the passkey-verify
-    // endpoint still needs to surface an error, not get silently swallowed
-    // by the ERROR_CEREMONY_ABORTED branch above. Documents current
-    // behavior per this task's brief - see this task's own report for a
-    // flagged copy concern (mfaInvalidCode's "code" wording doesn't quite
-    // fit a passkey, which has no code).
-    it('shows an invalid-code message on a 401 from passkey verification (not a cancellation)', async () => {
+    // endpoint still needs to surface an error, not get silently swallowed by
+    // the cancel-handling branches above. Final-review Finding 2 also closes
+    // a cosmetic copy mismatch here: mfaInvalidCode's "code" wording doesn't
+    // fit a passkey (which has no typed code), so this now reuses the
+    // existing passkey-specific failure copy instead (already shown by
+    // attemptPasskeyLogin for the same class of server-side passkey
+    // rejection).
+    it('shows a passkey-specific failure message on a 401 from passkey verification (not a cancellation)', async () => {
       server.use(
         http.post('/api/v1/session', () => HttpResponse.json({ mfa_pending_token: 'ptok' })),
         http.get('/api/v1/mfa/challenge/methods', () => HttpResponse.json({ methods: ['passkey'] })),
@@ -325,7 +358,7 @@ describe('LoginPage', () => {
       renderLoginPage();
       await submitLoginForm();
       await userEvent.click(await screen.findByRole('button', { name: /passkey/i }));
-      expect(await screen.findByText('Der eingegebene Code ist ungültig.')).toBeInTheDocument();
+      expect(await screen.findByText('Die Anmeldung mit dem Passkey ist fehlgeschlagen.')).toBeInTheDocument();
     });
   });
 
